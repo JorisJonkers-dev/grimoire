@@ -2,6 +2,9 @@ package pgstore
 
 import (
 	"context"
+	"encoding/json"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -13,6 +16,8 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/live"
 	prep "github.com/JorisJonkers-dev/grimoire/api/internal/prep/domain"
 	preppg "github.com/JorisJonkers-dev/grimoire/api/internal/prep/pgstore"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/itembuild"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/spellbuild"
 )
 
 // LoadLoot reads the Campaign's Loot Tables.
@@ -36,7 +41,42 @@ func (s *Store) Items(ctx context.Context, campaign uuid.UUID, slugs []string) (
 			MaxCharges: int(r.MaxCharges), RegainDice: int(r.RegainDice), RegainFaces: int(r.RegainFaces), RegainBonus: int(r.RegainBonus), RechargeOn: r.RechargeOn,
 		}
 	}
-	return out, nil
+	return out, s.homebrewItems(ctx, campaign, slugs, out)
+}
+
+// homebrewItems adds the homebrew items among the slugs, as the Campaign sees them.
+func (s *Store) homebrewItems(ctx context.Context, campaign uuid.UUID, slugs []string, out map[string]domain.ItemInfo) error {
+	if !slices.ContainsFunc(slugs, func(slug string) bool { return strings.HasPrefix(slug, "hb-") }) {
+		return nil
+	}
+	rows, err := s.q.CampaignHomebrewItems(ctx, campaign)
+	for _, r := range rows {
+		slug := spellbuild.Slug(r.ID.String())
+		var d itembuild.Design
+		if !slices.Contains(slugs, slug) || json.Unmarshal(r.Design, &d) != nil {
+			continue
+		}
+		out[slug] = homebrewItem(r.Name, d)
+	}
+	return err
+}
+
+// homebrewItem is what play needs of a homebrew item.
+func homebrewItem(name string, d itembuild.Design) domain.ItemInfo {
+	info := domain.ItemInfo{Name: name, WeightLb: d.WeightLb, Category: itembuild.Category(d), Card: itembuild.Card(name, d, false), KnownCard: itembuild.Card(name, d, true)}
+	if a := d.Attunement; a != nil {
+		info.RequiresAttunement = true
+		if a.Kind != "" {
+			info.AttunementDetail = "Requires Attunement by a " + a.Value
+		}
+	}
+	if c := d.Charges; c != nil {
+		info.MaxCharges, info.RegainDice, info.RegainFaces, info.RegainBonus, info.RechargeOn = c.Max, c.Dice, c.Faces, c.Bonus, c.On
+	}
+	for _, g := range itembuild.Spells(d) {
+		info.Spells = append(info.Spells, domain.ItemSpell{Slug: g.Spell, Name: g.Name, Cost: g.Cost})
+	}
+	return info
 }
 
 // LoadInventory reads every Container of the Campaign, first making the Party Stash and an Inventory

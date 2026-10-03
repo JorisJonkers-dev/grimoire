@@ -453,7 +453,7 @@ func applyAttack(s *state, w *Write) {
 		if s.observed[o] == nil {
 			s.observed[o] = map[domain.TokenID]int{}
 		}
-		s.observed[o][w.Token.ID] += w.HP.Before - w.HP.After
+		s.observed[o][w.Token.ID] += w.HP.Lost()
 	}
 	if h := w.HP; h != nil {
 		s.setHP(*h)

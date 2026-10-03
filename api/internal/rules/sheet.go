@@ -13,20 +13,6 @@ const (
 	PactCaster CasterKind = "pact"
 )
 
-// CasterFor is the SRD caster kind of a class.
-func CasterFor(class string) CasterKind {
-	switch class {
-	case "bard", "cleric", "druid", "sorcerer", "wizard":
-		return FullCaster
-	case "paladin", "ranger":
-		return HalfCaster
-	case "warlock":
-		return PactCaster
-	default:
-		return NoCaster
-	}
-}
-
 // Armor is worn body armour.
 type Armor struct {
 	Base   int
@@ -89,25 +75,6 @@ var fullCasterSlots = [20][9]int{ //nolint:gochecknoglobals // a fixed table
 	{4, 3, 3, 3, 3, 2, 2, 1, 1},
 }
 
-// slotsAt are the spell slots per spell level a class has at a level: half casters (who cast from
-// level 1 in SRD 5.2) as a full caster of half their level rounded up, pact casters a few slots of
-// one level.
-func slotsAt(class string, level int) [9]int {
-	level = min(max(level, 1), 20)
-	switch CasterFor(class) {
-	case FullCaster:
-		return fullCasterSlots[level-1]
-	case HalfCaster:
-		return fullCasterSlots[(level+1)/2-1]
-	case PactCaster:
-		var out [9]int
-		out[min((level+1)/2, 5)-1] = pactSlots(level)
-		return out
-	case NoCaster:
-	}
-	return [9]int{}
-}
-
 // pactSlots is how many slots a pact caster has at a level.
 func pactSlots(level int) int {
 	switch {
@@ -124,14 +91,18 @@ func pactSlots(level int) int {
 
 // ResourcesAt are the pools a new character has at a level: one Hit Die per level and the spell slots
 // of its class.
-func ResourcesAt(class string, hitDie, level int) []Resource {
+func ResourcesAt(class Class, hitDie, level int) []Resource {
 	level = max(level, 1)
 	out := []Resource{{Key: "hit-dice", Label: "Hit Dice (d" + strconv.Itoa(hitDie) + ")", Current: level, Max: level}}
-	for i, n := range slotsAt(class, level) {
+	for i, n := range class.SlotsAt(level) {
 		if n > 0 {
 			spell := strconv.Itoa(i + 1)
 			out = append(out, Resource{Key: "spell-slots-" + spell, Label: "Level " + spell + " spell slots", Current: n, Max: n})
 		}
+	}
+	if class.Casting.Kind == SpellPoints {
+		n := class.Casting.Points[level20(level)-1]
+		out = append(out, Resource{Key: "spell-points", Label: "Spell points", Current: n, Max: n})
 	}
 	return out
 }
@@ -156,7 +127,7 @@ type SkillBonus struct {
 
 // SheetInput is everything the sheet is derived from.
 type SheetInput struct {
-	Class      string
+	Class      Class
 	Level      int
 	HitDie     int
 	Scores     map[Ability]int

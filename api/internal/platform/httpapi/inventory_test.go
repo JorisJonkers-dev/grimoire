@@ -227,6 +227,10 @@ func (b brokenInventory) Use(context.Context, caller.Caller, uuid.UUID, uuid.UUI
 	return playapp.InventoryView{}, 0, b.err
 }
 
+func (b brokenInventory) CastFrom(context.Context, caller.Caller, uuid.UUID, uuid.UUID, playapp.ItemRef, string) (playapp.InventoryView, error) {
+	return playapp.InventoryView{}, b.err
+}
+
 func (b brokenInventory) Swap(context.Context, caller.Caller, uuid.UUID, uuid.UUID) (playapp.InventoryView, error) {
 	return playapp.InventoryView{}, b.err
 }
@@ -240,6 +244,7 @@ func TestInventoryErrorsBecomeProblems(t *testing.T) {
 		{http.MethodPost, one + "/move", `{"slug":"rope","to":"stash"}`},
 		{http.MethodPost, one + "/take", `{"instanceId":"0190c7a8-0000-7000-8000-000000000003"}`},
 		{http.MethodPost, one + "/use", `{"slug":"rope","use":"throw"}`},
+		{http.MethodPost, one + "/use", `{"slug":"rope","use":"cast","spell":"light"}`},
 		{http.MethodPost, one + "/swap", ""},
 	} {
 		if rec := call(h, o.method, o.path, "u", o.body); rec.Code != http.StatusServiceUnavailable {

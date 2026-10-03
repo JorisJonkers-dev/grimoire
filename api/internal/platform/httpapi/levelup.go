@@ -14,7 +14,7 @@ func (h *Handler) PlanLevelUp(ctx context.Context, p oas.PlanLevelUpParams) (oas
 	if !ok {
 		return unauthorized(), nil
 	}
-	plan, err := h.Characters.PlanLevelUp(ctx, c, domain.CampaignID(p.CampaignId), domain.CharacterID(p.CharacterId), string(p.Class.Or("")))
+	plan, err := h.Characters.PlanLevelUp(ctx, c, domain.CampaignID(p.CampaignId), domain.CharacterID(p.CharacterId), string(p.Class.Or("")), string(p.Subclass.Or("")))
 	if err != nil {
 		return h.campaignProblem(ctx, "plan level up", err), nil
 	}

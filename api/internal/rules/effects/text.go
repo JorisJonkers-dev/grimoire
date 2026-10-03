@@ -71,8 +71,7 @@ func moreSentence(c Component) string {
 	case CritWithin:
 		return "Any hit against the target from within " + strconv.Itoa(c.Feet) + " feet is a Critical Hit."
 	case Exhausting:
-		return "Each level gives a −" + strconv.Itoa(c.D20PerLevel) + " penalty to D20 Tests and reduces Speed by " + strconv.Itoa(c.SpeedFtPerLevel) +
-			" feet; a creature dies at level " + strconv.Itoa(c.DeathAt) + "."
+		return stackingText(c)
 	case SpeedPenalty:
 		return "The target's Speed is reduced by " + strconv.Itoa(c.Ft) + " feet."
 	case Reacts:
@@ -114,6 +113,10 @@ func lastSentence(c Component) string {
 			return "The target regains " + plural(c.Delta, "use") + " of " + title(c.Resource) + "."
 		}
 		return "The target expends " + plural(-c.Delta, "use") + " of " + title(c.Resource) + "."
+	case AreaSave:
+		return "Each creature in the area makes a " + title(c.Ability) + " saving throw."
+	case Light:
+		return "Bright light fills " + strconv.Itoa(c.BrightFt) + " feet around where it lands, and dim light another " + strconv.Itoa(c.DimFt) + " feet."
 	case Choice:
 		modes := make([]string, 0, len(c.Modes))
 		for _, m := range c.Modes {
@@ -283,4 +286,26 @@ func article(word string) string {
 		return "an"
 	}
 	return "a"
+}
+
+// stackingText reads a stacking Effect: what each level takes, when it kills, and how high it rises.
+func stackingText(c Exhausting) string {
+	var each []string
+	if c.D20PerLevel > 0 {
+		each = append(each, "gives a −"+strconv.Itoa(c.D20PerLevel)+" penalty to D20 Tests")
+	}
+	if c.SpeedFtPerLevel > 0 {
+		each = append(each, "reduces Speed by "+strconv.Itoa(c.SpeedFtPerLevel)+" feet")
+	}
+	text := "It stacks"
+	if len(each) > 0 {
+		text = "Each level " + strings.Join(each, " and ")
+	}
+	if c.DeathAt > 0 {
+		text += "; a creature dies at level " + strconv.Itoa(c.DeathAt)
+	}
+	if c.MaxLevel > 0 {
+		text += "; it rises to level " + strconv.Itoa(c.MaxLevel) + " at most"
+	}
+	return text + "."
 }

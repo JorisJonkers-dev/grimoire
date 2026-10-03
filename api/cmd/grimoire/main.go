@@ -267,6 +267,10 @@ func serve(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 		})
 		accounts.Grant, accounts.AdminRole, oidcName = o.GrantRole, o.AdminRole, o.Name
 	}
+	library := &libraryapp.Service{
+		Repo: librarypg.New(store.Pool()), Members: playpg.CampaignMembers{Store: campaignpg.New(store.Pool())}, Now: time.Now,
+		Notices: proposalNotices{social: social}, Log: logger, Admins: accounts, Surfaces: playpg.New(store.Pool()).SurfaceKinds,
+	}
 	handler, err := httpapi.New(httpapi.Options{
 		Sessions: accounts, TrustForwardAuth: cfg.TrustForwardAuth,
 		Handler: &httpapi.Handler{
@@ -276,10 +280,7 @@ func serve(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 			Campaigns:  campaignapp.NewService(campaignpg.New(store.Pool())),
 			Characters: characters,
 			NPCs:       &campaignapp.NPCs{Repo: campaignpg.New(store.Pool()), Now: time.Now},
-			Library: &libraryapp.Service{
-				Repo: librarypg.New(store.Pool()), Members: playpg.CampaignMembers{Store: campaignpg.New(store.Pool())}, Now: time.Now,
-				Notices: proposalNotices{social: social}, Log: logger, Admins: accounts,
-			},
+			Library:    library, Spells: library, ItemBuilder: library, Subclasses: library, Classes: library, BackgroundBuilds: library, FeatBuilds: library, SpeciesBuilds: library, ConditionBuilds: library, MonsterBuilds: library,
 			Sessions: &playapp.Sessions{
 				Repo: playpg.New(store.Pool()), Members: playpg.CampaignMembers{Store: campaignpg.New(store.Pool())}, Live: hub, Now: time.Now,
 			},

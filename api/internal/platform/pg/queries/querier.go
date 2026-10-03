@@ -76,9 +76,15 @@ type Querier interface {
 	CampaignContainerCoins(ctx context.Context, campaignID uuid.UUID) ([]CampaignContainerCoin, error)
 	CampaignContainers(ctx context.Context, campaignID uuid.UUID) ([]CampaignContainersRow, error)
 	CampaignEntryMonsters(ctx context.Context, campaignID uuid.UUID) ([]PrepEntryMonster, error)
+	CampaignExhaustion(ctx context.Context, id uuid.UUID) (string, error)
 	CampaignHasLiveSession(ctx context.Context, campaignID uuid.UUID) (bool, error)
 	CampaignHighGround(ctx context.Context, id uuid.UUID) (bool, error)
 	CampaignHome(ctx context.Context, campaignID uuid.UUID) (uuid.UUID, error)
+	// The homebrew designs of one kind a Campaign sees: linked directly or through a Collection switched
+	// on, at the Revision a link pins.
+	CampaignHomebrewDesigns(ctx context.Context, arg CampaignHomebrewDesignsParams) ([]CampaignHomebrewDesignsRow, error)
+	CampaignHomebrewItems(ctx context.Context, campaignID uuid.UUID) ([]CampaignHomebrewItemsRow, error)
+	CampaignHomebrewSpells(ctx context.Context, campaignID uuid.UUID) ([]CampaignHomebrewSpellsRow, error)
 	CampaignInitiative(ctx context.Context, id uuid.UUID) (CampaignInitiativeRow, error)
 	CampaignItemInstances(ctx context.Context, campaignID uuid.UUID) ([]CampaignItemInstancesRow, error)
 	CampaignLibraryCollections(ctx context.Context, arg CampaignLibraryCollectionsParams) ([]CampaignLibraryCollectionsRow, error)
@@ -634,6 +640,9 @@ type Querier interface {
 	SetTokenArmorClass(ctx context.Context, arg SetTokenArmorClassParams) error
 	SetTokenDisguise(ctx context.Context, arg SetTokenDisguiseParams) error
 	SetTokenHP(ctx context.Context, arg SetTokenHPParams) error
+	// A legendary creature's Legend as play leaves it. A mythic phase brings a new hit point maximum and
+	// fills it, in one statement: the check on hit points holds at every step.
+	SetTokenLegend(ctx context.Context, arg SetTokenLegendParams) error
 	SetTokenReaction(ctx context.Context, arg SetTokenReactionParams) error
 	SetTokenTactics(ctx context.Context, arg SetTokenTacticsParams) error
 	SetTokenTempHP(ctx context.Context, arg SetTokenTempHPParams) error

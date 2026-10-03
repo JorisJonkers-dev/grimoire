@@ -16,7 +16,12 @@ import (
 
 // Kinds are what a Library keeps.
 func Kinds() []string {
-	return []string{"creature", "npc", "location", "shop", "item", "spell", "table"}
+	return []string{"creature", "npc", "location", "shop", "item", "spell", "table", "subclass", "class", "species", "background", "feat", "condition", "creature"}
+}
+
+// BuiltKinds are the kinds a builder designs; an export carries their designs as typed parts.
+func BuiltKinds() []string {
+	return []string{"spell", "item", "subclass", "class", "species", "background", "feat", "condition", "creature"}
 }
 
 // Limits on an entry's fields.
@@ -38,7 +43,9 @@ type Entry struct {
 	Fields   Fields
 	Revision int
 	// Shared marks a read-only copy in the Shared Library.
-	Shared    bool
+	Shared bool
+	// Design is a homebrew spell's design as the Effect builder saves it, nil for any other entry.
+	Design    []byte
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
@@ -60,6 +67,7 @@ type Submission struct {
 	Entry     uuid.UUID
 	Revision  int
 	Draft     Draft
+	Design    []byte
 	Note      string
 	Submitter string
 	Status    string
@@ -77,6 +85,7 @@ type Revision struct {
 	No     int
 	Name   string
 	Fields Fields
+	Design []byte
 	Author string
 	At     time.Time
 }

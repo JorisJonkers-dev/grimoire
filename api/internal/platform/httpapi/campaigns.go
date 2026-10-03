@@ -124,6 +124,7 @@ func summaryOut(s domain.Summary) oas.CampaignSummary {
 		CreationMethods:  methodsOut(s.CreationMethods),
 		StartingLevel:    oas.NewOptInt32(int32(s.StartingLevel)), //nolint:gosec // 1 to 20
 		HoldLevelUps:     oas.NewOptBool(s.HoldLevelUps),
+		Exhaustion:       oas.NewOptString(s.ExhaustionVariant),
 	}
 }
 
@@ -139,6 +140,7 @@ func detailOut(d domain.Detail) oas.Campaign {
 		CreationMethods:  methodsOut(d.CreationMethods),
 		StartingLevel:    oas.NewOptInt32(int32(d.StartingLevel)), //nolint:gosec // 1 to 20
 		HoldLevelUps:     oas.NewOptBool(d.HoldLevelUps),
+		Exhaustion:       oas.NewOptString(d.ExhaustionVariant),
 		Members:          make([]oas.Member, 0, len(d.Members)),
 	}
 	for _, m := range d.Members {
@@ -213,6 +215,20 @@ func (h *Handler) UpdateCampaign(ctx context.Context, req *oas.CampaignUpdate, p
 	if !ok {
 		return unauthorized(), nil
 	}
+	in := updateInput(req)
+	camp, err := h.Campaigns.Update(ctx, c, domain.CampaignID(p.CampaignId), in)
+	if err != nil {
+		return h.campaignProblem(ctx, "update campaign", err), nil
+	}
+	d, err := h.Campaigns.Get(ctx, c, camp.ID)
+	if err != nil {
+		return h.campaignProblem(ctx, "update campaign", err), nil
+	}
+	return &oas.CampaignSummaryHeaders{Response: summaryOut(domain.Summary{Campaign: camp, MyRole: d.Me.Role, MemberCount: len(d.Members)})}, nil
+}
+
+// updateInput reads the settings a Campaign update changes.
+func updateInput(req *oas.CampaignUpdate) app.UpdateInput {
 	var in app.UpdateInput
 	if v, set := req.Name.Get(); set {
 		name := string(v)
@@ -239,6 +255,12 @@ func (h *Handler) UpdateCampaign(ctx context.Context, req *oas.CampaignUpdate, p
 	if v, set := req.ShareInitiative.Get(); set {
 		in.ShareInitiative = &v
 	}
+	characterSettings(req, &in)
+	return in
+}
+
+// characterSettings reads the settings for Characters: creation, levelling and exhaustion.
+func characterSettings(req *oas.CampaignUpdate, in *app.UpdateInput) {
 	if req.CreationMethods != nil {
 		in.CreationMethods = make([]string, 0, len(req.CreationMethods))
 		for _, m := range req.CreationMethods {
@@ -252,15 +274,9 @@ func (h *Handler) UpdateCampaign(ctx context.Context, req *oas.CampaignUpdate, p
 	if v, set := req.HoldLevelUps.Get(); set {
 		in.HoldLevelUps = &v
 	}
-	camp, err := h.Campaigns.Update(ctx, c, domain.CampaignID(p.CampaignId), in)
-	if err != nil {
-		return h.campaignProblem(ctx, "update campaign", err), nil
+	if v, set := req.Exhaustion.Get(); set {
+		in.ExhaustionVariant = &v
 	}
-	d, err := h.Campaigns.Get(ctx, c, camp.ID)
-	if err != nil {
-		return h.campaignProblem(ctx, "update campaign", err), nil
-	}
-	return &oas.CampaignSummaryHeaders{Response: summaryOut(domain.Summary{Campaign: camp, MyRole: d.Me.Role, MemberCount: len(d.Members)})}, nil
 }
 
 // UpdateMember changes a Member's role.

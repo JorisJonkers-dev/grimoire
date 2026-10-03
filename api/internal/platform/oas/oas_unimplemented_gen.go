@@ -472,6 +472,15 @@ func (UnimplementedHandler) GetAutomationCoverage(ctx context.Context, params Ge
 	return r, ht.ErrNotImplemented
 }
 
+// GetBackgroundBuild implements getBackgroundBuild operation.
+//
+// A homebrew background's design, read back: one of the caller's, or a Shared Library copy.
+//
+// GET /api/v1/builders/backgrounds/{entryId}
+func (UnimplementedHandler) GetBackgroundBuild(ctx context.Context, params GetBackgroundBuildParams) (r GetBackgroundBuildRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetBuilderOptions implements getBuilderOptions operation.
 //
 // Every class, species, background, armour and weapon a first-level character can choose in one
@@ -510,12 +519,40 @@ func (UnimplementedHandler) GetCharacterDraft(ctx context.Context, params GetCha
 	return r, ht.ErrNotImplemented
 }
 
+// GetClassBuild implements getClassBuild operation.
+//
+// A homebrew class's design, read back with its level table: one of the caller's classes, or a Shared
+// Library copy.
+//
+// GET /api/v1/builders/classes/{entryId}
+func (UnimplementedHandler) GetClassBuild(ctx context.Context, params GetClassBuildParams) (r GetClassBuildRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetConditionBuild implements getConditionBuild operation.
+//
+// A homebrew condition's design, read back: one of the caller's, or a Shared Library copy.
+//
+// GET /api/v1/builders/conditions/{entryId}
+func (UnimplementedHandler) GetConditionBuild(ctx context.Context, params GetConditionBuildParams) (r GetConditionBuildRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetEntry implements getEntry operation.
 //
 // One entry rendered for reading, with the conditions its text mentions.
 //
 // GET /api/v1/compendium/entries/{kind}/{slug}
 func (UnimplementedHandler) GetEntry(ctx context.Context, params GetEntryParams) (r GetEntryRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetFeatBuild implements getFeatBuild operation.
+//
+// A homebrew feat's design, read back: one of the caller's, or a Shared Library copy.
+//
+// GET /api/v1/builders/feats/{entryId}
+func (UnimplementedHandler) GetFeatBuild(ctx context.Context, params GetFeatBuildParams) (r GetFeatBuildRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -534,6 +571,16 @@ func (UnimplementedHandler) GetHealth(ctx context.Context) (r GetHealthRes, _ er
 //
 // GET /api/v1/campaigns/{campaignId}/characters/{characterId}/inventory
 func (UnimplementedHandler) GetInventory(ctx context.Context, params GetInventoryParams) (r GetInventoryRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetItemBuild implements getItemBuild operation.
+//
+// A homebrew item's design with its card and Price Check: one of the caller's items, or a Shared
+// Library copy.
+//
+// GET /api/v1/builders/items/{entryId}
+func (UnimplementedHandler) GetItemBuild(ctx context.Context, params GetItemBuildParams) (r GetItemBuildRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -571,6 +618,15 @@ func (UnimplementedHandler) GetMapImage(ctx context.Context, params GetMapImageP
 //
 // GET /api/v1/me
 func (UnimplementedHandler) GetMe(ctx context.Context) (r GetMeRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetMonsterBuild implements getMonsterBuild operation.
+//
+// A homebrew creature's design, read back: one of the caller's, or a Shared Library copy.
+//
+// GET /api/v1/builders/monsters/{entryId}
+func (UnimplementedHandler) GetMonsterBuild(ctx context.Context, params GetMonsterBuildParams) (r GetMonsterBuildRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -684,12 +740,31 @@ func (UnimplementedHandler) GetSignInMethods(ctx context.Context) (r GetSignInMe
 	return r, ht.ErrNotImplemented
 }
 
+// GetSpeciesBuild implements getSpeciesBuild operation.
+//
+// A homebrew species's design, read back: one of the caller's, or a Shared Library copy.
+//
+// GET /api/v1/builders/species/{entryId}
+func (UnimplementedHandler) GetSpeciesBuild(ctx context.Context, params GetSpeciesBuildParams) (r GetSpeciesBuildRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetSpell implements getSpell operation.
 //
 // One spell with its rules text and the conditions it mentions.
 //
 // GET /api/v1/compendium/spells/{slug}
 func (UnimplementedHandler) GetSpell(ctx context.Context, params GetSpellParams) (r GetSpellRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetSpellBuild implements getSpellBuild operation.
+//
+// A homebrew spell's design with its rules text and area: one of the caller's spells, or a Shared
+// Library copy.
+//
+// GET /api/v1/builders/spells/{entryId}
+func (UnimplementedHandler) GetSpellBuild(ctx context.Context, params GetSpellBuildParams) (r GetSpellBuildRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -709,6 +784,15 @@ func (UnimplementedHandler) GetSpellcasting(ctx context.Context, params GetSpell
 //
 // GET /api/v1/status
 func (UnimplementedHandler) GetStatus(ctx context.Context) (r GetStatusRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetSubclassBuild implements getSubclassBuild operation.
+//
+// A homebrew subclass's design, read back: one of the caller's subclasses, or a Shared Library copy.
+//
+// GET /api/v1/builders/subclasses/{entryId}
+func (UnimplementedHandler) GetSubclassBuild(ctx context.Context, params GetSubclassBuildParams) (r GetSubclassBuildRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -1266,6 +1350,16 @@ func (UnimplementedHandler) PreviewAccountInvite(ctx context.Context, req *LinkT
 	return r, ht.ErrNotImplemented
 }
 
+// PreviewBackground implements previewBackground operation.
+//
+// Checks a design without saving it and reads it back. A design the rules refuse comes back with the
+// reason.
+//
+// POST /api/v1/builders/backgrounds/preview
+func (UnimplementedHandler) PreviewBackground(ctx context.Context, req *BackgroundPreviewInput) (r PreviewBackgroundRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // PreviewCharacter implements previewCharacter operation.
 //
 // Validates a build and returns the sheet it would make, without saving it.
@@ -1275,12 +1369,62 @@ func (UnimplementedHandler) PreviewCharacter(ctx context.Context, req *Character
 	return r, ht.ErrNotImplemented
 }
 
+// PreviewClass implements previewClass operation.
+//
+// Checks a design without saving it and reads it back with its level table. A design the rules refuse
+// comes back with the reason.
+//
+// POST /api/v1/builders/classes/preview
+func (UnimplementedHandler) PreviewClass(ctx context.Context, req *ClassPreviewInput) (r PreviewClassRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// PreviewCondition implements previewCondition operation.
+//
+// Checks a design without saving it and reads it back. A design the rules refuse comes back with the
+// reason.
+//
+// POST /api/v1/builders/conditions/preview
+func (UnimplementedHandler) PreviewCondition(ctx context.Context, req *ConditionPreviewInput) (r PreviewConditionRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// PreviewFeat implements previewFeat operation.
+//
+// Checks a design without saving it and reads it back. A design the rules refuse comes back with the
+// reason.
+//
+// POST /api/v1/builders/feats/preview
+func (UnimplementedHandler) PreviewFeat(ctx context.Context, req *FeatPreviewInput) (r PreviewFeatRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // PreviewInvite implements previewInvite operation.
 //
 // Which Campaign an invite link leads to, before joining.
 //
 // POST /api/v1/invites/preview
 func (UnimplementedHandler) PreviewInvite(ctx context.Context, req *InviteToken) (r PreviewInviteRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// PreviewItem implements previewItem operation.
+//
+// Checks a design without saving it: its item card and its Price Check. A design the rules refuse
+// comes back with the reason.
+//
+// POST /api/v1/builders/items/preview
+func (UnimplementedHandler) PreviewItem(ctx context.Context, req *ItemPreviewInput) (r PreviewItemRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// PreviewMonster implements previewMonster operation.
+//
+// Checks a design without saving it and reads it back. A design the rules refuse comes back with the
+// reason.
+//
+// POST /api/v1/builders/monsters/preview
+func (UnimplementedHandler) PreviewMonster(ctx context.Context, req *MonsterPreviewInput) (r PreviewMonsterRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -1299,6 +1443,36 @@ func (UnimplementedHandler) PreviewReach(ctx context.Context, req *ReachRequest)
 //
 // POST /api/v1/rules/hex/sight
 func (UnimplementedHandler) PreviewSight(ctx context.Context, req *SightRequest) (r PreviewSightRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// PreviewSpecies implements previewSpecies operation.
+//
+// Checks a design without saving it and reads it back. A design the rules refuse comes back with the
+// reason.
+//
+// POST /api/v1/builders/species/preview
+func (UnimplementedHandler) PreviewSpecies(ctx context.Context, req *SpeciesPreviewInput) (r PreviewSpeciesRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// PreviewSpell implements previewSpell operation.
+//
+// Builds a design without saving it: its rules text and its area drawn as hexes. A design the rules
+// cannot run is refused with the reason.
+//
+// POST /api/v1/builders/spells/preview
+func (UnimplementedHandler) PreviewSpell(ctx context.Context, req *SpellPreviewInput) (r PreviewSpellRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// PreviewSubclass implements previewSubclass operation.
+//
+// Checks a design without saving it and reads it back. A design the rules refuse comes back with the
+// reason.
+//
+// POST /api/v1/builders/subclasses/preview
+func (UnimplementedHandler) PreviewSubclass(ctx context.Context, req *SubclassPreviewInput) (r PreviewSubclassRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -1522,6 +1696,16 @@ func (UnimplementedHandler) RollRest(ctx context.Context, params RollRestParams)
 	return r, ht.ErrNotImplemented
 }
 
+// SaveBackgroundBuild implements saveBackgroundBuild operation.
+//
+// Saves the design of one of the caller's background entries as its next Revision; Campaigns that see
+// it offer it in character creation.
+//
+// PUT /api/v1/builders/backgrounds/{entryId}
+func (UnimplementedHandler) SaveBackgroundBuild(ctx context.Context, req *BackgroundDesign, params SaveBackgroundBuildParams) (r SaveBackgroundBuildRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // SaveCharacterDraft implements saveCharacterDraft operation.
 //
 // Keeps the wizard's choices so the caller can come back to them; rolled scores stay as the server
@@ -1529,6 +1713,86 @@ func (UnimplementedHandler) RollRest(ctx context.Context, params RollRestParams)
 //
 // PUT /api/v1/campaigns/{campaignId}/character-draft
 func (UnimplementedHandler) SaveCharacterDraft(ctx context.Context, req *CharacterDraftSave, params SaveCharacterDraftParams) (r SaveCharacterDraftRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// SaveClassBuild implements saveClassBuild operation.
+//
+// Saves the design of one of the caller's classes as its next Revision; Campaigns that see it offer it
+// in character creation and multiclassing.
+//
+// PUT /api/v1/builders/classes/{entryId}
+func (UnimplementedHandler) SaveClassBuild(ctx context.Context, req *ClassDesign, params SaveClassBuildParams) (r SaveClassBuildRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// SaveConditionBuild implements saveConditionBuild operation.
+//
+// Saves the design of one of the caller's condition entries as its next Revision; Campaigns that see
+// it offer it in the DM's effect picker, with its icon on every token it is on.
+//
+// PUT /api/v1/builders/conditions/{entryId}
+func (UnimplementedHandler) SaveConditionBuild(ctx context.Context, req *ConditionDesign, params SaveConditionBuildParams) (r SaveConditionBuildRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// SaveFeatBuild implements saveFeatBuild operation.
+//
+// Saves the design of one of the caller's feat entries as its next Revision; Campaigns that see it
+// offer it when a level grants a feat of its category.
+//
+// PUT /api/v1/builders/feats/{entryId}
+func (UnimplementedHandler) SaveFeatBuild(ctx context.Context, req *FeatDesign, params SaveFeatBuildParams) (r SaveFeatBuildRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// SaveItemBuild implements saveItemBuild operation.
+//
+// Saves the design of one of the caller's items as its next Revision; Campaigns that see it carry it
+// in Inventories by its slug.
+//
+// PUT /api/v1/builders/items/{entryId}
+func (UnimplementedHandler) SaveItemBuild(ctx context.Context, req *ItemDesign, params SaveItemBuildParams) (r SaveItemBuildRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// SaveMonsterBuild implements saveMonsterBuild operation.
+//
+// Saves the design of one of the caller's creature entries as its next Revision; Campaigns that see it
+// can place it by its slug, with its legendary and lair actions offered in the turn order.
+//
+// PUT /api/v1/builders/monsters/{entryId}
+func (UnimplementedHandler) SaveMonsterBuild(ctx context.Context, req *MonsterDesign, params SaveMonsterBuildParams) (r SaveMonsterBuildRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// SaveSpeciesBuild implements saveSpeciesBuild operation.
+//
+// Saves the design of one of the caller's species entries as its next Revision; Campaigns that see it
+// offer it, and each of its lineages, in character creation.
+//
+// PUT /api/v1/builders/species/{entryId}
+func (UnimplementedHandler) SaveSpeciesBuild(ctx context.Context, req *SpeciesDesign, params SaveSpeciesBuildParams) (r SaveSpeciesBuildRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// SaveSpellBuild implements saveSpellBuild operation.
+//
+// Saves the design of one of the caller's spells as its next Revision; in a live Session it runs as an
+// area spell.
+//
+// PUT /api/v1/builders/spells/{entryId}
+func (UnimplementedHandler) SaveSpellBuild(ctx context.Context, req *SpellDesign, params SaveSpellBuildParams) (r SaveSpellBuildRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// SaveSubclassBuild implements saveSubclassBuild operation.
+//
+// Saves the design of one of the caller's subclasses as its next Revision; Campaigns that see it offer
+// it on levelling up its class.
+//
+// PUT /api/v1/builders/subclasses/{entryId}
+func (UnimplementedHandler) SaveSubclassBuild(ctx context.Context, req *SubclassDesign, params SaveSubclassBuildParams) (r SaveSubclassBuildRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

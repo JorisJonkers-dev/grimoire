@@ -91,6 +91,18 @@ type ItemInfo struct {
 	RegainFaces int
 	RegainBonus int
 	RechargeOn  string
+	// Spells are the spells it lets its bearer cast; Card and KnownCard are a homebrew item's card before
+	// and after it is identified or attuned.
+	Spells    []ItemSpell
+	Card      []string
+	KnownCard []string
+}
+
+// ItemSpell is a spell an item lets its bearer cast: at will, or for Cost charges.
+type ItemSpell struct {
+	Slug string
+	Name string
+	Cost int
 }
 
 // Inventory is every Container of a Campaign, who carries them, and what their items are.

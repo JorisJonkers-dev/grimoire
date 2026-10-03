@@ -1,0 +1,31 @@
+import AxeBuilder from '@axe-core/playwright'
+import { expect, test } from '@playwright/test'
+
+test('an author builds a legendary creature in the monster builder and reads its estimated Challenge', async ({ page }, info) => {
+  const name = `Bog King ${info.project.name} ${String(Date.now())}`
+  await page.goto('/library')
+  await page.getByTestId('library-kind').selectOption('creature')
+  await page.getByTestId('library-name').fill(name)
+  await page.getByTestId('library-add').click()
+  await page.getByTestId('open-monster-builder').click()
+  await expect(page.getByTestId('monster-form')).toBeVisible()
+  await page.getByTestId('monster-size').selectOption('large')
+  await page.getByTestId('monster-hp').fill('120')
+  await page.getByTestId('monster-ac').fill('16')
+  await page.getByTestId('monster-legendary').check()
+  await page.getByTestId('monster-lair').check()
+  await page.getByTestId('monster-lair-0-text').fill('The water rises a foot.')
+  await page.getByTestId('monster-add-phase').click()
+  await page.getByTestId('monster-phase-0-name').fill('Drowned King')
+  await page.getByTestId('monster-preview').click()
+  const lines = page.getByTestId('monster-lines')
+  await expect(lines).toContainText('Large Beast')
+  await expect(lines).toContainText('Legendary Actions (3 a round).')
+  await expect(lines).toContainText('Lair Actions (initiative 20). Lair action. The water rises a foot.')
+  await expect(lines).toContainText('Phase 2: Drowned King (120 HP).')
+  await expect(page.getByTestId('monster-estimate')).toContainText('Estimated Challenge')
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  await page.getByTestId('monster-save').click()
+  await expect(page.getByTestId('monster-status')).toHaveText('Saved as Revision 2.')
+})

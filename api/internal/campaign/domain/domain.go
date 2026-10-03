@@ -73,6 +73,8 @@ type Campaign struct {
 	StartingLevel   int
 	// HoldLevelUps stops long rests unlocking the next level; the DM grants levels instead.
 	HoldLevelUps bool
+	// ExhaustionVariant is the exhaustion the Campaign plays with: srd-2024, gentle, grim or off.
+	ExhaustionVariant string
 }
 
 // SettingsChange is a change to a Campaign's settings; nil leaves a field alone.
@@ -87,6 +89,8 @@ type SettingsChange struct {
 	CreationMethods  []string
 	StartingLevel    *int
 	HoldLevelUps     *bool
+	// ExhaustionVariant picks the Campaign's exhaustion.
+	ExhaustionVariant *string
 }
 
 // Member is an account's participation in a Campaign.

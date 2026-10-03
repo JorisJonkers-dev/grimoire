@@ -290,6 +290,11 @@ paths:
           required: true
           description: The ruleset to build in.
           schema: { $ref: "#/components/schemas/Ruleset" }
+        - name: campaignId
+          in: query
+          required: false
+          description: A Campaign the caller belongs to, whose Library adds homebrew classes; its options carry no ETag.
+          schema: { $ref: "#/components/schemas/Id" }
       responses:
         "200":
           description: The options.
@@ -799,6 +804,11 @@ paths:
           in: query
           required: false
           description: The class to level in; the starting class when omitted.
+          schema: { $ref: "#/components/schemas/Slug" }
+        - name: subclass
+          in: query
+          required: false
+          description: A subclass picked on this level, so the plan adds the choices it asks for at once.
           schema: { $ref: "#/components/schemas/Slug" }
       responses:
         "200":
@@ -4526,6 +4536,816 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/builders/spells/preview:
+    post:
+      operationId: previewSpell
+      x-ogen-operation-group: Read
+      summary: Preview a homebrew spell
+      description: "Builds a design without saving it: its rules text and its area drawn as hexes. A design the rules cannot run is refused with the reason."
+      tags: [Library]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SpellPreviewInput"
+      responses:
+        "200":
+          description: The preview.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpellBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/builders/spells/{entryId}:
+    get:
+      operationId: getSpellBuild
+      x-ogen-operation-group: Read
+      summary: Open a spell in the Effect builder
+      description: "A homebrew spell's design with its rules text and area: one of the caller's spells, or a Shared Library copy."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/LibraryEntryId"
+      responses:
+        "200":
+          description: The spell.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpellBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    put:
+      operationId: saveSpellBuild
+      x-ogen-operation-group: Build
+      summary: Save a spell design
+      description: "Saves the design of one of the caller's spells as its next Revision; in a live Session it runs as an area spell."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/LibraryEntryId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SpellDesign"
+      responses:
+        "200":
+          description: The spell.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpellBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/builders/items/preview:
+    post:
+      operationId: previewItem
+      x-ogen-operation-group: Read
+      summary: Preview a homebrew item
+      description: "Checks a design without saving it: its item card and its Price Check. A design the rules refuse comes back with the reason."
+      tags: [Library]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ItemPreviewInput"
+      responses:
+        "200":
+          description: The preview.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ItemBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/builders/items/{entryId}:
+    get:
+      operationId: getItemBuild
+      x-ogen-operation-group: Read
+      summary: Open an item in the item builder
+      description: "A homebrew item's design with its card and Price Check: one of the caller's items, or a Shared Library copy."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/LibraryEntryId"
+      responses:
+        "200":
+          description: The item.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ItemBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    put:
+      operationId: saveItemBuild
+      x-ogen-operation-group: Build
+      summary: Save an item design
+      description: "Saves the design of one of the caller's items as its next Revision; Campaigns that see it carry it in Inventories by its slug."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/LibraryEntryId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ItemDesign"
+      responses:
+        "200":
+          description: The item.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ItemBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/builders/subclasses/preview:
+    post:
+      operationId: previewSubclass
+      x-ogen-operation-group: Read
+      summary: Preview a homebrew subclass
+      description: "Checks a design without saving it and reads it back. A design the rules refuse comes back with the reason."
+      tags: [Library]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubclassPreviewInput"
+      responses:
+        "200":
+          description: The preview.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubclassBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/builders/subclasses/{entryId}:
+    get:
+      operationId: getSubclassBuild
+      x-ogen-operation-group: Read
+      summary: Open a subclass in the subclass builder
+      description: "A homebrew subclass's design, read back: one of the caller's subclasses, or a Shared Library copy."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/LibraryEntryId"
+      responses:
+        "200":
+          description: The subclass.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubclassBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    put:
+      operationId: saveSubclassBuild
+      x-ogen-operation-group: Build
+      summary: Save a subclass design
+      description: "Saves the design of one of the caller's subclasses as its next Revision; Campaigns that see it offer it on levelling up its class."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/LibraryEntryId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubclassDesign"
+      responses:
+        "200":
+          description: The subclass.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubclassBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/builders/classes/preview:
+    post:
+      operationId: previewClass
+      x-ogen-operation-group: Read
+      summary: Preview a homebrew class
+      description: "Checks a design without saving it and reads it back with its level table. A design the rules refuse comes back with the reason."
+      tags: [Library]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClassPreviewInput"
+      responses:
+        "200":
+          description: The preview.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClassBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/builders/classes/{entryId}:
+    get:
+      operationId: getClassBuild
+      x-ogen-operation-group: Read
+      summary: Open a class in the class builder
+      description: "A homebrew class's design, read back with its level table: one of the caller's classes, or a Shared Library copy."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/LibraryEntryId"
+      responses:
+        "200":
+          description: The class.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClassBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    put:
+      operationId: saveClassBuild
+      x-ogen-operation-group: Build
+      summary: Save a class design
+      description: "Saves the design of one of the caller's classes as its next Revision; Campaigns that see it offer it in character creation and multiclassing."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/LibraryEntryId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClassDesign"
+      responses:
+        "200":
+          description: The class.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClassBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/builders/species/preview:
+    post:
+      operationId: previewSpecies
+      x-ogen-operation-group: Read
+      summary: Preview a homebrew species
+      description: "Checks a design without saving it and reads it back. A design the rules refuse comes back with the reason."
+      tags: [Library]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SpeciesPreviewInput"
+      responses:
+        "200":
+          description: The preview.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpeciesBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/builders/species/{entryId}:
+    get:
+      operationId: getSpeciesBuild
+      x-ogen-operation-group: Read
+      summary: Open a species in the species builder
+      description: "A homebrew species's design, read back: one of the caller's, or a Shared Library copy."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/LibraryEntryId"
+      responses:
+        "200":
+          description: The species.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpeciesBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    put:
+      operationId: saveSpeciesBuild
+      x-ogen-operation-group: Build
+      summary: Save a species design
+      description: "Saves the design of one of the caller's species entries as its next Revision; Campaigns that see it offer it, and each of its lineages, in character creation."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/LibraryEntryId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SpeciesDesign"
+      responses:
+        "200":
+          description: The species.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpeciesBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/builders/feats/preview:
+    post:
+      operationId: previewFeat
+      x-ogen-operation-group: Read
+      summary: Preview a homebrew feat
+      description: "Checks a design without saving it and reads it back. A design the rules refuse comes back with the reason."
+      tags: [Library]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FeatPreviewInput"
+      responses:
+        "200":
+          description: The preview.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeatBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/builders/feats/{entryId}:
+    get:
+      operationId: getFeatBuild
+      x-ogen-operation-group: Read
+      summary: Open a feat in the feat builder
+      description: "A homebrew feat's design, read back: one of the caller's, or a Shared Library copy."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/LibraryEntryId"
+      responses:
+        "200":
+          description: The feat.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeatBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    put:
+      operationId: saveFeatBuild
+      x-ogen-operation-group: Build
+      summary: Save a feat design
+      description: "Saves the design of one of the caller's feat entries as its next Revision; Campaigns that see it offer it when a level grants a feat of its category."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/LibraryEntryId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FeatDesign"
+      responses:
+        "200":
+          description: The feat.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeatBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/builders/backgrounds/preview:
+    post:
+      operationId: previewBackground
+      x-ogen-operation-group: Read
+      summary: Preview a homebrew background
+      description: "Checks a design without saving it and reads it back. A design the rules refuse comes back with the reason."
+      tags: [Library]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BackgroundPreviewInput"
+      responses:
+        "200":
+          description: The preview.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BackgroundBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/builders/backgrounds/{entryId}:
+    get:
+      operationId: getBackgroundBuild
+      x-ogen-operation-group: Read
+      summary: Open a background in the background builder
+      description: "A homebrew background's design, read back: one of the caller's, or a Shared Library copy."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/LibraryEntryId"
+      responses:
+        "200":
+          description: The background.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BackgroundBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    put:
+      operationId: saveBackgroundBuild
+      x-ogen-operation-group: Build
+      summary: Save a background design
+      description: "Saves the design of one of the caller's background entries as its next Revision; Campaigns that see it offer it in character creation."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/LibraryEntryId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BackgroundDesign"
+      responses:
+        "200":
+          description: The background.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BackgroundBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/builders/conditions/preview:
+    post:
+      operationId: previewCondition
+      x-ogen-operation-group: Read
+      summary: Preview a homebrew condition
+      description: "Checks a design without saving it and reads it back. A design the rules refuse comes back with the reason."
+      tags: [Library]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConditionPreviewInput"
+      responses:
+        "200":
+          description: The preview.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConditionBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/builders/conditions/{entryId}:
+    get:
+      operationId: getConditionBuild
+      x-ogen-operation-group: Read
+      summary: Open a condition in the condition builder
+      description: "A homebrew condition's design, read back: one of the caller's, or a Shared Library copy."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/LibraryEntryId"
+      responses:
+        "200":
+          description: The condition.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConditionBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    put:
+      operationId: saveConditionBuild
+      x-ogen-operation-group: Build
+      summary: Save a condition design
+      description: "Saves the design of one of the caller's condition entries as its next Revision; Campaigns that see it offer it in the DM's effect picker, with its icon on every token it is on."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/LibraryEntryId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConditionDesign"
+      responses:
+        "200":
+          description: The condition.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConditionBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/builders/monsters/preview:
+    post:
+      operationId: previewMonster
+      x-ogen-operation-group: Read
+      summary: Preview a homebrew creature
+      description: "Checks a design without saving it and reads it back. A design the rules refuse comes back with the reason."
+      tags: [Library]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MonsterPreviewInput"
+      responses:
+        "200":
+          description: The preview.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MonsterBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/builders/monsters/{entryId}:
+    get:
+      operationId: getMonsterBuild
+      x-ogen-operation-group: Read
+      summary: Open a creature in the creature builder
+      description: "A homebrew creature's design, read back: one of the caller's, or a Shared Library copy."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/LibraryEntryId"
+      responses:
+        "200":
+          description: The creature.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MonsterBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    put:
+      operationId: saveMonsterBuild
+      x-ogen-operation-group: Build
+      summary: Save a creature design
+      description: "Saves the design of one of the caller's creature entries as its next Revision; Campaigns that see it can place it by its slug, with its legendary and lair actions offered in the turn order."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/LibraryEntryId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MonsterDesign"
+      responses:
+        "200":
+          description: The creature.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MonsterBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /api/v1/me:
     get:
       operationId: getMe
@@ -6824,6 +7644,7 @@ components:
           items: { $ref: "#/components/schemas/CreationMethod" }
         startingLevel: { type: integer, format: int32, minimum: 1, maximum: 20, description: "The level new Characters start at." }
         holdLevelUps: { type: boolean, description: "Long rests stop unlocking the next level; the DM grants levels instead." }
+        exhaustion: { type: string, maxLength: 40, description: "The exhaustion the Campaign plays with: srd-2024, gentle, grim or off." }
         shareInitiative: { type: boolean, description: "Identical monsters share one initiative roll." }
     CampaignPage:
       type: object
@@ -6875,6 +7696,7 @@ components:
           items: { $ref: "#/components/schemas/CreationMethod" }
         startingLevel: { type: integer, format: int32, minimum: 1, maximum: 20, description: "The level new Characters start at." }
         holdLevelUps: { type: boolean, description: "Long rests stop unlocking the next level; the DM grants levels instead." }
+        exhaustion: { type: string, maxLength: 40, description: "The exhaustion the Campaign plays with: srd-2024, gentle, grim or off." }
         shareInitiative: { type: boolean, description: "Identical monsters share one initiative roll." }
         me: { $ref: "#/components/schemas/Member" }
         members:
@@ -6910,6 +7732,7 @@ components:
           items: { $ref: "#/components/schemas/CreationMethod" }
         startingLevel: { type: integer, format: int32, minimum: 1, maximum: 20, description: "The level new Characters start at." }
         holdLevelUps: { type: boolean, description: "Long rests stop unlocking the next level; the DM grants levels instead." }
+        exhaustion: { type: string, maxLength: 40, description: "The exhaustion the Campaign plays with: srd-2024, gentle, grim or off." }
         shareInitiative: { type: boolean, description: "Identical monsters share one initiative roll." }
     Account:
       type: object
@@ -8182,6 +9005,25 @@ components:
           type: array
           maxItems: 14
           items: { $ref: "#/components/schemas/EquipmentSlot" }
+        spells:
+          type: array
+          description: Spells the item lets its bearer cast, at will or for charges.
+          maxItems: 40
+          items: { $ref: "#/components/schemas/ItemSpell" }
+        lines:
+          type: array
+          description: A homebrew item's card, as far as its holder knows it.
+          maxItems: 60
+          items: { type: string, maxLength: 1200 }
+    ItemSpell:
+      type: object
+      description: A spell an item grants; cost is the charges it spends, 0 at will.
+      additionalProperties: false
+      required: [slug, name, cost]
+      properties:
+        slug: { $ref: "#/components/schemas/Slug" }
+        name: { type: string, maxLength: 120 }
+        cost: { type: integer, format: int32, minimum: 0, maximum: 100 }
     SlotLine:
       type: object
       description: An equipment slot and what is in it.
@@ -8262,8 +9104,9 @@ components:
       properties:
         instanceId: { $ref: "#/components/schemas/Id" }
         slug: { $ref: "#/components/schemas/Slug" }
-        use: { type: string, enum: [drink, throw, attune, unattune, identify, charge] }
+        use: { type: string, enum: [drink, throw, attune, unattune, identify, charge, cast] }
         count: { type: integer, format: int32, minimum: 1, maximum: 100, description: "Charges to spend." }
+        spell: { $ref: "#/components/schemas/Slug" }
     InventoryUseResult:
       type: object
       description: The Inventory after using an item, and the hit points it restored.
@@ -8436,7 +9279,7 @@ components:
           description: The abilities the class leans on most, highlighted when choosing it.
           maxItems: 2
           items: { $ref: "#/components/schemas/Ability" }
-        caster: { type: string, enum: [none, full, half, pact], description: "How the class casts spells." }
+        caster: { type: string, enum: [none, full, half, pact, slots, points], description: "How the class casts spells: the SRD kinds, or a homebrew slot table or spell points." }
     SpeciesChoice:
       type: object
       description: A playable species.
@@ -9179,6 +10022,7 @@ components:
           maxItems: 4
           items: { $ref: "#/components/schemas/LiveReactionSetting" }
         dying: { $ref: "#/components/schemas/LiveDying" }
+        legend: { $ref: "#/components/schemas/LiveLegend" }
     LiveDying:
       type: object
       description: A Character at 0 hit points, its death saves, and whether it is stable or dead. Shown to the DM and for the party's tokens.
@@ -9263,7 +10107,7 @@ components:
       required: [nonce, kind, q, r, hidden]
       properties:
         nonce: { type: string, minLength: 1, maxLength: 64 }
-        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual, preview_area, cast_area, paint_surface, set_elevation, table_camera, table_scene, table_blackout, ping, set_world, add_node, add_route, remove_node, remove_route, place_party, travel, add_zone, remove_zone, hold_zone, spring_zone, rest, encounter_check, schedule_check, roll_loot, move_item, move_coins, claim_loot, settle_loot, trade, open_shop, close_shop, buy, sell, haggle, spawn_encounter, adjust_hp, undo, propose_rest, agree_rest, spend_hit_die, finish_rest, interrupt_rest, take_action, unarmed, interact, swap_weapons, set_reaction, stabilise, revive, teleport, summon, command, set_visibility, place_object, remove_object, use_object, damage_object, find_object, unlock, disarm, jump, throw, sneak, explore, pass_turn] }
+        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual, preview_area, cast_area, paint_surface, set_elevation, table_camera, table_scene, table_blackout, ping, set_world, add_node, add_route, remove_node, remove_route, place_party, travel, add_zone, remove_zone, hold_zone, spring_zone, rest, encounter_check, schedule_check, roll_loot, move_item, move_coins, claim_loot, settle_loot, trade, open_shop, close_shop, buy, sell, haggle, spawn_encounter, adjust_hp, undo, propose_rest, agree_rest, spend_hit_die, finish_rest, interrupt_rest, take_action, unarmed, interact, swap_weapons, set_reaction, stabilise, revive, teleport, summon, command, set_visibility, place_object, remove_object, use_object, damage_object, find_object, unlock, disarm, jump, throw, sneak, explore, pass_turn, legendary_action, lair_action, legendary_resistance] }
         tokenId: { $ref: "#/components/schemas/Id" }
         label: { type: string, maxLength: 40 }
         tokenKind: { $ref: "#/components/schemas/TokenKind" }
@@ -9357,6 +10201,7 @@ components:
           items: { $ref: "#/components/schemas/LiveTradeLine" }
         instanceId: { $ref: "#/components/schemas/Id" }
         action: { type: string, enum: [dash, disengage, dodge, help, hide, influence, magic, ready, search, study, utilize] }
+        legend: { type: string, maxLength: 200, description: "The legendary or lair action to take, by name." }
         detail: { type: string, maxLength: 200 }
         trigger: { type: string, enum: [enters_reach] }
         option: { type: string, enum: [grapple, shove_push, shove_prone, medicine, spell, revivify, raise_dead, resurrection, need, greed, pass] }
@@ -9412,7 +10257,7 @@ components:
     LibraryKind:
       type: string
       description: What a Library entry is.
-      enum: [creature, npc, location, shop, item, spell, table]
+      enum: [creature, npc, location, shop, item, spell, table, subclass, class, species, background, feat, condition]
     LibraryField:
       type: object
       description: One named value of a Library entry.
@@ -9791,6 +10636,807 @@ components:
       properties:
         where: { type: string, maxLength: 300 }
         reason: { type: string, maxLength: 300 }
+    SpellDesign:
+      type: object
+      description: A homebrew spell as the Effect builder makes it, from Targeting and typed parts listed as rows.
+      additionalProperties: false
+      required: [targeting, concentration, duration, ritual, castingTime, components, parts]
+      properties:
+        targeting:
+          type: object
+          additionalProperties: false
+          required: [shape, sizeFt, rangeFt]
+          properties:
+            shape: { type: string, enum: [sphere, cylinder, emanation, ring, cone, cube, line, wall] }
+            sizeFt: { type: integer, format: int32, minimum: 0, maximum: 1000 }
+            rangeFt: { type: integer, format: int32, minimum: 0, maximum: 5000 }
+        save: { type: string, enum: [strength, dexterity, constitution, intelligence, wisdom, charisma] }
+        concentration: { type: boolean }
+        duration:
+          type: object
+          additionalProperties: false
+          required: [unit]
+          properties:
+            unit: { type: string, enum: [instant, rounds, minutes, hours, until_dispelled] }
+            amount: { type: integer, format: int32, minimum: 0, maximum: 1000 }
+        ritual: { type: boolean }
+        castingTime:
+          type: object
+          additionalProperties: false
+          required: [kind]
+          properties:
+            kind: { type: string, enum: [action, bonus_action, reaction, minutes] }
+            minutes: { type: integer, format: int32, minimum: 0, maximum: 10000 }
+            trigger: { type: string, enum: [when_hit, when_damaged, ally_attacked, creature_casts, creature_enters_reach] }
+        components:
+          type: object
+          additionalProperties: false
+          required: [verbal, somatic]
+          properties:
+            verbal: { type: boolean }
+            somatic: { type: boolean }
+            material:
+              type: object
+              additionalProperties: false
+              required: [text]
+              properties:
+                text: { type: string, maxLength: 400 }
+                costGp: { type: integer, format: int32, minimum: 0, maximum: 1000000 }
+                consumed: { type: boolean }
+                item: { type: string, maxLength: 80 }
+        parts:
+          type: array
+          maxItems: 100
+          items: { $ref: "#/components/schemas/SpellPart" }
+    SpellPart:
+      type: object
+      description: One row of a spell design; which fields count depends on its type.
+      additionalProperties: false
+      required: [type]
+      properties:
+        type: { type: string, enum: [damage, condition, light, reveal, surface, manual] }
+        when: { type: string, enum: [on_cast, start_of_turn] }
+        dice: { type: string, maxLength: 20 }
+        damageType: { type: string, maxLength: 20 }
+        half: { type: boolean }
+        condition: { type: string, maxLength: 40 }
+        onlyTypes:
+          type: array
+          maxItems: 14
+          items: { type: string, maxLength: 20 }
+        brightFt: { type: integer, format: int32, minimum: 0, maximum: 1000 }
+        dimFt: { type: integer, format: int32, minimum: -1000, maximum: 1000 }
+        qualities:
+          type: array
+          maxItems: 8
+          items: { type: string, maxLength: 20 }
+        surface: { type: string, maxLength: 40 }
+        rounds: { type: integer, format: int32, minimum: 0, maximum: 1000 }
+        text: { type: string, maxLength: 1000 }
+    SpellPreviewInput:
+      type: object
+      description: A design to preview, with the spell's name.
+      additionalProperties: false
+      required: [name, design]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        design: { $ref: "#/components/schemas/SpellDesign" }
+    BuilderHex:
+      type: object
+      description: A hex of an area, relative to its origin.
+      additionalProperties: false
+      required: [q, r]
+      properties:
+        q: { type: integer, format: int32, minimum: -1000, maximum: 1000 }
+        r: { type: integer, format: int32, minimum: -1000, maximum: 1000 }
+    SpellBuild:
+      type: object
+      description: A homebrew spell in the Effect builder, the Effect slug it runs under in play, its rules text and its area as hexes.
+      additionalProperties: false
+      required: [design, effect, text, hexes]
+      properties:
+        entry: { $ref: "#/components/schemas/LibraryEntry" }
+        design: { $ref: "#/components/schemas/SpellDesign" }
+        effect: { type: string, maxLength: 40 }
+        text:
+          type: array
+          maxItems: 200
+          items: { type: string, maxLength: 1000 }
+        hexes:
+          type: array
+          maxItems: 20000
+          items: { $ref: "#/components/schemas/BuilderHex" }
+    ClassDesign:
+      type: object
+      description: A homebrew class as the class builder makes it, from its Hit Die, training, level table, features, subclass and feat levels, and spellcasting.
+      additionalProperties: false
+      required: [hitDie, primary, saves, armor, weapons, skills, subclassLevel, featLevels, columns, features, casting]
+      properties:
+        hitDie: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        primary:
+          type: array
+          maxItems: 10
+          items: { type: string, maxLength: 40 }
+        anyPrimary: { type: boolean }
+        saves:
+          type: array
+          maxItems: 10
+          items: { type: string, maxLength: 40 }
+        armor:
+          type: array
+          maxItems: 10
+          items: { type: string, maxLength: 40 }
+        weapons:
+          type: array
+          maxItems: 10
+          items: { type: string, maxLength: 40 }
+        skills: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        subclassLevel: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        featLevels:
+          type: array
+          maxItems: 40
+          items: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        columns:
+          type: array
+          maxItems: 20
+          items: { $ref: "#/components/schemas/ClassColumn" }
+        features:
+          type: array
+          maxItems: 100
+          items: { $ref: "#/components/schemas/ClassFeature" }
+        casting: { $ref: "#/components/schemas/ClassCasting" }
+    ClassColumn:
+      type: object
+      description: A custom column of the level table, one value for each of the 20 levels.
+      additionalProperties: false
+      required: [name, values]
+      properties:
+        name: { type: string, maxLength: 200 }
+        values:
+          type: array
+          maxItems: 40
+          items: { type: string, maxLength: 200 }
+    ClassFeature:
+      type: object
+      description: A feature gained at a class level.
+      additionalProperties: false
+      required: [level, name, text]
+      properties:
+        level: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        name: { type: string, maxLength: 200 }
+        text: { type: string, maxLength: 8000 }
+    ClassCasting:
+      type: object
+      description: "How the class casts: none, an SRD kind (full, half, pact), its own slot table or spell points, from an SRD class's spell list. Tables run over the 20 levels; slots and costs over the nine spell levels."
+      additionalProperties: false
+      required: [kind]
+      properties:
+        kind: { type: string, maxLength: 40 }
+        ability: { type: string, maxLength: 40 }
+        spellList: { type: string, maxLength: 40 }
+        cantrips:
+          type: array
+          maxItems: 40
+          items: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        prepared:
+          type: array
+          maxItems: 40
+          items: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        slots:
+          type: array
+          maxItems: 40
+          items:
+            type: array
+            maxItems: 20
+            items: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        points:
+          type: array
+          maxItems: 40
+          items: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        costs:
+          type: array
+          maxItems: 40
+          items: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        maxSpell:
+          type: array
+          maxItems: 40
+          items: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        spellbook: { type: boolean }
+        afterRest: { type: boolean }
+    ClassPreviewInput:
+      type: object
+      description: A design to preview, with the class's name.
+      additionalProperties: false
+      required: [name, design]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        design: { $ref: "#/components/schemas/ClassDesign" }
+    ClassBuild:
+      type: object
+      description: A homebrew class in the class builder, the slug it is known by on a sheet, and how it reads back with its level table.
+      additionalProperties: false
+      required: [design, lines]
+      properties:
+        entry: { $ref: "#/components/schemas/LibraryEntry" }
+        design: { $ref: "#/components/schemas/ClassDesign" }
+        slug: { type: string, maxLength: 40 }
+        lines:
+          type: array
+          maxItems: 200
+          items: { type: string, maxLength: 1200 }
+    SpeciesPreviewInput:
+      type: object
+      description: A design to preview, with the species's name.
+      additionalProperties: false
+      required: [name, design]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        design: { $ref: "#/components/schemas/SpeciesDesign" }
+    SpeciesBuild:
+      type: object
+      description: A homebrew species in its builder, the slug it is known by, and how it reads back.
+      additionalProperties: false
+      required: [design, lines]
+      properties:
+        entry: { $ref: "#/components/schemas/LibraryEntry" }
+        design: { $ref: "#/components/schemas/SpeciesDesign" }
+        slug: { type: string, maxLength: 40 }
+        lines:
+          type: array
+          maxItems: 400
+          items: { type: string, maxLength: 2400 }
+    SpeciesDesign:
+      type: object
+      description: A homebrew species as the species builder makes it, from its sizes, creature type, speeds, senses, resistances, traits, innate spells and lineages.
+      additionalProperties: false
+      required: [sizes, creatureType, speedFt, speeds, senses, resistances, traits, spells, lineages]
+      properties:
+        sizes:
+          type: array
+          maxItems: 10
+          items: { type: string, maxLength: 40 }
+        creatureType: { type: string, maxLength: 40 }
+        speedFt: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        speeds:
+          type: array
+          maxItems: 20
+          items: { $ref: "#/components/schemas/SpeciesMeasure" }
+        senses:
+          type: array
+          maxItems: 20
+          items: { $ref: "#/components/schemas/SpeciesMeasure" }
+        resistances:
+          type: array
+          maxItems: 20
+          items: { type: string, maxLength: 40 }
+        traits:
+          type: array
+          maxItems: 40
+          items: { $ref: "#/components/schemas/SpeciesTrait" }
+        spells:
+          type: array
+          maxItems: 40
+          items: { $ref: "#/components/schemas/SpeciesSpell" }
+        lineages:
+          type: array
+          maxItems: 20
+          items: { $ref: "#/components/schemas/SpeciesLineage" }
+    SpeciesMeasure:
+      type: object
+      description: A speed beside walking, or a special sense, and how far it reaches.
+      additionalProperties: false
+      required: [kind, feet]
+      properties:
+        kind: { type: string, maxLength: 40 }
+        feet: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+    SpeciesTrait:
+      type: object
+      description: A named trait every member of the species has.
+      additionalProperties: false
+      required: [name, text]
+      properties:
+        name: { type: string, maxLength: 200 }
+        text: { type: string, maxLength: 8000 }
+    SpeciesSpell:
+      type: object
+      description: An innate spell gained at a character level, cast at will or once per long rest.
+      additionalProperties: false
+      required: [level, spell, name, uses]
+      properties:
+        level: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        spell: { type: string, maxLength: 120 }
+        name: { type: string, maxLength: 200 }
+        uses: { type: string, maxLength: 40 }
+    SpeciesLineage:
+      type: object
+      description: One branch of the species, picked at creation, with its own trait and spells.
+      additionalProperties: false
+      required: [name, text, spells]
+      properties:
+        name: { type: string, maxLength: 200 }
+        text: { type: string, maxLength: 8000 }
+        spells:
+          type: array
+          maxItems: 40
+          items: { $ref: "#/components/schemas/SpeciesSpell" }
+    FeatPreviewInput:
+      type: object
+      description: A design to preview, with the feat's name.
+      additionalProperties: false
+      required: [name, design]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        design: { $ref: "#/components/schemas/FeatDesign" }
+    FeatBuild:
+      type: object
+      description: A homebrew feat in its builder, the slug it is known by, and how it reads back.
+      additionalProperties: false
+      required: [design, lines]
+      properties:
+        entry: { $ref: "#/components/schemas/LibraryEntry" }
+        design: { $ref: "#/components/schemas/FeatDesign" }
+        slug: { type: string, maxLength: 40 }
+        lines:
+          type: array
+          maxItems: 400
+          items: { type: string, maxLength: 2400 }
+    BackgroundPreviewInput:
+      type: object
+      description: A design to preview, with the background's name.
+      additionalProperties: false
+      required: [name, design]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        design: { $ref: "#/components/schemas/BackgroundDesign" }
+    BackgroundBuild:
+      type: object
+      description: A homebrew background in its builder, the slug it is known by, and how it reads back.
+      additionalProperties: false
+      required: [design, lines]
+      properties:
+        entry: { $ref: "#/components/schemas/LibraryEntry" }
+        design: { $ref: "#/components/schemas/BackgroundDesign" }
+        slug: { type: string, maxLength: 40 }
+        lines:
+          type: array
+          maxItems: 400
+          items: { type: string, maxLength: 2400 }
+    FeatDesign:
+      type: object
+      description: A homebrew feat as the feat builder makes it, with its category, text, prerequisites and whether it can be taken again.
+      additionalProperties: false
+      required: [category, text, prerequisites]
+      properties:
+        category: { type: string, maxLength: 40 }
+        text: { type: string, maxLength: 16000 }
+        repeatable: { type: boolean }
+        prerequisites:
+          type: array
+          maxItems: 40
+          items: { $ref: "#/components/schemas/FeatPrerequisite" }
+    FeatPrerequisite:
+      type: object
+      description: One thing a feat needs; prerequisites in one group are alternatives, and every group must hold.
+      additionalProperties: false
+      required: [kind, group]
+      properties:
+        kind: { type: string, maxLength: 40 }
+        ability: { type: string, maxLength: 40 }
+        minimum: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        feat: { type: string, maxLength: 120 }
+        group: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+    BackgroundDesign:
+      type: object
+      description: A homebrew background as the background builder makes it, shaped like the 2024 ones.
+      additionalProperties: false
+      required: [abilities, skills, feat, featName]
+      properties:
+        abilities:
+          type: array
+          maxItems: 10
+          items: { type: string, maxLength: 40 }
+        skills:
+          type: array
+          maxItems: 10
+          items: { type: string, maxLength: 40 }
+        feat: { type: string, maxLength: 120 }
+        featName: { type: string, maxLength: 200 }
+        tool: { type: string, maxLength: 400 }
+        equipment: { type: string, maxLength: 2000 }
+        gold: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        text: { type: string, maxLength: 8000 }
+    ConditionPreviewInput:
+      type: object
+      description: A design to preview, with the condition's name.
+      additionalProperties: false
+      required: [name, design]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        design: { $ref: "#/components/schemas/ConditionDesign" }
+    ConditionBuild:
+      type: object
+      description: A homebrew condition in its builder, the slug it is known by, and how it reads back.
+      additionalProperties: false
+      required: [design, lines]
+      properties:
+        entry: { $ref: "#/components/schemas/LibraryEntry" }
+        design: { $ref: "#/components/schemas/ConditionDesign" }
+        slug: { type: string, maxLength: 40 }
+        lines:
+          type: array
+          maxItems: 400
+          items: { type: string, maxLength: 2400 }
+    ConditionDesign:
+      type: object
+      description: A homebrew condition as the condition builder makes it, from its icon, how it ends, how it stacks and what it does.
+      additionalProperties: false
+      required: [icon, color, text, ends, perLevel, parts]
+      properties:
+        icon: { type: string, maxLength: 40 }
+        color: { type: string, maxLength: 20 }
+        text: { type: string, maxLength: 8000 }
+        ends: { type: string, maxLength: 40 }
+        ability: { type: string, maxLength: 40 }
+        stacks: { type: boolean }
+        maxLevel: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        perLevel:
+          type: object
+          additionalProperties: false
+          required: [d20, speedFt, deathAt]
+          properties:
+            d20: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+            speedFt: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+            deathAt: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        parts:
+          type: array
+          maxItems: 40
+          items:
+            type: object
+            additionalProperties: false
+            required: [type]
+            properties:
+              type: { type: string, maxLength: 40 }
+              ability: { type: string, maxLength: 40 }
+              feet: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+              text: { type: string, maxLength: 2000 }
+    MonsterPreviewInput:
+      type: object
+      description: A design to preview, with the creature's name.
+      additionalProperties: false
+      required: [name, design]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        design: { $ref: "#/components/schemas/MonsterDesign" }
+    MonsterBuild:
+      type: object
+      description: A homebrew creature in its builder, the slug it is placed by, its stat block and an estimated Challenge.
+      additionalProperties: false
+      required: [design, lines, estimate]
+      properties:
+        estimate: { type: string, maxLength: 10 }
+        entry: { $ref: "#/components/schemas/LibraryEntry" }
+        design: { $ref: "#/components/schemas/MonsterDesign" }
+        slug: { type: string, maxLength: 40 }
+        lines:
+          type: array
+          maxItems: 400
+          items: { type: string, maxLength: 2400 }
+    MonsterDesign:
+      type: object
+      description: A homebrew creature as the monster builder makes it.
+      additionalProperties: false
+      required: [size, creatureType, ac, hp, speedFt, challenge, abilities, saves, senses, resistances, immunities, vulnerabilities, threshold, traits, multiattack, actions, phases]
+      properties:
+        size: { type: string, maxLength: 40 }
+        creatureType: { type: string, maxLength: 40 }
+        ac: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        hp: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        speedFt: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        challenge: { type: number, format: double, minimum: -100, maximum: 100 }
+        abilities:
+          type: object
+          additionalProperties: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        saves:
+          type: array
+          maxItems: 20
+          items: { type: string, maxLength: 40 }
+        senses:
+          type: array
+          maxItems: 20
+          items: { $ref: "#/components/schemas/SpeciesMeasure" }
+        resistances:
+          type: array
+          maxItems: 20
+          items: { type: string, maxLength: 40 }
+        immunities:
+          type: array
+          maxItems: 20
+          items: { type: string, maxLength: 40 }
+        vulnerabilities:
+          type: array
+          maxItems: 20
+          items: { type: string, maxLength: 40 }
+        threshold: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        swarm: { type: boolean }
+        traits:
+          type: array
+          maxItems: 40
+          items: { $ref: "#/components/schemas/MonsterTrait" }
+        aura:
+          type: object
+          additionalProperties: false
+          required: [name, feet, text]
+          properties:
+            name: { type: string, maxLength: 200 }
+            feet: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+            text: { type: string, maxLength: 8000 }
+        multiattack: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        actions:
+          type: array
+          maxItems: 40
+          items: { $ref: "#/components/schemas/MonsterAction" }
+        legendary:
+          type: object
+          additionalProperties: false
+          required: [uses, resistance, actions]
+          properties:
+            uses: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+            resistance: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+            actions:
+              type: array
+              maxItems: 20
+              items:
+                type: object
+                additionalProperties: false
+                required: [name, cost, text]
+                properties:
+                  name: { type: string, maxLength: 200 }
+                  cost: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+                  text: { type: string, maxLength: 8000 }
+        lair:
+          type: object
+          additionalProperties: false
+          required: [actions, regional]
+          properties:
+            actions:
+              type: array
+              maxItems: 40
+              items: { $ref: "#/components/schemas/MonsterTrait" }
+            regional:
+              type: array
+              maxItems: 20
+              items: { type: string, maxLength: 8000 }
+        phases:
+          type: array
+          maxItems: 10
+          items:
+            type: object
+            additionalProperties: false
+            required: [name, hp, text]
+            properties:
+              name: { type: string, maxLength: 200 }
+              hp: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+              text: { type: string, maxLength: 8000 }
+    MonsterTrait:
+      type: object
+      description: A named rule of a creature's, or a lair action.
+      additionalProperties: false
+      required: [name, text]
+      properties:
+        name: { type: string, maxLength: 200 }
+        text: { type: string, maxLength: 8000 }
+    MonsterAction:
+      type: object
+      description: "Something a creature does with its action: a melee or ranged attack, a save it forces, or anything else as text."
+      additionalProperties: false
+      required: [name, kind]
+      properties:
+        name: { type: string, maxLength: 200 }
+        kind: { type: string, maxLength: 40 }
+        toHit: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        reachFt: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        rangeFt: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        longRangeFt: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        damage: { type: string, maxLength: 40 }
+        damageBonus: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        damageType: { type: string, maxLength: 40 }
+        saveAbility: { type: string, maxLength: 40 }
+        dc: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        recharge: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        text: { type: string, maxLength: 8000 }
+    SubclassDesign:
+      type: object
+      description: A homebrew subclass as the subclass builder makes it, from level-gated Features, the Resources they spend and the choices they ask for.
+      additionalProperties: false
+      required: [class, features, resources, choices]
+      properties:
+        class: { type: string, maxLength: 40 }
+        features:
+          type: array
+          maxItems: 100
+          items: { $ref: "#/components/schemas/SubclassFeature" }
+        resources:
+          type: array
+          maxItems: 100
+          items: { $ref: "#/components/schemas/SubclassResource" }
+        choices:
+          type: array
+          maxItems: 100
+          items: { $ref: "#/components/schemas/SubclassChoice" }
+    SubclassFeature:
+      type: object
+      description: A Feature gained at a class level; it may spend a use of a Resource, by key, and let its bearer cast a spell.
+      additionalProperties: false
+      required: [level, name, text]
+      properties:
+        level: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        name: { type: string, maxLength: 200 }
+        text: { type: string, maxLength: 4000 }
+        uses: { type: string, maxLength: 80 }
+        spell: { type: string, maxLength: 120 }
+        spellName: { type: string, maxLength: 200 }
+    SubclassResource:
+      type: object
+      description: "A pool of uses: a fixed number, some per class level, an ability modifier or the Proficiency Bonus, from a level on, coming back on a rest or at dawn."
+      additionalProperties: false
+      required: [key, name, basis, fromLevel, recharge]
+      properties:
+        key: { type: string, maxLength: 80 }
+        name: { type: string, maxLength: 200 }
+        basis: { type: string, maxLength: 40 }
+        amount: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        ability: { type: string, maxLength: 40 }
+        fromLevel: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        die: { type: string, maxLength: 20 }
+        recharge: { type: string, maxLength: 40 }
+    SubclassChoice:
+      type: object
+      description: A pick from listed options at a level.
+      additionalProperties: false
+      required: [level, name, count, options]
+      properties:
+        level: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        name: { type: string, maxLength: 200 }
+        count: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        options:
+          type: array
+          maxItems: 100
+          items: { type: string, maxLength: 200 }
+    SubclassPreviewInput:
+      type: object
+      description: A design to preview, with the subclass's name.
+      additionalProperties: false
+      required: [name, design]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        design: { $ref: "#/components/schemas/SubclassDesign" }
+    SubclassBuild:
+      type: object
+      description: A homebrew subclass in the subclass builder, the slug it is known by on a sheet, and how it reads back.
+      additionalProperties: false
+      required: [design, lines]
+      properties:
+        entry: { $ref: "#/components/schemas/LibraryEntry" }
+        design: { $ref: "#/components/schemas/SubclassDesign" }
+        slug: { type: string, maxLength: 40 }
+        lines:
+          type: array
+          maxItems: 200
+          items: { type: string, maxLength: 1200 }
+    ItemDesign:
+      type: object
+      description: A homebrew item as the item builder makes it, from its kind, base item, rarity, enchantment, attunement, charges and Item Properties.
+      additionalProperties: false
+      required: [kind, rarity, enchantment, weightLb, valueGp, properties]
+      properties:
+        kind: { type: string, maxLength: 40 }
+        base: { type: string, maxLength: 80 }
+        rarity: { type: string, enum: [common, uncommon, rare, very_rare, legendary] }
+        enchantment: { type: integer, format: int32, minimum: -100000, maximum: 100000000 }
+        weightLb: { type: number, format: double, minimum: -100000, maximum: 100000 }
+        valueGp: { type: integer, format: int32, minimum: -100000, maximum: 100000000 }
+        attunement:
+          type: object
+          additionalProperties: false
+          properties:
+            kind: { type: string, maxLength: 40 }
+            value: { type: string, maxLength: 200 }
+        weapon:
+          type: object
+          additionalProperties: false
+          required: [properties]
+          properties:
+            properties:
+              type: array
+              maxItems: 20
+              items: { type: string, maxLength: 40 }
+            mastery: { type: string, maxLength: 40 }
+            custom: { type: string, maxLength: 1000 }
+        charges:
+          type: object
+          additionalProperties: false
+          required: [max, "on"]
+          properties:
+            max: { type: integer, format: int32, minimum: -100000, maximum: 100000000 }
+            "on": { type: string, maxLength: 40 }
+            dice: { type: integer, format: int32, minimum: -100000, maximum: 100000000 }
+            faces: { type: integer, format: int32, minimum: -100000, maximum: 100000000 }
+            bonus: { type: integer, format: int32, minimum: -100000, maximum: 100000000 }
+        properties:
+          type: array
+          maxItems: 100
+          items: { $ref: "#/components/schemas/ItemProperty" }
+    ItemProperty:
+      type: object
+      description: One Item Property row; which fields count depends on its type. A hidden one shows once the item is identified or attuned.
+      additionalProperties: false
+      required: [type]
+      properties:
+        type: { type: string, maxLength: 40 }
+        hidden: { type: boolean }
+        skill: { type: string, maxLength: 40 }
+        mode: { type: string, maxLength: 40 }
+        target: { type: string, maxLength: 40 }
+        value: { type: integer, format: int32, minimum: -100000, maximum: 100000000 }
+        dice: { type: string, maxLength: 20 }
+        damage: { type: string, maxLength: 40 }
+        sense: { type: string, maxLength: 40 }
+        speed: { type: string, maxLength: 40 }
+        feet: { type: integer, format: int32, minimum: -100000, maximum: 100000000 }
+        spell: { type: string, maxLength: 80 }
+        name: { type: string, maxLength: 120 }
+        level: { type: integer, format: int32, minimum: -100000, maximum: 100000000 }
+        cost: { type: integer, format: int32, minimum: -100000, maximum: 100000000 }
+        brightFt: { type: integer, format: int32, minimum: -100000, maximum: 100000000 }
+        dimFt: { type: integer, format: int32, minimum: -100000, maximum: 100000000 }
+        uses: { type: string, maxLength: 40 }
+        hits: { type: integer, format: int32, minimum: -100000, maximum: 100000000 }
+        text: { type: string, maxLength: 2000 }
+        cannotDrop: { type: boolean }
+        atLevel: { type: integer, format: int32, minimum: -100000, maximum: 100000000 }
+        set: { type: string, maxLength: 80 }
+        pieces: { type: integer, format: int32, minimum: -100000, maximum: 100000000 }
+        capacityLb: { type: integer, format: int32, minimum: -100000, maximum: 100000000 }
+        weightless: { type: boolean }
+        onlyKind: { type: string, maxLength: 40 }
+        misfire: { type: integer, format: int32, minimum: -100000, maximum: 100000000 }
+        reload: { type: integer, format: int32, minimum: -100000, maximum: 100000000 }
+        burst: { type: integer, format: int32, minimum: -100000, maximum: 100000000 }
+    ItemPreviewInput:
+      type: object
+      description: A design to preview, with the item's name.
+      additionalProperties: false
+      required: [name, design]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        design: { $ref: "#/components/schemas/ItemDesign" }
+    ItemBuild:
+      type: object
+      description: A homebrew item in the item builder, the slug it is known by in play, its card as players read it once known, and its Price Check.
+      additionalProperties: false
+      required: [design, card, price]
+      properties:
+        entry: { $ref: "#/components/schemas/LibraryEntry" }
+        design: { $ref: "#/components/schemas/ItemDesign" }
+        slug: { type: string, maxLength: 40 }
+        card:
+          type: array
+          maxItems: 200
+          items: { type: string, maxLength: 1200 }
+        price:
+          type: object
+          description: Whether the rarity and value fit what the properties are worth.
+          additionalProperties: false
+          required: [points, suggested, priceGp, fits, notes]
+          properties:
+            points: { type: integer, format: int32, minimum: 0, maximum: 100000 }
+            suggested: { type: string, maxLength: 40 }
+            priceGp: { type: integer, format: int32, minimum: 0, maximum: 100000000 }
+            fits: { type: boolean }
+            notes:
+              type: array
+              maxItems: 10
+              items: { type: string, maxLength: 300 }
     LiveContainer:
       type: object
       description: A Character's Inventory, the Party Stash, a drop of loot, or a bag inside another container, with what it weighs including its bags. A Character's names its owner and how much they can carry.
@@ -10262,6 +11908,33 @@ components:
           description: The hexes an emanation covers around the token where it stands now; it moves with the token.
           maxItems: 2000
           items: { $ref: "#/components/schemas/HexCoord" }
+        icon: { type: string, maxLength: 40, description: "A homebrew condition's glyph." }
+        color: { type: string, maxLength: 20, description: "A homebrew condition's colour." }
+    LiveLegend:
+      type: object
+      description: "A legendary creature's actions and what it has left, for the DM only: legendary actions once another creature's turn ends (ready), the lair's once a round from initiative count 20 (lairReady), Legendary Resistance, and its mythic phases."
+      additionalProperties: false
+      required: [uses, left, ready, actions, lair, lairReady, resistLeft, phase, phases, threshold]
+      properties:
+        uses: { type: integer, format: int32, minimum: 0, maximum: 10 }
+        left: { type: integer, format: int32, minimum: 0, maximum: 10 }
+        ready: { type: boolean }
+        actions: { type: array, maxItems: 20, items: { $ref: "#/components/schemas/LiveLegendAction" } }
+        lair: { type: array, maxItems: 20, items: { $ref: "#/components/schemas/LiveLegendAction" } }
+        lairReady: { type: boolean }
+        resistLeft: { type: integer, format: int32, minimum: 0, maximum: 10 }
+        phase: { type: integer, format: int32, minimum: 0, maximum: 10 }
+        phases: { type: integer, format: int32, minimum: 0, maximum: 10 }
+        threshold: { type: integer, format: int32, minimum: 0, maximum: 100 }
+    LiveLegendAction:
+      type: object
+      description: A legendary or lair action.
+      additionalProperties: false
+      required: [name, cost, text]
+      properties:
+        name: { type: string, maxLength: 200 }
+        cost: { type: integer, format: int32, minimum: 0, maximum: 3 }
+        text: { type: string, maxLength: 8000 }
     LiveManual:
       type: object
       description: Part of an Effect the engine cannot compute, for the DM to resolve by hand.
@@ -10504,6 +12177,19 @@ components:
             properties:
               kind: { type: string, maxLength: 40 }
               name: { type: string, maxLength: 40 }
+        conditions:
+          type: array
+          description: The Campaign's homebrew conditions, for the DM's effect picker.
+          maxItems: 500
+          items:
+            type: object
+            additionalProperties: false
+            required: [slug, name, icon, color]
+            properties:
+              slug: { type: string, maxLength: 80 }
+              name: { type: string, maxLength: 80 }
+              icon: { type: string, maxLength: 40 }
+              color: { type: string, maxLength: 20 }
         objects:
           type: array
           description: The Map Objects the audience knows; the party never gets secret ones or ones outside what it has seen.

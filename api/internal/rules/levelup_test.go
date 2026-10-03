@@ -26,16 +26,20 @@ func TestMulticlassNeedsThirteenInEveryPrimaryAbility(t *testing.T) {
 	}{
 		{"fighter by strength into wizard", abilitySet(13, 8, 10, 13, 10, 10), []string{"fighter"}, "wizard", nil},
 		{"fighter by dexterity", abilitySet(8, 13, 10, 13, 10, 10), []string{"fighter"}, "wizard", nil},
-		{"fighter with neither", abilitySet(12, 12, 10, 13, 10, 10), []string{"fighter"}, "wizard", []string{"Strength 13+ or Dexterity 13+ (fighter)"}},
-		{"wizard too low", abilitySet(13, 8, 10, 12, 10, 10), []string{"fighter"}, "wizard", []string{"Intelligence 13+ (wizard)"}},
-		{"paladin needs both", abilitySet(13, 8, 10, 10, 10, 12), []string{"fighter"}, "paladin", []string{"Charisma 13+ (paladin)"}},
-		{"monk needs both", abilitySet(10, 13, 10, 10, 12, 10), []string{"rogue"}, "monk", []string{"Wisdom 13+ (monk)"}},
+		{"fighter with neither", abilitySet(12, 12, 10, 13, 10, 10), []string{"fighter"}, "wizard", []string{"Strength 13+ or Dexterity 13+ (Fighter)"}},
+		{"wizard too low", abilitySet(13, 8, 10, 12, 10, 10), []string{"fighter"}, "wizard", []string{"Intelligence 13+ (Wizard)"}},
+		{"paladin needs both", abilitySet(13, 8, 10, 10, 10, 12), []string{"fighter"}, "paladin", []string{"Charisma 13+ (Paladin)"}},
+		{"monk needs both", abilitySet(10, 13, 10, 10, 12, 10), []string{"rogue"}, "monk", []string{"Wisdom 13+ (Monk)"}},
 		{"every class counted once", abilitySet(10, 10, 10, 10, 10, 13), []string{"bard", "bard"}, "sorcerer", nil},
 		{"unknown class has no requirement", abilitySet(3, 3, 3, 3, 3, 3), []string{"homebrew"}, "other", nil},
 		{"same class needs nothing", abilitySet(3, 3, 3, 3, 3, 3), []string{"wizard"}, "wizard", nil},
 	}
 	for _, c := range cases {
-		if got := rules.MulticlassUnmet(c.s, c.classes, c.target); !reflect.DeepEqual(got, c.unmet) {
+		have := make([]rules.Class, 0, len(c.classes))
+		for _, x := range c.classes {
+			have = append(have, rules.SRD(x))
+		}
+		if got := rules.MulticlassUnmet(c.s, have, rules.SRD(c.target)); !reflect.DeepEqual(got, c.unmet) {
 			t.Errorf("%s: %v, want %v", c.name, got, c.unmet)
 		}
 	}
@@ -96,8 +100,8 @@ func TestSpellcastingTables(t *testing.T) {
 	t.Parallel()
 	cantrips := map[string][3]int{"bard": {2, 3, 4}, "cleric": {3, 4, 5}, "druid": {2, 3, 4}, "sorcerer": {4, 5, 6}, "warlock": {2, 3, 4}, "wizard": {3, 4, 5}, "paladin": {}, "fighter": {}}
 	for class, want := range cantrips {
-		got := [3]int{rules.CantripsKnown(class, 3), rules.CantripsKnown(class, 4), rules.CantripsKnown(class, 10)}
-		if got != want || rules.CantripsKnown(class, 9) != want[1] || rules.CantripsKnown(class, 20) != want[2] {
+		got := [3]int{rules.SRD(class).CantripsAt(3), rules.SRD(class).CantripsAt(4), rules.SRD(class).CantripsAt(10)}
+		if got != want || rules.SRD(class).CantripsAt(9) != want[1] || rules.SRD(class).CantripsAt(20) != want[2] {
 			t.Errorf("%s cantrips = %v, want %v", class, got, want)
 		}
 	}
@@ -106,8 +110,8 @@ func TestSpellcastingTables(t *testing.T) {
 		"wizard": {4, 5, 16, 25}, "warlock": {2, 3, 11, 15}, "paladin": {2, 3, 10, 15}, "ranger": {2, 3, 10, 15}, "rogue": {},
 	}
 	for class, want := range prepared {
-		got := [4]int{rules.PreparedSpells(class, 1), rules.PreparedSpells(class, 2), rules.PreparedSpells(class, 12), rules.PreparedSpells(class, 20)}
-		if got != want || rules.PreparedSpells(class, 0) != want[0] || rules.PreparedSpells(class, 25) != want[3] {
+		got := [4]int{rules.SRD(class).PreparedAt(1), rules.SRD(class).PreparedAt(2), rules.SRD(class).PreparedAt(12), rules.SRD(class).PreparedAt(20)}
+		if got != want || rules.SRD(class).PreparedAt(0) != want[0] || rules.SRD(class).PreparedAt(25) != want[3] {
 			t.Errorf("%s prepared = %v, want %v", class, got, want)
 		}
 	}
@@ -117,7 +121,7 @@ func TestSpellcastingTables(t *testing.T) {
 	for class, want := range levels {
 		var got [6]int
 		for i, lvl := range []int{1, 2, 3, 5, 9, 20} {
-			got[i] = rules.MaxSpellLevel(class, lvl)
+			got[i] = rules.SRD(class).MaxSpellLevel(lvl)
 		}
 		if got != want {
 			t.Errorf("%s max spell level = %v, want %v", class, got, want)
@@ -127,12 +131,12 @@ func TestSpellcastingTables(t *testing.T) {
 
 func TestMulticlassResources(t *testing.T) {
 	t.Parallel()
-	single := rules.MulticlassResources([]rules.ClassLevel{{Class: "wizard", Level: 3, HitDie: 6}})
-	if !reflect.DeepEqual(single, rules.ResourcesAt("wizard", 6, 3)) {
+	single := rules.MulticlassResources([]rules.ClassLevel{{Class: rules.SRD("wizard"), Level: 3, HitDie: 6}})
+	if !reflect.DeepEqual(single, rules.ResourcesAt(rules.SRD("wizard"), 6, 3)) {
 		t.Fatalf("single class = %v", single)
 	}
 	mixed := rules.MulticlassResources([]rules.ClassLevel{
-		{Class: "fighter", Level: 2, HitDie: 10}, {Class: "wizard", Level: 3, HitDie: 6}, {Class: "paladin", Level: 3, HitDie: 10},
+		{Class: rules.SRD("fighter"), Level: 2, HitDie: 10}, {Class: rules.SRD("wizard"), Level: 3, HitDie: 6}, {Class: rules.SRD("paladin"), Level: 3, HitDie: 10},
 	})
 	want := []rules.Resource{
 		{Key: "hit-dice", Label: "Hit Dice (5d10, 3d6)", Current: 8, Max: 8},
@@ -143,7 +147,7 @@ func TestMulticlassResources(t *testing.T) {
 	if !reflect.DeepEqual(mixed, want) {
 		t.Fatalf("mixed = %v", mixed)
 	}
-	pact := rules.MulticlassResources([]rules.ClassLevel{{Class: "warlock", Level: 3, HitDie: 8}, {Class: "sorcerer", Level: 1, HitDie: 6}})
+	pact := rules.MulticlassResources([]rules.ClassLevel{{Class: rules.SRD("warlock"), Level: 3, HitDie: 8}, {Class: rules.SRD("sorcerer"), Level: 1, HitDie: 6}})
 	labels := []string{}
 	for _, r := range pact {
 		labels = append(labels, r.Key+"="+strings.Repeat("|", r.Max))
@@ -151,11 +155,11 @@ func TestMulticlassResources(t *testing.T) {
 	if strings.Join(labels, " ") != "hit-dice=|||| spell-slots-1=|| pact-slots-2=||" {
 		t.Fatalf("pact = %v", labels)
 	}
-	pactOnly := rules.MulticlassResources([]rules.ClassLevel{{Class: "warlock", Level: 2, HitDie: 8}, {Class: "fighter", Level: 1, HitDie: 10}})
+	pactOnly := rules.MulticlassResources([]rules.ClassLevel{{Class: rules.SRD("warlock"), Level: 2, HitDie: 8}, {Class: rules.SRD("fighter"), Level: 1, HitDie: 10}})
 	if len(pactOnly) != 2 || pactOnly[1].Key != "spell-slots-1" || pactOnly[1].Label != "Level 1 spell slots" || pactOnly[1].Max != 2 {
 		t.Fatalf("pact magic alone = %v", pactOnly)
 	}
-	martial := rules.MulticlassResources([]rules.ClassLevel{{Class: "fighter", Level: 1, HitDie: 10}, {Class: "rogue", Level: 1, HitDie: 8}})
+	martial := rules.MulticlassResources([]rules.ClassLevel{{Class: rules.SRD("fighter"), Level: 1, HitDie: 10}, {Class: rules.SRD("rogue"), Level: 1, HitDie: 8}})
 	if len(martial) != 1 || martial[0].Label != "Hit Dice (1d10, 1d8)" {
 		t.Fatalf("martial = %v", martial)
 	}

@@ -30,22 +30,23 @@ type CampaignAccountCharacter struct {
 }
 
 type CampaignCampaign struct {
-	ID               uuid.UUID
-	Name             string
-	RulesetPref      string
-	CreatedBy        string
-	CreatedAt        time.Time
-	UpdatedAt        time.Time
-	ReactionTimeoutS int32
-	HighGround       bool
-	GameDay          int32
-	RestSupplies     bool
-	InitiativeMode   string
-	ShareInitiative  bool
-	CreationMethods  []string
-	StartingLevel    int32
-	HoldLevelUps     bool
-	GameMinute       int32
+	ID                uuid.UUID
+	Name              string
+	RulesetPref       string
+	CreatedBy         string
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+	ReactionTimeoutS  int32
+	HighGround        bool
+	GameDay           int32
+	RestSupplies      bool
+	InitiativeMode    string
+	ShareInitiative   bool
+	CreationMethods   []string
+	StartingLevel     int32
+	HoldLevelUps      bool
+	GameMinute        int32
+	ExhaustionVariant string
 }
 
 type CampaignCharacter struct {
@@ -1167,6 +1168,7 @@ type LibraryEntry struct {
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 	Shared       bool
+	Design       []byte
 }
 
 type LibraryEntryRevision struct {
@@ -1176,6 +1178,7 @@ type LibraryEntryRevision struct {
 	Fields        []byte
 	AuthorSubject string
 	CreatedAt     time.Time
+	Design        []byte
 }
 
 type LibraryProposal struct {
@@ -1221,6 +1224,7 @@ type LibrarySharedSubmission struct {
 	SharedEntryID    pgtype.UUID
 	CreatedAt        time.Time
 	DecidedAt        pgtype.Timestamptz
+	Design           []byte
 }
 
 type OpsCompendiumImport struct {
@@ -1624,6 +1628,8 @@ type PlayToken struct {
 	SummonEffectID     pgtype.UUID
 	Disguise           pgtype.Text
 	Strength           int32
+	CreatureType       string
+	Legend             []byte
 }
 
 type PlayTokenAttack struct {

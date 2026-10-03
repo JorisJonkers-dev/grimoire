@@ -201,6 +201,10 @@ type GetAutomationCoverageRes interface {
 	getAutomationCoverageRes()
 }
 
+type GetBackgroundBuildRes interface {
+	getBackgroundBuildRes()
+}
+
 type GetBuilderOptionsRes interface {
 	getBuilderOptionsRes()
 }
@@ -217,8 +221,20 @@ type GetCharacterRes interface {
 	getCharacterRes()
 }
 
+type GetClassBuildRes interface {
+	getClassBuildRes()
+}
+
+type GetConditionBuildRes interface {
+	getConditionBuildRes()
+}
+
 type GetEntryRes interface {
 	getEntryRes()
+}
+
+type GetFeatBuildRes interface {
+	getFeatBuildRes()
 }
 
 type GetHealthRes interface {
@@ -227,6 +243,10 @@ type GetHealthRes interface {
 
 type GetInventoryRes interface {
 	getInventoryRes()
+}
+
+type GetItemBuildRes interface {
+	getItemBuildRes()
 }
 
 type GetLibraryEntryRes interface {
@@ -243,6 +263,10 @@ type GetMapRes interface {
 
 type GetMeRes interface {
 	getMeRes()
+}
+
+type GetMonsterBuildRes interface {
+	getMonsterBuildRes()
 }
 
 type GetMyCharacterRes interface {
@@ -293,6 +317,14 @@ type GetSignInMethodsRes interface {
 	getSignInMethodsRes()
 }
 
+type GetSpeciesBuildRes interface {
+	getSpeciesBuildRes()
+}
+
+type GetSpellBuildRes interface {
+	getSpellBuildRes()
+}
+
 type GetSpellRes interface {
 	getSpellRes()
 }
@@ -303,6 +335,10 @@ type GetSpellcastingRes interface {
 
 type GetStatusRes interface {
 	getStatusRes()
+}
+
+type GetSubclassBuildRes interface {
+	getSubclassBuildRes()
 }
 
 type GetTokenIconRes interface {
@@ -545,12 +581,36 @@ type PreviewAccountInviteRes interface {
 	previewAccountInviteRes()
 }
 
+type PreviewBackgroundRes interface {
+	previewBackgroundRes()
+}
+
 type PreviewCharacterRes interface {
 	previewCharacterRes()
 }
 
+type PreviewClassRes interface {
+	previewClassRes()
+}
+
+type PreviewConditionRes interface {
+	previewConditionRes()
+}
+
+type PreviewFeatRes interface {
+	previewFeatRes()
+}
+
 type PreviewInviteRes interface {
 	previewInviteRes()
+}
+
+type PreviewItemRes interface {
+	previewItemRes()
+}
+
+type PreviewMonsterRes interface {
+	previewMonsterRes()
 }
 
 type PreviewReachRes interface {
@@ -559,6 +619,18 @@ type PreviewReachRes interface {
 
 type PreviewSightRes interface {
 	previewSightRes()
+}
+
+type PreviewSpeciesRes interface {
+	previewSpeciesRes()
+}
+
+type PreviewSpellRes interface {
+	previewSpellRes()
+}
+
+type PreviewSubclassRes interface {
+	previewSubclassRes()
 }
 
 type PublishReleaseNoteRes interface {
@@ -653,8 +725,44 @@ type RollRestRes interface {
 	rollRestRes()
 }
 
+type SaveBackgroundBuildRes interface {
+	saveBackgroundBuildRes()
+}
+
 type SaveCharacterDraftRes interface {
 	saveCharacterDraftRes()
+}
+
+type SaveClassBuildRes interface {
+	saveClassBuildRes()
+}
+
+type SaveConditionBuildRes interface {
+	saveConditionBuildRes()
+}
+
+type SaveFeatBuildRes interface {
+	saveFeatBuildRes()
+}
+
+type SaveItemBuildRes interface {
+	saveItemBuildRes()
+}
+
+type SaveMonsterBuildRes interface {
+	saveMonsterBuildRes()
+}
+
+type SaveSpeciesBuildRes interface {
+	saveSpeciesBuildRes()
+}
+
+type SaveSpellBuildRes interface {
+	saveSpellBuildRes()
+}
+
+type SaveSubclassBuildRes interface {
+	saveSubclassBuildRes()
 }
 
 type SeeReleaseNoteRes interface {

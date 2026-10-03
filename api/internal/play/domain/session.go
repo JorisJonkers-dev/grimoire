@@ -93,7 +93,9 @@ type Stats struct {
 	// jumping and throwing use, 10 when the statblock gives none.
 	Senses   map[string]int
 	Strength int
-	Attacks  []Attack
+	// CreatureType is what kind of creature it is (undead, fey, humanoid), empty when unknown.
+	CreatureType string
+	Attacks      []Attack
 	// Intelligence drives Tactics; 0 when the statblock has none.
 	Intelligence int
 	// Shield is set for statblocks that can cast the Shield spell.
@@ -111,6 +113,8 @@ type Stats struct {
 	// attacks one Attack action holds (Extra Attack).
 	UnarmedDC        int
 	AttacksPerAction int
+	// Legend is set for a legendary creature, a lair's master, a mythic one or one with a damage threshold.
+	Legend *Legend
 }
 
 // Attack is one attack on a token's hotbar. Damage is dice notation, empty for flat damage.

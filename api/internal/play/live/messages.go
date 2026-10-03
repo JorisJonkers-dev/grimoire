@@ -235,7 +235,9 @@ type Command struct {
 	InstanceID string      `json:"instanceId,omitempty"`
 	// Action is the 2024 action take_action takes, with Detail for what Help, Magic or Utilize does;
 	// Trigger sets off a readied attack; Option is a Grapple or Shove.
-	Action  string `json:"action,omitempty"`
+	Action string `json:"action,omitempty"`
+	// Legend names the legendary or lair action to take.
+	Legend  string `json:"legend,omitempty"`
 	Detail  string `json:"detail,omitempty"`
 	Trigger string `json:"trigger,omitempty"`
 	Option  string `json:"option,omitempty"`
@@ -306,6 +308,8 @@ type TokenView struct {
 	// Dying is a Character's death saves at 0 hit points.
 	Reactions []ReactionSettingView `json:"reactions,omitempty"`
 	Dying     *DyingView            `json:"dying,omitempty"`
+	// Legend is what a legendary creature has left, for the DM only.
+	Legend *LegendView `json:"legend,omitempty"`
 }
 
 // SurfaceKindView is one Surface the DM can paint.
@@ -333,6 +337,40 @@ type EffectView struct {
 	Level int    `json:"level,omitempty"`
 	Mode  string `json:"mode,omitempty"`
 	Hexes []Hex  `json:"hexes,omitempty"`
+	// Icon and Color are how a homebrew condition shows.
+	Icon  string `json:"icon,omitempty"`
+	Color string `json:"color,omitempty"`
+}
+
+// LegendView is a legendary creature's actions and what it has left: legendary actions once another
+// creature's turn ends (Ready), the lair's once a round on initiative count 20 (LairReady), Legendary
+// Resistance, and its mythic phases.
+type LegendView struct {
+	Uses       int                `json:"uses"`
+	Left       int                `json:"left"`
+	Ready      bool               `json:"ready"`
+	Actions    []LegendActionView `json:"actions"`
+	Lair       []LegendActionView `json:"lair"`
+	LairReady  bool               `json:"lairReady"`
+	ResistLeft int                `json:"resistLeft"`
+	Phase      int                `json:"phase"`
+	Phases     int                `json:"phases"`
+	Threshold  int                `json:"threshold"`
+}
+
+// LegendActionView is a legendary or lair action.
+type LegendActionView struct {
+	Name string `json:"name"`
+	Cost int    `json:"cost"`
+	Text string `json:"text"`
+}
+
+// ConditionKindView is one of the Campaign's homebrew conditions, for the DM's effect picker.
+type ConditionKindView struct {
+	Slug  string `json:"slug"`
+	Name  string `json:"name"`
+	Icon  string `json:"icon"`
+	Color string `json:"color"`
 }
 
 // ManualView is part of an Effect the DM resolves by hand.
@@ -439,12 +477,14 @@ type View struct {
 	Exploration *ExplorationView `json:"exploration,omitempty"`
 	// SurfaceKinds is the Surface catalogue, for the DM's paint tool.
 	SurfaceKinds []SurfaceKindView `json:"surfaceKinds,omitempty"`
-	Perception   []PerceptionView  `json:"perception,omitempty"`
-	Checks       []CheckView       `json:"checks,omitempty"`
-	Inventory    []ContainerView   `json:"inventory,omitempty"`
-	Shop         *ShopView         `json:"shop,omitempty"`
-	Rest         *RestView         `json:"rest,omitempty"`
-	GameDay      int               `json:"gameDay"`
+	// Conditions are the Campaign's homebrew conditions, for the DM's effect picker.
+	Conditions []ConditionKindView `json:"conditions,omitempty"`
+	Perception []PerceptionView    `json:"perception,omitempty"`
+	Checks     []CheckView         `json:"checks,omitempty"`
+	Inventory  []ContainerView     `json:"inventory,omitempty"`
+	Shop       *ShopView           `json:"shop,omitempty"`
+	Rest       *RestView           `json:"rest,omitempty"`
+	GameDay    int                 `json:"gameDay"`
 }
 
 // RestView is the rest the party proposed or is taking: who agreed, who the rest still waits on, and

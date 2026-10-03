@@ -14,10 +14,12 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
 	prep "github.com/JorisJonkers-dev/grimoire/api/internal/prep/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/combat"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/conditionbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/dice"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/effects"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/features"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/spellbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/surface"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
@@ -25,6 +27,8 @@ import (
 // Write is one change the runtime commits: the action kind plus what it touches. AutoReveal lists the
 // hexes the party sees for the first time because of it; they are remembered from then on.
 type Write struct {
+	// Legends are legendary creatures' Legends as the change leaves them.
+	Legends    []LegendChange
 	Kind       string
 	Token      domain.Token
 	Hexes      []hex.Coord
@@ -171,6 +175,7 @@ type Write struct {
 type loaded struct {
 	catalog  effects.Catalog
 	surfaces surface.Catalog
+	looks    map[string]look
 	rest     *domain.Rest
 	pending  []domain.PendingAction
 	dying    map[domain.TokenID]domain.Dying
@@ -189,6 +194,12 @@ func (h *Hub) loadRules(ctx context.Context, s domain.Session) (loaded, error) {
 	if out.surfaces, err = h.Store.Surfaces(ctx); err != nil {
 		return out, err
 	}
+	brew, err := h.Store.Homebrew(ctx, s.CampaignID)
+	if err != nil {
+		return out, err
+	}
+	out.catalog, out.surfaces = withHomebrew(out.catalog, out.surfaces, brew)
+	out.looks = looksOf(brew.Conditions)
 	if out.rest, err = h.Store.LoadRest(ctx, s.CampaignID, s.ID); err != nil {
 		return out, err
 	}
@@ -205,8 +216,57 @@ func (h *Hub) loadRules(ctx context.Context, s domain.Session) (loaded, error) {
 	return out, err
 }
 
+// Brew is what a Campaign adds to the rules: its homebrew spells and conditions, and the exhaustion it
+// plays with.
+type Brew struct {
+	Spells     []spellbuild.Built
+	Conditions []conditionbuild.Condition
+	Exhaustion effects.Exhausting
+}
+
+// withHomebrew adds a Campaign's homebrew spells, the Surfaces their start-of-turn damage lies on, and
+// its homebrew conditions to copies of the shared catalogues, and makes exhaustion its variant.
+func withHomebrew(cat effects.Catalog, ground surface.Catalog, brew Brew) (effects.Catalog, surface.Catalog) {
+	cat, ground = maps.Clone(cat), maps.Clone(ground)
+	for _, b := range brew.Spells {
+		cat[b.Definition.Slug] = b.Definition
+		if g := b.Surface; g != nil {
+			ground[surface.Kind(g.Slug)] = surface.Definition{Kind: surface.Kind(g.Slug), Name: g.Name, Cost: 1, HazardDice: g.Dice, HazardType: g.Type}
+		}
+	}
+	for _, c := range brew.Conditions {
+		cat[c.Definition.Slug] = c.Definition
+	}
+	if ex, ok := cat["exhaustion"]; ok {
+		parts := slices.Clone(ex.Components)
+		for i, c := range parts {
+			if _, stacks := c.(effects.Exhausting); stacks {
+				parts[i] = brew.Exhaustion
+			}
+		}
+		ex.Components = parts
+		cat["exhaustion"] = ex
+	}
+	return cat, ground
+}
+
+// look is how a homebrew condition shows on a token.
+type look struct {
+	name, icon, color string
+}
+
+func looksOf(conditions []conditionbuild.Condition) map[string]look {
+	out := make(map[string]look, len(conditions))
+	for _, c := range conditions {
+		out[c.Definition.Slug] = look{name: c.Definition.Name, icon: c.Icon, color: c.Color}
+	}
+	return out
+}
+
 // Store is the runtime's persistence port.
 type Store interface {
+	// Homebrew builds the homebrew spells and conditions a Campaign sees, and its exhaustion.
+	Homebrew(ctx context.Context, campaign uuid.UUID) (Brew, error)
 	Load(ctx context.Context, id domain.SessionID) (domain.Session, []domain.Token, *domain.MapState, error)
 	LoadMap(ctx context.Context, campaign uuid.UUID, id domain.MapID) (*domain.MapState, error)
 	LoadCombat(ctx context.Context, id domain.SessionID) (*domain.Combat, error)
@@ -433,7 +493,7 @@ func (h *Hub) start(ctx context.Context, id domain.SessionID) (*runtime, error) 
 		return nil, err
 	}
 	st := &state{
-		session: s, tokens: map[domain.TokenID]domain.Token{}, combat: fight, observed: seen, now: h.Now, fx: fx, catalog: kept.catalog, terrainKinds: kept.surfaces, sneak: kept.sneak, explore: kept.explore, rest: kept.rest, pending: kept.pending, dying: kept.dying, surfaces: ground, cast: cast, table: table,
+		session: s, tokens: map[domain.TokenID]domain.Token{}, combat: fight, observed: seen, now: h.Now, fx: fx, catalog: kept.catalog, looks: kept.looks, terrainKinds: kept.surfaces, sneak: kept.sneak, explore: kept.explore, rest: kept.rest, pending: kept.pending, dying: kept.dying, surfaces: ground, cast: cast, table: table,
 		tableMap: tableMap, zones: zones, checks: checks, inventory: trade.inventory, shop: trade.shop, day: trade.day,
 	}
 	for _, t := range tokens {
@@ -734,6 +794,9 @@ func apply(s *state, w *Write) {
 		round = s.combat.Round
 	}
 	change(s, w)
+	for _, c := range w.Legends {
+		s.setLegend(c)
+	}
 	if w.Day != nil {
 		s.day = *w.Day
 	}
@@ -749,6 +812,7 @@ func apply(s *state, w *Write) {
 	for id := range s.acting() {
 		started[id] = !before[id]
 	}
+	s.legends(w, started)
 	changed = s.tick(started) || changed
 	changed = s.hazards(started, w) || changed
 	settleTerrain(s, w, round)
@@ -859,6 +923,8 @@ func change(s *state, w *Write) {
 		return
 	case domain.ActionEffectApplied, domain.ActionEffectEnded, domain.ActionSavePassed, domain.ActionSaveFailed, domain.ActionManualResolved:
 		return
+	case domain.ActionLegendaryAction, domain.ActionLairAction, domain.ActionLegendaryResistance:
+		return // the Legend changes with every write, after this
 	case domain.ActionAreaCast, domain.ActionAreaResolved, domain.ActionSurfacesSet, domain.ActionElevationSet:
 		applyTerrain(s, w)
 		return

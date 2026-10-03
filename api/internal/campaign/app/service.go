@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
+	"slices"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -13,6 +14,11 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/campaign/domain"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/classbuild"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/conditionbuild"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/featbuild"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/speciesbuild"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/subclassbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
 
@@ -24,6 +30,15 @@ type Repository interface {
 	GetCampaign(ctx context.Context, id domain.CampaignID) (domain.Campaign, error)
 	ListCampaigns(ctx context.Context, subject string, after *domain.ListCursor, pageSize int) ([]domain.Summary, error)
 	LockCampaign(ctx context.Context, id domain.CampaignID) error
+	// HomebrewSubclasses are the subclasses a Campaign's Library links and Collections add.
+	HomebrewSubclasses(ctx context.Context, id domain.CampaignID) ([]subclassbuild.Subclass, error)
+	// HomebrewClasses are the classes a Campaign's Library links and Collections add.
+	HomebrewClasses(ctx context.Context, id domain.CampaignID) ([]classbuild.Class, error)
+	// HomebrewSpecies are the species, one for each lineage, a Campaign's Library adds.
+	HomebrewSpecies(ctx context.Context, id domain.CampaignID) ([]speciesbuild.Option, error)
+	// HomebrewFeats and HomebrewBackgrounds are the feats and backgrounds a Campaign's Library adds.
+	HomebrewFeats(ctx context.Context, id domain.CampaignID) ([]featbuild.BuiltFeat, error)
+	HomebrewBackgrounds(ctx context.Context, id domain.CampaignID) ([]featbuild.BuiltBackground, error)
 	AddMember(ctx context.Context, m domain.Member) (domain.Member, error)
 	Membership(ctx context.Context, id domain.CampaignID, subject string) (domain.Member, error)
 	Member(ctx context.Context, id domain.CampaignID, member domain.MemberID) (domain.Member, error)
@@ -211,6 +226,8 @@ type UpdateInput struct {
 	StartingLevel   *int
 	// HoldLevelUps stops long rests unlocking the next level.
 	HoldLevelUps *bool
+	// ExhaustionVariant picks the Campaign's exhaustion: srd-2024, gentle, grim or off.
+	ExhaustionVariant *string
 }
 
 // Update changes a Campaign's settings. DM only.
@@ -237,9 +254,13 @@ func (s *Service) Update(ctx context.Context, c caller.Caller, id domain.Campaig
 	if err := creationRules(in); err != nil {
 		return domain.Campaign{}, err
 	}
+	if v := in.ExhaustionVariant; v != nil && !slices.Contains(conditionbuild.Variants(), *v) {
+		return domain.Campaign{}, refuse("exhaustion is srd-2024, gentle, grim or off")
+	}
 	change := domain.SettingsChange{
 		Name: in.Name, Ruleset: in.Ruleset, ReactionTimeoutS: in.ReactionTimeoutS, HighGround: in.HighGround, RestSupplies: in.RestSupplies,
 		InitiativeMode: in.InitiativeMode, ShareInitiative: in.ShareInitiative, CreationMethods: in.CreationMethods, StartingLevel: in.StartingLevel, HoldLevelUps: in.HoldLevelUps,
+		ExhaustionVariant: in.ExhaustionVariant,
 	}
 	return s.Repo.UpdateCampaign(ctx, id, change, s.Now())
 }

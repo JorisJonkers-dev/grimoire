@@ -30,9 +30,17 @@ type HPChange struct {
 	Temp *int
 }
 
+// Lost is how many hit points damage took; a mythic creature that rose into its next phase lost all it had.
+func (h HPChange) Lost() int {
+	return min(max(h.Raw, 0), h.Before)
+}
+
 // damage takes an amount off a token's temporary hit points first, then its hit points.
 func damage(t domain.Token, amount int, critical bool) HPChange {
 	amount = max(amount, 0)
+	if l := t.Stats.Legend; l != nil && amount < l.Threshold {
+		amount = 0
+	}
 	soaked := min(t.Stats.TempHP, amount)
 	h := HPChange{Token: t.ID, Before: t.Stats.HP, After: max(t.Stats.HP-amount+soaked, 0), Raw: amount - soaked, Critical: critical}
 	if soaked > 0 {
@@ -288,8 +296,8 @@ func (r *runtime) attackRolled(roll domain.Roll) {
 	if p.Stage == domain.StageDamage {
 		w := r.hurt(t, roll.Total, Write{Token: a, attack: &p})
 		r.commit(request{}, w, roll.Roller, sys)
-		r.masteryAfterHit(a, t, p, w.HP.Before-w.HP.After, roll.Roller, sys)
-		r.reactToDamage(t, a, w.HP.Before-w.HP.After, roll.Roller, sys)
+		r.masteryAfterHit(a, t, p, w.HP.Lost(), roll.Roller, sys)
+		r.reactToDamage(t, a, w.HP.Lost(), roll.Roller, sys)
 		return
 	}
 	result := attack.Outcome(natural(roll), roll.Total-natural(roll), r.st.armor(t)+p.CoverBonus)
@@ -309,8 +317,8 @@ func (r *runtime) attackRolled(roll domain.Roll) {
 	w := r.hit(a, t, p, result == attack.Critical, roll)
 	r.commit(request{}, w, roll.Roller, sys)
 	if w.Kind == domain.ActionDamageDealt {
-		r.masteryAfterHit(a, t, p, w.HP.Before-w.HP.After, roll.Roller, sys)
-		r.reactToDamage(t, a, w.HP.Before-w.HP.After, roll.Roller, sys)
+		r.masteryAfterHit(a, t, p, w.HP.Lost(), roll.Roller, sys)
+		r.reactToDamage(t, a, w.HP.Lost(), roll.Roller, sys)
 	}
 }
 
@@ -345,12 +353,12 @@ func (r *runtime) hit(a, t domain.Token, p domain.PendingAttack, critical bool, 
 // hurt takes damage off a target's hit points and ends the attack. Creatures that see a ranged attacker
 // deal damage remember it.
 func (r *runtime) hurt(t domain.Token, amount int, w Write) Write {
-	before := t.Stats.HP
 	ranged, critical := w.attack.Ranged, w.attack.Critical
 	w.Kind, w.attack = domain.ActionDamageDealt, nil
 	h := damage(t, amount, critical)
+	rise(&w, &h, t)
 	w.HP = &h
-	if ranged && w.HP.After < before {
+	if ranged && h.Lost() > 0 {
 		w.Observers = r.st.witnesses(w.Token)
 	}
 	return w

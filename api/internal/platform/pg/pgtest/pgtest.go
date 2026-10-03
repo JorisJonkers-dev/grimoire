@@ -1,4 +1,5 @@
-// Package pgtest gives tests a freshly migrated Postgres database each, from one shared container.
+// Package pgtest gives tests a freshly migrated Postgres database each, from one shared container, or
+// from the server GRIMOIRE_TEST_POSTGRES_URL names when Docker is not at hand.
 package pgtest
 
 import (
@@ -7,6 +8,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net/url"
+	"os"
 	"sync"
 	"testing"
 	"time"
@@ -19,9 +21,8 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg"
 )
 
-const template = "grimoire_template"
-
 var (
+	template = "grimoire_template"
 	once     sync.Once
 	adminURL string
 	errStart error
@@ -59,6 +60,15 @@ func EmptyURL(t testing.TB) string {
 
 func start() {
 	ctx := context.Background()
+	if external := os.Getenv("GRIMOIRE_TEST_POSTGRES_URL"); external != "" {
+		// Test binaries share the server, so each migrates a template of its own.
+		adminURL, template = external, template+"_"+randomSuffix()
+		if errStart = execErr(ctx, adminURL, "CREATE DATABASE "+template); errStart != nil {
+			return
+		}
+		errStart = pg.Migrate(ctx, withDatabase(adminURL, template))
+		return
+	}
 	c, err := postgres.Run(ctx, "postgres:16-alpine",
 		postgres.WithDatabase("postgres"),
 		postgres.WithUsername("grimoire"),

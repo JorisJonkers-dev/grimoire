@@ -16,6 +16,7 @@ import { cellsFor, key, layoutOf } from './geometry'
 import AreaPreviewCard from './AreaPreviewCard.vue'
 import AttackPreview from './AttackPreview.vue'
 import EffectsPanel from './EffectsPanel.vue'
+import LegendPanel from './LegendPanel.vue'
 import VisibilityPanel from './VisibilityPanel.vue'
 import ObjectsPanel from './ObjectsPanel.vue'
 import ActionLog from './ActionLog.vue'
@@ -602,11 +603,13 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
           <label class="check"><input v-model="hidden" type="checkbox" data-testid="token-hidden" /><span>Hidden</span></label>
           <label class="check"><input v-model="knowsShield" type="checkbox" data-testid="token-shield" /><span>Knows Shield</span></label>
         </div>
+        <LegendPanel v-if="chosen?.legend && isDM" :key="`legend-${chosen.id}`" :token="chosen" :legend="chosen.legend" @send="(c) => live?.send(c)" />
         <EffectsPanel
           v-if="chosen"
           :key="chosen.id"
           :token="chosen"
           :tokens="view?.tokens ?? []"
+          :conditions="view?.conditions ?? []"
           @apply="(e) => live?.send({ kind: 'apply_effect', targetId: chosen!.id, ...e })"
           @end="(id) => live?.send({ kind: 'end_effect', effectId: id })"
         />

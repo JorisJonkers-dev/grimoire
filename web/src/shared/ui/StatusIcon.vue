@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-const props = withDefaults(defineProps<{ slug: string; label: string; size?: number }>(), { size: 14 })
+const props = withDefaults(defineProps<{ slug: string; label: string; size?: number; icon?: string; color?: string }>(), { size: 14, icon: '', color: '' })
 
 // The canvas status set: a colour and a glyph per condition or effect; anything else is a plain dot.
 const glyphs: Record<string, [string, string]> = {
@@ -24,7 +24,28 @@ const glyphs: Record<string, [string, string]> = {
   'hunters-mark': ['#7FA8DD', 'M12 4a8 8 0 1 0 0 16a8 8 0 1 0 0-16M12 9a3 3 0 1 0 0 6a3 3 0 1 0 0-6'],
   'faerie-fire': ['#B48BE0', 'M12 2C13 7 18 9 18 15A6 6 0 0 1 6 15C6 12 8 10.5 9 8C10 10 11 10.5 11.5 11C12.5 8 12 5 12 2Z'],
 }
-const glyph = computed(() => glyphs[props.slug] ?? (['#BFB199', 'M12 8a4 4 0 1 0 0 8a4 4 0 1 0 0-8'] as [string, string]))
+// A homebrew condition picks one of these shapes and its own colour.
+const shapes: Record<string, string> = {
+  drop: 'M12 3C15.5 8 18 11 18 14.5A6 6 0 0 1 6 14.5C6 11 8.5 8 12 3Z',
+  flame: 'M12 2C13 7 18 9 18 15A6 6 0 0 1 6 15C6 12 8 10.5 9 8C10 10 11 10.5 11.5 11C12.5 8 12 5 12 2Z',
+  snow: 'M12 2V22M3.3 7L20.7 17M3.3 17L20.7 7M9 4L12 6L15 4M9 20L12 18L15 20',
+  skull: 'M12 3C7.5 3 4 6.5 4 11C4 13.5 5.2 15.4 7 16.5V20H17V16.5C18.8 15.4 20 13.5 20 11C20 6.5 16.5 3 12 3ZM9 11V12M15 11V12',
+  spiral: 'M12 12m-1 0a1 1 0 1 1 2 0a3 3 0 1 1 -6 0a5 5 0 1 1 10 0a7 7 0 1 1 -14 0',
+  eye: 'M2 12C5 6 19 6 22 12C19 18 5 18 2 12ZM12 9a3 3 0 1 0 0 6a3 3 0 1 0 0-6',
+  chain: 'M10 14L14 10M8 12L6 14A3 3 0 0 0 10 18L12 16M16 12L18 10A3 3 0 0 0 14 6L12 8',
+  star: 'M12 3L14.5 9L21 9.5L16 13.5L17.5 20L12 16.5L6.5 20L8 13.5L3 9.5L9.5 9Z',
+  moon: 'M20 14A8 8 0 1 1 10 4A6 6 0 0 0 20 14Z',
+  leaf: 'M5 19C5 10 10 5 20 4C19 14 14 19 5 19ZM5 19L12 12',
+  bolt: 'M13 2L5 14H11L10 22L19 9H13Z',
+  heart: 'M12 20C5 15 3 11 3 8A4.5 4.5 0 0 1 12 6A4.5 4.5 0 0 1 21 8C21 11 19 15 12 20Z',
+  shield: 'M12 3L20 6V12C20 16.5 16.5 19.5 12 21C7.5 19.5 4 16.5 4 12V6Z',
+  cloud: 'M7 18A4 4 0 0 1 7 10A5 5 0 0 1 17 9A4.5 4.5 0 0 1 17 18Z',
+}
+const glyph = computed<[string, string]>(() => {
+  const shape = shapes[props.icon]
+  if (shape) return [props.color || '#BFB199', shape]
+  return glyphs[props.slug] ?? ['#BFB199', 'M12 8a4 4 0 1 0 0 8a4 4 0 1 0 0-8']
+})
 </script>
 
 <template>

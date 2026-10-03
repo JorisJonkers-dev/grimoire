@@ -28,6 +28,15 @@ const LibraryEntryPage = () => import('@/features/library/LibraryEntryPage.vue')
 const CampaignLibraryPage = () => import('@/features/library/CampaignLibraryPage.vue')
 const ProposalsPage = () => import('@/features/library/ProposalsPage.vue')
 const SharedLibraryPage = () => import('@/features/library/SharedLibraryPage.vue')
+const SpellBuilderPage = () => import('@/features/library/SpellBuilderPage.vue')
+const ItemBuilderPage = () => import('@/features/library/ItemBuilderPage.vue')
+const SubclassBuilderPage = () => import('@/features/library/SubclassBuilderPage.vue')
+const ClassBuilderPage = () => import('@/features/library/ClassBuilderPage.vue')
+const SpeciesBuilderPage = () => import('@/features/library/SpeciesBuilderPage.vue')
+const FeatBuilderPage = () => import('@/features/library/FeatBuilderPage.vue')
+const BackgroundBuilderPage = () => import('@/features/library/BackgroundBuilderPage.vue')
+const ConditionBuilderPage = () => import('@/features/library/ConditionBuilderPage.vue')
+const MonsterBuilderPage = () => import('@/features/library/MonsterBuilderPage.vue')
 const SharedReviewPage = () => import('@/features/library/SharedReviewPage.vue')
 const ProposalPage = () => import('@/features/library/ProposalPage.vue')
 const NpcPage = () => import('@/features/npcs/NpcPage.vue')
@@ -79,6 +88,15 @@ export function createAppRouter(history: RouterHistory = createWebHistory()) {
       { path: '/shared-library', name: 'shared-library', component: SharedLibraryPage },
       { path: '/admin/shared-library', name: 'admin-shared', component: SharedReviewPage },
       { path: '/library/:entryId', name: 'library-entry', component: LibraryEntryPage },
+      { path: '/library/:entryId/spell', name: 'spell-builder', component: SpellBuilderPage },
+      { path: '/library/:entryId/item', name: 'item-builder', component: ItemBuilderPage },
+      { path: '/library/:entryId/subclass', name: 'subclass-builder', component: SubclassBuilderPage },
+      { path: '/library/:entryId/class', name: 'class-builder', component: ClassBuilderPage },
+      { path: '/library/:entryId/species', name: 'species-builder', component: SpeciesBuilderPage },
+      { path: '/library/:entryId/feat', name: 'feat-builder', component: FeatBuilderPage },
+      { path: '/library/:entryId/background', name: 'background-builder', component: BackgroundBuilderPage },
+      { path: '/library/:entryId/condition', name: 'condition-builder', component: ConditionBuilderPage },
+      { path: '/library/:entryId/monster', name: 'monster-builder', component: MonsterBuilderPage },
       { path: '/campaigns/:id/npcs/:npcId', name: 'npc', component: NpcPage },
       { path: '/campaigns/:id/encounters', name: 'encounters', component: EncountersPage },
       { path: '/campaigns/:id/loot', name: 'loot', component: LootPage },

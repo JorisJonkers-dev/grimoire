@@ -70,9 +70,8 @@ func (r *runtime) planApply(cmd Command) (Write, string) {
 		RoundsLeft: cmd.Rounds, SaveAbility: cmd.SaveAbility, SaveDC: cmd.SaveDC, Level: 1, Mode: cmd.EffectMode,
 	}
 	r.st.lasting(&e, def.Duration)
-	if i := r.st.stacked(target.ID, slug); i >= 0 {
-		e = r.st.fx.Active[i]
-		e.Level++
+	if e, reason = r.st.stack(e); reason != "" {
+		return Write{}, reason
 	}
 	w := Write{Kind: domain.ActionEffectApplied, Token: target, effect: &e}
 	r.st.land(&w, land, target)
@@ -182,6 +181,21 @@ func (s *state) restEnded() []domain.EffectID {
 }
 
 // stacked finds the Effect a stacking Effect adds a level to, or -1.
+// stack is what a new Effect becomes on its target: one more level of the same Effect when it stacks,
+// refused at its highest level.
+func (s *state) stack(e domain.Effect) (domain.Effect, string) {
+	i := s.stacked(e.Target, e.Slug)
+	if i < 0 {
+		return e, ""
+	}
+	held := s.fx.Active[i]
+	if most := s.catalog.MaxLevel(e.Slug); most > 0 && held.Level >= most {
+		return e, e.Name + " is at its highest level."
+	}
+	held.Level++
+	return held, ""
+}
+
 func (s *state) stacked(target domain.TokenID, slug string) int {
 	if !s.catalog.Stacks(slug) {
 		return -1
@@ -450,6 +464,9 @@ func (s *state) effectViews(id domain.TokenID) []EffectView {
 		v := EffectView{ID: uuid.UUID(e.ID).String(), Slug: e.Slug, Name: e.Name, Concentration: e.Concentration, RoundsLeft: e.RoundsLeft, Mode: e.Mode}
 		if s.catalog.Stacks(e.Slug) {
 			v.Level = max(1, e.Level)
+		}
+		if l, ok := s.looks[e.Slug]; ok {
+			v.Icon, v.Color = l.icon, l.color
 		}
 		if e.Source != nil {
 			v.SourceID = uuid.UUID(*e.Source).String()

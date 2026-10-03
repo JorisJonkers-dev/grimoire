@@ -23,12 +23,16 @@ func TestImportsTakeWhatTheyCanAndNoteTheRest(t *testing.T) {
 		{Key: "cart", Kind: "vehicle", Name: "Cart"},
 		{Key: "blank", Kind: "npc", Name: "  "},
 		{Key: "hag", Kind: "npc", Name: "Twin"},
-		{Key: "lots", Kind: "item", Name: "Lots", Fields: many},
+		{Key: "lots", Kind: "item", Name: "Lots", Fields: many, Parts: []map[string]any{{"type": "spell", "design": map[string]any{"save": "wisdom"}}}},
+		{Key: "lance", Kind: "spell", Name: "Lance", Parts: []map[string]any{
+			{"type": "spell", "design": map[string]any{"save": "wisdom"}}, {"type": "spell", "design": map[string]any{}}, {"type": "spell", "design": "x"},
+		}},
 	}, []domain.ExportedCollection{
 		{Name: "Fey", Entries: []string{"hag", "cart", "lots"}},
 		{Name: " ", Entries: []string{"hag"}},
 	})
-	if len(entries) != 2 || entries[0].Name != "Bog Hag" || !maps.Equal(entries[0].Fields, domain.Fields{"HP": "52"}) || len(entries[1].Fields) != domain.MaxFields {
+	if len(entries) != 3 || entries[0].Name != "Bog Hag" || !maps.Equal(entries[0].Fields, domain.Fields{"HP": "52"}) || len(entries[1].Fields) != domain.MaxFields ||
+		entries[1].Design != nil || string(entries[2].Design) != `{"save":"wisdom"}` {
 		t.Fatalf("entries = %+v", entries)
 	}
 	if len(cols) != 1 || cols[0].Name != "Fey" || strings.Join(cols[0].Entries, ",") != "hag,lots" {
@@ -49,6 +53,9 @@ func TestImportsTakeWhatTheyCanAndNoteTheRest(t *testing.T) {
 		`entries[2] "": a name needs 1 to 80 characters`,
 		`entries[3] "Twin": another entry already has the key hag`,
 		`entries[4] "Lots" fields.f100: an entry keeps at most 100 fields`,
+		`entries[4] "Lots" parts[0]: spell parts are not supported yet`,
+		`entries[5] "Lance" parts[1]: spell parts are not supported yet`,
+		`entries[5] "Lance" parts[2]: spell parts are not supported yet`,
 		`collections[0] "Fey": no imported entry has the key cart`,
 		`collections[1] " ": a Collection needs a name`,
 	} {
@@ -56,7 +63,7 @@ func TestImportsTakeWhatTheyCanAndNoteTheRest(t *testing.T) {
 			t.Errorf("missing %q in\n%s", want, got)
 		}
 	}
-	if len(manual) != 11 {
+	if len(manual) != 14 {
 		t.Errorf("%d manual parts:\n%s", len(manual), got)
 	}
 }

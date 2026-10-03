@@ -1553,7 +1553,13 @@ export const zLibraryKind = z.enum([
     'shop',
     'item',
     'spell',
-    'table'
+    'table',
+    'subclass',
+    'class',
+    'species',
+    'background',
+    'feat',
+    'condition'
 ]);
 
 /**
@@ -1898,6 +1904,629 @@ export const zImportReport = z.object({
 });
 
 /**
+ * One row of a spell design; which fields count depends on its type.
+ */
+export const zSpellPart = z.object({
+    type: z.enum([
+        'damage',
+        'condition',
+        'light',
+        'reveal',
+        'surface',
+        'manual'
+    ]),
+    when: z.enum(['on_cast', 'start_of_turn']).optional(),
+    dice: z.string().max(20).optional(),
+    damageType: z.string().max(20).optional(),
+    half: z.boolean().optional(),
+    condition: z.string().max(40).optional(),
+    onlyTypes: z.array(z.string().max(20)).max(14).optional(),
+    brightFt: z.int().gte(0).lte(1000).optional(),
+    dimFt: z.int().gte(-1000).lte(1000).optional(),
+    qualities: z.array(z.string().max(20)).max(8).optional(),
+    surface: z.string().max(40).optional(),
+    rounds: z.int().gte(0).lte(1000).optional(),
+    text: z.string().max(1000).optional()
+});
+
+/**
+ * A homebrew spell as the Effect builder makes it, from Targeting and typed parts listed as rows.
+ */
+export const zSpellDesign = z.object({
+    targeting: z.object({
+        shape: z.enum([
+            'sphere',
+            'cylinder',
+            'emanation',
+            'ring',
+            'cone',
+            'cube',
+            'line',
+            'wall'
+        ]),
+        sizeFt: z.int().gte(0).lte(1000),
+        rangeFt: z.int().gte(0).lte(5000)
+    }),
+    save: z.enum([
+        'strength',
+        'dexterity',
+        'constitution',
+        'intelligence',
+        'wisdom',
+        'charisma'
+    ]).optional(),
+    concentration: z.boolean(),
+    duration: z.object({
+        unit: z.enum([
+            'instant',
+            'rounds',
+            'minutes',
+            'hours',
+            'until_dispelled'
+        ]),
+        amount: z.int().gte(0).lte(1000).optional()
+    }),
+    ritual: z.boolean(),
+    castingTime: z.object({
+        kind: z.enum([
+            'action',
+            'bonus_action',
+            'reaction',
+            'minutes'
+        ]),
+        minutes: z.int().gte(0).lte(10000).optional(),
+        trigger: z.enum([
+            'when_hit',
+            'when_damaged',
+            'ally_attacked',
+            'creature_casts',
+            'creature_enters_reach'
+        ]).optional()
+    }),
+    components: z.object({
+        verbal: z.boolean(),
+        somatic: z.boolean(),
+        material: z.object({
+            text: z.string().max(400),
+            costGp: z.int().gte(0).lte(1000000).optional(),
+            consumed: z.boolean().optional(),
+            item: z.string().max(80).optional()
+        }).optional()
+    }),
+    parts: z.array(zSpellPart).max(100)
+});
+
+/**
+ * A design to preview, with the spell's name.
+ */
+export const zSpellPreviewInput = z.object({
+    name: z.string().min(1).max(80),
+    design: zSpellDesign
+});
+
+/**
+ * A hex of an area, relative to its origin.
+ */
+export const zBuilderHex = z.object({
+    q: z.int().gte(-1000).lte(1000),
+    r: z.int().gte(-1000).lte(1000)
+});
+
+/**
+ * A homebrew spell in the Effect builder, the Effect slug it runs under in play, its rules text and its area as hexes.
+ */
+export const zSpellBuild = z.object({
+    entry: zLibraryEntry.optional(),
+    design: zSpellDesign,
+    effect: z.string().max(40),
+    text: z.array(z.string().max(1000)).max(200),
+    hexes: z.array(zBuilderHex).max(20000)
+});
+
+/**
+ * A custom column of the level table, one value for each of the 20 levels.
+ */
+export const zClassColumn = z.object({
+    name: z.string().max(200),
+    values: z.array(z.string().max(200)).max(40)
+});
+
+/**
+ * A feature gained at a class level.
+ */
+export const zClassFeature = z.object({
+    level: z.int().gte(-100000).lte(100000),
+    name: z.string().max(200),
+    text: z.string().max(8000)
+});
+
+/**
+ * How the class casts: none, an SRD kind (full, half, pact), its own slot table or spell points, from an SRD class's spell list. Tables run over the 20 levels; slots and costs over the nine spell levels.
+ */
+export const zClassCasting = z.object({
+    kind: z.string().max(40),
+    ability: z.string().max(40).optional(),
+    spellList: z.string().max(40).optional(),
+    cantrips: z.array(z.int().gte(-100000).lte(100000)).max(40).optional(),
+    prepared: z.array(z.int().gte(-100000).lte(100000)).max(40).optional(),
+    slots: z.array(z.array(z.int().gte(-100000).lte(100000)).max(20)).max(40).optional(),
+    points: z.array(z.int().gte(-100000).lte(100000)).max(40).optional(),
+    costs: z.array(z.int().gte(-100000).lte(100000)).max(40).optional(),
+    maxSpell: z.array(z.int().gte(-100000).lte(100000)).max(40).optional(),
+    spellbook: z.boolean().optional(),
+    afterRest: z.boolean().optional()
+});
+
+/**
+ * A homebrew class as the class builder makes it, from its Hit Die, training, level table, features, subclass and feat levels, and spellcasting.
+ */
+export const zClassDesign = z.object({
+    hitDie: z.int().gte(-100000).lte(100000),
+    primary: z.array(z.string().max(40)).max(10),
+    anyPrimary: z.boolean().optional(),
+    saves: z.array(z.string().max(40)).max(10),
+    armor: z.array(z.string().max(40)).max(10),
+    weapons: z.array(z.string().max(40)).max(10),
+    skills: z.int().gte(-100000).lte(100000),
+    subclassLevel: z.int().gte(-100000).lte(100000),
+    featLevels: z.array(z.int().gte(-100000).lte(100000)).max(40),
+    columns: z.array(zClassColumn).max(20),
+    features: z.array(zClassFeature).max(100),
+    casting: zClassCasting
+});
+
+/**
+ * A design to preview, with the class's name.
+ */
+export const zClassPreviewInput = z.object({
+    name: z.string().min(1).max(80),
+    design: zClassDesign
+});
+
+/**
+ * A homebrew class in the class builder, the slug it is known by on a sheet, and how it reads back with its level table.
+ */
+export const zClassBuild = z.object({
+    entry: zLibraryEntry.optional(),
+    design: zClassDesign,
+    slug: z.string().max(40).optional(),
+    lines: z.array(z.string().max(1200)).max(200)
+});
+
+/**
+ * A speed beside walking, or a special sense, and how far it reaches.
+ */
+export const zSpeciesMeasure = z.object({
+    kind: z.string().max(40),
+    feet: z.int().gte(-100000).lte(100000)
+});
+
+/**
+ * A named trait every member of the species has.
+ */
+export const zSpeciesTrait = z.object({
+    name: z.string().max(200),
+    text: z.string().max(8000)
+});
+
+/**
+ * An innate spell gained at a character level, cast at will or once per long rest.
+ */
+export const zSpeciesSpell = z.object({
+    level: z.int().gte(-100000).lte(100000),
+    spell: z.string().max(120),
+    name: z.string().max(200),
+    uses: z.string().max(40)
+});
+
+/**
+ * One branch of the species, picked at creation, with its own trait and spells.
+ */
+export const zSpeciesLineage = z.object({
+    name: z.string().max(200),
+    text: z.string().max(8000),
+    spells: z.array(zSpeciesSpell).max(40)
+});
+
+/**
+ * A homebrew species as the species builder makes it, from its sizes, creature type, speeds, senses, resistances, traits, innate spells and lineages.
+ */
+export const zSpeciesDesign = z.object({
+    sizes: z.array(z.string().max(40)).max(10),
+    creatureType: z.string().max(40),
+    speedFt: z.int().gte(-100000).lte(100000),
+    speeds: z.array(zSpeciesMeasure).max(20),
+    senses: z.array(zSpeciesMeasure).max(20),
+    resistances: z.array(z.string().max(40)).max(20),
+    traits: z.array(zSpeciesTrait).max(40),
+    spells: z.array(zSpeciesSpell).max(40),
+    lineages: z.array(zSpeciesLineage).max(20)
+});
+
+/**
+ * A design to preview, with the species's name.
+ */
+export const zSpeciesPreviewInput = z.object({
+    name: z.string().min(1).max(80),
+    design: zSpeciesDesign
+});
+
+/**
+ * A homebrew species in its builder, the slug it is known by, and how it reads back.
+ */
+export const zSpeciesBuild = z.object({
+    entry: zLibraryEntry.optional(),
+    design: zSpeciesDesign,
+    slug: z.string().max(40).optional(),
+    lines: z.array(z.string().max(2400)).max(400)
+});
+
+/**
+ * One thing a feat needs; prerequisites in one group are alternatives, and every group must hold.
+ */
+export const zFeatPrerequisite = z.object({
+    kind: z.string().max(40),
+    ability: z.string().max(40).optional(),
+    minimum: z.int().gte(-100000).lte(100000).optional(),
+    feat: z.string().max(120).optional(),
+    group: z.int().gte(-100000).lte(100000)
+});
+
+/**
+ * A homebrew feat as the feat builder makes it, with its category, text, prerequisites and whether it can be taken again.
+ */
+export const zFeatDesign = z.object({
+    category: z.string().max(40),
+    text: z.string().max(16000),
+    repeatable: z.boolean().optional(),
+    prerequisites: z.array(zFeatPrerequisite).max(40)
+});
+
+/**
+ * A design to preview, with the feat's name.
+ */
+export const zFeatPreviewInput = z.object({
+    name: z.string().min(1).max(80),
+    design: zFeatDesign
+});
+
+/**
+ * A homebrew feat in its builder, the slug it is known by, and how it reads back.
+ */
+export const zFeatBuild = z.object({
+    entry: zLibraryEntry.optional(),
+    design: zFeatDesign,
+    slug: z.string().max(40).optional(),
+    lines: z.array(z.string().max(2400)).max(400)
+});
+
+/**
+ * A homebrew background as the background builder makes it, shaped like the 2024 ones.
+ */
+export const zBackgroundDesign = z.object({
+    abilities: z.array(z.string().max(40)).max(10),
+    skills: z.array(z.string().max(40)).max(10),
+    feat: z.string().max(120),
+    featName: z.string().max(200),
+    tool: z.string().max(400).optional(),
+    equipment: z.string().max(2000).optional(),
+    gold: z.int().gte(-100000).lte(100000).optional(),
+    text: z.string().max(8000).optional()
+});
+
+/**
+ * A design to preview, with the background's name.
+ */
+export const zBackgroundPreviewInput = z.object({
+    name: z.string().min(1).max(80),
+    design: zBackgroundDesign
+});
+
+/**
+ * A homebrew background in its builder, the slug it is known by, and how it reads back.
+ */
+export const zBackgroundBuild = z.object({
+    entry: zLibraryEntry.optional(),
+    design: zBackgroundDesign,
+    slug: z.string().max(40).optional(),
+    lines: z.array(z.string().max(2400)).max(400)
+});
+
+/**
+ * A homebrew condition as the condition builder makes it, from its icon, how it ends, how it stacks and what it does.
+ */
+export const zConditionDesign = z.object({
+    icon: z.string().max(40),
+    color: z.string().max(20),
+    text: z.string().max(8000),
+    ends: z.string().max(40),
+    ability: z.string().max(40).optional(),
+    stacks: z.boolean().optional(),
+    maxLevel: z.int().gte(-100000).lte(100000).optional(),
+    perLevel: z.object({
+        d20: z.int().gte(-100000).lte(100000),
+        speedFt: z.int().gte(-100000).lte(100000),
+        deathAt: z.int().gte(-100000).lte(100000)
+    }),
+    parts: z.array(z.object({
+        type: z.string().max(40),
+        ability: z.string().max(40).optional(),
+        feet: z.int().gte(-100000).lte(100000).optional(),
+        text: z.string().max(2000).optional()
+    })).max(40)
+});
+
+/**
+ * A design to preview, with the condition's name.
+ */
+export const zConditionPreviewInput = z.object({
+    name: z.string().min(1).max(80),
+    design: zConditionDesign
+});
+
+/**
+ * A homebrew condition in its builder, the slug it is known by, and how it reads back.
+ */
+export const zConditionBuild = z.object({
+    entry: zLibraryEntry.optional(),
+    design: zConditionDesign,
+    slug: z.string().max(40).optional(),
+    lines: z.array(z.string().max(2400)).max(400)
+});
+
+/**
+ * A named rule of a creature's, or a lair action.
+ */
+export const zMonsterTrait = z.object({
+    name: z.string().max(200),
+    text: z.string().max(8000)
+});
+
+/**
+ * Something a creature does with its action: a melee or ranged attack, a save it forces, or anything else as text.
+ */
+export const zMonsterAction = z.object({
+    name: z.string().max(200),
+    kind: z.string().max(40),
+    toHit: z.int().gte(-100000).lte(100000).optional(),
+    reachFt: z.int().gte(-100000).lte(100000).optional(),
+    rangeFt: z.int().gte(-100000).lte(100000).optional(),
+    longRangeFt: z.int().gte(-100000).lte(100000).optional(),
+    damage: z.string().max(40).optional(),
+    damageBonus: z.int().gte(-100000).lte(100000).optional(),
+    damageType: z.string().max(40).optional(),
+    saveAbility: z.string().max(40).optional(),
+    dc: z.int().gte(-100000).lte(100000).optional(),
+    recharge: z.int().gte(-100000).lte(100000).optional(),
+    text: z.string().max(8000).optional()
+});
+
+/**
+ * A homebrew creature as the monster builder makes it.
+ */
+export const zMonsterDesign = z.object({
+    size: z.string().max(40),
+    creatureType: z.string().max(40),
+    ac: z.int().gte(-100000).lte(100000),
+    hp: z.int().gte(-100000).lte(100000),
+    speedFt: z.int().gte(-100000).lte(100000),
+    challenge: z.number().gte(-100).lte(100),
+    abilities: z.record(z.string(), z.int().gte(-100000).lte(100000)),
+    saves: z.array(z.string().max(40)).max(20),
+    senses: z.array(zSpeciesMeasure).max(20),
+    resistances: z.array(z.string().max(40)).max(20),
+    immunities: z.array(z.string().max(40)).max(20),
+    vulnerabilities: z.array(z.string().max(40)).max(20),
+    threshold: z.int().gte(-100000).lte(100000),
+    swarm: z.boolean().optional(),
+    traits: z.array(zMonsterTrait).max(40),
+    aura: z.object({
+        name: z.string().max(200),
+        feet: z.int().gte(-100000).lte(100000),
+        text: z.string().max(8000)
+    }).optional(),
+    multiattack: z.int().gte(-100000).lte(100000),
+    actions: z.array(zMonsterAction).max(40),
+    legendary: z.object({
+        uses: z.int().gte(-100000).lte(100000),
+        resistance: z.int().gte(-100000).lte(100000),
+        actions: z.array(z.object({
+            name: z.string().max(200),
+            cost: z.int().gte(-100000).lte(100000),
+            text: z.string().max(8000)
+        })).max(20)
+    }).optional(),
+    lair: z.object({
+        actions: z.array(zMonsterTrait).max(40),
+        regional: z.array(z.string().max(8000)).max(20)
+    }).optional(),
+    phases: z.array(z.object({
+        name: z.string().max(200),
+        hp: z.int().gte(-100000).lte(100000),
+        text: z.string().max(8000)
+    })).max(10)
+});
+
+/**
+ * A design to preview, with the creature's name.
+ */
+export const zMonsterPreviewInput = z.object({
+    name: z.string().min(1).max(80),
+    design: zMonsterDesign
+});
+
+/**
+ * A homebrew creature in its builder, the slug it is placed by, its stat block and an estimated Challenge.
+ */
+export const zMonsterBuild = z.object({
+    estimate: z.string().max(10),
+    entry: zLibraryEntry.optional(),
+    design: zMonsterDesign,
+    slug: z.string().max(40).optional(),
+    lines: z.array(z.string().max(2400)).max(400)
+});
+
+/**
+ * A Feature gained at a class level; it may spend a use of a Resource, by key, and let its bearer cast a spell.
+ */
+export const zSubclassFeature = z.object({
+    level: z.int().gte(-100000).lte(100000),
+    name: z.string().max(200),
+    text: z.string().max(4000),
+    uses: z.string().max(80).optional(),
+    spell: z.string().max(120).optional(),
+    spellName: z.string().max(200).optional()
+});
+
+/**
+ * A pool of uses: a fixed number, some per class level, an ability modifier or the Proficiency Bonus, from a level on, coming back on a rest or at dawn.
+ */
+export const zSubclassResource = z.object({
+    key: z.string().max(80),
+    name: z.string().max(200),
+    basis: z.string().max(40),
+    amount: z.int().gte(-100000).lte(100000).optional(),
+    ability: z.string().max(40).optional(),
+    fromLevel: z.int().gte(-100000).lte(100000),
+    die: z.string().max(20).optional(),
+    recharge: z.string().max(40)
+});
+
+/**
+ * A pick from listed options at a level.
+ */
+export const zSubclassChoice = z.object({
+    level: z.int().gte(-100000).lte(100000),
+    name: z.string().max(200),
+    count: z.int().gte(-100000).lte(100000),
+    options: z.array(z.string().max(200)).max(100)
+});
+
+/**
+ * A homebrew subclass as the subclass builder makes it, from level-gated Features, the Resources they spend and the choices they ask for.
+ */
+export const zSubclassDesign = z.object({
+    class: z.string().max(40),
+    features: z.array(zSubclassFeature).max(100),
+    resources: z.array(zSubclassResource).max(100),
+    choices: z.array(zSubclassChoice).max(100)
+});
+
+/**
+ * A design to preview, with the subclass's name.
+ */
+export const zSubclassPreviewInput = z.object({
+    name: z.string().min(1).max(80),
+    design: zSubclassDesign
+});
+
+/**
+ * A homebrew subclass in the subclass builder, the slug it is known by on a sheet, and how it reads back.
+ */
+export const zSubclassBuild = z.object({
+    entry: zLibraryEntry.optional(),
+    design: zSubclassDesign,
+    slug: z.string().max(40).optional(),
+    lines: z.array(z.string().max(1200)).max(200)
+});
+
+/**
+ * One Item Property row; which fields count depends on its type. A hidden one shows once the item is identified or attuned.
+ */
+export const zItemProperty = z.object({
+    type: z.string().max(40),
+    hidden: z.boolean().optional(),
+    skill: z.string().max(40).optional(),
+    mode: z.string().max(40).optional(),
+    target: z.string().max(40).optional(),
+    value: z.int().gte(-100000).lte(100000000).optional(),
+    dice: z.string().max(20).optional(),
+    damage: z.string().max(40).optional(),
+    sense: z.string().max(40).optional(),
+    speed: z.string().max(40).optional(),
+    feet: z.int().gte(-100000).lte(100000000).optional(),
+    spell: z.string().max(80).optional(),
+    name: z.string().max(120).optional(),
+    level: z.int().gte(-100000).lte(100000000).optional(),
+    cost: z.int().gte(-100000).lte(100000000).optional(),
+    brightFt: z.int().gte(-100000).lte(100000000).optional(),
+    dimFt: z.int().gte(-100000).lte(100000000).optional(),
+    uses: z.string().max(40).optional(),
+    hits: z.int().gte(-100000).lte(100000000).optional(),
+    text: z.string().max(2000).optional(),
+    cannotDrop: z.boolean().optional(),
+    atLevel: z.int().gte(-100000).lte(100000000).optional(),
+    set: z.string().max(80).optional(),
+    pieces: z.int().gte(-100000).lte(100000000).optional(),
+    capacityLb: z.int().gte(-100000).lte(100000000).optional(),
+    weightless: z.boolean().optional(),
+    onlyKind: z.string().max(40).optional(),
+    misfire: z.int().gte(-100000).lte(100000000).optional(),
+    reload: z.int().gte(-100000).lte(100000000).optional(),
+    burst: z.int().gte(-100000).lte(100000000).optional()
+});
+
+/**
+ * A homebrew item as the item builder makes it, from its kind, base item, rarity, enchantment, attunement, charges and Item Properties.
+ */
+export const zItemDesign = z.object({
+    kind: z.string().max(40),
+    base: z.string().max(80).optional(),
+    rarity: z.enum([
+        'common',
+        'uncommon',
+        'rare',
+        'very_rare',
+        'legendary'
+    ]),
+    enchantment: z.int().gte(-100000).lte(100000000),
+    weightLb: z.number().gte(-100000).lte(100000),
+    valueGp: z.int().gte(-100000).lte(100000000),
+    attunement: z.object({
+        kind: z.string().max(40).optional(),
+        value: z.string().max(200).optional()
+    }).optional(),
+    weapon: z.object({
+        properties: z.array(z.string().max(40)).max(20),
+        mastery: z.string().max(40).optional(),
+        custom: z.string().max(1000).optional()
+    }).optional(),
+    charges: z.object({
+        max: z.int().gte(-100000).lte(100000000),
+        on: z.string().max(40),
+        dice: z.int().gte(-100000).lte(100000000).optional(),
+        faces: z.int().gte(-100000).lte(100000000).optional(),
+        bonus: z.int().gte(-100000).lte(100000000).optional()
+    }).optional(),
+    properties: z.array(zItemProperty).max(100)
+});
+
+/**
+ * A design to preview, with the item's name.
+ */
+export const zItemPreviewInput = z.object({
+    name: z.string().min(1).max(80),
+    design: zItemDesign
+});
+
+/**
+ * A homebrew item in the item builder, the slug it is known by in play, its card as players read it once known, and its Price Check.
+ */
+export const zItemBuild = z.object({
+    entry: zLibraryEntry.optional(),
+    design: zItemDesign,
+    slug: z.string().max(40).optional(),
+    card: z.array(z.string().max(1200)).max(200),
+    price: z.object({
+        points: z.int().gte(0).lte(100000),
+        suggested: z.string().max(40),
+        priceGp: z.int().gte(0).lte(100000000),
+        fits: z.boolean(),
+        notes: z.array(z.string().max(300)).max(10)
+    })
+});
+
+/**
  * A Character's need or greed call on a loot pile's item, with the d20 it rolled. Need beats greed, then the higher roll, then the earlier claim.
  */
 export const zLiveClaim = z.object({
@@ -2193,7 +2822,34 @@ export const zLiveEffect = z.object({
     roundsLeft: z.int().gte(1).lte(100).optional(),
     level: z.int().gte(1).lte(10).optional(),
     mode: z.string().max(80).optional(),
-    hexes: z.array(zHexCoord).max(2000).optional()
+    hexes: z.array(zHexCoord).max(2000).optional(),
+    icon: z.string().max(40).optional(),
+    color: z.string().max(20).optional()
+});
+
+/**
+ * A legendary or lair action.
+ */
+export const zLiveLegendAction = z.object({
+    name: z.string().max(200),
+    cost: z.int().gte(0).lte(3),
+    text: z.string().max(8000)
+});
+
+/**
+ * A legendary creature's actions and what it has left, for the DM only: legendary actions once another creature's turn ends (ready), the lair's once a round from initiative count 20 (lairReady), Legendary Resistance, and its mythic phases.
+ */
+export const zLiveLegend = z.object({
+    uses: z.int().gte(0).lte(10),
+    left: z.int().gte(0).lte(10),
+    ready: z.boolean(),
+    actions: z.array(zLiveLegendAction).max(20),
+    lair: z.array(zLiveLegendAction).max(20),
+    lairReady: z.boolean(),
+    resistLeft: z.int().gte(0).lte(10),
+    phase: z.int().gte(0).lte(10),
+    phases: z.int().gte(0).lte(10),
+    threshold: z.int().gte(0).lte(100)
 });
 
 /**
@@ -2225,7 +2881,8 @@ export const zLiveToken = z.object({
     shield: z.boolean().optional(),
     effects: z.array(zLiveEffect).max(50).optional(),
     reactions: z.array(zLiveReactionSetting).max(4).optional(),
-    dying: zLiveDying.optional()
+    dying: zLiveDying.optional(),
+    legend: zLiveLegend.optional()
 });
 
 /**
@@ -2661,6 +3318,15 @@ export const zCharacterRevisionLine = z.object({
 });
 
 /**
+ * A spell an item grants; cost is the charges it spends, 0 at will.
+ */
+export const zItemSpell = z.object({
+    slug: zSlug,
+    name: z.string().max(120),
+    cost: z.int().gte(0).lte(100)
+});
+
+/**
  * An item in an Inventory, with the slots it fits.
  */
 export const zItemCard = z.object({
@@ -2678,7 +3344,9 @@ export const zItemCard = z.object({
     requiresAttunement: z.boolean().optional(),
     attunementDetail: z.string().max(200).optional(),
     maxCharges: z.int().gte(0).lte(100).optional(),
-    fits: z.array(zEquipmentSlot).max(14)
+    fits: z.array(zEquipmentSlot).max(14),
+    spells: z.array(zItemSpell).max(40).optional(),
+    lines: z.array(z.string().max(1200)).max(60).optional()
 });
 
 /**
@@ -2749,9 +3417,11 @@ export const zInventoryUse = z.object({
         'attune',
         'unattune',
         'identify',
-        'charge'
+        'charge',
+        'cast'
     ]),
-    count: z.int().gte(1).lte(100).optional()
+    count: z.int().gte(1).lte(100).optional(),
+    spell: zSlug.optional()
 });
 
 /**
@@ -2950,7 +3620,9 @@ export const zClassChoice = z.object({
         'none',
         'full',
         'half',
-        'pact'
+        'pact',
+        'slots',
+        'points'
     ]).optional()
 });
 
@@ -3345,7 +4017,10 @@ export const zLiveCommand = z.object({
         'throw',
         'sneak',
         'explore',
-        'pass_turn'
+        'pass_turn',
+        'legendary_action',
+        'lair_action',
+        'legendary_resistance'
     ]),
     tokenId: zId.optional(),
     label: z.string().max(40).optional(),
@@ -3447,6 +4122,7 @@ export const zLiveCommand = z.object({
         'study',
         'utilize'
     ]).optional(),
+    legend: z.string().max(200).optional(),
     detail: z.string().max(200).optional(),
     trigger: z.enum(['enters_reach']).optional(),
     option: z.enum([
@@ -3570,6 +4246,12 @@ export const zLiveView = z.object({
         kind: z.string().max(40),
         name: z.string().max(40)
     })).max(500).optional(),
+    conditions: z.array(z.object({
+        slug: z.string().max(80),
+        name: z.string().max(80),
+        icon: z.string().max(40),
+        color: z.string().max(20)
+    })).max(500).optional(),
     objects: z.array(zLiveObject).max(500).optional(),
     zones: z.array(zLiveZone).max(200).optional(),
     perception: z.array(zLivePerception).max(1000).optional(),
@@ -3632,6 +4314,7 @@ export const zCampaignSummary = z.object({
     creationMethods: z.array(zCreationMethod).min(1).max(3).optional(),
     startingLevel: z.int().gte(1).lte(20).optional(),
     holdLevelUps: z.boolean().optional(),
+    exhaustion: z.string().max(40).optional(),
     shareInitiative: z.boolean().optional()
 });
 
@@ -3660,6 +4343,7 @@ export const zCampaign = z.object({
     creationMethods: z.array(zCreationMethod).min(1).max(3).optional(),
     startingLevel: z.int().gte(1).lte(20).optional(),
     holdLevelUps: z.boolean().optional(),
+    exhaustion: z.string().max(40).optional(),
     shareInitiative: z.boolean().optional(),
     me: zMember,
     members: z.array(zMember).max(1000)
@@ -3759,6 +4443,7 @@ export const zCampaignUpdate = z.object({
     creationMethods: z.array(zCreationMethod).min(1).max(3).optional(),
     startingLevel: z.int().gte(1).lte(20).optional(),
     holdLevelUps: z.boolean().optional(),
+    exhaustion: z.string().max(40).optional(),
     shareInitiative: z.boolean().optional()
 });
 
@@ -4156,7 +4841,8 @@ export const zGetBuilderOptionsHeaders = z.object({
 });
 
 export const zGetBuilderOptionsQuery = z.object({
-    ruleset: zRuleset
+    ruleset: zRuleset,
+    campaignId: zId.optional()
 });
 
 /**
@@ -4325,7 +5011,8 @@ export const zPlanLevelUpPath = z.object({
 });
 
 export const zPlanLevelUpQuery = z.object({
-    class: zSlug.optional()
+    class: zSlug.optional(),
+    subclass: zSlug.optional()
 });
 
 /**
@@ -5540,6 +6227,249 @@ export const zReviewSharedSubmissionPath = z.object({
  * The request.
  */
 export const zReviewSharedSubmissionResponse = zSharedSubmission;
+
+export const zPreviewSpellBody = zSpellPreviewInput;
+
+/**
+ * The preview.
+ */
+export const zPreviewSpellResponse = zSpellBuild;
+
+export const zGetSpellBuildPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The spell.
+ */
+export const zGetSpellBuildResponse = zSpellBuild;
+
+export const zSaveSpellBuildBody = zSpellDesign;
+
+export const zSaveSpellBuildPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The spell.
+ */
+export const zSaveSpellBuildResponse = zSpellBuild;
+
+export const zPreviewItemBody = zItemPreviewInput;
+
+/**
+ * The preview.
+ */
+export const zPreviewItemResponse = zItemBuild;
+
+export const zGetItemBuildPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The item.
+ */
+export const zGetItemBuildResponse = zItemBuild;
+
+export const zSaveItemBuildBody = zItemDesign;
+
+export const zSaveItemBuildPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The item.
+ */
+export const zSaveItemBuildResponse = zItemBuild;
+
+export const zPreviewSubclassBody = zSubclassPreviewInput;
+
+/**
+ * The preview.
+ */
+export const zPreviewSubclassResponse = zSubclassBuild;
+
+export const zGetSubclassBuildPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The subclass.
+ */
+export const zGetSubclassBuildResponse = zSubclassBuild;
+
+export const zSaveSubclassBuildBody = zSubclassDesign;
+
+export const zSaveSubclassBuildPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The subclass.
+ */
+export const zSaveSubclassBuildResponse = zSubclassBuild;
+
+export const zPreviewClassBody = zClassPreviewInput;
+
+/**
+ * The preview.
+ */
+export const zPreviewClassResponse = zClassBuild;
+
+export const zGetClassBuildPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The class.
+ */
+export const zGetClassBuildResponse = zClassBuild;
+
+export const zSaveClassBuildBody = zClassDesign;
+
+export const zSaveClassBuildPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The class.
+ */
+export const zSaveClassBuildResponse = zClassBuild;
+
+export const zPreviewSpeciesBody = zSpeciesPreviewInput;
+
+/**
+ * The preview.
+ */
+export const zPreviewSpeciesResponse = zSpeciesBuild;
+
+export const zGetSpeciesBuildPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The species.
+ */
+export const zGetSpeciesBuildResponse = zSpeciesBuild;
+
+export const zSaveSpeciesBuildBody = zSpeciesDesign;
+
+export const zSaveSpeciesBuildPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The species.
+ */
+export const zSaveSpeciesBuildResponse = zSpeciesBuild;
+
+export const zPreviewFeatBody = zFeatPreviewInput;
+
+/**
+ * The preview.
+ */
+export const zPreviewFeatResponse = zFeatBuild;
+
+export const zGetFeatBuildPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The feat.
+ */
+export const zGetFeatBuildResponse = zFeatBuild;
+
+export const zSaveFeatBuildBody = zFeatDesign;
+
+export const zSaveFeatBuildPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The feat.
+ */
+export const zSaveFeatBuildResponse = zFeatBuild;
+
+export const zPreviewBackgroundBody = zBackgroundPreviewInput;
+
+/**
+ * The preview.
+ */
+export const zPreviewBackgroundResponse = zBackgroundBuild;
+
+export const zGetBackgroundBuildPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The background.
+ */
+export const zGetBackgroundBuildResponse = zBackgroundBuild;
+
+export const zSaveBackgroundBuildBody = zBackgroundDesign;
+
+export const zSaveBackgroundBuildPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The background.
+ */
+export const zSaveBackgroundBuildResponse = zBackgroundBuild;
+
+export const zPreviewConditionBody = zConditionPreviewInput;
+
+/**
+ * The preview.
+ */
+export const zPreviewConditionResponse = zConditionBuild;
+
+export const zGetConditionBuildPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The condition.
+ */
+export const zGetConditionBuildResponse = zConditionBuild;
+
+export const zSaveConditionBuildBody = zConditionDesign;
+
+export const zSaveConditionBuildPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The condition.
+ */
+export const zSaveConditionBuildResponse = zConditionBuild;
+
+export const zPreviewMonsterBody = zMonsterPreviewInput;
+
+/**
+ * The preview.
+ */
+export const zPreviewMonsterResponse = zMonsterBuild;
+
+export const zGetMonsterBuildPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The creature.
+ */
+export const zGetMonsterBuildResponse = zMonsterBuild;
+
+export const zSaveMonsterBuildBody = zMonsterDesign;
+
+export const zSaveMonsterBuildPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The creature.
+ */
+export const zSaveMonsterBuildResponse = zMonsterBuild;
 
 /**
  * The signed-in account.

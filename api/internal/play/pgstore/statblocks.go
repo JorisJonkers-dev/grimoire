@@ -5,6 +5,7 @@ import (
 	"errors"
 	"slices"
 	"strconv"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -33,6 +34,9 @@ type Statblocks struct {
 
 // Monster reads a monster's AC, hit points and attacks in the Campaign's ruleset.
 func (s Statblocks) Monster(ctx context.Context, campaign uuid.UUID, slug string) (string, domain.Stats, error) {
+	if strings.HasPrefix(slug, "hb-") {
+		return s.homebrewMonster(ctx, campaign, slug)
+	}
 	ruleset, err := s.Store.q.CampaignRuleset(ctx, campaign)
 	if err != nil {
 		return "", domain.Stats{}, notFound(err)
@@ -50,7 +54,7 @@ func (s Statblocks) Monster(ctx context.Context, campaign uuid.UUID, slug string
 	}
 	stats := domain.Stats{
 		Source: "monster:" + slug, AC: int(m.ArmorClass), HP: int(m.HitPoints), HPMax: int(m.HitPoints), Attacks: []domain.Attack{},
-		Intelligence: int(m.Intelligence), Saves: map[string]int{}, Strength: int(m.Strength),
+		Intelligence: int(m.Intelligence), Saves: map[string]int{}, Strength: int(m.Strength), CreatureType: m.CreatureType,
 		UnarmedDC: actions.UnarmedDC(rules.Modifier(int(m.Strength)), rules.ProficiencyByChallenge(m.ChallengeRating)),
 	}
 	scores := map[string]int32{
@@ -115,7 +119,7 @@ func (s Statblocks) fromSheet(ctx context.Context, id uuid.UUID, sheet campaigna
 		Source: "character:" + id.String(), AC: sheet.Derived.ArmorClass, HP: sheet.HPCurrent, HPMax: sheet.HPMax,
 		Shield: sheet.Class == "wizard" || sheet.Class == "sorcerer", Saves: map[string]int{}, UnarmedDC: actions.UnarmedDC(str, pb),
 		Attacks:          []domain.Attack{{Name: "Unarmed Strike", ToHit: str + pb, ReachFt: 5, DamageBonus: 1 + str, DamageType: "bludgeoning", DamageMod: str}},
-		AttacksPerAction: s.attacksPerAction(ctx, sheet.Class, sheet.Level), Strength: sheet.Scores[rules.Strength],
+		AttacksPerAction: s.attacksPerAction(ctx, sheet.Class, sheet.Level), Strength: sheet.Scores[rules.Strength], CreatureType: "humanoid",
 	}
 	for _, sv := range sheet.Derived.Saves {
 		stats.Saves[string(sv.Ability)] = sv.Bonus

@@ -3005,6 +3005,107 @@ func (s *AutomationCountKind) UnmarshalText(data []byte) error {
 	}
 }
 
+// A homebrew background in its builder, the slug it is known by, and how it reads back.
+// Ref: #/components/schemas/BackgroundBuild
+type BackgroundBuild struct {
+	Entry  OptLibraryEntry  `json:"entry"`
+	Design BackgroundDesign `json:"design"`
+	Slug   OptString        `json:"slug"`
+	Lines  []string         `json:"lines"`
+}
+
+// GetEntry returns the value of Entry.
+func (s *BackgroundBuild) GetEntry() OptLibraryEntry {
+	return s.Entry
+}
+
+// GetDesign returns the value of Design.
+func (s *BackgroundBuild) GetDesign() BackgroundDesign {
+	return s.Design
+}
+
+// GetSlug returns the value of Slug.
+func (s *BackgroundBuild) GetSlug() OptString {
+	return s.Slug
+}
+
+// GetLines returns the value of Lines.
+func (s *BackgroundBuild) GetLines() []string {
+	return s.Lines
+}
+
+// SetEntry sets the value of Entry.
+func (s *BackgroundBuild) SetEntry(val OptLibraryEntry) {
+	s.Entry = val
+}
+
+// SetDesign sets the value of Design.
+func (s *BackgroundBuild) SetDesign(val BackgroundDesign) {
+	s.Design = val
+}
+
+// SetSlug sets the value of Slug.
+func (s *BackgroundBuild) SetSlug(val OptString) {
+	s.Slug = val
+}
+
+// SetLines sets the value of Lines.
+func (s *BackgroundBuild) SetLines(val []string) {
+	s.Lines = val
+}
+
+// BackgroundBuildHeaders wraps BackgroundBuild with response headers.
+type BackgroundBuildHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           BackgroundBuild
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *BackgroundBuildHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *BackgroundBuildHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *BackgroundBuildHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *BackgroundBuildHeaders) GetResponse() BackgroundBuild {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *BackgroundBuildHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *BackgroundBuildHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *BackgroundBuildHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *BackgroundBuildHeaders) SetResponse(val BackgroundBuild) {
+	s.Response = val
+}
+
+func (*BackgroundBuildHeaders) getBackgroundBuildRes()  {}
+func (*BackgroundBuildHeaders) previewBackgroundRes()   {}
+func (*BackgroundBuildHeaders) saveBackgroundBuildRes() {}
+
 // A background and what it grants; empty abilities means a free choice.
 // Ref: #/components/schemas/BackgroundChoice
 type BackgroundChoice struct {
@@ -3052,6 +3153,126 @@ func (s *BackgroundChoice) SetAbilities(val []Ability) {
 // SetSkills sets the value of Skills.
 func (s *BackgroundChoice) SetSkills(val []Slug) {
 	s.Skills = val
+}
+
+// A homebrew background as the background builder makes it, shaped like the 2024 ones.
+// Ref: #/components/schemas/BackgroundDesign
+type BackgroundDesign struct {
+	Abilities []string  `json:"abilities"`
+	Skills    []string  `json:"skills"`
+	Feat      string    `json:"feat"`
+	FeatName  string    `json:"featName"`
+	Tool      OptString `json:"tool"`
+	Equipment OptString `json:"equipment"`
+	Gold      OptInt32  `json:"gold"`
+	Text      OptString `json:"text"`
+}
+
+// GetAbilities returns the value of Abilities.
+func (s *BackgroundDesign) GetAbilities() []string {
+	return s.Abilities
+}
+
+// GetSkills returns the value of Skills.
+func (s *BackgroundDesign) GetSkills() []string {
+	return s.Skills
+}
+
+// GetFeat returns the value of Feat.
+func (s *BackgroundDesign) GetFeat() string {
+	return s.Feat
+}
+
+// GetFeatName returns the value of FeatName.
+func (s *BackgroundDesign) GetFeatName() string {
+	return s.FeatName
+}
+
+// GetTool returns the value of Tool.
+func (s *BackgroundDesign) GetTool() OptString {
+	return s.Tool
+}
+
+// GetEquipment returns the value of Equipment.
+func (s *BackgroundDesign) GetEquipment() OptString {
+	return s.Equipment
+}
+
+// GetGold returns the value of Gold.
+func (s *BackgroundDesign) GetGold() OptInt32 {
+	return s.Gold
+}
+
+// GetText returns the value of Text.
+func (s *BackgroundDesign) GetText() OptString {
+	return s.Text
+}
+
+// SetAbilities sets the value of Abilities.
+func (s *BackgroundDesign) SetAbilities(val []string) {
+	s.Abilities = val
+}
+
+// SetSkills sets the value of Skills.
+func (s *BackgroundDesign) SetSkills(val []string) {
+	s.Skills = val
+}
+
+// SetFeat sets the value of Feat.
+func (s *BackgroundDesign) SetFeat(val string) {
+	s.Feat = val
+}
+
+// SetFeatName sets the value of FeatName.
+func (s *BackgroundDesign) SetFeatName(val string) {
+	s.FeatName = val
+}
+
+// SetTool sets the value of Tool.
+func (s *BackgroundDesign) SetTool(val OptString) {
+	s.Tool = val
+}
+
+// SetEquipment sets the value of Equipment.
+func (s *BackgroundDesign) SetEquipment(val OptString) {
+	s.Equipment = val
+}
+
+// SetGold sets the value of Gold.
+func (s *BackgroundDesign) SetGold(val OptInt32) {
+	s.Gold = val
+}
+
+// SetText sets the value of Text.
+func (s *BackgroundDesign) SetText(val OptString) {
+	s.Text = val
+}
+
+// A design to preview, with the background's name.
+// Ref: #/components/schemas/BackgroundPreviewInput
+type BackgroundPreviewInput struct {
+	Name   string           `json:"name"`
+	Design BackgroundDesign `json:"design"`
+}
+
+// GetName returns the value of Name.
+func (s *BackgroundPreviewInput) GetName() string {
+	return s.Name
+}
+
+// GetDesign returns the value of Design.
+func (s *BackgroundPreviewInput) GetDesign() BackgroundDesign {
+	return s.Design
+}
+
+// SetName sets the value of Name.
+func (s *BackgroundPreviewInput) SetName(val string) {
+	s.Name = val
+}
+
+// SetDesign sets the value of Design.
+func (s *BackgroundPreviewInput) SetDesign(val BackgroundDesign) {
+	s.Design = val
 }
 
 // A Character's rebuildable choices.
@@ -3193,6 +3414,33 @@ func (s *BuildSnapshotMethod) UnmarshalText(data []byte) error {
 	default:
 		return errors.Errorf("invalid value: %q", data)
 	}
+}
+
+// A hex of an area, relative to its origin.
+// Ref: #/components/schemas/BuilderHex
+type BuilderHex struct {
+	Q int32 `json:"q"`
+	R int32 `json:"r"`
+}
+
+// GetQ returns the value of Q.
+func (s *BuilderHex) GetQ() int32 {
+	return s.Q
+}
+
+// GetR returns the value of R.
+func (s *BuilderHex) GetR() int32 {
+	return s.R
+}
+
+// SetQ sets the value of Q.
+func (s *BuilderHex) SetQ(val int32) {
+	s.Q = val
+}
+
+// SetR sets the value of R.
+func (s *BuilderHex) SetR(val int32) {
+	s.R = val
 }
 
 // What a first-level character can choose in one ruleset.
@@ -3381,6 +3629,8 @@ type Campaign struct {
 	StartingLevel OptInt32 `json:"startingLevel"`
 	// Long rests stop unlocking the next level; the DM grants levels instead.
 	HoldLevelUps OptBool `json:"holdLevelUps"`
+	// The exhaustion the Campaign plays with: srd-2024, gentle, grim or off.
+	Exhaustion OptString `json:"exhaustion"`
 	// Identical monsters share one initiative roll.
 	ShareInitiative OptBool  `json:"shareInitiative"`
 	Me              Member   `json:"me"`
@@ -3450,6 +3700,11 @@ func (s *Campaign) GetStartingLevel() OptInt32 {
 // GetHoldLevelUps returns the value of HoldLevelUps.
 func (s *Campaign) GetHoldLevelUps() OptBool {
 	return s.HoldLevelUps
+}
+
+// GetExhaustion returns the value of Exhaustion.
+func (s *Campaign) GetExhaustion() OptString {
+	return s.Exhaustion
 }
 
 // GetShareInitiative returns the value of ShareInitiative.
@@ -3530,6 +3785,11 @@ func (s *Campaign) SetStartingLevel(val OptInt32) {
 // SetHoldLevelUps sets the value of HoldLevelUps.
 func (s *Campaign) SetHoldLevelUps(val OptBool) {
 	s.HoldLevelUps = val
+}
+
+// SetExhaustion sets the value of Exhaustion.
+func (s *Campaign) SetExhaustion(val OptString) {
+	s.Exhaustion = val
 }
 
 // SetShareInitiative sets the value of ShareInitiative.
@@ -3926,6 +4186,8 @@ type CampaignSummary struct {
 	StartingLevel OptInt32 `json:"startingLevel"`
 	// Long rests stop unlocking the next level; the DM grants levels instead.
 	HoldLevelUps OptBool `json:"holdLevelUps"`
+	// The exhaustion the Campaign plays with: srd-2024, gentle, grim or off.
+	Exhaustion OptString `json:"exhaustion"`
 	// Identical monsters share one initiative roll.
 	ShareInitiative OptBool `json:"shareInitiative"`
 }
@@ -3993,6 +4255,11 @@ func (s *CampaignSummary) GetStartingLevel() OptInt32 {
 // GetHoldLevelUps returns the value of HoldLevelUps.
 func (s *CampaignSummary) GetHoldLevelUps() OptBool {
 	return s.HoldLevelUps
+}
+
+// GetExhaustion returns the value of Exhaustion.
+func (s *CampaignSummary) GetExhaustion() OptString {
+	return s.Exhaustion
 }
 
 // GetShareInitiative returns the value of ShareInitiative.
@@ -4063,6 +4330,11 @@ func (s *CampaignSummary) SetStartingLevel(val OptInt32) {
 // SetHoldLevelUps sets the value of HoldLevelUps.
 func (s *CampaignSummary) SetHoldLevelUps(val OptBool) {
 	s.HoldLevelUps = val
+}
+
+// SetExhaustion sets the value of Exhaustion.
+func (s *CampaignSummary) SetExhaustion(val OptString) {
+	s.Exhaustion = val
 }
 
 // SetShareInitiative sets the value of ShareInitiative.
@@ -4137,6 +4409,8 @@ type CampaignUpdate struct {
 	StartingLevel OptInt32 `json:"startingLevel"`
 	// Long rests stop unlocking the next level; the DM grants levels instead.
 	HoldLevelUps OptBool `json:"holdLevelUps"`
+	// The exhaustion the Campaign plays with: srd-2024, gentle, grim or off.
+	Exhaustion OptString `json:"exhaustion"`
 	// Identical monsters share one initiative roll.
 	ShareInitiative OptBool `json:"shareInitiative"`
 }
@@ -4184,6 +4458,11 @@ func (s *CampaignUpdate) GetStartingLevel() OptInt32 {
 // GetHoldLevelUps returns the value of HoldLevelUps.
 func (s *CampaignUpdate) GetHoldLevelUps() OptBool {
 	return s.HoldLevelUps
+}
+
+// GetExhaustion returns the value of Exhaustion.
+func (s *CampaignUpdate) GetExhaustion() OptString {
+	return s.Exhaustion
 }
 
 // GetShareInitiative returns the value of ShareInitiative.
@@ -4234,6 +4513,11 @@ func (s *CampaignUpdate) SetStartingLevel(val OptInt32) {
 // SetHoldLevelUps sets the value of HoldLevelUps.
 func (s *CampaignUpdate) SetHoldLevelUps(val OptBool) {
 	s.HoldLevelUps = val
+}
+
+// SetExhaustion sets the value of Exhaustion.
+func (s *CampaignUpdate) SetExhaustion(val OptString) {
+	s.Exhaustion = val
 }
 
 // SetShareInitiative sets the value of ShareInitiative.
@@ -5687,6 +5971,236 @@ func (s *CharacterSummary) SetHeroicInspiration(val OptBool) {
 	s.HeroicInspiration = val
 }
 
+// A homebrew class in the class builder, the slug it is known by on a sheet, and how it reads back
+// with its level table.
+// Ref: #/components/schemas/ClassBuild
+type ClassBuild struct {
+	Entry  OptLibraryEntry `json:"entry"`
+	Design ClassDesign     `json:"design"`
+	Slug   OptString       `json:"slug"`
+	Lines  []string        `json:"lines"`
+}
+
+// GetEntry returns the value of Entry.
+func (s *ClassBuild) GetEntry() OptLibraryEntry {
+	return s.Entry
+}
+
+// GetDesign returns the value of Design.
+func (s *ClassBuild) GetDesign() ClassDesign {
+	return s.Design
+}
+
+// GetSlug returns the value of Slug.
+func (s *ClassBuild) GetSlug() OptString {
+	return s.Slug
+}
+
+// GetLines returns the value of Lines.
+func (s *ClassBuild) GetLines() []string {
+	return s.Lines
+}
+
+// SetEntry sets the value of Entry.
+func (s *ClassBuild) SetEntry(val OptLibraryEntry) {
+	s.Entry = val
+}
+
+// SetDesign sets the value of Design.
+func (s *ClassBuild) SetDesign(val ClassDesign) {
+	s.Design = val
+}
+
+// SetSlug sets the value of Slug.
+func (s *ClassBuild) SetSlug(val OptString) {
+	s.Slug = val
+}
+
+// SetLines sets the value of Lines.
+func (s *ClassBuild) SetLines(val []string) {
+	s.Lines = val
+}
+
+// ClassBuildHeaders wraps ClassBuild with response headers.
+type ClassBuildHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           ClassBuild
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ClassBuildHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ClassBuildHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ClassBuildHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ClassBuildHeaders) GetResponse() ClassBuild {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ClassBuildHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ClassBuildHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ClassBuildHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ClassBuildHeaders) SetResponse(val ClassBuild) {
+	s.Response = val
+}
+
+func (*ClassBuildHeaders) getClassBuildRes()  {}
+func (*ClassBuildHeaders) previewClassRes()   {}
+func (*ClassBuildHeaders) saveClassBuildRes() {}
+
+// How the class casts: none, an SRD kind (full, half, pact), its own slot table or spell points, from
+// an SRD class's spell list. Tables run over the 20 levels; slots and costs over the nine spell
+// levels.
+// Ref: #/components/schemas/ClassCasting
+type ClassCasting struct {
+	Kind      string    `json:"kind"`
+	Ability   OptString `json:"ability"`
+	SpellList OptString `json:"spellList"`
+	Cantrips  []int32   `json:"cantrips"`
+	Prepared  []int32   `json:"prepared"`
+	Slots     [][]int32 `json:"slots"`
+	Points    []int32   `json:"points"`
+	Costs     []int32   `json:"costs"`
+	MaxSpell  []int32   `json:"maxSpell"`
+	Spellbook OptBool   `json:"spellbook"`
+	AfterRest OptBool   `json:"afterRest"`
+}
+
+// GetKind returns the value of Kind.
+func (s *ClassCasting) GetKind() string {
+	return s.Kind
+}
+
+// GetAbility returns the value of Ability.
+func (s *ClassCasting) GetAbility() OptString {
+	return s.Ability
+}
+
+// GetSpellList returns the value of SpellList.
+func (s *ClassCasting) GetSpellList() OptString {
+	return s.SpellList
+}
+
+// GetCantrips returns the value of Cantrips.
+func (s *ClassCasting) GetCantrips() []int32 {
+	return s.Cantrips
+}
+
+// GetPrepared returns the value of Prepared.
+func (s *ClassCasting) GetPrepared() []int32 {
+	return s.Prepared
+}
+
+// GetSlots returns the value of Slots.
+func (s *ClassCasting) GetSlots() [][]int32 {
+	return s.Slots
+}
+
+// GetPoints returns the value of Points.
+func (s *ClassCasting) GetPoints() []int32 {
+	return s.Points
+}
+
+// GetCosts returns the value of Costs.
+func (s *ClassCasting) GetCosts() []int32 {
+	return s.Costs
+}
+
+// GetMaxSpell returns the value of MaxSpell.
+func (s *ClassCasting) GetMaxSpell() []int32 {
+	return s.MaxSpell
+}
+
+// GetSpellbook returns the value of Spellbook.
+func (s *ClassCasting) GetSpellbook() OptBool {
+	return s.Spellbook
+}
+
+// GetAfterRest returns the value of AfterRest.
+func (s *ClassCasting) GetAfterRest() OptBool {
+	return s.AfterRest
+}
+
+// SetKind sets the value of Kind.
+func (s *ClassCasting) SetKind(val string) {
+	s.Kind = val
+}
+
+// SetAbility sets the value of Ability.
+func (s *ClassCasting) SetAbility(val OptString) {
+	s.Ability = val
+}
+
+// SetSpellList sets the value of SpellList.
+func (s *ClassCasting) SetSpellList(val OptString) {
+	s.SpellList = val
+}
+
+// SetCantrips sets the value of Cantrips.
+func (s *ClassCasting) SetCantrips(val []int32) {
+	s.Cantrips = val
+}
+
+// SetPrepared sets the value of Prepared.
+func (s *ClassCasting) SetPrepared(val []int32) {
+	s.Prepared = val
+}
+
+// SetSlots sets the value of Slots.
+func (s *ClassCasting) SetSlots(val [][]int32) {
+	s.Slots = val
+}
+
+// SetPoints sets the value of Points.
+func (s *ClassCasting) SetPoints(val []int32) {
+	s.Points = val
+}
+
+// SetCosts sets the value of Costs.
+func (s *ClassCasting) SetCosts(val []int32) {
+	s.Costs = val
+}
+
+// SetMaxSpell sets the value of MaxSpell.
+func (s *ClassCasting) SetMaxSpell(val []int32) {
+	s.MaxSpell = val
+}
+
+// SetSpellbook sets the value of Spellbook.
+func (s *ClassCasting) SetSpellbook(val OptBool) {
+	s.Spellbook = val
+}
+
+// SetAfterRest sets the value of AfterRest.
+func (s *ClassCasting) SetAfterRest(val OptBool) {
+	s.AfterRest = val
+}
+
 // A class and what it gives at level 1.
 // Ref: #/components/schemas/ClassChoice
 type ClassChoice struct {
@@ -5697,7 +6211,7 @@ type ClassChoice struct {
 	SkillChoices int32     `json:"skillChoices"`
 	// The abilities the class leans on most, highlighted when choosing it.
 	PrimaryAbilities []Ability `json:"primaryAbilities"`
-	// How the class casts spells.
+	// How the class casts spells: the SRD kinds, or a homebrew slot table or spell points.
 	Caster OptClassChoiceCaster `json:"caster"`
 }
 
@@ -5771,14 +6285,16 @@ func (s *ClassChoice) SetCaster(val OptClassChoiceCaster) {
 	s.Caster = val
 }
 
-// How the class casts spells.
+// How the class casts spells: the SRD kinds, or a homebrew slot table or spell points.
 type ClassChoiceCaster string
 
 const (
-	ClassChoiceCasterNone ClassChoiceCaster = "none"
-	ClassChoiceCasterFull ClassChoiceCaster = "full"
-	ClassChoiceCasterHalf ClassChoiceCaster = "half"
-	ClassChoiceCasterPact ClassChoiceCaster = "pact"
+	ClassChoiceCasterNone   ClassChoiceCaster = "none"
+	ClassChoiceCasterFull   ClassChoiceCaster = "full"
+	ClassChoiceCasterHalf   ClassChoiceCaster = "half"
+	ClassChoiceCasterPact   ClassChoiceCaster = "pact"
+	ClassChoiceCasterSlots  ClassChoiceCaster = "slots"
+	ClassChoiceCasterPoints ClassChoiceCaster = "points"
 )
 
 // AllValues returns all ClassChoiceCaster values.
@@ -5788,6 +6304,8 @@ func (ClassChoiceCaster) AllValues() []ClassChoiceCaster {
 		ClassChoiceCasterFull,
 		ClassChoiceCasterHalf,
 		ClassChoiceCasterPact,
+		ClassChoiceCasterSlots,
+		ClassChoiceCasterPoints,
 	}
 }
 
@@ -5801,6 +6319,10 @@ func (s ClassChoiceCaster) MarshalText() ([]byte, error) {
 	case ClassChoiceCasterHalf:
 		return []byte(s), nil
 	case ClassChoiceCasterPact:
+		return []byte(s), nil
+	case ClassChoiceCasterSlots:
+		return []byte(s), nil
+	case ClassChoiceCasterPoints:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -5822,9 +6344,218 @@ func (s *ClassChoiceCaster) UnmarshalText(data []byte) error {
 	case ClassChoiceCasterPact:
 		*s = ClassChoiceCasterPact
 		return nil
+	case ClassChoiceCasterSlots:
+		*s = ClassChoiceCasterSlots
+		return nil
+	case ClassChoiceCasterPoints:
+		*s = ClassChoiceCasterPoints
+		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
 	}
+}
+
+// A custom column of the level table, one value for each of the 20 levels.
+// Ref: #/components/schemas/ClassColumn
+type ClassColumn struct {
+	Name   string   `json:"name"`
+	Values []string `json:"values"`
+}
+
+// GetName returns the value of Name.
+func (s *ClassColumn) GetName() string {
+	return s.Name
+}
+
+// GetValues returns the value of Values.
+func (s *ClassColumn) GetValues() []string {
+	return s.Values
+}
+
+// SetName sets the value of Name.
+func (s *ClassColumn) SetName(val string) {
+	s.Name = val
+}
+
+// SetValues sets the value of Values.
+func (s *ClassColumn) SetValues(val []string) {
+	s.Values = val
+}
+
+// A homebrew class as the class builder makes it, from its Hit Die, training, level table, features,
+// subclass and feat levels, and spellcasting.
+// Ref: #/components/schemas/ClassDesign
+type ClassDesign struct {
+	HitDie        int32          `json:"hitDie"`
+	Primary       []string       `json:"primary"`
+	AnyPrimary    OptBool        `json:"anyPrimary"`
+	Saves         []string       `json:"saves"`
+	Armor         []string       `json:"armor"`
+	Weapons       []string       `json:"weapons"`
+	Skills        int32          `json:"skills"`
+	SubclassLevel int32          `json:"subclassLevel"`
+	FeatLevels    []int32        `json:"featLevels"`
+	Columns       []ClassColumn  `json:"columns"`
+	Features      []ClassFeature `json:"features"`
+	Casting       ClassCasting   `json:"casting"`
+}
+
+// GetHitDie returns the value of HitDie.
+func (s *ClassDesign) GetHitDie() int32 {
+	return s.HitDie
+}
+
+// GetPrimary returns the value of Primary.
+func (s *ClassDesign) GetPrimary() []string {
+	return s.Primary
+}
+
+// GetAnyPrimary returns the value of AnyPrimary.
+func (s *ClassDesign) GetAnyPrimary() OptBool {
+	return s.AnyPrimary
+}
+
+// GetSaves returns the value of Saves.
+func (s *ClassDesign) GetSaves() []string {
+	return s.Saves
+}
+
+// GetArmor returns the value of Armor.
+func (s *ClassDesign) GetArmor() []string {
+	return s.Armor
+}
+
+// GetWeapons returns the value of Weapons.
+func (s *ClassDesign) GetWeapons() []string {
+	return s.Weapons
+}
+
+// GetSkills returns the value of Skills.
+func (s *ClassDesign) GetSkills() int32 {
+	return s.Skills
+}
+
+// GetSubclassLevel returns the value of SubclassLevel.
+func (s *ClassDesign) GetSubclassLevel() int32 {
+	return s.SubclassLevel
+}
+
+// GetFeatLevels returns the value of FeatLevels.
+func (s *ClassDesign) GetFeatLevels() []int32 {
+	return s.FeatLevels
+}
+
+// GetColumns returns the value of Columns.
+func (s *ClassDesign) GetColumns() []ClassColumn {
+	return s.Columns
+}
+
+// GetFeatures returns the value of Features.
+func (s *ClassDesign) GetFeatures() []ClassFeature {
+	return s.Features
+}
+
+// GetCasting returns the value of Casting.
+func (s *ClassDesign) GetCasting() ClassCasting {
+	return s.Casting
+}
+
+// SetHitDie sets the value of HitDie.
+func (s *ClassDesign) SetHitDie(val int32) {
+	s.HitDie = val
+}
+
+// SetPrimary sets the value of Primary.
+func (s *ClassDesign) SetPrimary(val []string) {
+	s.Primary = val
+}
+
+// SetAnyPrimary sets the value of AnyPrimary.
+func (s *ClassDesign) SetAnyPrimary(val OptBool) {
+	s.AnyPrimary = val
+}
+
+// SetSaves sets the value of Saves.
+func (s *ClassDesign) SetSaves(val []string) {
+	s.Saves = val
+}
+
+// SetArmor sets the value of Armor.
+func (s *ClassDesign) SetArmor(val []string) {
+	s.Armor = val
+}
+
+// SetWeapons sets the value of Weapons.
+func (s *ClassDesign) SetWeapons(val []string) {
+	s.Weapons = val
+}
+
+// SetSkills sets the value of Skills.
+func (s *ClassDesign) SetSkills(val int32) {
+	s.Skills = val
+}
+
+// SetSubclassLevel sets the value of SubclassLevel.
+func (s *ClassDesign) SetSubclassLevel(val int32) {
+	s.SubclassLevel = val
+}
+
+// SetFeatLevels sets the value of FeatLevels.
+func (s *ClassDesign) SetFeatLevels(val []int32) {
+	s.FeatLevels = val
+}
+
+// SetColumns sets the value of Columns.
+func (s *ClassDesign) SetColumns(val []ClassColumn) {
+	s.Columns = val
+}
+
+// SetFeatures sets the value of Features.
+func (s *ClassDesign) SetFeatures(val []ClassFeature) {
+	s.Features = val
+}
+
+// SetCasting sets the value of Casting.
+func (s *ClassDesign) SetCasting(val ClassCasting) {
+	s.Casting = val
+}
+
+// A feature gained at a class level.
+// Ref: #/components/schemas/ClassFeature
+type ClassFeature struct {
+	Level int32  `json:"level"`
+	Name  string `json:"name"`
+	Text  string `json:"text"`
+}
+
+// GetLevel returns the value of Level.
+func (s *ClassFeature) GetLevel() int32 {
+	return s.Level
+}
+
+// GetName returns the value of Name.
+func (s *ClassFeature) GetName() string {
+	return s.Name
+}
+
+// GetText returns the value of Text.
+func (s *ClassFeature) GetText() string {
+	return s.Text
+}
+
+// SetLevel sets the value of Level.
+func (s *ClassFeature) SetLevel(val int32) {
+	s.Level = val
+}
+
+// SetName sets the value of Name.
+func (s *ClassFeature) SetName(val string) {
+	s.Name = val
+}
+
+// SetText sets the value of Text.
+func (s *ClassFeature) SetText(val string) {
+	s.Text = val
 }
 
 // The levels a Character has in one class, and its subclass there.
@@ -5874,6 +6605,33 @@ func (s *ClassLine) SetSubclass(val OptSlug) {
 // SetLevel sets the value of Level.
 func (s *ClassLine) SetLevel(val int32) {
 	s.Level = val
+}
+
+// A design to preview, with the class's name.
+// Ref: #/components/schemas/ClassPreviewInput
+type ClassPreviewInput struct {
+	Name   string      `json:"name"`
+	Design ClassDesign `json:"design"`
+}
+
+// GetName returns the value of Name.
+func (s *ClassPreviewInput) GetName() string {
+	return s.Name
+}
+
+// GetDesign returns the value of Design.
+func (s *ClassPreviewInput) GetDesign() ClassDesign {
+	return s.Design
+}
+
+// SetName sets the value of Name.
+func (s *ClassPreviewInput) SetName(val string) {
+	s.Name = val
+}
+
+// SetDesign sets the value of Design.
+func (s *ClassPreviewInput) SetDesign(val ClassDesign) {
+	s.Design = val
 }
 
 // What a Character casts through one class.
@@ -6127,6 +6885,322 @@ func (s *Coin) UnmarshalText(data []byte) error {
 	default:
 		return errors.Errorf("invalid value: %q", data)
 	}
+}
+
+// A homebrew condition in its builder, the slug it is known by, and how it reads back.
+// Ref: #/components/schemas/ConditionBuild
+type ConditionBuild struct {
+	Entry  OptLibraryEntry `json:"entry"`
+	Design ConditionDesign `json:"design"`
+	Slug   OptString       `json:"slug"`
+	Lines  []string        `json:"lines"`
+}
+
+// GetEntry returns the value of Entry.
+func (s *ConditionBuild) GetEntry() OptLibraryEntry {
+	return s.Entry
+}
+
+// GetDesign returns the value of Design.
+func (s *ConditionBuild) GetDesign() ConditionDesign {
+	return s.Design
+}
+
+// GetSlug returns the value of Slug.
+func (s *ConditionBuild) GetSlug() OptString {
+	return s.Slug
+}
+
+// GetLines returns the value of Lines.
+func (s *ConditionBuild) GetLines() []string {
+	return s.Lines
+}
+
+// SetEntry sets the value of Entry.
+func (s *ConditionBuild) SetEntry(val OptLibraryEntry) {
+	s.Entry = val
+}
+
+// SetDesign sets the value of Design.
+func (s *ConditionBuild) SetDesign(val ConditionDesign) {
+	s.Design = val
+}
+
+// SetSlug sets the value of Slug.
+func (s *ConditionBuild) SetSlug(val OptString) {
+	s.Slug = val
+}
+
+// SetLines sets the value of Lines.
+func (s *ConditionBuild) SetLines(val []string) {
+	s.Lines = val
+}
+
+// ConditionBuildHeaders wraps ConditionBuild with response headers.
+type ConditionBuildHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           ConditionBuild
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ConditionBuildHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ConditionBuildHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ConditionBuildHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ConditionBuildHeaders) GetResponse() ConditionBuild {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ConditionBuildHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ConditionBuildHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ConditionBuildHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ConditionBuildHeaders) SetResponse(val ConditionBuild) {
+	s.Response = val
+}
+
+func (*ConditionBuildHeaders) getConditionBuildRes()  {}
+func (*ConditionBuildHeaders) previewConditionRes()   {}
+func (*ConditionBuildHeaders) saveConditionBuildRes() {}
+
+// A homebrew condition as the condition builder makes it, from its icon, how it ends, how it stacks
+// and what it does.
+// Ref: #/components/schemas/ConditionDesign
+type ConditionDesign struct {
+	Icon     string                     `json:"icon"`
+	Color    string                     `json:"color"`
+	Text     string                     `json:"text"`
+	Ends     string                     `json:"ends"`
+	Ability  OptString                  `json:"ability"`
+	Stacks   OptBool                    `json:"stacks"`
+	MaxLevel OptInt32                   `json:"maxLevel"`
+	PerLevel ConditionDesignPerLevel    `json:"perLevel"`
+	Parts    []ConditionDesignPartsItem `json:"parts"`
+}
+
+// GetIcon returns the value of Icon.
+func (s *ConditionDesign) GetIcon() string {
+	return s.Icon
+}
+
+// GetColor returns the value of Color.
+func (s *ConditionDesign) GetColor() string {
+	return s.Color
+}
+
+// GetText returns the value of Text.
+func (s *ConditionDesign) GetText() string {
+	return s.Text
+}
+
+// GetEnds returns the value of Ends.
+func (s *ConditionDesign) GetEnds() string {
+	return s.Ends
+}
+
+// GetAbility returns the value of Ability.
+func (s *ConditionDesign) GetAbility() OptString {
+	return s.Ability
+}
+
+// GetStacks returns the value of Stacks.
+func (s *ConditionDesign) GetStacks() OptBool {
+	return s.Stacks
+}
+
+// GetMaxLevel returns the value of MaxLevel.
+func (s *ConditionDesign) GetMaxLevel() OptInt32 {
+	return s.MaxLevel
+}
+
+// GetPerLevel returns the value of PerLevel.
+func (s *ConditionDesign) GetPerLevel() ConditionDesignPerLevel {
+	return s.PerLevel
+}
+
+// GetParts returns the value of Parts.
+func (s *ConditionDesign) GetParts() []ConditionDesignPartsItem {
+	return s.Parts
+}
+
+// SetIcon sets the value of Icon.
+func (s *ConditionDesign) SetIcon(val string) {
+	s.Icon = val
+}
+
+// SetColor sets the value of Color.
+func (s *ConditionDesign) SetColor(val string) {
+	s.Color = val
+}
+
+// SetText sets the value of Text.
+func (s *ConditionDesign) SetText(val string) {
+	s.Text = val
+}
+
+// SetEnds sets the value of Ends.
+func (s *ConditionDesign) SetEnds(val string) {
+	s.Ends = val
+}
+
+// SetAbility sets the value of Ability.
+func (s *ConditionDesign) SetAbility(val OptString) {
+	s.Ability = val
+}
+
+// SetStacks sets the value of Stacks.
+func (s *ConditionDesign) SetStacks(val OptBool) {
+	s.Stacks = val
+}
+
+// SetMaxLevel sets the value of MaxLevel.
+func (s *ConditionDesign) SetMaxLevel(val OptInt32) {
+	s.MaxLevel = val
+}
+
+// SetPerLevel sets the value of PerLevel.
+func (s *ConditionDesign) SetPerLevel(val ConditionDesignPerLevel) {
+	s.PerLevel = val
+}
+
+// SetParts sets the value of Parts.
+func (s *ConditionDesign) SetParts(val []ConditionDesignPartsItem) {
+	s.Parts = val
+}
+
+type ConditionDesignPartsItem struct {
+	Type    string    `json:"type"`
+	Ability OptString `json:"ability"`
+	Feet    OptInt32  `json:"feet"`
+	Text    OptString `json:"text"`
+}
+
+// GetType returns the value of Type.
+func (s *ConditionDesignPartsItem) GetType() string {
+	return s.Type
+}
+
+// GetAbility returns the value of Ability.
+func (s *ConditionDesignPartsItem) GetAbility() OptString {
+	return s.Ability
+}
+
+// GetFeet returns the value of Feet.
+func (s *ConditionDesignPartsItem) GetFeet() OptInt32 {
+	return s.Feet
+}
+
+// GetText returns the value of Text.
+func (s *ConditionDesignPartsItem) GetText() OptString {
+	return s.Text
+}
+
+// SetType sets the value of Type.
+func (s *ConditionDesignPartsItem) SetType(val string) {
+	s.Type = val
+}
+
+// SetAbility sets the value of Ability.
+func (s *ConditionDesignPartsItem) SetAbility(val OptString) {
+	s.Ability = val
+}
+
+// SetFeet sets the value of Feet.
+func (s *ConditionDesignPartsItem) SetFeet(val OptInt32) {
+	s.Feet = val
+}
+
+// SetText sets the value of Text.
+func (s *ConditionDesignPartsItem) SetText(val OptString) {
+	s.Text = val
+}
+
+type ConditionDesignPerLevel struct {
+	D20     int32 `json:"d20"`
+	SpeedFt int32 `json:"speedFt"`
+	DeathAt int32 `json:"deathAt"`
+}
+
+// GetD20 returns the value of D20.
+func (s *ConditionDesignPerLevel) GetD20() int32 {
+	return s.D20
+}
+
+// GetSpeedFt returns the value of SpeedFt.
+func (s *ConditionDesignPerLevel) GetSpeedFt() int32 {
+	return s.SpeedFt
+}
+
+// GetDeathAt returns the value of DeathAt.
+func (s *ConditionDesignPerLevel) GetDeathAt() int32 {
+	return s.DeathAt
+}
+
+// SetD20 sets the value of D20.
+func (s *ConditionDesignPerLevel) SetD20(val int32) {
+	s.D20 = val
+}
+
+// SetSpeedFt sets the value of SpeedFt.
+func (s *ConditionDesignPerLevel) SetSpeedFt(val int32) {
+	s.SpeedFt = val
+}
+
+// SetDeathAt sets the value of DeathAt.
+func (s *ConditionDesignPerLevel) SetDeathAt(val int32) {
+	s.DeathAt = val
+}
+
+// A design to preview, with the condition's name.
+// Ref: #/components/schemas/ConditionPreviewInput
+type ConditionPreviewInput struct {
+	Name   string          `json:"name"`
+	Design ConditionDesign `json:"design"`
+}
+
+// GetName returns the value of Name.
+func (s *ConditionPreviewInput) GetName() string {
+	return s.Name
+}
+
+// GetDesign returns the value of Design.
+func (s *ConditionPreviewInput) GetDesign() ConditionDesign {
+	return s.Design
+}
+
+// SetName sets the value of Name.
+func (s *ConditionPreviewInput) SetName(val string) {
+	s.Name = val
+}
+
+// SetDesign sets the value of Design.
+func (s *ConditionPreviewInput) SetDesign(val ConditionDesign) {
+	s.Design = val
 }
 
 // A condition named in rules text, with its own text for tooltips.
@@ -8985,6 +10059,244 @@ func (s *ExportedEntryPartsItem) init() ExportedEntryPartsItem {
 	return m
 }
 
+// A homebrew feat in its builder, the slug it is known by, and how it reads back.
+// Ref: #/components/schemas/FeatBuild
+type FeatBuild struct {
+	Entry  OptLibraryEntry `json:"entry"`
+	Design FeatDesign      `json:"design"`
+	Slug   OptString       `json:"slug"`
+	Lines  []string        `json:"lines"`
+}
+
+// GetEntry returns the value of Entry.
+func (s *FeatBuild) GetEntry() OptLibraryEntry {
+	return s.Entry
+}
+
+// GetDesign returns the value of Design.
+func (s *FeatBuild) GetDesign() FeatDesign {
+	return s.Design
+}
+
+// GetSlug returns the value of Slug.
+func (s *FeatBuild) GetSlug() OptString {
+	return s.Slug
+}
+
+// GetLines returns the value of Lines.
+func (s *FeatBuild) GetLines() []string {
+	return s.Lines
+}
+
+// SetEntry sets the value of Entry.
+func (s *FeatBuild) SetEntry(val OptLibraryEntry) {
+	s.Entry = val
+}
+
+// SetDesign sets the value of Design.
+func (s *FeatBuild) SetDesign(val FeatDesign) {
+	s.Design = val
+}
+
+// SetSlug sets the value of Slug.
+func (s *FeatBuild) SetSlug(val OptString) {
+	s.Slug = val
+}
+
+// SetLines sets the value of Lines.
+func (s *FeatBuild) SetLines(val []string) {
+	s.Lines = val
+}
+
+// FeatBuildHeaders wraps FeatBuild with response headers.
+type FeatBuildHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           FeatBuild
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *FeatBuildHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *FeatBuildHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *FeatBuildHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *FeatBuildHeaders) GetResponse() FeatBuild {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *FeatBuildHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *FeatBuildHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *FeatBuildHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *FeatBuildHeaders) SetResponse(val FeatBuild) {
+	s.Response = val
+}
+
+func (*FeatBuildHeaders) getFeatBuildRes()  {}
+func (*FeatBuildHeaders) previewFeatRes()   {}
+func (*FeatBuildHeaders) saveFeatBuildRes() {}
+
+// A homebrew feat as the feat builder makes it, with its category, text, prerequisites and whether it
+// can be taken again.
+// Ref: #/components/schemas/FeatDesign
+type FeatDesign struct {
+	Category      string             `json:"category"`
+	Text          string             `json:"text"`
+	Repeatable    OptBool            `json:"repeatable"`
+	Prerequisites []FeatPrerequisite `json:"prerequisites"`
+}
+
+// GetCategory returns the value of Category.
+func (s *FeatDesign) GetCategory() string {
+	return s.Category
+}
+
+// GetText returns the value of Text.
+func (s *FeatDesign) GetText() string {
+	return s.Text
+}
+
+// GetRepeatable returns the value of Repeatable.
+func (s *FeatDesign) GetRepeatable() OptBool {
+	return s.Repeatable
+}
+
+// GetPrerequisites returns the value of Prerequisites.
+func (s *FeatDesign) GetPrerequisites() []FeatPrerequisite {
+	return s.Prerequisites
+}
+
+// SetCategory sets the value of Category.
+func (s *FeatDesign) SetCategory(val string) {
+	s.Category = val
+}
+
+// SetText sets the value of Text.
+func (s *FeatDesign) SetText(val string) {
+	s.Text = val
+}
+
+// SetRepeatable sets the value of Repeatable.
+func (s *FeatDesign) SetRepeatable(val OptBool) {
+	s.Repeatable = val
+}
+
+// SetPrerequisites sets the value of Prerequisites.
+func (s *FeatDesign) SetPrerequisites(val []FeatPrerequisite) {
+	s.Prerequisites = val
+}
+
+// One thing a feat needs; prerequisites in one group are alternatives, and every group must hold.
+// Ref: #/components/schemas/FeatPrerequisite
+type FeatPrerequisite struct {
+	Kind    string    `json:"kind"`
+	Ability OptString `json:"ability"`
+	Minimum OptInt32  `json:"minimum"`
+	Feat    OptString `json:"feat"`
+	Group   int32     `json:"group"`
+}
+
+// GetKind returns the value of Kind.
+func (s *FeatPrerequisite) GetKind() string {
+	return s.Kind
+}
+
+// GetAbility returns the value of Ability.
+func (s *FeatPrerequisite) GetAbility() OptString {
+	return s.Ability
+}
+
+// GetMinimum returns the value of Minimum.
+func (s *FeatPrerequisite) GetMinimum() OptInt32 {
+	return s.Minimum
+}
+
+// GetFeat returns the value of Feat.
+func (s *FeatPrerequisite) GetFeat() OptString {
+	return s.Feat
+}
+
+// GetGroup returns the value of Group.
+func (s *FeatPrerequisite) GetGroup() int32 {
+	return s.Group
+}
+
+// SetKind sets the value of Kind.
+func (s *FeatPrerequisite) SetKind(val string) {
+	s.Kind = val
+}
+
+// SetAbility sets the value of Ability.
+func (s *FeatPrerequisite) SetAbility(val OptString) {
+	s.Ability = val
+}
+
+// SetMinimum sets the value of Minimum.
+func (s *FeatPrerequisite) SetMinimum(val OptInt32) {
+	s.Minimum = val
+}
+
+// SetFeat sets the value of Feat.
+func (s *FeatPrerequisite) SetFeat(val OptString) {
+	s.Feat = val
+}
+
+// SetGroup sets the value of Group.
+func (s *FeatPrerequisite) SetGroup(val int32) {
+	s.Group = val
+}
+
+// A design to preview, with the feat's name.
+// Ref: #/components/schemas/FeatPreviewInput
+type FeatPreviewInput struct {
+	Name   string     `json:"name"`
+	Design FeatDesign `json:"design"`
+}
+
+// GetName returns the value of Name.
+func (s *FeatPreviewInput) GetName() string {
+	return s.Name
+}
+
+// GetDesign returns the value of Design.
+func (s *FeatPreviewInput) GetDesign() FeatDesign {
+	return s.Design
+}
+
+// SetName sets the value of Name.
+func (s *FeatPreviewInput) SetName(val string) {
+	s.Name = val
+}
+
+// SetDesign sets the value of Design.
+func (s *FeatPreviewInput) SetDesign(val FeatDesign) {
+	s.Design = val
+}
+
 // A field whose value differs between two Revisions.
 // Ref: #/components/schemas/FieldChange
 type FieldChange struct {
@@ -10813,6 +12125,7 @@ type InventoryUse struct {
 	Use        InventoryUseUse `json:"use"`
 	// Charges to spend.
 	Count OptInt32 `json:"count"`
+	Spell OptSlug  `json:"spell"`
 }
 
 // GetInstanceId returns the value of InstanceId.
@@ -10835,6 +12148,11 @@ func (s *InventoryUse) GetCount() OptInt32 {
 	return s.Count
 }
 
+// GetSpell returns the value of Spell.
+func (s *InventoryUse) GetSpell() OptSlug {
+	return s.Spell
+}
+
 // SetInstanceId sets the value of InstanceId.
 func (s *InventoryUse) SetInstanceId(val OptID) {
 	s.InstanceId = val
@@ -10853,6 +12171,11 @@ func (s *InventoryUse) SetUse(val InventoryUseUse) {
 // SetCount sets the value of Count.
 func (s *InventoryUse) SetCount(val OptInt32) {
 	s.Count = val
+}
+
+// SetSpell sets the value of Spell.
+func (s *InventoryUse) SetSpell(val OptSlug) {
+	s.Spell = val
 }
 
 // The Inventory after using an item, and the hit points it restored.
@@ -10941,6 +12264,7 @@ const (
 	InventoryUseUseUnattune InventoryUseUse = "unattune"
 	InventoryUseUseIdentify InventoryUseUse = "identify"
 	InventoryUseUseCharge   InventoryUseUse = "charge"
+	InventoryUseUseCast     InventoryUseUse = "cast"
 )
 
 // AllValues returns all InventoryUseUse values.
@@ -10952,6 +12276,7 @@ func (InventoryUseUse) AllValues() []InventoryUseUse {
 		InventoryUseUseUnattune,
 		InventoryUseUseIdentify,
 		InventoryUseUseCharge,
+		InventoryUseUseCast,
 	}
 }
 
@@ -10969,6 +12294,8 @@ func (s InventoryUseUse) MarshalText() ([]byte, error) {
 	case InventoryUseUseIdentify:
 		return []byte(s), nil
 	case InventoryUseUseCharge:
+		return []byte(s), nil
+	case InventoryUseUseCast:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -10995,6 +12322,9 @@ func (s *InventoryUseUse) UnmarshalText(data []byte) error {
 		return nil
 	case InventoryUseUseCharge:
 		*s = InventoryUseUseCharge
+		return nil
+	case InventoryUseUseCast:
+		*s = InventoryUseUseCast
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -11453,6 +12783,179 @@ func (s *InviteToken) SetToken(val Token) {
 	s.Token = val
 }
 
+// A homebrew item in the item builder, the slug it is known by in play, its card as players read it
+// once known, and its Price Check.
+// Ref: #/components/schemas/ItemBuild
+type ItemBuild struct {
+	Entry  OptLibraryEntry `json:"entry"`
+	Design ItemDesign      `json:"design"`
+	Slug   OptString       `json:"slug"`
+	Card   []string        `json:"card"`
+	// Whether the rarity and value fit what the properties are worth.
+	Price ItemBuildPrice `json:"price"`
+}
+
+// GetEntry returns the value of Entry.
+func (s *ItemBuild) GetEntry() OptLibraryEntry {
+	return s.Entry
+}
+
+// GetDesign returns the value of Design.
+func (s *ItemBuild) GetDesign() ItemDesign {
+	return s.Design
+}
+
+// GetSlug returns the value of Slug.
+func (s *ItemBuild) GetSlug() OptString {
+	return s.Slug
+}
+
+// GetCard returns the value of Card.
+func (s *ItemBuild) GetCard() []string {
+	return s.Card
+}
+
+// GetPrice returns the value of Price.
+func (s *ItemBuild) GetPrice() ItemBuildPrice {
+	return s.Price
+}
+
+// SetEntry sets the value of Entry.
+func (s *ItemBuild) SetEntry(val OptLibraryEntry) {
+	s.Entry = val
+}
+
+// SetDesign sets the value of Design.
+func (s *ItemBuild) SetDesign(val ItemDesign) {
+	s.Design = val
+}
+
+// SetSlug sets the value of Slug.
+func (s *ItemBuild) SetSlug(val OptString) {
+	s.Slug = val
+}
+
+// SetCard sets the value of Card.
+func (s *ItemBuild) SetCard(val []string) {
+	s.Card = val
+}
+
+// SetPrice sets the value of Price.
+func (s *ItemBuild) SetPrice(val ItemBuildPrice) {
+	s.Price = val
+}
+
+// ItemBuildHeaders wraps ItemBuild with response headers.
+type ItemBuildHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           ItemBuild
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ItemBuildHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ItemBuildHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ItemBuildHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ItemBuildHeaders) GetResponse() ItemBuild {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ItemBuildHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ItemBuildHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ItemBuildHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ItemBuildHeaders) SetResponse(val ItemBuild) {
+	s.Response = val
+}
+
+func (*ItemBuildHeaders) getItemBuildRes()  {}
+func (*ItemBuildHeaders) previewItemRes()   {}
+func (*ItemBuildHeaders) saveItemBuildRes() {}
+
+// Whether the rarity and value fit what the properties are worth.
+type ItemBuildPrice struct {
+	Points    int32    `json:"points"`
+	Suggested string   `json:"suggested"`
+	PriceGp   int32    `json:"priceGp"`
+	Fits      bool     `json:"fits"`
+	Notes     []string `json:"notes"`
+}
+
+// GetPoints returns the value of Points.
+func (s *ItemBuildPrice) GetPoints() int32 {
+	return s.Points
+}
+
+// GetSuggested returns the value of Suggested.
+func (s *ItemBuildPrice) GetSuggested() string {
+	return s.Suggested
+}
+
+// GetPriceGp returns the value of PriceGp.
+func (s *ItemBuildPrice) GetPriceGp() int32 {
+	return s.PriceGp
+}
+
+// GetFits returns the value of Fits.
+func (s *ItemBuildPrice) GetFits() bool {
+	return s.Fits
+}
+
+// GetNotes returns the value of Notes.
+func (s *ItemBuildPrice) GetNotes() []string {
+	return s.Notes
+}
+
+// SetPoints sets the value of Points.
+func (s *ItemBuildPrice) SetPoints(val int32) {
+	s.Points = val
+}
+
+// SetSuggested sets the value of Suggested.
+func (s *ItemBuildPrice) SetSuggested(val string) {
+	s.Suggested = val
+}
+
+// SetPriceGp sets the value of PriceGp.
+func (s *ItemBuildPrice) SetPriceGp(val int32) {
+	s.PriceGp = val
+}
+
+// SetFits sets the value of Fits.
+func (s *ItemBuildPrice) SetFits(val bool) {
+	s.Fits = val
+}
+
+// SetNotes sets the value of Notes.
+func (s *ItemBuildPrice) SetNotes(val []string) {
+	s.Notes = val
+}
+
 // An item in an Inventory, with the slots it fits.
 // Ref: #/components/schemas/ItemCard
 type ItemCard struct {
@@ -11471,6 +12974,10 @@ type ItemCard struct {
 	AttunementDetail   OptString        `json:"attunementDetail"`
 	MaxCharges         OptInt32         `json:"maxCharges"`
 	Fits               []EquipmentSlot  `json:"fits"`
+	// Spells the item lets its bearer cast, at will or for charges.
+	Spells []ItemSpell `json:"spells"`
+	// A homebrew item's card, as far as its holder knows it.
+	Lines []string `json:"lines"`
 }
 
 // GetInstanceId returns the value of InstanceId.
@@ -11548,6 +13055,16 @@ func (s *ItemCard) GetFits() []EquipmentSlot {
 	return s.Fits
 }
 
+// GetSpells returns the value of Spells.
+func (s *ItemCard) GetSpells() []ItemSpell {
+	return s.Spells
+}
+
+// GetLines returns the value of Lines.
+func (s *ItemCard) GetLines() []string {
+	return s.Lines
+}
+
 // SetInstanceId sets the value of InstanceId.
 func (s *ItemCard) SetInstanceId(val OptID) {
 	s.InstanceId = val
@@ -11621,6 +13138,714 @@ func (s *ItemCard) SetMaxCharges(val OptInt32) {
 // SetFits sets the value of Fits.
 func (s *ItemCard) SetFits(val []EquipmentSlot) {
 	s.Fits = val
+}
+
+// SetSpells sets the value of Spells.
+func (s *ItemCard) SetSpells(val []ItemSpell) {
+	s.Spells = val
+}
+
+// SetLines sets the value of Lines.
+func (s *ItemCard) SetLines(val []string) {
+	s.Lines = val
+}
+
+// A homebrew item as the item builder makes it, from its kind, base item, rarity, enchantment,
+// attunement, charges and Item Properties.
+// Ref: #/components/schemas/ItemDesign
+type ItemDesign struct {
+	Kind        string                  `json:"kind"`
+	Base        OptString               `json:"base"`
+	Rarity      ItemDesignRarity        `json:"rarity"`
+	Enchantment int32                   `json:"enchantment"`
+	WeightLb    float64                 `json:"weightLb"`
+	ValueGp     int32                   `json:"valueGp"`
+	Attunement  OptItemDesignAttunement `json:"attunement"`
+	Weapon      OptItemDesignWeapon     `json:"weapon"`
+	Charges     OptItemDesignCharges    `json:"charges"`
+	Properties  []ItemProperty          `json:"properties"`
+}
+
+// GetKind returns the value of Kind.
+func (s *ItemDesign) GetKind() string {
+	return s.Kind
+}
+
+// GetBase returns the value of Base.
+func (s *ItemDesign) GetBase() OptString {
+	return s.Base
+}
+
+// GetRarity returns the value of Rarity.
+func (s *ItemDesign) GetRarity() ItemDesignRarity {
+	return s.Rarity
+}
+
+// GetEnchantment returns the value of Enchantment.
+func (s *ItemDesign) GetEnchantment() int32 {
+	return s.Enchantment
+}
+
+// GetWeightLb returns the value of WeightLb.
+func (s *ItemDesign) GetWeightLb() float64 {
+	return s.WeightLb
+}
+
+// GetValueGp returns the value of ValueGp.
+func (s *ItemDesign) GetValueGp() int32 {
+	return s.ValueGp
+}
+
+// GetAttunement returns the value of Attunement.
+func (s *ItemDesign) GetAttunement() OptItemDesignAttunement {
+	return s.Attunement
+}
+
+// GetWeapon returns the value of Weapon.
+func (s *ItemDesign) GetWeapon() OptItemDesignWeapon {
+	return s.Weapon
+}
+
+// GetCharges returns the value of Charges.
+func (s *ItemDesign) GetCharges() OptItemDesignCharges {
+	return s.Charges
+}
+
+// GetProperties returns the value of Properties.
+func (s *ItemDesign) GetProperties() []ItemProperty {
+	return s.Properties
+}
+
+// SetKind sets the value of Kind.
+func (s *ItemDesign) SetKind(val string) {
+	s.Kind = val
+}
+
+// SetBase sets the value of Base.
+func (s *ItemDesign) SetBase(val OptString) {
+	s.Base = val
+}
+
+// SetRarity sets the value of Rarity.
+func (s *ItemDesign) SetRarity(val ItemDesignRarity) {
+	s.Rarity = val
+}
+
+// SetEnchantment sets the value of Enchantment.
+func (s *ItemDesign) SetEnchantment(val int32) {
+	s.Enchantment = val
+}
+
+// SetWeightLb sets the value of WeightLb.
+func (s *ItemDesign) SetWeightLb(val float64) {
+	s.WeightLb = val
+}
+
+// SetValueGp sets the value of ValueGp.
+func (s *ItemDesign) SetValueGp(val int32) {
+	s.ValueGp = val
+}
+
+// SetAttunement sets the value of Attunement.
+func (s *ItemDesign) SetAttunement(val OptItemDesignAttunement) {
+	s.Attunement = val
+}
+
+// SetWeapon sets the value of Weapon.
+func (s *ItemDesign) SetWeapon(val OptItemDesignWeapon) {
+	s.Weapon = val
+}
+
+// SetCharges sets the value of Charges.
+func (s *ItemDesign) SetCharges(val OptItemDesignCharges) {
+	s.Charges = val
+}
+
+// SetProperties sets the value of Properties.
+func (s *ItemDesign) SetProperties(val []ItemProperty) {
+	s.Properties = val
+}
+
+type ItemDesignAttunement struct {
+	Kind  OptString `json:"kind"`
+	Value OptString `json:"value"`
+}
+
+// GetKind returns the value of Kind.
+func (s *ItemDesignAttunement) GetKind() OptString {
+	return s.Kind
+}
+
+// GetValue returns the value of Value.
+func (s *ItemDesignAttunement) GetValue() OptString {
+	return s.Value
+}
+
+// SetKind sets the value of Kind.
+func (s *ItemDesignAttunement) SetKind(val OptString) {
+	s.Kind = val
+}
+
+// SetValue sets the value of Value.
+func (s *ItemDesignAttunement) SetValue(val OptString) {
+	s.Value = val
+}
+
+type ItemDesignCharges struct {
+	Max   int32    `json:"max"`
+	On    string   `json:"on"`
+	Dice  OptInt32 `json:"dice"`
+	Faces OptInt32 `json:"faces"`
+	Bonus OptInt32 `json:"bonus"`
+}
+
+// GetMax returns the value of Max.
+func (s *ItemDesignCharges) GetMax() int32 {
+	return s.Max
+}
+
+// GetOn returns the value of On.
+func (s *ItemDesignCharges) GetOn() string {
+	return s.On
+}
+
+// GetDice returns the value of Dice.
+func (s *ItemDesignCharges) GetDice() OptInt32 {
+	return s.Dice
+}
+
+// GetFaces returns the value of Faces.
+func (s *ItemDesignCharges) GetFaces() OptInt32 {
+	return s.Faces
+}
+
+// GetBonus returns the value of Bonus.
+func (s *ItemDesignCharges) GetBonus() OptInt32 {
+	return s.Bonus
+}
+
+// SetMax sets the value of Max.
+func (s *ItemDesignCharges) SetMax(val int32) {
+	s.Max = val
+}
+
+// SetOn sets the value of On.
+func (s *ItemDesignCharges) SetOn(val string) {
+	s.On = val
+}
+
+// SetDice sets the value of Dice.
+func (s *ItemDesignCharges) SetDice(val OptInt32) {
+	s.Dice = val
+}
+
+// SetFaces sets the value of Faces.
+func (s *ItemDesignCharges) SetFaces(val OptInt32) {
+	s.Faces = val
+}
+
+// SetBonus sets the value of Bonus.
+func (s *ItemDesignCharges) SetBonus(val OptInt32) {
+	s.Bonus = val
+}
+
+type ItemDesignRarity string
+
+const (
+	ItemDesignRarityCommon    ItemDesignRarity = "common"
+	ItemDesignRarityUncommon  ItemDesignRarity = "uncommon"
+	ItemDesignRarityRare      ItemDesignRarity = "rare"
+	ItemDesignRarityVeryRare  ItemDesignRarity = "very_rare"
+	ItemDesignRarityLegendary ItemDesignRarity = "legendary"
+)
+
+// AllValues returns all ItemDesignRarity values.
+func (ItemDesignRarity) AllValues() []ItemDesignRarity {
+	return []ItemDesignRarity{
+		ItemDesignRarityCommon,
+		ItemDesignRarityUncommon,
+		ItemDesignRarityRare,
+		ItemDesignRarityVeryRare,
+		ItemDesignRarityLegendary,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s ItemDesignRarity) MarshalText() ([]byte, error) {
+	switch s {
+	case ItemDesignRarityCommon:
+		return []byte(s), nil
+	case ItemDesignRarityUncommon:
+		return []byte(s), nil
+	case ItemDesignRarityRare:
+		return []byte(s), nil
+	case ItemDesignRarityVeryRare:
+		return []byte(s), nil
+	case ItemDesignRarityLegendary:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *ItemDesignRarity) UnmarshalText(data []byte) error {
+	switch ItemDesignRarity(data) {
+	case ItemDesignRarityCommon:
+		*s = ItemDesignRarityCommon
+		return nil
+	case ItemDesignRarityUncommon:
+		*s = ItemDesignRarityUncommon
+		return nil
+	case ItemDesignRarityRare:
+		*s = ItemDesignRarityRare
+		return nil
+	case ItemDesignRarityVeryRare:
+		*s = ItemDesignRarityVeryRare
+		return nil
+	case ItemDesignRarityLegendary:
+		*s = ItemDesignRarityLegendary
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type ItemDesignWeapon struct {
+	Properties []string  `json:"properties"`
+	Mastery    OptString `json:"mastery"`
+	Custom     OptString `json:"custom"`
+}
+
+// GetProperties returns the value of Properties.
+func (s *ItemDesignWeapon) GetProperties() []string {
+	return s.Properties
+}
+
+// GetMastery returns the value of Mastery.
+func (s *ItemDesignWeapon) GetMastery() OptString {
+	return s.Mastery
+}
+
+// GetCustom returns the value of Custom.
+func (s *ItemDesignWeapon) GetCustom() OptString {
+	return s.Custom
+}
+
+// SetProperties sets the value of Properties.
+func (s *ItemDesignWeapon) SetProperties(val []string) {
+	s.Properties = val
+}
+
+// SetMastery sets the value of Mastery.
+func (s *ItemDesignWeapon) SetMastery(val OptString) {
+	s.Mastery = val
+}
+
+// SetCustom sets the value of Custom.
+func (s *ItemDesignWeapon) SetCustom(val OptString) {
+	s.Custom = val
+}
+
+// A design to preview, with the item's name.
+// Ref: #/components/schemas/ItemPreviewInput
+type ItemPreviewInput struct {
+	Name   string     `json:"name"`
+	Design ItemDesign `json:"design"`
+}
+
+// GetName returns the value of Name.
+func (s *ItemPreviewInput) GetName() string {
+	return s.Name
+}
+
+// GetDesign returns the value of Design.
+func (s *ItemPreviewInput) GetDesign() ItemDesign {
+	return s.Design
+}
+
+// SetName sets the value of Name.
+func (s *ItemPreviewInput) SetName(val string) {
+	s.Name = val
+}
+
+// SetDesign sets the value of Design.
+func (s *ItemPreviewInput) SetDesign(val ItemDesign) {
+	s.Design = val
+}
+
+// One Item Property row; which fields count depends on its type. A hidden one shows once the item is
+// identified or attuned.
+// Ref: #/components/schemas/ItemProperty
+type ItemProperty struct {
+	Type       string    `json:"type"`
+	Hidden     OptBool   `json:"hidden"`
+	Skill      OptString `json:"skill"`
+	Mode       OptString `json:"mode"`
+	Target     OptString `json:"target"`
+	Value      OptInt32  `json:"value"`
+	Dice       OptString `json:"dice"`
+	Damage     OptString `json:"damage"`
+	Sense      OptString `json:"sense"`
+	Speed      OptString `json:"speed"`
+	Feet       OptInt32  `json:"feet"`
+	Spell      OptString `json:"spell"`
+	Name       OptString `json:"name"`
+	Level      OptInt32  `json:"level"`
+	Cost       OptInt32  `json:"cost"`
+	BrightFt   OptInt32  `json:"brightFt"`
+	DimFt      OptInt32  `json:"dimFt"`
+	Uses       OptString `json:"uses"`
+	Hits       OptInt32  `json:"hits"`
+	Text       OptString `json:"text"`
+	CannotDrop OptBool   `json:"cannotDrop"`
+	AtLevel    OptInt32  `json:"atLevel"`
+	Set        OptString `json:"set"`
+	Pieces     OptInt32  `json:"pieces"`
+	CapacityLb OptInt32  `json:"capacityLb"`
+	Weightless OptBool   `json:"weightless"`
+	OnlyKind   OptString `json:"onlyKind"`
+	Misfire    OptInt32  `json:"misfire"`
+	Reload     OptInt32  `json:"reload"`
+	Burst      OptInt32  `json:"burst"`
+}
+
+// GetType returns the value of Type.
+func (s *ItemProperty) GetType() string {
+	return s.Type
+}
+
+// GetHidden returns the value of Hidden.
+func (s *ItemProperty) GetHidden() OptBool {
+	return s.Hidden
+}
+
+// GetSkill returns the value of Skill.
+func (s *ItemProperty) GetSkill() OptString {
+	return s.Skill
+}
+
+// GetMode returns the value of Mode.
+func (s *ItemProperty) GetMode() OptString {
+	return s.Mode
+}
+
+// GetTarget returns the value of Target.
+func (s *ItemProperty) GetTarget() OptString {
+	return s.Target
+}
+
+// GetValue returns the value of Value.
+func (s *ItemProperty) GetValue() OptInt32 {
+	return s.Value
+}
+
+// GetDice returns the value of Dice.
+func (s *ItemProperty) GetDice() OptString {
+	return s.Dice
+}
+
+// GetDamage returns the value of Damage.
+func (s *ItemProperty) GetDamage() OptString {
+	return s.Damage
+}
+
+// GetSense returns the value of Sense.
+func (s *ItemProperty) GetSense() OptString {
+	return s.Sense
+}
+
+// GetSpeed returns the value of Speed.
+func (s *ItemProperty) GetSpeed() OptString {
+	return s.Speed
+}
+
+// GetFeet returns the value of Feet.
+func (s *ItemProperty) GetFeet() OptInt32 {
+	return s.Feet
+}
+
+// GetSpell returns the value of Spell.
+func (s *ItemProperty) GetSpell() OptString {
+	return s.Spell
+}
+
+// GetName returns the value of Name.
+func (s *ItemProperty) GetName() OptString {
+	return s.Name
+}
+
+// GetLevel returns the value of Level.
+func (s *ItemProperty) GetLevel() OptInt32 {
+	return s.Level
+}
+
+// GetCost returns the value of Cost.
+func (s *ItemProperty) GetCost() OptInt32 {
+	return s.Cost
+}
+
+// GetBrightFt returns the value of BrightFt.
+func (s *ItemProperty) GetBrightFt() OptInt32 {
+	return s.BrightFt
+}
+
+// GetDimFt returns the value of DimFt.
+func (s *ItemProperty) GetDimFt() OptInt32 {
+	return s.DimFt
+}
+
+// GetUses returns the value of Uses.
+func (s *ItemProperty) GetUses() OptString {
+	return s.Uses
+}
+
+// GetHits returns the value of Hits.
+func (s *ItemProperty) GetHits() OptInt32 {
+	return s.Hits
+}
+
+// GetText returns the value of Text.
+func (s *ItemProperty) GetText() OptString {
+	return s.Text
+}
+
+// GetCannotDrop returns the value of CannotDrop.
+func (s *ItemProperty) GetCannotDrop() OptBool {
+	return s.CannotDrop
+}
+
+// GetAtLevel returns the value of AtLevel.
+func (s *ItemProperty) GetAtLevel() OptInt32 {
+	return s.AtLevel
+}
+
+// GetSet returns the value of Set.
+func (s *ItemProperty) GetSet() OptString {
+	return s.Set
+}
+
+// GetPieces returns the value of Pieces.
+func (s *ItemProperty) GetPieces() OptInt32 {
+	return s.Pieces
+}
+
+// GetCapacityLb returns the value of CapacityLb.
+func (s *ItemProperty) GetCapacityLb() OptInt32 {
+	return s.CapacityLb
+}
+
+// GetWeightless returns the value of Weightless.
+func (s *ItemProperty) GetWeightless() OptBool {
+	return s.Weightless
+}
+
+// GetOnlyKind returns the value of OnlyKind.
+func (s *ItemProperty) GetOnlyKind() OptString {
+	return s.OnlyKind
+}
+
+// GetMisfire returns the value of Misfire.
+func (s *ItemProperty) GetMisfire() OptInt32 {
+	return s.Misfire
+}
+
+// GetReload returns the value of Reload.
+func (s *ItemProperty) GetReload() OptInt32 {
+	return s.Reload
+}
+
+// GetBurst returns the value of Burst.
+func (s *ItemProperty) GetBurst() OptInt32 {
+	return s.Burst
+}
+
+// SetType sets the value of Type.
+func (s *ItemProperty) SetType(val string) {
+	s.Type = val
+}
+
+// SetHidden sets the value of Hidden.
+func (s *ItemProperty) SetHidden(val OptBool) {
+	s.Hidden = val
+}
+
+// SetSkill sets the value of Skill.
+func (s *ItemProperty) SetSkill(val OptString) {
+	s.Skill = val
+}
+
+// SetMode sets the value of Mode.
+func (s *ItemProperty) SetMode(val OptString) {
+	s.Mode = val
+}
+
+// SetTarget sets the value of Target.
+func (s *ItemProperty) SetTarget(val OptString) {
+	s.Target = val
+}
+
+// SetValue sets the value of Value.
+func (s *ItemProperty) SetValue(val OptInt32) {
+	s.Value = val
+}
+
+// SetDice sets the value of Dice.
+func (s *ItemProperty) SetDice(val OptString) {
+	s.Dice = val
+}
+
+// SetDamage sets the value of Damage.
+func (s *ItemProperty) SetDamage(val OptString) {
+	s.Damage = val
+}
+
+// SetSense sets the value of Sense.
+func (s *ItemProperty) SetSense(val OptString) {
+	s.Sense = val
+}
+
+// SetSpeed sets the value of Speed.
+func (s *ItemProperty) SetSpeed(val OptString) {
+	s.Speed = val
+}
+
+// SetFeet sets the value of Feet.
+func (s *ItemProperty) SetFeet(val OptInt32) {
+	s.Feet = val
+}
+
+// SetSpell sets the value of Spell.
+func (s *ItemProperty) SetSpell(val OptString) {
+	s.Spell = val
+}
+
+// SetName sets the value of Name.
+func (s *ItemProperty) SetName(val OptString) {
+	s.Name = val
+}
+
+// SetLevel sets the value of Level.
+func (s *ItemProperty) SetLevel(val OptInt32) {
+	s.Level = val
+}
+
+// SetCost sets the value of Cost.
+func (s *ItemProperty) SetCost(val OptInt32) {
+	s.Cost = val
+}
+
+// SetBrightFt sets the value of BrightFt.
+func (s *ItemProperty) SetBrightFt(val OptInt32) {
+	s.BrightFt = val
+}
+
+// SetDimFt sets the value of DimFt.
+func (s *ItemProperty) SetDimFt(val OptInt32) {
+	s.DimFt = val
+}
+
+// SetUses sets the value of Uses.
+func (s *ItemProperty) SetUses(val OptString) {
+	s.Uses = val
+}
+
+// SetHits sets the value of Hits.
+func (s *ItemProperty) SetHits(val OptInt32) {
+	s.Hits = val
+}
+
+// SetText sets the value of Text.
+func (s *ItemProperty) SetText(val OptString) {
+	s.Text = val
+}
+
+// SetCannotDrop sets the value of CannotDrop.
+func (s *ItemProperty) SetCannotDrop(val OptBool) {
+	s.CannotDrop = val
+}
+
+// SetAtLevel sets the value of AtLevel.
+func (s *ItemProperty) SetAtLevel(val OptInt32) {
+	s.AtLevel = val
+}
+
+// SetSet sets the value of Set.
+func (s *ItemProperty) SetSet(val OptString) {
+	s.Set = val
+}
+
+// SetPieces sets the value of Pieces.
+func (s *ItemProperty) SetPieces(val OptInt32) {
+	s.Pieces = val
+}
+
+// SetCapacityLb sets the value of CapacityLb.
+func (s *ItemProperty) SetCapacityLb(val OptInt32) {
+	s.CapacityLb = val
+}
+
+// SetWeightless sets the value of Weightless.
+func (s *ItemProperty) SetWeightless(val OptBool) {
+	s.Weightless = val
+}
+
+// SetOnlyKind sets the value of OnlyKind.
+func (s *ItemProperty) SetOnlyKind(val OptString) {
+	s.OnlyKind = val
+}
+
+// SetMisfire sets the value of Misfire.
+func (s *ItemProperty) SetMisfire(val OptInt32) {
+	s.Misfire = val
+}
+
+// SetReload sets the value of Reload.
+func (s *ItemProperty) SetReload(val OptInt32) {
+	s.Reload = val
+}
+
+// SetBurst sets the value of Burst.
+func (s *ItemProperty) SetBurst(val OptInt32) {
+	s.Burst = val
+}
+
+// A spell an item grants; cost is the charges it spends, 0 at will.
+// Ref: #/components/schemas/ItemSpell
+type ItemSpell struct {
+	Slug Slug   `json:"slug"`
+	Name string `json:"name"`
+	Cost int32  `json:"cost"`
+}
+
+// GetSlug returns the value of Slug.
+func (s *ItemSpell) GetSlug() Slug {
+	return s.Slug
+}
+
+// GetName returns the value of Name.
+func (s *ItemSpell) GetName() string {
+	return s.Name
+}
+
+// GetCost returns the value of Cost.
+func (s *ItemSpell) GetCost() int32 {
+	return s.Cost
+}
+
+// SetSlug sets the value of Slug.
+func (s *ItemSpell) SetSlug(val Slug) {
+	s.Slug = val
+}
+
+// SetName sets the value of Name.
+func (s *ItemSpell) SetName(val string) {
+	s.Name = val
+}
+
+// SetCost sets the value of Cost.
+func (s *ItemSpell) SetCost(val int32) {
+	s.Cost = val
 }
 
 // A cantrip or spell a Character learned through a class.
@@ -12934,13 +15159,19 @@ func (s *LibraryImportFormat) UnmarshalText(data []byte) error {
 type LibraryKind string
 
 const (
-	LibraryKindCreature LibraryKind = "creature"
-	LibraryKindNpc      LibraryKind = "npc"
-	LibraryKindLocation LibraryKind = "location"
-	LibraryKindShop     LibraryKind = "shop"
-	LibraryKindItem     LibraryKind = "item"
-	LibraryKindSpell    LibraryKind = "spell"
-	LibraryKindTable    LibraryKind = "table"
+	LibraryKindCreature   LibraryKind = "creature"
+	LibraryKindNpc        LibraryKind = "npc"
+	LibraryKindLocation   LibraryKind = "location"
+	LibraryKindShop       LibraryKind = "shop"
+	LibraryKindItem       LibraryKind = "item"
+	LibraryKindSpell      LibraryKind = "spell"
+	LibraryKindTable      LibraryKind = "table"
+	LibraryKindSubclass   LibraryKind = "subclass"
+	LibraryKindClass      LibraryKind = "class"
+	LibraryKindSpecies    LibraryKind = "species"
+	LibraryKindBackground LibraryKind = "background"
+	LibraryKindFeat       LibraryKind = "feat"
+	LibraryKindCondition  LibraryKind = "condition"
 )
 
 // AllValues returns all LibraryKind values.
@@ -12953,6 +15184,12 @@ func (LibraryKind) AllValues() []LibraryKind {
 		LibraryKindItem,
 		LibraryKindSpell,
 		LibraryKindTable,
+		LibraryKindSubclass,
+		LibraryKindClass,
+		LibraryKindSpecies,
+		LibraryKindBackground,
+		LibraryKindFeat,
+		LibraryKindCondition,
 	}
 }
 
@@ -12972,6 +15209,18 @@ func (s LibraryKind) MarshalText() ([]byte, error) {
 	case LibraryKindSpell:
 		return []byte(s), nil
 	case LibraryKindTable:
+		return []byte(s), nil
+	case LibraryKindSubclass:
+		return []byte(s), nil
+	case LibraryKindClass:
+		return []byte(s), nil
+	case LibraryKindSpecies:
+		return []byte(s), nil
+	case LibraryKindBackground:
+		return []byte(s), nil
+	case LibraryKindFeat:
+		return []byte(s), nil
+	case LibraryKindCondition:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -13001,6 +15250,24 @@ func (s *LibraryKind) UnmarshalText(data []byte) error {
 		return nil
 	case LibraryKindTable:
 		*s = LibraryKindTable
+		return nil
+	case LibraryKindSubclass:
+		*s = LibraryKindSubclass
+		return nil
+	case LibraryKindClass:
+		*s = LibraryKindClass
+		return nil
+	case LibraryKindSpecies:
+		*s = LibraryKindSpecies
+		return nil
+	case LibraryKindBackground:
+		*s = LibraryKindBackground
+		return nil
+	case LibraryKindFeat:
+		*s = LibraryKindFeat
+		return nil
+	case LibraryKindCondition:
+		*s = LibraryKindCondition
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -16494,12 +18761,14 @@ type LiveCommand struct {
 	// What a trade buys from the open Shop, made with its sales or not at all.
 	Buys []LiveTradeLine `json:"buys"`
 	// What a trade sells to the open Shop, before it buys.
-	Sells      []LiveTradeLine       `json:"sells"`
-	InstanceId OptID                 `json:"instanceId"`
-	Action     OptLiveCommandAction  `json:"action"`
-	Detail     OptString             `json:"detail"`
-	Trigger    OptLiveCommandTrigger `json:"trigger"`
-	Option     OptLiveCommandOption  `json:"option"`
+	Sells      []LiveTradeLine      `json:"sells"`
+	InstanceId OptID                `json:"instanceId"`
+	Action     OptLiveCommandAction `json:"action"`
+	// The legendary or lair action to take, by name.
+	Legend  OptString             `json:"legend"`
+	Detail  OptString             `json:"detail"`
+	Trigger OptLiveCommandTrigger `json:"trigger"`
+	Option  OptLiveCommandOption  `json:"option"`
 	// Makes the attack the off-hand attack of a Light weapon.
 	OffHand OptBool `json:"offHand"`
 	// Makes the attack the second attack a Cleave hit allows.
@@ -16922,6 +19191,11 @@ func (s *LiveCommand) GetInstanceId() OptID {
 // GetAction returns the value of Action.
 func (s *LiveCommand) GetAction() OptLiveCommandAction {
 	return s.Action
+}
+
+// GetLegend returns the value of Legend.
+func (s *LiveCommand) GetLegend() OptString {
+	return s.Legend
 }
 
 // GetDetail returns the value of Detail.
@@ -17409,6 +19683,11 @@ func (s *LiveCommand) SetAction(val OptLiveCommandAction) {
 	s.Action = val
 }
 
+// SetLegend sets the value of Legend.
+func (s *LiveCommand) SetLegend(val OptString) {
+	s.Legend = val
+}
+
 // SetDetail sets the value of Detail.
 func (s *LiveCommand) SetDetail(val OptString) {
 	s.Detail = val
@@ -17678,95 +19957,98 @@ func (s *LiveCommandDue) UnmarshalText(data []byte) error {
 type LiveCommandKind string
 
 const (
-	LiveCommandKindResync         LiveCommandKind = "resync"
-	LiveCommandKindPlaceToken     LiveCommandKind = "place_token"
-	LiveCommandKindMoveToken      LiveCommandKind = "move_token"
-	LiveCommandKindSetTokenHidden LiveCommandKind = "set_token_hidden"
-	LiveCommandKindRemoveToken    LiveCommandKind = "remove_token"
-	LiveCommandKindSetMap         LiveCommandKind = "set_map"
-	LiveCommandKindRevealHexes    LiveCommandKind = "reveal_hexes"
-	LiveCommandKindSetWalls       LiveCommandKind = "set_walls"
-	LiveCommandKindPlaceLight     LiveCommandKind = "place_light"
-	LiveCommandKindRemoveLight    LiveCommandKind = "remove_light"
-	LiveCommandKindSetAmbient     LiveCommandKind = "set_ambient"
-	LiveCommandKindPlanWalk       LiveCommandKind = "plan_walk"
-	LiveCommandKindWalk           LiveCommandKind = "walk"
-	LiveCommandKindStartCombat    LiveCommandKind = "start_combat"
-	LiveCommandKindEndTurn        LiveCommandKind = "end_turn"
-	LiveCommandKindSpend          LiveCommandKind = "spend"
-	LiveCommandKindEndCombat      LiveCommandKind = "end_combat"
-	LiveCommandKindPreviewAttack  LiveCommandKind = "preview_attack"
-	LiveCommandKindAttack         LiveCommandKind = "attack"
-	LiveCommandKindUndoDamage     LiveCommandKind = "undo_damage"
-	LiveCommandKindSetTactics     LiveCommandKind = "set_tactics"
-	LiveCommandKindReact          LiveCommandKind = "react"
-	LiveCommandKindApplyEffect    LiveCommandKind = "apply_effect"
-	LiveCommandKindEndEffect      LiveCommandKind = "end_effect"
-	LiveCommandKindResolveManual  LiveCommandKind = "resolve_manual"
-	LiveCommandKindPreviewArea    LiveCommandKind = "preview_area"
-	LiveCommandKindCastArea       LiveCommandKind = "cast_area"
-	LiveCommandKindPaintSurface   LiveCommandKind = "paint_surface"
-	LiveCommandKindSetElevation   LiveCommandKind = "set_elevation"
-	LiveCommandKindTableCamera    LiveCommandKind = "table_camera"
-	LiveCommandKindTableScene     LiveCommandKind = "table_scene"
-	LiveCommandKindTableBlackout  LiveCommandKind = "table_blackout"
-	LiveCommandKindPing           LiveCommandKind = "ping"
-	LiveCommandKindSetWorld       LiveCommandKind = "set_world"
-	LiveCommandKindAddNode        LiveCommandKind = "add_node"
-	LiveCommandKindAddRoute       LiveCommandKind = "add_route"
-	LiveCommandKindRemoveNode     LiveCommandKind = "remove_node"
-	LiveCommandKindRemoveRoute    LiveCommandKind = "remove_route"
-	LiveCommandKindPlaceParty     LiveCommandKind = "place_party"
-	LiveCommandKindTravel         LiveCommandKind = "travel"
-	LiveCommandKindAddZone        LiveCommandKind = "add_zone"
-	LiveCommandKindRemoveZone     LiveCommandKind = "remove_zone"
-	LiveCommandKindHoldZone       LiveCommandKind = "hold_zone"
-	LiveCommandKindSpringZone     LiveCommandKind = "spring_zone"
-	LiveCommandKindRest           LiveCommandKind = "rest"
-	LiveCommandKindEncounterCheck LiveCommandKind = "encounter_check"
-	LiveCommandKindScheduleCheck  LiveCommandKind = "schedule_check"
-	LiveCommandKindRollLoot       LiveCommandKind = "roll_loot"
-	LiveCommandKindMoveItem       LiveCommandKind = "move_item"
-	LiveCommandKindMoveCoins      LiveCommandKind = "move_coins"
-	LiveCommandKindClaimLoot      LiveCommandKind = "claim_loot"
-	LiveCommandKindSettleLoot     LiveCommandKind = "settle_loot"
-	LiveCommandKindTrade          LiveCommandKind = "trade"
-	LiveCommandKindOpenShop       LiveCommandKind = "open_shop"
-	LiveCommandKindCloseShop      LiveCommandKind = "close_shop"
-	LiveCommandKindBuy            LiveCommandKind = "buy"
-	LiveCommandKindSell           LiveCommandKind = "sell"
-	LiveCommandKindHaggle         LiveCommandKind = "haggle"
-	LiveCommandKindSpawnEncounter LiveCommandKind = "spawn_encounter"
-	LiveCommandKindAdjustHp       LiveCommandKind = "adjust_hp"
-	LiveCommandKindUndo           LiveCommandKind = "undo"
-	LiveCommandKindProposeRest    LiveCommandKind = "propose_rest"
-	LiveCommandKindAgreeRest      LiveCommandKind = "agree_rest"
-	LiveCommandKindSpendHitDie    LiveCommandKind = "spend_hit_die"
-	LiveCommandKindFinishRest     LiveCommandKind = "finish_rest"
-	LiveCommandKindInterruptRest  LiveCommandKind = "interrupt_rest"
-	LiveCommandKindTakeAction     LiveCommandKind = "take_action"
-	LiveCommandKindUnarmed        LiveCommandKind = "unarmed"
-	LiveCommandKindInteract       LiveCommandKind = "interact"
-	LiveCommandKindSwapWeapons    LiveCommandKind = "swap_weapons"
-	LiveCommandKindSetReaction    LiveCommandKind = "set_reaction"
-	LiveCommandKindStabilise      LiveCommandKind = "stabilise"
-	LiveCommandKindRevive         LiveCommandKind = "revive"
-	LiveCommandKindTeleport       LiveCommandKind = "teleport"
-	LiveCommandKindSummon         LiveCommandKind = "summon"
-	LiveCommandKindCommand        LiveCommandKind = "command"
-	LiveCommandKindSetVisibility  LiveCommandKind = "set_visibility"
-	LiveCommandKindPlaceObject    LiveCommandKind = "place_object"
-	LiveCommandKindRemoveObject   LiveCommandKind = "remove_object"
-	LiveCommandKindUseObject      LiveCommandKind = "use_object"
-	LiveCommandKindDamageObject   LiveCommandKind = "damage_object"
-	LiveCommandKindFindObject     LiveCommandKind = "find_object"
-	LiveCommandKindUnlock         LiveCommandKind = "unlock"
-	LiveCommandKindDisarm         LiveCommandKind = "disarm"
-	LiveCommandKindJump           LiveCommandKind = "jump"
-	LiveCommandKindThrow          LiveCommandKind = "throw"
-	LiveCommandKindSneak          LiveCommandKind = "sneak"
-	LiveCommandKindExplore        LiveCommandKind = "explore"
-	LiveCommandKindPassTurn       LiveCommandKind = "pass_turn"
+	LiveCommandKindResync              LiveCommandKind = "resync"
+	LiveCommandKindPlaceToken          LiveCommandKind = "place_token"
+	LiveCommandKindMoveToken           LiveCommandKind = "move_token"
+	LiveCommandKindSetTokenHidden      LiveCommandKind = "set_token_hidden"
+	LiveCommandKindRemoveToken         LiveCommandKind = "remove_token"
+	LiveCommandKindSetMap              LiveCommandKind = "set_map"
+	LiveCommandKindRevealHexes         LiveCommandKind = "reveal_hexes"
+	LiveCommandKindSetWalls            LiveCommandKind = "set_walls"
+	LiveCommandKindPlaceLight          LiveCommandKind = "place_light"
+	LiveCommandKindRemoveLight         LiveCommandKind = "remove_light"
+	LiveCommandKindSetAmbient          LiveCommandKind = "set_ambient"
+	LiveCommandKindPlanWalk            LiveCommandKind = "plan_walk"
+	LiveCommandKindWalk                LiveCommandKind = "walk"
+	LiveCommandKindStartCombat         LiveCommandKind = "start_combat"
+	LiveCommandKindEndTurn             LiveCommandKind = "end_turn"
+	LiveCommandKindSpend               LiveCommandKind = "spend"
+	LiveCommandKindEndCombat           LiveCommandKind = "end_combat"
+	LiveCommandKindPreviewAttack       LiveCommandKind = "preview_attack"
+	LiveCommandKindAttack              LiveCommandKind = "attack"
+	LiveCommandKindUndoDamage          LiveCommandKind = "undo_damage"
+	LiveCommandKindSetTactics          LiveCommandKind = "set_tactics"
+	LiveCommandKindReact               LiveCommandKind = "react"
+	LiveCommandKindApplyEffect         LiveCommandKind = "apply_effect"
+	LiveCommandKindEndEffect           LiveCommandKind = "end_effect"
+	LiveCommandKindResolveManual       LiveCommandKind = "resolve_manual"
+	LiveCommandKindPreviewArea         LiveCommandKind = "preview_area"
+	LiveCommandKindCastArea            LiveCommandKind = "cast_area"
+	LiveCommandKindPaintSurface        LiveCommandKind = "paint_surface"
+	LiveCommandKindSetElevation        LiveCommandKind = "set_elevation"
+	LiveCommandKindTableCamera         LiveCommandKind = "table_camera"
+	LiveCommandKindTableScene          LiveCommandKind = "table_scene"
+	LiveCommandKindTableBlackout       LiveCommandKind = "table_blackout"
+	LiveCommandKindPing                LiveCommandKind = "ping"
+	LiveCommandKindSetWorld            LiveCommandKind = "set_world"
+	LiveCommandKindAddNode             LiveCommandKind = "add_node"
+	LiveCommandKindAddRoute            LiveCommandKind = "add_route"
+	LiveCommandKindRemoveNode          LiveCommandKind = "remove_node"
+	LiveCommandKindRemoveRoute         LiveCommandKind = "remove_route"
+	LiveCommandKindPlaceParty          LiveCommandKind = "place_party"
+	LiveCommandKindTravel              LiveCommandKind = "travel"
+	LiveCommandKindAddZone             LiveCommandKind = "add_zone"
+	LiveCommandKindRemoveZone          LiveCommandKind = "remove_zone"
+	LiveCommandKindHoldZone            LiveCommandKind = "hold_zone"
+	LiveCommandKindSpringZone          LiveCommandKind = "spring_zone"
+	LiveCommandKindRest                LiveCommandKind = "rest"
+	LiveCommandKindEncounterCheck      LiveCommandKind = "encounter_check"
+	LiveCommandKindScheduleCheck       LiveCommandKind = "schedule_check"
+	LiveCommandKindRollLoot            LiveCommandKind = "roll_loot"
+	LiveCommandKindMoveItem            LiveCommandKind = "move_item"
+	LiveCommandKindMoveCoins           LiveCommandKind = "move_coins"
+	LiveCommandKindClaimLoot           LiveCommandKind = "claim_loot"
+	LiveCommandKindSettleLoot          LiveCommandKind = "settle_loot"
+	LiveCommandKindTrade               LiveCommandKind = "trade"
+	LiveCommandKindOpenShop            LiveCommandKind = "open_shop"
+	LiveCommandKindCloseShop           LiveCommandKind = "close_shop"
+	LiveCommandKindBuy                 LiveCommandKind = "buy"
+	LiveCommandKindSell                LiveCommandKind = "sell"
+	LiveCommandKindHaggle              LiveCommandKind = "haggle"
+	LiveCommandKindSpawnEncounter      LiveCommandKind = "spawn_encounter"
+	LiveCommandKindAdjustHp            LiveCommandKind = "adjust_hp"
+	LiveCommandKindUndo                LiveCommandKind = "undo"
+	LiveCommandKindProposeRest         LiveCommandKind = "propose_rest"
+	LiveCommandKindAgreeRest           LiveCommandKind = "agree_rest"
+	LiveCommandKindSpendHitDie         LiveCommandKind = "spend_hit_die"
+	LiveCommandKindFinishRest          LiveCommandKind = "finish_rest"
+	LiveCommandKindInterruptRest       LiveCommandKind = "interrupt_rest"
+	LiveCommandKindTakeAction          LiveCommandKind = "take_action"
+	LiveCommandKindUnarmed             LiveCommandKind = "unarmed"
+	LiveCommandKindInteract            LiveCommandKind = "interact"
+	LiveCommandKindSwapWeapons         LiveCommandKind = "swap_weapons"
+	LiveCommandKindSetReaction         LiveCommandKind = "set_reaction"
+	LiveCommandKindStabilise           LiveCommandKind = "stabilise"
+	LiveCommandKindRevive              LiveCommandKind = "revive"
+	LiveCommandKindTeleport            LiveCommandKind = "teleport"
+	LiveCommandKindSummon              LiveCommandKind = "summon"
+	LiveCommandKindCommand             LiveCommandKind = "command"
+	LiveCommandKindSetVisibility       LiveCommandKind = "set_visibility"
+	LiveCommandKindPlaceObject         LiveCommandKind = "place_object"
+	LiveCommandKindRemoveObject        LiveCommandKind = "remove_object"
+	LiveCommandKindUseObject           LiveCommandKind = "use_object"
+	LiveCommandKindDamageObject        LiveCommandKind = "damage_object"
+	LiveCommandKindFindObject          LiveCommandKind = "find_object"
+	LiveCommandKindUnlock              LiveCommandKind = "unlock"
+	LiveCommandKindDisarm              LiveCommandKind = "disarm"
+	LiveCommandKindJump                LiveCommandKind = "jump"
+	LiveCommandKindThrow               LiveCommandKind = "throw"
+	LiveCommandKindSneak               LiveCommandKind = "sneak"
+	LiveCommandKindExplore             LiveCommandKind = "explore"
+	LiveCommandKindPassTurn            LiveCommandKind = "pass_turn"
+	LiveCommandKindLegendaryAction     LiveCommandKind = "legendary_action"
+	LiveCommandKindLairAction          LiveCommandKind = "lair_action"
+	LiveCommandKindLegendaryResistance LiveCommandKind = "legendary_resistance"
 )
 
 // AllValues returns all LiveCommandKind values.
@@ -17861,6 +20143,9 @@ func (LiveCommandKind) AllValues() []LiveCommandKind {
 		LiveCommandKindSneak,
 		LiveCommandKindExplore,
 		LiveCommandKindPassTurn,
+		LiveCommandKindLegendaryAction,
+		LiveCommandKindLairAction,
+		LiveCommandKindLegendaryResistance,
 	}
 }
 
@@ -18044,6 +20329,12 @@ func (s LiveCommandKind) MarshalText() ([]byte, error) {
 	case LiveCommandKindExplore:
 		return []byte(s), nil
 	case LiveCommandKindPassTurn:
+		return []byte(s), nil
+	case LiveCommandKindLegendaryAction:
+		return []byte(s), nil
+	case LiveCommandKindLairAction:
+		return []byte(s), nil
+	case LiveCommandKindLegendaryResistance:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -18319,6 +20610,15 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 		return nil
 	case LiveCommandKindPassTurn:
 		*s = LiveCommandKindPassTurn
+		return nil
+	case LiveCommandKindLegendaryAction:
+		*s = LiveCommandKindLegendaryAction
+		return nil
+	case LiveCommandKindLairAction:
+		*s = LiveCommandKindLairAction
+		return nil
+	case LiveCommandKindLegendaryResistance:
+		*s = LiveCommandKindLegendaryResistance
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -19105,6 +21405,10 @@ type LiveEffect struct {
 	Mode OptString `json:"mode"`
 	// The hexes an emanation covers around the token where it stands now; it moves with the token.
 	Hexes []HexCoord `json:"hexes"`
+	// A homebrew condition's glyph.
+	Icon OptString `json:"icon"`
+	// A homebrew condition's colour.
+	Color OptString `json:"color"`
 }
 
 // GetID returns the value of ID.
@@ -19152,6 +21456,16 @@ func (s *LiveEffect) GetHexes() []HexCoord {
 	return s.Hexes
 }
 
+// GetIcon returns the value of Icon.
+func (s *LiveEffect) GetIcon() OptString {
+	return s.Icon
+}
+
+// GetColor returns the value of Color.
+func (s *LiveEffect) GetColor() OptString {
+	return s.Color
+}
+
 // SetID sets the value of ID.
 func (s *LiveEffect) SetID(val ID) {
 	s.ID = val
@@ -19195,6 +21509,16 @@ func (s *LiveEffect) SetMode(val OptString) {
 // SetHexes sets the value of Hexes.
 func (s *LiveEffect) SetHexes(val []HexCoord) {
 	s.Hexes = val
+}
+
+// SetIcon sets the value of Icon.
+func (s *LiveEffect) SetIcon(val OptString) {
+	s.Icon = val
+}
+
+// SetColor sets the value of Color.
+func (s *LiveEffect) SetColor(val OptString) {
+	s.Color = val
 }
 
 // A raised or sunken hex.
@@ -19537,6 +21861,161 @@ func (s *LiveItemInstanceSlot) UnmarshalText(data []byte) error {
 	default:
 		return errors.Errorf("invalid value: %q", data)
 	}
+}
+
+// A legendary creature's actions and what it has left, for the DM only: legendary actions once another
+// creature's turn ends (ready), the lair's once a round from initiative count 20 (lairReady),
+// Legendary Resistance, and its mythic phases.
+// Ref: #/components/schemas/LiveLegend
+type LiveLegend struct {
+	Uses       int32              `json:"uses"`
+	Left       int32              `json:"left"`
+	Ready      bool               `json:"ready"`
+	Actions    []LiveLegendAction `json:"actions"`
+	Lair       []LiveLegendAction `json:"lair"`
+	LairReady  bool               `json:"lairReady"`
+	ResistLeft int32              `json:"resistLeft"`
+	Phase      int32              `json:"phase"`
+	Phases     int32              `json:"phases"`
+	Threshold  int32              `json:"threshold"`
+}
+
+// GetUses returns the value of Uses.
+func (s *LiveLegend) GetUses() int32 {
+	return s.Uses
+}
+
+// GetLeft returns the value of Left.
+func (s *LiveLegend) GetLeft() int32 {
+	return s.Left
+}
+
+// GetReady returns the value of Ready.
+func (s *LiveLegend) GetReady() bool {
+	return s.Ready
+}
+
+// GetActions returns the value of Actions.
+func (s *LiveLegend) GetActions() []LiveLegendAction {
+	return s.Actions
+}
+
+// GetLair returns the value of Lair.
+func (s *LiveLegend) GetLair() []LiveLegendAction {
+	return s.Lair
+}
+
+// GetLairReady returns the value of LairReady.
+func (s *LiveLegend) GetLairReady() bool {
+	return s.LairReady
+}
+
+// GetResistLeft returns the value of ResistLeft.
+func (s *LiveLegend) GetResistLeft() int32 {
+	return s.ResistLeft
+}
+
+// GetPhase returns the value of Phase.
+func (s *LiveLegend) GetPhase() int32 {
+	return s.Phase
+}
+
+// GetPhases returns the value of Phases.
+func (s *LiveLegend) GetPhases() int32 {
+	return s.Phases
+}
+
+// GetThreshold returns the value of Threshold.
+func (s *LiveLegend) GetThreshold() int32 {
+	return s.Threshold
+}
+
+// SetUses sets the value of Uses.
+func (s *LiveLegend) SetUses(val int32) {
+	s.Uses = val
+}
+
+// SetLeft sets the value of Left.
+func (s *LiveLegend) SetLeft(val int32) {
+	s.Left = val
+}
+
+// SetReady sets the value of Ready.
+func (s *LiveLegend) SetReady(val bool) {
+	s.Ready = val
+}
+
+// SetActions sets the value of Actions.
+func (s *LiveLegend) SetActions(val []LiveLegendAction) {
+	s.Actions = val
+}
+
+// SetLair sets the value of Lair.
+func (s *LiveLegend) SetLair(val []LiveLegendAction) {
+	s.Lair = val
+}
+
+// SetLairReady sets the value of LairReady.
+func (s *LiveLegend) SetLairReady(val bool) {
+	s.LairReady = val
+}
+
+// SetResistLeft sets the value of ResistLeft.
+func (s *LiveLegend) SetResistLeft(val int32) {
+	s.ResistLeft = val
+}
+
+// SetPhase sets the value of Phase.
+func (s *LiveLegend) SetPhase(val int32) {
+	s.Phase = val
+}
+
+// SetPhases sets the value of Phases.
+func (s *LiveLegend) SetPhases(val int32) {
+	s.Phases = val
+}
+
+// SetThreshold sets the value of Threshold.
+func (s *LiveLegend) SetThreshold(val int32) {
+	s.Threshold = val
+}
+
+// A legendary or lair action.
+// Ref: #/components/schemas/LiveLegendAction
+type LiveLegendAction struct {
+	Name string `json:"name"`
+	Cost int32  `json:"cost"`
+	Text string `json:"text"`
+}
+
+// GetName returns the value of Name.
+func (s *LiveLegendAction) GetName() string {
+	return s.Name
+}
+
+// GetCost returns the value of Cost.
+func (s *LiveLegendAction) GetCost() int32 {
+	return s.Cost
+}
+
+// GetText returns the value of Text.
+func (s *LiveLegendAction) GetText() string {
+	return s.Text
+}
+
+// SetName sets the value of Name.
+func (s *LiveLegendAction) SetName(val string) {
+	s.Name = val
+}
+
+// SetCost sets the value of Cost.
+func (s *LiveLegendAction) SetCost(val int32) {
+	s.Cost = val
+}
+
+// SetText sets the value of Text.
+func (s *LiveLegendAction) SetText(val string) {
+	s.Text = val
 }
 
 // A light on the Map, for the DM.
@@ -21333,6 +23812,7 @@ type LiveToken struct {
 	Effects   []LiveEffect          `json:"effects"`
 	Reactions []LiveReactionSetting `json:"reactions"`
 	Dying     OptLiveDying          `json:"dying"`
+	Legend    OptLiveLegend         `json:"legend"`
 }
 
 // GetID returns the value of ID.
@@ -21440,6 +23920,11 @@ func (s *LiveToken) GetDying() OptLiveDying {
 	return s.Dying
 }
 
+// GetLegend returns the value of Legend.
+func (s *LiveToken) GetLegend() OptLiveLegend {
+	return s.Legend
+}
+
 // SetID sets the value of ID.
 func (s *LiveToken) SetID(val ID) {
 	s.ID = val
@@ -21543,6 +24028,11 @@ func (s *LiveToken) SetReactions(val []LiveReactionSetting) {
 // SetDying sets the value of Dying.
 func (s *LiveToken) SetDying(val OptLiveDying) {
 	s.Dying = val
+}
+
+// SetLegend sets the value of Legend.
+func (s *LiveToken) SetLegend(val OptLiveLegend) {
+	s.Legend = val
 }
 
 // What anyone can tell by looking, for creatures whose hit points the audience may not see.
@@ -21988,6 +24478,8 @@ type LiveView struct {
 	Exploration OptLiveViewExploration `json:"exploration"`
 	// The Surface catalogue, for the DM's paint tool.
 	SurfaceKinds []LiveViewSurfaceKindsItem `json:"surfaceKinds"`
+	// The Campaign's homebrew conditions, for the DM's effect picker.
+	Conditions []LiveViewConditionsItem `json:"conditions"`
 	// The Map Objects the audience knows; the party never gets secret ones or ones outside what it has
 	// seen.
 	Objects    []LiveObject     `json:"objects"`
@@ -22087,6 +24579,11 @@ func (s *LiveView) GetExploration() OptLiveViewExploration {
 // GetSurfaceKinds returns the value of SurfaceKinds.
 func (s *LiveView) GetSurfaceKinds() []LiveViewSurfaceKindsItem {
 	return s.SurfaceKinds
+}
+
+// GetConditions returns the value of Conditions.
+func (s *LiveView) GetConditions() []LiveViewConditionsItem {
+	return s.Conditions
 }
 
 // GetObjects returns the value of Objects.
@@ -22229,6 +24726,11 @@ func (s *LiveView) SetSurfaceKinds(val []LiveViewSurfaceKindsItem) {
 	s.SurfaceKinds = val
 }
 
+// SetConditions sets the value of Conditions.
+func (s *LiveView) SetConditions(val []LiveViewConditionsItem) {
+	s.Conditions = val
+}
+
 // SetObjects sets the value of Objects.
 func (s *LiveView) SetObjects(val []LiveObject) {
 	s.Objects = val
@@ -22282,6 +24784,53 @@ func (s *LiveView) SetLights(val []LiveLight) {
 // SetAmbient sets the value of Ambient.
 func (s *LiveView) SetAmbient(val OptAmbientLight) {
 	s.Ambient = val
+}
+
+type LiveViewConditionsItem struct {
+	Slug  string `json:"slug"`
+	Name  string `json:"name"`
+	Icon  string `json:"icon"`
+	Color string `json:"color"`
+}
+
+// GetSlug returns the value of Slug.
+func (s *LiveViewConditionsItem) GetSlug() string {
+	return s.Slug
+}
+
+// GetName returns the value of Name.
+func (s *LiveViewConditionsItem) GetName() string {
+	return s.Name
+}
+
+// GetIcon returns the value of Icon.
+func (s *LiveViewConditionsItem) GetIcon() string {
+	return s.Icon
+}
+
+// GetColor returns the value of Color.
+func (s *LiveViewConditionsItem) GetColor() string {
+	return s.Color
+}
+
+// SetSlug sets the value of Slug.
+func (s *LiveViewConditionsItem) SetSlug(val string) {
+	s.Slug = val
+}
+
+// SetName sets the value of Name.
+func (s *LiveViewConditionsItem) SetName(val string) {
+	s.Name = val
+}
+
+// SetIcon sets the value of Icon.
+func (s *LiveViewConditionsItem) SetIcon(val string) {
+	s.Icon = val
+}
+
+// SetColor sets the value of Color.
+func (s *LiveViewConditionsItem) SetColor(val string) {
+	s.Color = val
 }
 
 // Exploration in turns, outside a fight.
@@ -24219,6 +26768,738 @@ func (s *MessageSend) SetBody(val string) {
 // SetMentions sets the value of Mentions.
 func (s *MessageSend) SetMentions(val []MentionRef) {
 	s.Mentions = val
+}
+
+// Something a creature does with its action: a melee or ranged attack, a save it forces, or anything
+// else as text.
+// Ref: #/components/schemas/MonsterAction
+type MonsterAction struct {
+	Name        string    `json:"name"`
+	Kind        string    `json:"kind"`
+	ToHit       OptInt32  `json:"toHit"`
+	ReachFt     OptInt32  `json:"reachFt"`
+	RangeFt     OptInt32  `json:"rangeFt"`
+	LongRangeFt OptInt32  `json:"longRangeFt"`
+	Damage      OptString `json:"damage"`
+	DamageBonus OptInt32  `json:"damageBonus"`
+	DamageType  OptString `json:"damageType"`
+	SaveAbility OptString `json:"saveAbility"`
+	DC          OptInt32  `json:"dc"`
+	Recharge    OptInt32  `json:"recharge"`
+	Text        OptString `json:"text"`
+}
+
+// GetName returns the value of Name.
+func (s *MonsterAction) GetName() string {
+	return s.Name
+}
+
+// GetKind returns the value of Kind.
+func (s *MonsterAction) GetKind() string {
+	return s.Kind
+}
+
+// GetToHit returns the value of ToHit.
+func (s *MonsterAction) GetToHit() OptInt32 {
+	return s.ToHit
+}
+
+// GetReachFt returns the value of ReachFt.
+func (s *MonsterAction) GetReachFt() OptInt32 {
+	return s.ReachFt
+}
+
+// GetRangeFt returns the value of RangeFt.
+func (s *MonsterAction) GetRangeFt() OptInt32 {
+	return s.RangeFt
+}
+
+// GetLongRangeFt returns the value of LongRangeFt.
+func (s *MonsterAction) GetLongRangeFt() OptInt32 {
+	return s.LongRangeFt
+}
+
+// GetDamage returns the value of Damage.
+func (s *MonsterAction) GetDamage() OptString {
+	return s.Damage
+}
+
+// GetDamageBonus returns the value of DamageBonus.
+func (s *MonsterAction) GetDamageBonus() OptInt32 {
+	return s.DamageBonus
+}
+
+// GetDamageType returns the value of DamageType.
+func (s *MonsterAction) GetDamageType() OptString {
+	return s.DamageType
+}
+
+// GetSaveAbility returns the value of SaveAbility.
+func (s *MonsterAction) GetSaveAbility() OptString {
+	return s.SaveAbility
+}
+
+// GetDC returns the value of DC.
+func (s *MonsterAction) GetDC() OptInt32 {
+	return s.DC
+}
+
+// GetRecharge returns the value of Recharge.
+func (s *MonsterAction) GetRecharge() OptInt32 {
+	return s.Recharge
+}
+
+// GetText returns the value of Text.
+func (s *MonsterAction) GetText() OptString {
+	return s.Text
+}
+
+// SetName sets the value of Name.
+func (s *MonsterAction) SetName(val string) {
+	s.Name = val
+}
+
+// SetKind sets the value of Kind.
+func (s *MonsterAction) SetKind(val string) {
+	s.Kind = val
+}
+
+// SetToHit sets the value of ToHit.
+func (s *MonsterAction) SetToHit(val OptInt32) {
+	s.ToHit = val
+}
+
+// SetReachFt sets the value of ReachFt.
+func (s *MonsterAction) SetReachFt(val OptInt32) {
+	s.ReachFt = val
+}
+
+// SetRangeFt sets the value of RangeFt.
+func (s *MonsterAction) SetRangeFt(val OptInt32) {
+	s.RangeFt = val
+}
+
+// SetLongRangeFt sets the value of LongRangeFt.
+func (s *MonsterAction) SetLongRangeFt(val OptInt32) {
+	s.LongRangeFt = val
+}
+
+// SetDamage sets the value of Damage.
+func (s *MonsterAction) SetDamage(val OptString) {
+	s.Damage = val
+}
+
+// SetDamageBonus sets the value of DamageBonus.
+func (s *MonsterAction) SetDamageBonus(val OptInt32) {
+	s.DamageBonus = val
+}
+
+// SetDamageType sets the value of DamageType.
+func (s *MonsterAction) SetDamageType(val OptString) {
+	s.DamageType = val
+}
+
+// SetSaveAbility sets the value of SaveAbility.
+func (s *MonsterAction) SetSaveAbility(val OptString) {
+	s.SaveAbility = val
+}
+
+// SetDC sets the value of DC.
+func (s *MonsterAction) SetDC(val OptInt32) {
+	s.DC = val
+}
+
+// SetRecharge sets the value of Recharge.
+func (s *MonsterAction) SetRecharge(val OptInt32) {
+	s.Recharge = val
+}
+
+// SetText sets the value of Text.
+func (s *MonsterAction) SetText(val OptString) {
+	s.Text = val
+}
+
+// A homebrew creature in its builder, the slug it is placed by, its stat block and an estimated
+// Challenge.
+// Ref: #/components/schemas/MonsterBuild
+type MonsterBuild struct {
+	Estimate string          `json:"estimate"`
+	Entry    OptLibraryEntry `json:"entry"`
+	Design   MonsterDesign   `json:"design"`
+	Slug     OptString       `json:"slug"`
+	Lines    []string        `json:"lines"`
+}
+
+// GetEstimate returns the value of Estimate.
+func (s *MonsterBuild) GetEstimate() string {
+	return s.Estimate
+}
+
+// GetEntry returns the value of Entry.
+func (s *MonsterBuild) GetEntry() OptLibraryEntry {
+	return s.Entry
+}
+
+// GetDesign returns the value of Design.
+func (s *MonsterBuild) GetDesign() MonsterDesign {
+	return s.Design
+}
+
+// GetSlug returns the value of Slug.
+func (s *MonsterBuild) GetSlug() OptString {
+	return s.Slug
+}
+
+// GetLines returns the value of Lines.
+func (s *MonsterBuild) GetLines() []string {
+	return s.Lines
+}
+
+// SetEstimate sets the value of Estimate.
+func (s *MonsterBuild) SetEstimate(val string) {
+	s.Estimate = val
+}
+
+// SetEntry sets the value of Entry.
+func (s *MonsterBuild) SetEntry(val OptLibraryEntry) {
+	s.Entry = val
+}
+
+// SetDesign sets the value of Design.
+func (s *MonsterBuild) SetDesign(val MonsterDesign) {
+	s.Design = val
+}
+
+// SetSlug sets the value of Slug.
+func (s *MonsterBuild) SetSlug(val OptString) {
+	s.Slug = val
+}
+
+// SetLines sets the value of Lines.
+func (s *MonsterBuild) SetLines(val []string) {
+	s.Lines = val
+}
+
+// MonsterBuildHeaders wraps MonsterBuild with response headers.
+type MonsterBuildHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           MonsterBuild
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *MonsterBuildHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *MonsterBuildHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *MonsterBuildHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *MonsterBuildHeaders) GetResponse() MonsterBuild {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *MonsterBuildHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *MonsterBuildHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *MonsterBuildHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *MonsterBuildHeaders) SetResponse(val MonsterBuild) {
+	s.Response = val
+}
+
+func (*MonsterBuildHeaders) getMonsterBuildRes()  {}
+func (*MonsterBuildHeaders) previewMonsterRes()   {}
+func (*MonsterBuildHeaders) saveMonsterBuildRes() {}
+
+// A homebrew creature as the monster builder makes it.
+// Ref: #/components/schemas/MonsterDesign
+type MonsterDesign struct {
+	Size            string                    `json:"size"`
+	CreatureType    string                    `json:"creatureType"`
+	Ac              int32                     `json:"ac"`
+	Hp              int32                     `json:"hp"`
+	SpeedFt         int32                     `json:"speedFt"`
+	Challenge       float64                   `json:"challenge"`
+	Abilities       MonsterDesignAbilities    `json:"abilities"`
+	Saves           []string                  `json:"saves"`
+	Senses          []SpeciesMeasure          `json:"senses"`
+	Resistances     []string                  `json:"resistances"`
+	Immunities      []string                  `json:"immunities"`
+	Vulnerabilities []string                  `json:"vulnerabilities"`
+	Threshold       int32                     `json:"threshold"`
+	Swarm           OptBool                   `json:"swarm"`
+	Traits          []MonsterTrait            `json:"traits"`
+	Aura            OptMonsterDesignAura      `json:"aura"`
+	Multiattack     int32                     `json:"multiattack"`
+	Actions         []MonsterAction           `json:"actions"`
+	Legendary       OptMonsterDesignLegendary `json:"legendary"`
+	Lair            OptMonsterDesignLair      `json:"lair"`
+	Phases          []MonsterDesignPhasesItem `json:"phases"`
+}
+
+// GetSize returns the value of Size.
+func (s *MonsterDesign) GetSize() string {
+	return s.Size
+}
+
+// GetCreatureType returns the value of CreatureType.
+func (s *MonsterDesign) GetCreatureType() string {
+	return s.CreatureType
+}
+
+// GetAc returns the value of Ac.
+func (s *MonsterDesign) GetAc() int32 {
+	return s.Ac
+}
+
+// GetHp returns the value of Hp.
+func (s *MonsterDesign) GetHp() int32 {
+	return s.Hp
+}
+
+// GetSpeedFt returns the value of SpeedFt.
+func (s *MonsterDesign) GetSpeedFt() int32 {
+	return s.SpeedFt
+}
+
+// GetChallenge returns the value of Challenge.
+func (s *MonsterDesign) GetChallenge() float64 {
+	return s.Challenge
+}
+
+// GetAbilities returns the value of Abilities.
+func (s *MonsterDesign) GetAbilities() MonsterDesignAbilities {
+	return s.Abilities
+}
+
+// GetSaves returns the value of Saves.
+func (s *MonsterDesign) GetSaves() []string {
+	return s.Saves
+}
+
+// GetSenses returns the value of Senses.
+func (s *MonsterDesign) GetSenses() []SpeciesMeasure {
+	return s.Senses
+}
+
+// GetResistances returns the value of Resistances.
+func (s *MonsterDesign) GetResistances() []string {
+	return s.Resistances
+}
+
+// GetImmunities returns the value of Immunities.
+func (s *MonsterDesign) GetImmunities() []string {
+	return s.Immunities
+}
+
+// GetVulnerabilities returns the value of Vulnerabilities.
+func (s *MonsterDesign) GetVulnerabilities() []string {
+	return s.Vulnerabilities
+}
+
+// GetThreshold returns the value of Threshold.
+func (s *MonsterDesign) GetThreshold() int32 {
+	return s.Threshold
+}
+
+// GetSwarm returns the value of Swarm.
+func (s *MonsterDesign) GetSwarm() OptBool {
+	return s.Swarm
+}
+
+// GetTraits returns the value of Traits.
+func (s *MonsterDesign) GetTraits() []MonsterTrait {
+	return s.Traits
+}
+
+// GetAura returns the value of Aura.
+func (s *MonsterDesign) GetAura() OptMonsterDesignAura {
+	return s.Aura
+}
+
+// GetMultiattack returns the value of Multiattack.
+func (s *MonsterDesign) GetMultiattack() int32 {
+	return s.Multiattack
+}
+
+// GetActions returns the value of Actions.
+func (s *MonsterDesign) GetActions() []MonsterAction {
+	return s.Actions
+}
+
+// GetLegendary returns the value of Legendary.
+func (s *MonsterDesign) GetLegendary() OptMonsterDesignLegendary {
+	return s.Legendary
+}
+
+// GetLair returns the value of Lair.
+func (s *MonsterDesign) GetLair() OptMonsterDesignLair {
+	return s.Lair
+}
+
+// GetPhases returns the value of Phases.
+func (s *MonsterDesign) GetPhases() []MonsterDesignPhasesItem {
+	return s.Phases
+}
+
+// SetSize sets the value of Size.
+func (s *MonsterDesign) SetSize(val string) {
+	s.Size = val
+}
+
+// SetCreatureType sets the value of CreatureType.
+func (s *MonsterDesign) SetCreatureType(val string) {
+	s.CreatureType = val
+}
+
+// SetAc sets the value of Ac.
+func (s *MonsterDesign) SetAc(val int32) {
+	s.Ac = val
+}
+
+// SetHp sets the value of Hp.
+func (s *MonsterDesign) SetHp(val int32) {
+	s.Hp = val
+}
+
+// SetSpeedFt sets the value of SpeedFt.
+func (s *MonsterDesign) SetSpeedFt(val int32) {
+	s.SpeedFt = val
+}
+
+// SetChallenge sets the value of Challenge.
+func (s *MonsterDesign) SetChallenge(val float64) {
+	s.Challenge = val
+}
+
+// SetAbilities sets the value of Abilities.
+func (s *MonsterDesign) SetAbilities(val MonsterDesignAbilities) {
+	s.Abilities = val
+}
+
+// SetSaves sets the value of Saves.
+func (s *MonsterDesign) SetSaves(val []string) {
+	s.Saves = val
+}
+
+// SetSenses sets the value of Senses.
+func (s *MonsterDesign) SetSenses(val []SpeciesMeasure) {
+	s.Senses = val
+}
+
+// SetResistances sets the value of Resistances.
+func (s *MonsterDesign) SetResistances(val []string) {
+	s.Resistances = val
+}
+
+// SetImmunities sets the value of Immunities.
+func (s *MonsterDesign) SetImmunities(val []string) {
+	s.Immunities = val
+}
+
+// SetVulnerabilities sets the value of Vulnerabilities.
+func (s *MonsterDesign) SetVulnerabilities(val []string) {
+	s.Vulnerabilities = val
+}
+
+// SetThreshold sets the value of Threshold.
+func (s *MonsterDesign) SetThreshold(val int32) {
+	s.Threshold = val
+}
+
+// SetSwarm sets the value of Swarm.
+func (s *MonsterDesign) SetSwarm(val OptBool) {
+	s.Swarm = val
+}
+
+// SetTraits sets the value of Traits.
+func (s *MonsterDesign) SetTraits(val []MonsterTrait) {
+	s.Traits = val
+}
+
+// SetAura sets the value of Aura.
+func (s *MonsterDesign) SetAura(val OptMonsterDesignAura) {
+	s.Aura = val
+}
+
+// SetMultiattack sets the value of Multiattack.
+func (s *MonsterDesign) SetMultiattack(val int32) {
+	s.Multiattack = val
+}
+
+// SetActions sets the value of Actions.
+func (s *MonsterDesign) SetActions(val []MonsterAction) {
+	s.Actions = val
+}
+
+// SetLegendary sets the value of Legendary.
+func (s *MonsterDesign) SetLegendary(val OptMonsterDesignLegendary) {
+	s.Legendary = val
+}
+
+// SetLair sets the value of Lair.
+func (s *MonsterDesign) SetLair(val OptMonsterDesignLair) {
+	s.Lair = val
+}
+
+// SetPhases sets the value of Phases.
+func (s *MonsterDesign) SetPhases(val []MonsterDesignPhasesItem) {
+	s.Phases = val
+}
+
+type MonsterDesignAbilities map[string]int32
+
+func (s *MonsterDesignAbilities) init() MonsterDesignAbilities {
+	m := *s
+	if m == nil {
+		m = map[string]int32{}
+		*s = m
+	}
+	return m
+}
+
+type MonsterDesignAura struct {
+	Name string `json:"name"`
+	Feet int32  `json:"feet"`
+	Text string `json:"text"`
+}
+
+// GetName returns the value of Name.
+func (s *MonsterDesignAura) GetName() string {
+	return s.Name
+}
+
+// GetFeet returns the value of Feet.
+func (s *MonsterDesignAura) GetFeet() int32 {
+	return s.Feet
+}
+
+// GetText returns the value of Text.
+func (s *MonsterDesignAura) GetText() string {
+	return s.Text
+}
+
+// SetName sets the value of Name.
+func (s *MonsterDesignAura) SetName(val string) {
+	s.Name = val
+}
+
+// SetFeet sets the value of Feet.
+func (s *MonsterDesignAura) SetFeet(val int32) {
+	s.Feet = val
+}
+
+// SetText sets the value of Text.
+func (s *MonsterDesignAura) SetText(val string) {
+	s.Text = val
+}
+
+type MonsterDesignLair struct {
+	Actions  []MonsterTrait `json:"actions"`
+	Regional []string       `json:"regional"`
+}
+
+// GetActions returns the value of Actions.
+func (s *MonsterDesignLair) GetActions() []MonsterTrait {
+	return s.Actions
+}
+
+// GetRegional returns the value of Regional.
+func (s *MonsterDesignLair) GetRegional() []string {
+	return s.Regional
+}
+
+// SetActions sets the value of Actions.
+func (s *MonsterDesignLair) SetActions(val []MonsterTrait) {
+	s.Actions = val
+}
+
+// SetRegional sets the value of Regional.
+func (s *MonsterDesignLair) SetRegional(val []string) {
+	s.Regional = val
+}
+
+type MonsterDesignLegendary struct {
+	Uses       int32                               `json:"uses"`
+	Resistance int32                               `json:"resistance"`
+	Actions    []MonsterDesignLegendaryActionsItem `json:"actions"`
+}
+
+// GetUses returns the value of Uses.
+func (s *MonsterDesignLegendary) GetUses() int32 {
+	return s.Uses
+}
+
+// GetResistance returns the value of Resistance.
+func (s *MonsterDesignLegendary) GetResistance() int32 {
+	return s.Resistance
+}
+
+// GetActions returns the value of Actions.
+func (s *MonsterDesignLegendary) GetActions() []MonsterDesignLegendaryActionsItem {
+	return s.Actions
+}
+
+// SetUses sets the value of Uses.
+func (s *MonsterDesignLegendary) SetUses(val int32) {
+	s.Uses = val
+}
+
+// SetResistance sets the value of Resistance.
+func (s *MonsterDesignLegendary) SetResistance(val int32) {
+	s.Resistance = val
+}
+
+// SetActions sets the value of Actions.
+func (s *MonsterDesignLegendary) SetActions(val []MonsterDesignLegendaryActionsItem) {
+	s.Actions = val
+}
+
+type MonsterDesignLegendaryActionsItem struct {
+	Name string `json:"name"`
+	Cost int32  `json:"cost"`
+	Text string `json:"text"`
+}
+
+// GetName returns the value of Name.
+func (s *MonsterDesignLegendaryActionsItem) GetName() string {
+	return s.Name
+}
+
+// GetCost returns the value of Cost.
+func (s *MonsterDesignLegendaryActionsItem) GetCost() int32 {
+	return s.Cost
+}
+
+// GetText returns the value of Text.
+func (s *MonsterDesignLegendaryActionsItem) GetText() string {
+	return s.Text
+}
+
+// SetName sets the value of Name.
+func (s *MonsterDesignLegendaryActionsItem) SetName(val string) {
+	s.Name = val
+}
+
+// SetCost sets the value of Cost.
+func (s *MonsterDesignLegendaryActionsItem) SetCost(val int32) {
+	s.Cost = val
+}
+
+// SetText sets the value of Text.
+func (s *MonsterDesignLegendaryActionsItem) SetText(val string) {
+	s.Text = val
+}
+
+type MonsterDesignPhasesItem struct {
+	Name string `json:"name"`
+	Hp   int32  `json:"hp"`
+	Text string `json:"text"`
+}
+
+// GetName returns the value of Name.
+func (s *MonsterDesignPhasesItem) GetName() string {
+	return s.Name
+}
+
+// GetHp returns the value of Hp.
+func (s *MonsterDesignPhasesItem) GetHp() int32 {
+	return s.Hp
+}
+
+// GetText returns the value of Text.
+func (s *MonsterDesignPhasesItem) GetText() string {
+	return s.Text
+}
+
+// SetName sets the value of Name.
+func (s *MonsterDesignPhasesItem) SetName(val string) {
+	s.Name = val
+}
+
+// SetHp sets the value of Hp.
+func (s *MonsterDesignPhasesItem) SetHp(val int32) {
+	s.Hp = val
+}
+
+// SetText sets the value of Text.
+func (s *MonsterDesignPhasesItem) SetText(val string) {
+	s.Text = val
+}
+
+// A design to preview, with the creature's name.
+// Ref: #/components/schemas/MonsterPreviewInput
+type MonsterPreviewInput struct {
+	Name   string        `json:"name"`
+	Design MonsterDesign `json:"design"`
+}
+
+// GetName returns the value of Name.
+func (s *MonsterPreviewInput) GetName() string {
+	return s.Name
+}
+
+// GetDesign returns the value of Design.
+func (s *MonsterPreviewInput) GetDesign() MonsterDesign {
+	return s.Design
+}
+
+// SetName sets the value of Name.
+func (s *MonsterPreviewInput) SetName(val string) {
+	s.Name = val
+}
+
+// SetDesign sets the value of Design.
+func (s *MonsterPreviewInput) SetDesign(val MonsterDesign) {
+	s.Design = val
+}
+
+// A named rule of a creature's, or a lair action.
+// Ref: #/components/schemas/MonsterTrait
+type MonsterTrait struct {
+	Name string `json:"name"`
+	Text string `json:"text"`
+}
+
+// GetName returns the value of Name.
+func (s *MonsterTrait) GetName() string {
+	return s.Name
+}
+
+// GetText returns the value of Text.
+func (s *MonsterTrait) GetText() string {
+	return s.Text
+}
+
+// SetName sets the value of Name.
+func (s *MonsterTrait) SetName(val string) {
+	s.Name = val
+}
+
+// SetText sets the value of Text.
+func (s *MonsterTrait) SetText(val string) {
+	s.Text = val
 }
 
 // A compendium entry by slug and name.
@@ -26685,6 +29966,144 @@ func (o OptItemCard) Or(d ItemCard) ItemCard {
 	return d
 }
 
+// NewOptItemDesignAttunement returns new OptItemDesignAttunement with value set to v.
+func NewOptItemDesignAttunement(v ItemDesignAttunement) OptItemDesignAttunement {
+	return OptItemDesignAttunement{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptItemDesignAttunement is optional ItemDesignAttunement.
+type OptItemDesignAttunement struct {
+	Value ItemDesignAttunement
+	Set   bool
+}
+
+// IsSet returns true if OptItemDesignAttunement was set.
+func (o OptItemDesignAttunement) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptItemDesignAttunement) Reset() {
+	var v ItemDesignAttunement
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptItemDesignAttunement) SetTo(v ItemDesignAttunement) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptItemDesignAttunement) Get() (v ItemDesignAttunement, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptItemDesignAttunement) Or(d ItemDesignAttunement) ItemDesignAttunement {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptItemDesignCharges returns new OptItemDesignCharges with value set to v.
+func NewOptItemDesignCharges(v ItemDesignCharges) OptItemDesignCharges {
+	return OptItemDesignCharges{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptItemDesignCharges is optional ItemDesignCharges.
+type OptItemDesignCharges struct {
+	Value ItemDesignCharges
+	Set   bool
+}
+
+// IsSet returns true if OptItemDesignCharges was set.
+func (o OptItemDesignCharges) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptItemDesignCharges) Reset() {
+	var v ItemDesignCharges
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptItemDesignCharges) SetTo(v ItemDesignCharges) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptItemDesignCharges) Get() (v ItemDesignCharges, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptItemDesignCharges) Or(d ItemDesignCharges) ItemDesignCharges {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptItemDesignWeapon returns new OptItemDesignWeapon with value set to v.
+func NewOptItemDesignWeapon(v ItemDesignWeapon) OptItemDesignWeapon {
+	return OptItemDesignWeapon{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptItemDesignWeapon is optional ItemDesignWeapon.
+type OptItemDesignWeapon struct {
+	Value ItemDesignWeapon
+	Set   bool
+}
+
+// IsSet returns true if OptItemDesignWeapon was set.
+func (o OptItemDesignWeapon) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptItemDesignWeapon) Reset() {
+	var v ItemDesignWeapon
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptItemDesignWeapon) SetTo(v ItemDesignWeapon) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptItemDesignWeapon) Get() (v ItemDesignWeapon, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptItemDesignWeapon) Or(d ItemDesignWeapon) ItemDesignWeapon {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptLevelUpRequestHitPoints returns new OptLevelUpRequestHitPoints with value set to v.
 func NewOptLevelUpRequestHitPoints(v LevelUpRequestHitPoints) OptLevelUpRequestHitPoints {
 	return OptLevelUpRequestHitPoints{
@@ -26725,6 +30144,52 @@ func (o OptLevelUpRequestHitPoints) Get() (v LevelUpRequestHitPoints, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptLevelUpRequestHitPoints) Or(d LevelUpRequestHitPoints) LevelUpRequestHitPoints {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptLibraryEntry returns new OptLibraryEntry with value set to v.
+func NewOptLibraryEntry(v LibraryEntry) OptLibraryEntry {
+	return OptLibraryEntry{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLibraryEntry is optional LibraryEntry.
+type OptLibraryEntry struct {
+	Value LibraryEntry
+	Set   bool
+}
+
+// IsSet returns true if OptLibraryEntry was set.
+func (o OptLibraryEntry) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLibraryEntry) Reset() {
+	var v LibraryEntry
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLibraryEntry) SetTo(v LibraryEntry) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLibraryEntry) Get() (v LibraryEntry, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLibraryEntry) Or(d LibraryEntry) LibraryEntry {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -27651,6 +31116,52 @@ func (o OptLiveItemInstanceSlot) Or(d LiveItemInstanceSlot) LiveItemInstanceSlot
 	return d
 }
 
+// NewOptLiveLegend returns new OptLiveLegend with value set to v.
+func NewOptLiveLegend(v LiveLegend) OptLiveLegend {
+	return OptLiveLegend{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveLegend is optional LiveLegend.
+type OptLiveLegend struct {
+	Value LiveLegend
+	Set   bool
+}
+
+// IsSet returns true if OptLiveLegend was set.
+func (o OptLiveLegend) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveLegend) Reset() {
+	var v LiveLegend
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveLegend) SetTo(v LiveLegend) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveLegend) Get() (v LiveLegend, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveLegend) Or(d LiveLegend) LiveLegend {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptLiveMap returns new OptLiveMap with value set to v.
 func NewOptLiveMap(v LiveMap) OptLiveMap {
 	return OptLiveMap{
@@ -28479,6 +31990,144 @@ func (o OptMapObjectKind) Or(d MapObjectKind) MapObjectKind {
 	return d
 }
 
+// NewOptMonsterDesignAura returns new OptMonsterDesignAura with value set to v.
+func NewOptMonsterDesignAura(v MonsterDesignAura) OptMonsterDesignAura {
+	return OptMonsterDesignAura{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptMonsterDesignAura is optional MonsterDesignAura.
+type OptMonsterDesignAura struct {
+	Value MonsterDesignAura
+	Set   bool
+}
+
+// IsSet returns true if OptMonsterDesignAura was set.
+func (o OptMonsterDesignAura) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptMonsterDesignAura) Reset() {
+	var v MonsterDesignAura
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptMonsterDesignAura) SetTo(v MonsterDesignAura) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptMonsterDesignAura) Get() (v MonsterDesignAura, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptMonsterDesignAura) Or(d MonsterDesignAura) MonsterDesignAura {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptMonsterDesignLair returns new OptMonsterDesignLair with value set to v.
+func NewOptMonsterDesignLair(v MonsterDesignLair) OptMonsterDesignLair {
+	return OptMonsterDesignLair{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptMonsterDesignLair is optional MonsterDesignLair.
+type OptMonsterDesignLair struct {
+	Value MonsterDesignLair
+	Set   bool
+}
+
+// IsSet returns true if OptMonsterDesignLair was set.
+func (o OptMonsterDesignLair) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptMonsterDesignLair) Reset() {
+	var v MonsterDesignLair
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptMonsterDesignLair) SetTo(v MonsterDesignLair) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptMonsterDesignLair) Get() (v MonsterDesignLair, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptMonsterDesignLair) Or(d MonsterDesignLair) MonsterDesignLair {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptMonsterDesignLegendary returns new OptMonsterDesignLegendary with value set to v.
+func NewOptMonsterDesignLegendary(v MonsterDesignLegendary) OptMonsterDesignLegendary {
+	return OptMonsterDesignLegendary{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptMonsterDesignLegendary is optional MonsterDesignLegendary.
+type OptMonsterDesignLegendary struct {
+	Value MonsterDesignLegendary
+	Set   bool
+}
+
+// IsSet returns true if OptMonsterDesignLegendary was set.
+func (o OptMonsterDesignLegendary) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptMonsterDesignLegendary) Reset() {
+	var v MonsterDesignLegendary
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptMonsterDesignLegendary) SetTo(v MonsterDesignLegendary) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptMonsterDesignLegendary) Get() (v MonsterDesignLegendary, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptMonsterDesignLegendary) Or(d MonsterDesignLegendary) MonsterDesignLegendary {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptNamedRef returns new OptNamedRef with value set to v.
 func NewOptNamedRef(v NamedRef) OptNamedRef {
 	return OptNamedRef{
@@ -28887,6 +32536,190 @@ func (o OptSlug) Get() (v Slug, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptSlug) Or(d Slug) Slug {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptSpellDesignCastingTimeTrigger returns new OptSpellDesignCastingTimeTrigger with value set to v.
+func NewOptSpellDesignCastingTimeTrigger(v SpellDesignCastingTimeTrigger) OptSpellDesignCastingTimeTrigger {
+	return OptSpellDesignCastingTimeTrigger{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptSpellDesignCastingTimeTrigger is optional SpellDesignCastingTimeTrigger.
+type OptSpellDesignCastingTimeTrigger struct {
+	Value SpellDesignCastingTimeTrigger
+	Set   bool
+}
+
+// IsSet returns true if OptSpellDesignCastingTimeTrigger was set.
+func (o OptSpellDesignCastingTimeTrigger) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptSpellDesignCastingTimeTrigger) Reset() {
+	var v SpellDesignCastingTimeTrigger
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptSpellDesignCastingTimeTrigger) SetTo(v SpellDesignCastingTimeTrigger) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptSpellDesignCastingTimeTrigger) Get() (v SpellDesignCastingTimeTrigger, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptSpellDesignCastingTimeTrigger) Or(d SpellDesignCastingTimeTrigger) SpellDesignCastingTimeTrigger {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptSpellDesignComponentsMaterial returns new OptSpellDesignComponentsMaterial with value set to v.
+func NewOptSpellDesignComponentsMaterial(v SpellDesignComponentsMaterial) OptSpellDesignComponentsMaterial {
+	return OptSpellDesignComponentsMaterial{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptSpellDesignComponentsMaterial is optional SpellDesignComponentsMaterial.
+type OptSpellDesignComponentsMaterial struct {
+	Value SpellDesignComponentsMaterial
+	Set   bool
+}
+
+// IsSet returns true if OptSpellDesignComponentsMaterial was set.
+func (o OptSpellDesignComponentsMaterial) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptSpellDesignComponentsMaterial) Reset() {
+	var v SpellDesignComponentsMaterial
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptSpellDesignComponentsMaterial) SetTo(v SpellDesignComponentsMaterial) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptSpellDesignComponentsMaterial) Get() (v SpellDesignComponentsMaterial, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptSpellDesignComponentsMaterial) Or(d SpellDesignComponentsMaterial) SpellDesignComponentsMaterial {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptSpellDesignSave returns new OptSpellDesignSave with value set to v.
+func NewOptSpellDesignSave(v SpellDesignSave) OptSpellDesignSave {
+	return OptSpellDesignSave{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptSpellDesignSave is optional SpellDesignSave.
+type OptSpellDesignSave struct {
+	Value SpellDesignSave
+	Set   bool
+}
+
+// IsSet returns true if OptSpellDesignSave was set.
+func (o OptSpellDesignSave) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptSpellDesignSave) Reset() {
+	var v SpellDesignSave
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptSpellDesignSave) SetTo(v SpellDesignSave) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptSpellDesignSave) Get() (v SpellDesignSave, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptSpellDesignSave) Or(d SpellDesignSave) SpellDesignSave {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptSpellPartWhen returns new OptSpellPartWhen with value set to v.
+func NewOptSpellPartWhen(v SpellPartWhen) OptSpellPartWhen {
+	return OptSpellPartWhen{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptSpellPartWhen is optional SpellPartWhen.
+type OptSpellPartWhen struct {
+	Value SpellPartWhen
+	Set   bool
+}
+
+// IsSet returns true if OptSpellPartWhen was set.
+func (o OptSpellPartWhen) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptSpellPartWhen) Reset() {
+	var v SpellPartWhen
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptSpellPartWhen) SetTo(v SpellPartWhen) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptSpellPartWhen) Get() (v SpellPartWhen, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptSpellPartWhen) Or(d SpellPartWhen) SpellPartWhen {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -29880,17 +33713,23 @@ func (*ProblemStatusCodeWithHeaders) getAccountRes()                    {}
 func (*ProblemStatusCodeWithHeaders) getActionLogRes()                  {}
 func (*ProblemStatusCodeWithHeaders) getAdminAccountRes()               {}
 func (*ProblemStatusCodeWithHeaders) getAutomationCoverageRes()         {}
+func (*ProblemStatusCodeWithHeaders) getBackgroundBuildRes()            {}
 func (*ProblemStatusCodeWithHeaders) getBuilderOptionsRes()             {}
 func (*ProblemStatusCodeWithHeaders) getCampaignRes()                   {}
 func (*ProblemStatusCodeWithHeaders) getCharacterDraftRes()             {}
 func (*ProblemStatusCodeWithHeaders) getCharacterRes()                  {}
+func (*ProblemStatusCodeWithHeaders) getClassBuildRes()                 {}
+func (*ProblemStatusCodeWithHeaders) getConditionBuildRes()             {}
 func (*ProblemStatusCodeWithHeaders) getEntryRes()                      {}
+func (*ProblemStatusCodeWithHeaders) getFeatBuildRes()                  {}
 func (*ProblemStatusCodeWithHeaders) getHealthRes()                     {}
 func (*ProblemStatusCodeWithHeaders) getInventoryRes()                  {}
+func (*ProblemStatusCodeWithHeaders) getItemBuildRes()                  {}
 func (*ProblemStatusCodeWithHeaders) getLibraryEntryRes()               {}
 func (*ProblemStatusCodeWithHeaders) getMapImageRes()                   {}
 func (*ProblemStatusCodeWithHeaders) getMapRes()                        {}
 func (*ProblemStatusCodeWithHeaders) getMeRes()                         {}
+func (*ProblemStatusCodeWithHeaders) getMonsterBuildRes()               {}
 func (*ProblemStatusCodeWithHeaders) getMyCharacterRes()                {}
 func (*ProblemStatusCodeWithHeaders) getNotificationPreferencesRes()    {}
 func (*ProblemStatusCodeWithHeaders) getNpcRes()                        {}
@@ -29903,9 +33742,12 @@ func (*ProblemStatusCodeWithHeaders) getSessionLogRes()                 {}
 func (*ProblemStatusCodeWithHeaders) getSessionRes()                    {}
 func (*ProblemStatusCodeWithHeaders) getSessionViewRes()                {}
 func (*ProblemStatusCodeWithHeaders) getSignInMethodsRes()              {}
+func (*ProblemStatusCodeWithHeaders) getSpeciesBuildRes()               {}
+func (*ProblemStatusCodeWithHeaders) getSpellBuildRes()                 {}
 func (*ProblemStatusCodeWithHeaders) getSpellRes()                      {}
 func (*ProblemStatusCodeWithHeaders) getSpellcastingRes()               {}
 func (*ProblemStatusCodeWithHeaders) getStatusRes()                     {}
+func (*ProblemStatusCodeWithHeaders) getSubclassBuildRes()              {}
 func (*ProblemStatusCodeWithHeaders) getTokenIconRes()                  {}
 func (*ProblemStatusCodeWithHeaders) getUnseenReleaseNoteRes()          {}
 func (*ProblemStatusCodeWithHeaders) importLibraryRes()                 {}
@@ -29966,10 +33808,19 @@ func (*ProblemStatusCodeWithHeaders) pinLibraryRevisionRes()            {}
 func (*ProblemStatusCodeWithHeaders) planLevelUpRes()                   {}
 func (*ProblemStatusCodeWithHeaders) prepareSpellsRes()                 {}
 func (*ProblemStatusCodeWithHeaders) previewAccountInviteRes()          {}
+func (*ProblemStatusCodeWithHeaders) previewBackgroundRes()             {}
 func (*ProblemStatusCodeWithHeaders) previewCharacterRes()              {}
+func (*ProblemStatusCodeWithHeaders) previewClassRes()                  {}
+func (*ProblemStatusCodeWithHeaders) previewConditionRes()              {}
+func (*ProblemStatusCodeWithHeaders) previewFeatRes()                   {}
 func (*ProblemStatusCodeWithHeaders) previewInviteRes()                 {}
+func (*ProblemStatusCodeWithHeaders) previewItemRes()                   {}
+func (*ProblemStatusCodeWithHeaders) previewMonsterRes()                {}
 func (*ProblemStatusCodeWithHeaders) previewReachRes()                  {}
 func (*ProblemStatusCodeWithHeaders) previewSightRes()                  {}
+func (*ProblemStatusCodeWithHeaders) previewSpeciesRes()                {}
+func (*ProblemStatusCodeWithHeaders) previewSpellRes()                  {}
+func (*ProblemStatusCodeWithHeaders) previewSubclassRes()               {}
 func (*ProblemStatusCodeWithHeaders) publishReleaseNoteRes()            {}
 func (*ProblemStatusCodeWithHeaders) readAllNotificationsRes()          {}
 func (*ProblemStatusCodeWithHeaders) readNotificationRes()              {}
@@ -29993,7 +33844,16 @@ func (*ProblemStatusCodeWithHeaders) revokeAccessTokenRes()             {}
 func (*ProblemStatusCodeWithHeaders) revokeInviteRes()                  {}
 func (*ProblemStatusCodeWithHeaders) rollCharacterScoresRes()           {}
 func (*ProblemStatusCodeWithHeaders) rollRestRes()                      {}
+func (*ProblemStatusCodeWithHeaders) saveBackgroundBuildRes()           {}
 func (*ProblemStatusCodeWithHeaders) saveCharacterDraftRes()            {}
+func (*ProblemStatusCodeWithHeaders) saveClassBuildRes()                {}
+func (*ProblemStatusCodeWithHeaders) saveConditionBuildRes()            {}
+func (*ProblemStatusCodeWithHeaders) saveFeatBuildRes()                 {}
+func (*ProblemStatusCodeWithHeaders) saveItemBuildRes()                 {}
+func (*ProblemStatusCodeWithHeaders) saveMonsterBuildRes()              {}
+func (*ProblemStatusCodeWithHeaders) saveSpeciesBuildRes()              {}
+func (*ProblemStatusCodeWithHeaders) saveSpellBuildRes()                {}
+func (*ProblemStatusCodeWithHeaders) saveSubclassBuildRes()             {}
 func (*ProblemStatusCodeWithHeaders) seeReleaseNoteRes()                {}
 func (*ProblemStatusCodeWithHeaders) sendAdminSignInLinkRes()           {}
 func (*ProblemStatusCodeWithHeaders) sendFriendRequestRes()             {}
@@ -35130,6 +38990,107 @@ func (s *SpawnMonster) SetCount(val int32) {
 	s.Count = val
 }
 
+// A homebrew species in its builder, the slug it is known by, and how it reads back.
+// Ref: #/components/schemas/SpeciesBuild
+type SpeciesBuild struct {
+	Entry  OptLibraryEntry `json:"entry"`
+	Design SpeciesDesign   `json:"design"`
+	Slug   OptString       `json:"slug"`
+	Lines  []string        `json:"lines"`
+}
+
+// GetEntry returns the value of Entry.
+func (s *SpeciesBuild) GetEntry() OptLibraryEntry {
+	return s.Entry
+}
+
+// GetDesign returns the value of Design.
+func (s *SpeciesBuild) GetDesign() SpeciesDesign {
+	return s.Design
+}
+
+// GetSlug returns the value of Slug.
+func (s *SpeciesBuild) GetSlug() OptString {
+	return s.Slug
+}
+
+// GetLines returns the value of Lines.
+func (s *SpeciesBuild) GetLines() []string {
+	return s.Lines
+}
+
+// SetEntry sets the value of Entry.
+func (s *SpeciesBuild) SetEntry(val OptLibraryEntry) {
+	s.Entry = val
+}
+
+// SetDesign sets the value of Design.
+func (s *SpeciesBuild) SetDesign(val SpeciesDesign) {
+	s.Design = val
+}
+
+// SetSlug sets the value of Slug.
+func (s *SpeciesBuild) SetSlug(val OptString) {
+	s.Slug = val
+}
+
+// SetLines sets the value of Lines.
+func (s *SpeciesBuild) SetLines(val []string) {
+	s.Lines = val
+}
+
+// SpeciesBuildHeaders wraps SpeciesBuild with response headers.
+type SpeciesBuildHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           SpeciesBuild
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *SpeciesBuildHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *SpeciesBuildHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *SpeciesBuildHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *SpeciesBuildHeaders) GetResponse() SpeciesBuild {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *SpeciesBuildHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *SpeciesBuildHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *SpeciesBuildHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *SpeciesBuildHeaders) SetResponse(val SpeciesBuild) {
+	s.Response = val
+}
+
+func (*SpeciesBuildHeaders) getSpeciesBuildRes()  {}
+func (*SpeciesBuildHeaders) previewSpeciesRes()   {}
+func (*SpeciesBuildHeaders) saveSpeciesBuildRes() {}
+
 // A playable species.
 // Ref: #/components/schemas/SpeciesChoice
 type SpeciesChoice struct {
@@ -35166,6 +39127,279 @@ func (s *SpeciesChoice) SetName(val string) {
 // SetSpeedFeet sets the value of SpeedFeet.
 func (s *SpeciesChoice) SetSpeedFeet(val int32) {
 	s.SpeedFeet = val
+}
+
+// A homebrew species as the species builder makes it, from its sizes, creature type, speeds, senses,
+// resistances, traits, innate spells and lineages.
+// Ref: #/components/schemas/SpeciesDesign
+type SpeciesDesign struct {
+	Sizes        []string         `json:"sizes"`
+	CreatureType string           `json:"creatureType"`
+	SpeedFt      int32            `json:"speedFt"`
+	Speeds       []SpeciesMeasure `json:"speeds"`
+	Senses       []SpeciesMeasure `json:"senses"`
+	Resistances  []string         `json:"resistances"`
+	Traits       []SpeciesTrait   `json:"traits"`
+	Spells       []SpeciesSpell   `json:"spells"`
+	Lineages     []SpeciesLineage `json:"lineages"`
+}
+
+// GetSizes returns the value of Sizes.
+func (s *SpeciesDesign) GetSizes() []string {
+	return s.Sizes
+}
+
+// GetCreatureType returns the value of CreatureType.
+func (s *SpeciesDesign) GetCreatureType() string {
+	return s.CreatureType
+}
+
+// GetSpeedFt returns the value of SpeedFt.
+func (s *SpeciesDesign) GetSpeedFt() int32 {
+	return s.SpeedFt
+}
+
+// GetSpeeds returns the value of Speeds.
+func (s *SpeciesDesign) GetSpeeds() []SpeciesMeasure {
+	return s.Speeds
+}
+
+// GetSenses returns the value of Senses.
+func (s *SpeciesDesign) GetSenses() []SpeciesMeasure {
+	return s.Senses
+}
+
+// GetResistances returns the value of Resistances.
+func (s *SpeciesDesign) GetResistances() []string {
+	return s.Resistances
+}
+
+// GetTraits returns the value of Traits.
+func (s *SpeciesDesign) GetTraits() []SpeciesTrait {
+	return s.Traits
+}
+
+// GetSpells returns the value of Spells.
+func (s *SpeciesDesign) GetSpells() []SpeciesSpell {
+	return s.Spells
+}
+
+// GetLineages returns the value of Lineages.
+func (s *SpeciesDesign) GetLineages() []SpeciesLineage {
+	return s.Lineages
+}
+
+// SetSizes sets the value of Sizes.
+func (s *SpeciesDesign) SetSizes(val []string) {
+	s.Sizes = val
+}
+
+// SetCreatureType sets the value of CreatureType.
+func (s *SpeciesDesign) SetCreatureType(val string) {
+	s.CreatureType = val
+}
+
+// SetSpeedFt sets the value of SpeedFt.
+func (s *SpeciesDesign) SetSpeedFt(val int32) {
+	s.SpeedFt = val
+}
+
+// SetSpeeds sets the value of Speeds.
+func (s *SpeciesDesign) SetSpeeds(val []SpeciesMeasure) {
+	s.Speeds = val
+}
+
+// SetSenses sets the value of Senses.
+func (s *SpeciesDesign) SetSenses(val []SpeciesMeasure) {
+	s.Senses = val
+}
+
+// SetResistances sets the value of Resistances.
+func (s *SpeciesDesign) SetResistances(val []string) {
+	s.Resistances = val
+}
+
+// SetTraits sets the value of Traits.
+func (s *SpeciesDesign) SetTraits(val []SpeciesTrait) {
+	s.Traits = val
+}
+
+// SetSpells sets the value of Spells.
+func (s *SpeciesDesign) SetSpells(val []SpeciesSpell) {
+	s.Spells = val
+}
+
+// SetLineages sets the value of Lineages.
+func (s *SpeciesDesign) SetLineages(val []SpeciesLineage) {
+	s.Lineages = val
+}
+
+// One branch of the species, picked at creation, with its own trait and spells.
+// Ref: #/components/schemas/SpeciesLineage
+type SpeciesLineage struct {
+	Name   string         `json:"name"`
+	Text   string         `json:"text"`
+	Spells []SpeciesSpell `json:"spells"`
+}
+
+// GetName returns the value of Name.
+func (s *SpeciesLineage) GetName() string {
+	return s.Name
+}
+
+// GetText returns the value of Text.
+func (s *SpeciesLineage) GetText() string {
+	return s.Text
+}
+
+// GetSpells returns the value of Spells.
+func (s *SpeciesLineage) GetSpells() []SpeciesSpell {
+	return s.Spells
+}
+
+// SetName sets the value of Name.
+func (s *SpeciesLineage) SetName(val string) {
+	s.Name = val
+}
+
+// SetText sets the value of Text.
+func (s *SpeciesLineage) SetText(val string) {
+	s.Text = val
+}
+
+// SetSpells sets the value of Spells.
+func (s *SpeciesLineage) SetSpells(val []SpeciesSpell) {
+	s.Spells = val
+}
+
+// A speed beside walking, or a special sense, and how far it reaches.
+// Ref: #/components/schemas/SpeciesMeasure
+type SpeciesMeasure struct {
+	Kind string `json:"kind"`
+	Feet int32  `json:"feet"`
+}
+
+// GetKind returns the value of Kind.
+func (s *SpeciesMeasure) GetKind() string {
+	return s.Kind
+}
+
+// GetFeet returns the value of Feet.
+func (s *SpeciesMeasure) GetFeet() int32 {
+	return s.Feet
+}
+
+// SetKind sets the value of Kind.
+func (s *SpeciesMeasure) SetKind(val string) {
+	s.Kind = val
+}
+
+// SetFeet sets the value of Feet.
+func (s *SpeciesMeasure) SetFeet(val int32) {
+	s.Feet = val
+}
+
+// A design to preview, with the species's name.
+// Ref: #/components/schemas/SpeciesPreviewInput
+type SpeciesPreviewInput struct {
+	Name   string        `json:"name"`
+	Design SpeciesDesign `json:"design"`
+}
+
+// GetName returns the value of Name.
+func (s *SpeciesPreviewInput) GetName() string {
+	return s.Name
+}
+
+// GetDesign returns the value of Design.
+func (s *SpeciesPreviewInput) GetDesign() SpeciesDesign {
+	return s.Design
+}
+
+// SetName sets the value of Name.
+func (s *SpeciesPreviewInput) SetName(val string) {
+	s.Name = val
+}
+
+// SetDesign sets the value of Design.
+func (s *SpeciesPreviewInput) SetDesign(val SpeciesDesign) {
+	s.Design = val
+}
+
+// An innate spell gained at a character level, cast at will or once per long rest.
+// Ref: #/components/schemas/SpeciesSpell
+type SpeciesSpell struct {
+	Level int32  `json:"level"`
+	Spell string `json:"spell"`
+	Name  string `json:"name"`
+	Uses  string `json:"uses"`
+}
+
+// GetLevel returns the value of Level.
+func (s *SpeciesSpell) GetLevel() int32 {
+	return s.Level
+}
+
+// GetSpell returns the value of Spell.
+func (s *SpeciesSpell) GetSpell() string {
+	return s.Spell
+}
+
+// GetName returns the value of Name.
+func (s *SpeciesSpell) GetName() string {
+	return s.Name
+}
+
+// GetUses returns the value of Uses.
+func (s *SpeciesSpell) GetUses() string {
+	return s.Uses
+}
+
+// SetLevel sets the value of Level.
+func (s *SpeciesSpell) SetLevel(val int32) {
+	s.Level = val
+}
+
+// SetSpell sets the value of Spell.
+func (s *SpeciesSpell) SetSpell(val string) {
+	s.Spell = val
+}
+
+// SetName sets the value of Name.
+func (s *SpeciesSpell) SetName(val string) {
+	s.Name = val
+}
+
+// SetUses sets the value of Uses.
+func (s *SpeciesSpell) SetUses(val string) {
+	s.Uses = val
+}
+
+// A named trait every member of the species has.
+// Ref: #/components/schemas/SpeciesTrait
+type SpeciesTrait struct {
+	Name string `json:"name"`
+	Text string `json:"text"`
+}
+
+// GetName returns the value of Name.
+func (s *SpeciesTrait) GetName() string {
+	return s.Name
+}
+
+// GetText returns the value of Text.
+func (s *SpeciesTrait) GetText() string {
+	return s.Text
+}
+
+// SetName sets the value of Name.
+func (s *SpeciesTrait) SetName(val string) {
+	s.Name = val
+}
+
+// SetText sets the value of Text.
+func (s *SpeciesTrait) SetText(val string) {
+	s.Text = val
 }
 
 // A spell with its full rules text.
@@ -35437,6 +39671,119 @@ func (s *Spell) SetMentions(val []ConditionRef) {
 	s.Mentions = val
 }
 
+// A homebrew spell in the Effect builder, the Effect slug it runs under in play, its rules text and
+// its area as hexes.
+// Ref: #/components/schemas/SpellBuild
+type SpellBuild struct {
+	Entry  OptLibraryEntry `json:"entry"`
+	Design SpellDesign     `json:"design"`
+	Effect string          `json:"effect"`
+	Text   []string        `json:"text"`
+	Hexes  []BuilderHex    `json:"hexes"`
+}
+
+// GetEntry returns the value of Entry.
+func (s *SpellBuild) GetEntry() OptLibraryEntry {
+	return s.Entry
+}
+
+// GetDesign returns the value of Design.
+func (s *SpellBuild) GetDesign() SpellDesign {
+	return s.Design
+}
+
+// GetEffect returns the value of Effect.
+func (s *SpellBuild) GetEffect() string {
+	return s.Effect
+}
+
+// GetText returns the value of Text.
+func (s *SpellBuild) GetText() []string {
+	return s.Text
+}
+
+// GetHexes returns the value of Hexes.
+func (s *SpellBuild) GetHexes() []BuilderHex {
+	return s.Hexes
+}
+
+// SetEntry sets the value of Entry.
+func (s *SpellBuild) SetEntry(val OptLibraryEntry) {
+	s.Entry = val
+}
+
+// SetDesign sets the value of Design.
+func (s *SpellBuild) SetDesign(val SpellDesign) {
+	s.Design = val
+}
+
+// SetEffect sets the value of Effect.
+func (s *SpellBuild) SetEffect(val string) {
+	s.Effect = val
+}
+
+// SetText sets the value of Text.
+func (s *SpellBuild) SetText(val []string) {
+	s.Text = val
+}
+
+// SetHexes sets the value of Hexes.
+func (s *SpellBuild) SetHexes(val []BuilderHex) {
+	s.Hexes = val
+}
+
+// SpellBuildHeaders wraps SpellBuild with response headers.
+type SpellBuildHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           SpellBuild
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *SpellBuildHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *SpellBuildHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *SpellBuildHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *SpellBuildHeaders) GetResponse() SpellBuild {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *SpellBuildHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *SpellBuildHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *SpellBuildHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *SpellBuildHeaders) SetResponse(val SpellBuild) {
+	s.Response = val
+}
+
+func (*SpellBuildHeaders) getSpellBuildRes()  {}
+func (*SpellBuildHeaders) previewSpellRes()   {}
+func (*SpellBuildHeaders) saveSpellBuildRes() {}
+
 // One spell by slug.
 // Ref: #/components/schemas/SpellChoice
 type SpellChoice struct {
@@ -35451,6 +39798,610 @@ func (s *SpellChoice) GetSpell() Slug {
 // SetSpell sets the value of Spell.
 func (s *SpellChoice) SetSpell(val Slug) {
 	s.Spell = val
+}
+
+// A homebrew spell as the Effect builder makes it, from Targeting and typed parts listed as rows.
+// Ref: #/components/schemas/SpellDesign
+type SpellDesign struct {
+	Targeting     SpellDesignTargeting   `json:"targeting"`
+	Save          OptSpellDesignSave     `json:"save"`
+	Concentration bool                   `json:"concentration"`
+	Duration      SpellDesignDuration    `json:"duration"`
+	Ritual        bool                   `json:"ritual"`
+	CastingTime   SpellDesignCastingTime `json:"castingTime"`
+	Components    SpellDesignComponents  `json:"components"`
+	Parts         []SpellPart            `json:"parts"`
+}
+
+// GetTargeting returns the value of Targeting.
+func (s *SpellDesign) GetTargeting() SpellDesignTargeting {
+	return s.Targeting
+}
+
+// GetSave returns the value of Save.
+func (s *SpellDesign) GetSave() OptSpellDesignSave {
+	return s.Save
+}
+
+// GetConcentration returns the value of Concentration.
+func (s *SpellDesign) GetConcentration() bool {
+	return s.Concentration
+}
+
+// GetDuration returns the value of Duration.
+func (s *SpellDesign) GetDuration() SpellDesignDuration {
+	return s.Duration
+}
+
+// GetRitual returns the value of Ritual.
+func (s *SpellDesign) GetRitual() bool {
+	return s.Ritual
+}
+
+// GetCastingTime returns the value of CastingTime.
+func (s *SpellDesign) GetCastingTime() SpellDesignCastingTime {
+	return s.CastingTime
+}
+
+// GetComponents returns the value of Components.
+func (s *SpellDesign) GetComponents() SpellDesignComponents {
+	return s.Components
+}
+
+// GetParts returns the value of Parts.
+func (s *SpellDesign) GetParts() []SpellPart {
+	return s.Parts
+}
+
+// SetTargeting sets the value of Targeting.
+func (s *SpellDesign) SetTargeting(val SpellDesignTargeting) {
+	s.Targeting = val
+}
+
+// SetSave sets the value of Save.
+func (s *SpellDesign) SetSave(val OptSpellDesignSave) {
+	s.Save = val
+}
+
+// SetConcentration sets the value of Concentration.
+func (s *SpellDesign) SetConcentration(val bool) {
+	s.Concentration = val
+}
+
+// SetDuration sets the value of Duration.
+func (s *SpellDesign) SetDuration(val SpellDesignDuration) {
+	s.Duration = val
+}
+
+// SetRitual sets the value of Ritual.
+func (s *SpellDesign) SetRitual(val bool) {
+	s.Ritual = val
+}
+
+// SetCastingTime sets the value of CastingTime.
+func (s *SpellDesign) SetCastingTime(val SpellDesignCastingTime) {
+	s.CastingTime = val
+}
+
+// SetComponents sets the value of Components.
+func (s *SpellDesign) SetComponents(val SpellDesignComponents) {
+	s.Components = val
+}
+
+// SetParts sets the value of Parts.
+func (s *SpellDesign) SetParts(val []SpellPart) {
+	s.Parts = val
+}
+
+type SpellDesignCastingTime struct {
+	Kind    SpellDesignCastingTimeKind       `json:"kind"`
+	Minutes OptInt32                         `json:"minutes"`
+	Trigger OptSpellDesignCastingTimeTrigger `json:"trigger"`
+}
+
+// GetKind returns the value of Kind.
+func (s *SpellDesignCastingTime) GetKind() SpellDesignCastingTimeKind {
+	return s.Kind
+}
+
+// GetMinutes returns the value of Minutes.
+func (s *SpellDesignCastingTime) GetMinutes() OptInt32 {
+	return s.Minutes
+}
+
+// GetTrigger returns the value of Trigger.
+func (s *SpellDesignCastingTime) GetTrigger() OptSpellDesignCastingTimeTrigger {
+	return s.Trigger
+}
+
+// SetKind sets the value of Kind.
+func (s *SpellDesignCastingTime) SetKind(val SpellDesignCastingTimeKind) {
+	s.Kind = val
+}
+
+// SetMinutes sets the value of Minutes.
+func (s *SpellDesignCastingTime) SetMinutes(val OptInt32) {
+	s.Minutes = val
+}
+
+// SetTrigger sets the value of Trigger.
+func (s *SpellDesignCastingTime) SetTrigger(val OptSpellDesignCastingTimeTrigger) {
+	s.Trigger = val
+}
+
+type SpellDesignCastingTimeKind string
+
+const (
+	SpellDesignCastingTimeKindAction      SpellDesignCastingTimeKind = "action"
+	SpellDesignCastingTimeKindBonusAction SpellDesignCastingTimeKind = "bonus_action"
+	SpellDesignCastingTimeKindReaction    SpellDesignCastingTimeKind = "reaction"
+	SpellDesignCastingTimeKindMinutes     SpellDesignCastingTimeKind = "minutes"
+)
+
+// AllValues returns all SpellDesignCastingTimeKind values.
+func (SpellDesignCastingTimeKind) AllValues() []SpellDesignCastingTimeKind {
+	return []SpellDesignCastingTimeKind{
+		SpellDesignCastingTimeKindAction,
+		SpellDesignCastingTimeKindBonusAction,
+		SpellDesignCastingTimeKindReaction,
+		SpellDesignCastingTimeKindMinutes,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s SpellDesignCastingTimeKind) MarshalText() ([]byte, error) {
+	switch s {
+	case SpellDesignCastingTimeKindAction:
+		return []byte(s), nil
+	case SpellDesignCastingTimeKindBonusAction:
+		return []byte(s), nil
+	case SpellDesignCastingTimeKindReaction:
+		return []byte(s), nil
+	case SpellDesignCastingTimeKindMinutes:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *SpellDesignCastingTimeKind) UnmarshalText(data []byte) error {
+	switch SpellDesignCastingTimeKind(data) {
+	case SpellDesignCastingTimeKindAction:
+		*s = SpellDesignCastingTimeKindAction
+		return nil
+	case SpellDesignCastingTimeKindBonusAction:
+		*s = SpellDesignCastingTimeKindBonusAction
+		return nil
+	case SpellDesignCastingTimeKindReaction:
+		*s = SpellDesignCastingTimeKindReaction
+		return nil
+	case SpellDesignCastingTimeKindMinutes:
+		*s = SpellDesignCastingTimeKindMinutes
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type SpellDesignCastingTimeTrigger string
+
+const (
+	SpellDesignCastingTimeTriggerWhenHit             SpellDesignCastingTimeTrigger = "when_hit"
+	SpellDesignCastingTimeTriggerWhenDamaged         SpellDesignCastingTimeTrigger = "when_damaged"
+	SpellDesignCastingTimeTriggerAllyAttacked        SpellDesignCastingTimeTrigger = "ally_attacked"
+	SpellDesignCastingTimeTriggerCreatureCasts       SpellDesignCastingTimeTrigger = "creature_casts"
+	SpellDesignCastingTimeTriggerCreatureEntersReach SpellDesignCastingTimeTrigger = "creature_enters_reach"
+)
+
+// AllValues returns all SpellDesignCastingTimeTrigger values.
+func (SpellDesignCastingTimeTrigger) AllValues() []SpellDesignCastingTimeTrigger {
+	return []SpellDesignCastingTimeTrigger{
+		SpellDesignCastingTimeTriggerWhenHit,
+		SpellDesignCastingTimeTriggerWhenDamaged,
+		SpellDesignCastingTimeTriggerAllyAttacked,
+		SpellDesignCastingTimeTriggerCreatureCasts,
+		SpellDesignCastingTimeTriggerCreatureEntersReach,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s SpellDesignCastingTimeTrigger) MarshalText() ([]byte, error) {
+	switch s {
+	case SpellDesignCastingTimeTriggerWhenHit:
+		return []byte(s), nil
+	case SpellDesignCastingTimeTriggerWhenDamaged:
+		return []byte(s), nil
+	case SpellDesignCastingTimeTriggerAllyAttacked:
+		return []byte(s), nil
+	case SpellDesignCastingTimeTriggerCreatureCasts:
+		return []byte(s), nil
+	case SpellDesignCastingTimeTriggerCreatureEntersReach:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *SpellDesignCastingTimeTrigger) UnmarshalText(data []byte) error {
+	switch SpellDesignCastingTimeTrigger(data) {
+	case SpellDesignCastingTimeTriggerWhenHit:
+		*s = SpellDesignCastingTimeTriggerWhenHit
+		return nil
+	case SpellDesignCastingTimeTriggerWhenDamaged:
+		*s = SpellDesignCastingTimeTriggerWhenDamaged
+		return nil
+	case SpellDesignCastingTimeTriggerAllyAttacked:
+		*s = SpellDesignCastingTimeTriggerAllyAttacked
+		return nil
+	case SpellDesignCastingTimeTriggerCreatureCasts:
+		*s = SpellDesignCastingTimeTriggerCreatureCasts
+		return nil
+	case SpellDesignCastingTimeTriggerCreatureEntersReach:
+		*s = SpellDesignCastingTimeTriggerCreatureEntersReach
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type SpellDesignComponents struct {
+	Verbal   bool                             `json:"verbal"`
+	Somatic  bool                             `json:"somatic"`
+	Material OptSpellDesignComponentsMaterial `json:"material"`
+}
+
+// GetVerbal returns the value of Verbal.
+func (s *SpellDesignComponents) GetVerbal() bool {
+	return s.Verbal
+}
+
+// GetSomatic returns the value of Somatic.
+func (s *SpellDesignComponents) GetSomatic() bool {
+	return s.Somatic
+}
+
+// GetMaterial returns the value of Material.
+func (s *SpellDesignComponents) GetMaterial() OptSpellDesignComponentsMaterial {
+	return s.Material
+}
+
+// SetVerbal sets the value of Verbal.
+func (s *SpellDesignComponents) SetVerbal(val bool) {
+	s.Verbal = val
+}
+
+// SetSomatic sets the value of Somatic.
+func (s *SpellDesignComponents) SetSomatic(val bool) {
+	s.Somatic = val
+}
+
+// SetMaterial sets the value of Material.
+func (s *SpellDesignComponents) SetMaterial(val OptSpellDesignComponentsMaterial) {
+	s.Material = val
+}
+
+type SpellDesignComponentsMaterial struct {
+	Text     string    `json:"text"`
+	CostGp   OptInt32  `json:"costGp"`
+	Consumed OptBool   `json:"consumed"`
+	Item     OptString `json:"item"`
+}
+
+// GetText returns the value of Text.
+func (s *SpellDesignComponentsMaterial) GetText() string {
+	return s.Text
+}
+
+// GetCostGp returns the value of CostGp.
+func (s *SpellDesignComponentsMaterial) GetCostGp() OptInt32 {
+	return s.CostGp
+}
+
+// GetConsumed returns the value of Consumed.
+func (s *SpellDesignComponentsMaterial) GetConsumed() OptBool {
+	return s.Consumed
+}
+
+// GetItem returns the value of Item.
+func (s *SpellDesignComponentsMaterial) GetItem() OptString {
+	return s.Item
+}
+
+// SetText sets the value of Text.
+func (s *SpellDesignComponentsMaterial) SetText(val string) {
+	s.Text = val
+}
+
+// SetCostGp sets the value of CostGp.
+func (s *SpellDesignComponentsMaterial) SetCostGp(val OptInt32) {
+	s.CostGp = val
+}
+
+// SetConsumed sets the value of Consumed.
+func (s *SpellDesignComponentsMaterial) SetConsumed(val OptBool) {
+	s.Consumed = val
+}
+
+// SetItem sets the value of Item.
+func (s *SpellDesignComponentsMaterial) SetItem(val OptString) {
+	s.Item = val
+}
+
+type SpellDesignDuration struct {
+	Unit   SpellDesignDurationUnit `json:"unit"`
+	Amount OptInt32                `json:"amount"`
+}
+
+// GetUnit returns the value of Unit.
+func (s *SpellDesignDuration) GetUnit() SpellDesignDurationUnit {
+	return s.Unit
+}
+
+// GetAmount returns the value of Amount.
+func (s *SpellDesignDuration) GetAmount() OptInt32 {
+	return s.Amount
+}
+
+// SetUnit sets the value of Unit.
+func (s *SpellDesignDuration) SetUnit(val SpellDesignDurationUnit) {
+	s.Unit = val
+}
+
+// SetAmount sets the value of Amount.
+func (s *SpellDesignDuration) SetAmount(val OptInt32) {
+	s.Amount = val
+}
+
+type SpellDesignDurationUnit string
+
+const (
+	SpellDesignDurationUnitInstant        SpellDesignDurationUnit = "instant"
+	SpellDesignDurationUnitRounds         SpellDesignDurationUnit = "rounds"
+	SpellDesignDurationUnitMinutes        SpellDesignDurationUnit = "minutes"
+	SpellDesignDurationUnitHours          SpellDesignDurationUnit = "hours"
+	SpellDesignDurationUnitUntilDispelled SpellDesignDurationUnit = "until_dispelled"
+)
+
+// AllValues returns all SpellDesignDurationUnit values.
+func (SpellDesignDurationUnit) AllValues() []SpellDesignDurationUnit {
+	return []SpellDesignDurationUnit{
+		SpellDesignDurationUnitInstant,
+		SpellDesignDurationUnitRounds,
+		SpellDesignDurationUnitMinutes,
+		SpellDesignDurationUnitHours,
+		SpellDesignDurationUnitUntilDispelled,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s SpellDesignDurationUnit) MarshalText() ([]byte, error) {
+	switch s {
+	case SpellDesignDurationUnitInstant:
+		return []byte(s), nil
+	case SpellDesignDurationUnitRounds:
+		return []byte(s), nil
+	case SpellDesignDurationUnitMinutes:
+		return []byte(s), nil
+	case SpellDesignDurationUnitHours:
+		return []byte(s), nil
+	case SpellDesignDurationUnitUntilDispelled:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *SpellDesignDurationUnit) UnmarshalText(data []byte) error {
+	switch SpellDesignDurationUnit(data) {
+	case SpellDesignDurationUnitInstant:
+		*s = SpellDesignDurationUnitInstant
+		return nil
+	case SpellDesignDurationUnitRounds:
+		*s = SpellDesignDurationUnitRounds
+		return nil
+	case SpellDesignDurationUnitMinutes:
+		*s = SpellDesignDurationUnitMinutes
+		return nil
+	case SpellDesignDurationUnitHours:
+		*s = SpellDesignDurationUnitHours
+		return nil
+	case SpellDesignDurationUnitUntilDispelled:
+		*s = SpellDesignDurationUnitUntilDispelled
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type SpellDesignSave string
+
+const (
+	SpellDesignSaveStrength     SpellDesignSave = "strength"
+	SpellDesignSaveDexterity    SpellDesignSave = "dexterity"
+	SpellDesignSaveConstitution SpellDesignSave = "constitution"
+	SpellDesignSaveIntelligence SpellDesignSave = "intelligence"
+	SpellDesignSaveWisdom       SpellDesignSave = "wisdom"
+	SpellDesignSaveCharisma     SpellDesignSave = "charisma"
+)
+
+// AllValues returns all SpellDesignSave values.
+func (SpellDesignSave) AllValues() []SpellDesignSave {
+	return []SpellDesignSave{
+		SpellDesignSaveStrength,
+		SpellDesignSaveDexterity,
+		SpellDesignSaveConstitution,
+		SpellDesignSaveIntelligence,
+		SpellDesignSaveWisdom,
+		SpellDesignSaveCharisma,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s SpellDesignSave) MarshalText() ([]byte, error) {
+	switch s {
+	case SpellDesignSaveStrength:
+		return []byte(s), nil
+	case SpellDesignSaveDexterity:
+		return []byte(s), nil
+	case SpellDesignSaveConstitution:
+		return []byte(s), nil
+	case SpellDesignSaveIntelligence:
+		return []byte(s), nil
+	case SpellDesignSaveWisdom:
+		return []byte(s), nil
+	case SpellDesignSaveCharisma:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *SpellDesignSave) UnmarshalText(data []byte) error {
+	switch SpellDesignSave(data) {
+	case SpellDesignSaveStrength:
+		*s = SpellDesignSaveStrength
+		return nil
+	case SpellDesignSaveDexterity:
+		*s = SpellDesignSaveDexterity
+		return nil
+	case SpellDesignSaveConstitution:
+		*s = SpellDesignSaveConstitution
+		return nil
+	case SpellDesignSaveIntelligence:
+		*s = SpellDesignSaveIntelligence
+		return nil
+	case SpellDesignSaveWisdom:
+		*s = SpellDesignSaveWisdom
+		return nil
+	case SpellDesignSaveCharisma:
+		*s = SpellDesignSaveCharisma
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type SpellDesignTargeting struct {
+	Shape   SpellDesignTargetingShape `json:"shape"`
+	SizeFt  int32                     `json:"sizeFt"`
+	RangeFt int32                     `json:"rangeFt"`
+}
+
+// GetShape returns the value of Shape.
+func (s *SpellDesignTargeting) GetShape() SpellDesignTargetingShape {
+	return s.Shape
+}
+
+// GetSizeFt returns the value of SizeFt.
+func (s *SpellDesignTargeting) GetSizeFt() int32 {
+	return s.SizeFt
+}
+
+// GetRangeFt returns the value of RangeFt.
+func (s *SpellDesignTargeting) GetRangeFt() int32 {
+	return s.RangeFt
+}
+
+// SetShape sets the value of Shape.
+func (s *SpellDesignTargeting) SetShape(val SpellDesignTargetingShape) {
+	s.Shape = val
+}
+
+// SetSizeFt sets the value of SizeFt.
+func (s *SpellDesignTargeting) SetSizeFt(val int32) {
+	s.SizeFt = val
+}
+
+// SetRangeFt sets the value of RangeFt.
+func (s *SpellDesignTargeting) SetRangeFt(val int32) {
+	s.RangeFt = val
+}
+
+type SpellDesignTargetingShape string
+
+const (
+	SpellDesignTargetingShapeSphere    SpellDesignTargetingShape = "sphere"
+	SpellDesignTargetingShapeCylinder  SpellDesignTargetingShape = "cylinder"
+	SpellDesignTargetingShapeEmanation SpellDesignTargetingShape = "emanation"
+	SpellDesignTargetingShapeRing      SpellDesignTargetingShape = "ring"
+	SpellDesignTargetingShapeCone      SpellDesignTargetingShape = "cone"
+	SpellDesignTargetingShapeCube      SpellDesignTargetingShape = "cube"
+	SpellDesignTargetingShapeLine      SpellDesignTargetingShape = "line"
+	SpellDesignTargetingShapeWall      SpellDesignTargetingShape = "wall"
+)
+
+// AllValues returns all SpellDesignTargetingShape values.
+func (SpellDesignTargetingShape) AllValues() []SpellDesignTargetingShape {
+	return []SpellDesignTargetingShape{
+		SpellDesignTargetingShapeSphere,
+		SpellDesignTargetingShapeCylinder,
+		SpellDesignTargetingShapeEmanation,
+		SpellDesignTargetingShapeRing,
+		SpellDesignTargetingShapeCone,
+		SpellDesignTargetingShapeCube,
+		SpellDesignTargetingShapeLine,
+		SpellDesignTargetingShapeWall,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s SpellDesignTargetingShape) MarshalText() ([]byte, error) {
+	switch s {
+	case SpellDesignTargetingShapeSphere:
+		return []byte(s), nil
+	case SpellDesignTargetingShapeCylinder:
+		return []byte(s), nil
+	case SpellDesignTargetingShapeEmanation:
+		return []byte(s), nil
+	case SpellDesignTargetingShapeRing:
+		return []byte(s), nil
+	case SpellDesignTargetingShapeCone:
+		return []byte(s), nil
+	case SpellDesignTargetingShapeCube:
+		return []byte(s), nil
+	case SpellDesignTargetingShapeLine:
+		return []byte(s), nil
+	case SpellDesignTargetingShapeWall:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *SpellDesignTargetingShape) UnmarshalText(data []byte) error {
+	switch SpellDesignTargetingShape(data) {
+	case SpellDesignTargetingShapeSphere:
+		*s = SpellDesignTargetingShapeSphere
+		return nil
+	case SpellDesignTargetingShapeCylinder:
+		*s = SpellDesignTargetingShapeCylinder
+		return nil
+	case SpellDesignTargetingShapeEmanation:
+		*s = SpellDesignTargetingShapeEmanation
+		return nil
+	case SpellDesignTargetingShapeRing:
+		*s = SpellDesignTargetingShapeRing
+		return nil
+	case SpellDesignTargetingShapeCone:
+		*s = SpellDesignTargetingShapeCone
+		return nil
+	case SpellDesignTargetingShapeCube:
+		*s = SpellDesignTargetingShapeCube
+		return nil
+	case SpellDesignTargetingShapeLine:
+		*s = SpellDesignTargetingShapeLine
+		return nil
+	case SpellDesignTargetingShapeWall:
+		*s = SpellDesignTargetingShapeWall
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 // SpellHeaders wraps Spell with response headers.
@@ -35602,6 +40553,264 @@ func (s *SpellPageHeaders) SetResponse(val SpellPage) {
 
 func (*SpellPageHeaders) listSpellsRes() {}
 
+// One row of a spell design; which fields count depends on its type.
+// Ref: #/components/schemas/SpellPart
+type SpellPart struct {
+	Type       SpellPartType    `json:"type"`
+	When       OptSpellPartWhen `json:"when"`
+	Dice       OptString        `json:"dice"`
+	DamageType OptString        `json:"damageType"`
+	Half       OptBool          `json:"half"`
+	Condition  OptString        `json:"condition"`
+	OnlyTypes  []string         `json:"onlyTypes"`
+	BrightFt   OptInt32         `json:"brightFt"`
+	DimFt      OptInt32         `json:"dimFt"`
+	Qualities  []string         `json:"qualities"`
+	Surface    OptString        `json:"surface"`
+	Rounds     OptInt32         `json:"rounds"`
+	Text       OptString        `json:"text"`
+}
+
+// GetType returns the value of Type.
+func (s *SpellPart) GetType() SpellPartType {
+	return s.Type
+}
+
+// GetWhen returns the value of When.
+func (s *SpellPart) GetWhen() OptSpellPartWhen {
+	return s.When
+}
+
+// GetDice returns the value of Dice.
+func (s *SpellPart) GetDice() OptString {
+	return s.Dice
+}
+
+// GetDamageType returns the value of DamageType.
+func (s *SpellPart) GetDamageType() OptString {
+	return s.DamageType
+}
+
+// GetHalf returns the value of Half.
+func (s *SpellPart) GetHalf() OptBool {
+	return s.Half
+}
+
+// GetCondition returns the value of Condition.
+func (s *SpellPart) GetCondition() OptString {
+	return s.Condition
+}
+
+// GetOnlyTypes returns the value of OnlyTypes.
+func (s *SpellPart) GetOnlyTypes() []string {
+	return s.OnlyTypes
+}
+
+// GetBrightFt returns the value of BrightFt.
+func (s *SpellPart) GetBrightFt() OptInt32 {
+	return s.BrightFt
+}
+
+// GetDimFt returns the value of DimFt.
+func (s *SpellPart) GetDimFt() OptInt32 {
+	return s.DimFt
+}
+
+// GetQualities returns the value of Qualities.
+func (s *SpellPart) GetQualities() []string {
+	return s.Qualities
+}
+
+// GetSurface returns the value of Surface.
+func (s *SpellPart) GetSurface() OptString {
+	return s.Surface
+}
+
+// GetRounds returns the value of Rounds.
+func (s *SpellPart) GetRounds() OptInt32 {
+	return s.Rounds
+}
+
+// GetText returns the value of Text.
+func (s *SpellPart) GetText() OptString {
+	return s.Text
+}
+
+// SetType sets the value of Type.
+func (s *SpellPart) SetType(val SpellPartType) {
+	s.Type = val
+}
+
+// SetWhen sets the value of When.
+func (s *SpellPart) SetWhen(val OptSpellPartWhen) {
+	s.When = val
+}
+
+// SetDice sets the value of Dice.
+func (s *SpellPart) SetDice(val OptString) {
+	s.Dice = val
+}
+
+// SetDamageType sets the value of DamageType.
+func (s *SpellPart) SetDamageType(val OptString) {
+	s.DamageType = val
+}
+
+// SetHalf sets the value of Half.
+func (s *SpellPart) SetHalf(val OptBool) {
+	s.Half = val
+}
+
+// SetCondition sets the value of Condition.
+func (s *SpellPart) SetCondition(val OptString) {
+	s.Condition = val
+}
+
+// SetOnlyTypes sets the value of OnlyTypes.
+func (s *SpellPart) SetOnlyTypes(val []string) {
+	s.OnlyTypes = val
+}
+
+// SetBrightFt sets the value of BrightFt.
+func (s *SpellPart) SetBrightFt(val OptInt32) {
+	s.BrightFt = val
+}
+
+// SetDimFt sets the value of DimFt.
+func (s *SpellPart) SetDimFt(val OptInt32) {
+	s.DimFt = val
+}
+
+// SetQualities sets the value of Qualities.
+func (s *SpellPart) SetQualities(val []string) {
+	s.Qualities = val
+}
+
+// SetSurface sets the value of Surface.
+func (s *SpellPart) SetSurface(val OptString) {
+	s.Surface = val
+}
+
+// SetRounds sets the value of Rounds.
+func (s *SpellPart) SetRounds(val OptInt32) {
+	s.Rounds = val
+}
+
+// SetText sets the value of Text.
+func (s *SpellPart) SetText(val OptString) {
+	s.Text = val
+}
+
+type SpellPartType string
+
+const (
+	SpellPartTypeDamage    SpellPartType = "damage"
+	SpellPartTypeCondition SpellPartType = "condition"
+	SpellPartTypeLight     SpellPartType = "light"
+	SpellPartTypeReveal    SpellPartType = "reveal"
+	SpellPartTypeSurface   SpellPartType = "surface"
+	SpellPartTypeManual    SpellPartType = "manual"
+)
+
+// AllValues returns all SpellPartType values.
+func (SpellPartType) AllValues() []SpellPartType {
+	return []SpellPartType{
+		SpellPartTypeDamage,
+		SpellPartTypeCondition,
+		SpellPartTypeLight,
+		SpellPartTypeReveal,
+		SpellPartTypeSurface,
+		SpellPartTypeManual,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s SpellPartType) MarshalText() ([]byte, error) {
+	switch s {
+	case SpellPartTypeDamage:
+		return []byte(s), nil
+	case SpellPartTypeCondition:
+		return []byte(s), nil
+	case SpellPartTypeLight:
+		return []byte(s), nil
+	case SpellPartTypeReveal:
+		return []byte(s), nil
+	case SpellPartTypeSurface:
+		return []byte(s), nil
+	case SpellPartTypeManual:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *SpellPartType) UnmarshalText(data []byte) error {
+	switch SpellPartType(data) {
+	case SpellPartTypeDamage:
+		*s = SpellPartTypeDamage
+		return nil
+	case SpellPartTypeCondition:
+		*s = SpellPartTypeCondition
+		return nil
+	case SpellPartTypeLight:
+		*s = SpellPartTypeLight
+		return nil
+	case SpellPartTypeReveal:
+		*s = SpellPartTypeReveal
+		return nil
+	case SpellPartTypeSurface:
+		*s = SpellPartTypeSurface
+		return nil
+	case SpellPartTypeManual:
+		*s = SpellPartTypeManual
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type SpellPartWhen string
+
+const (
+	SpellPartWhenOnCast      SpellPartWhen = "on_cast"
+	SpellPartWhenStartOfTurn SpellPartWhen = "start_of_turn"
+)
+
+// AllValues returns all SpellPartWhen values.
+func (SpellPartWhen) AllValues() []SpellPartWhen {
+	return []SpellPartWhen{
+		SpellPartWhenOnCast,
+		SpellPartWhenStartOfTurn,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s SpellPartWhen) MarshalText() ([]byte, error) {
+	switch s {
+	case SpellPartWhenOnCast:
+		return []byte(s), nil
+	case SpellPartWhenStartOfTurn:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *SpellPartWhen) UnmarshalText(data []byte) error {
+	switch SpellPartWhen(data) {
+	case SpellPartWhenOnCast:
+		*s = SpellPartWhenOnCast
+		return nil
+	case SpellPartWhenStartOfTurn:
+		*s = SpellPartWhenStartOfTurn
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // A cantrip (level 0) or spell on a class's list.
 // Ref: #/components/schemas/SpellPick
 type SpellPick struct {
@@ -35678,6 +40887,33 @@ func (s *SpellPreparation) SetClass(val Slug) {
 // SetSpells sets the value of Spells.
 func (s *SpellPreparation) SetSpells(val []Slug) {
 	s.Spells = val
+}
+
+// A design to preview, with the spell's name.
+// Ref: #/components/schemas/SpellPreviewInput
+type SpellPreviewInput struct {
+	Name   string      `json:"name"`
+	Design SpellDesign `json:"design"`
+}
+
+// GetName returns the value of Name.
+func (s *SpellPreviewInput) GetName() string {
+	return s.Name
+}
+
+// GetDesign returns the value of Design.
+func (s *SpellPreviewInput) GetDesign() SpellDesign {
+	return s.Design
+}
+
+// SetName sets the value of Name.
+func (s *SpellPreviewInput) SetName(val string) {
+	s.Name = val
+}
+
+// SetDesign sets the value of Design.
+func (s *SpellPreviewInput) SetDesign(val SpellDesign) {
+	s.Design = val
 }
 
 // Damage at a higher slot or character level.
@@ -36112,6 +41348,400 @@ func (s *StockItem) SetQuantity(val int32) {
 // SetPriceCp sets the value of PriceCp.
 func (s *StockItem) SetPriceCp(val int32) {
 	s.PriceCp = val
+}
+
+// A homebrew subclass in the subclass builder, the slug it is known by on a sheet, and how it reads
+// back.
+// Ref: #/components/schemas/SubclassBuild
+type SubclassBuild struct {
+	Entry  OptLibraryEntry `json:"entry"`
+	Design SubclassDesign  `json:"design"`
+	Slug   OptString       `json:"slug"`
+	Lines  []string        `json:"lines"`
+}
+
+// GetEntry returns the value of Entry.
+func (s *SubclassBuild) GetEntry() OptLibraryEntry {
+	return s.Entry
+}
+
+// GetDesign returns the value of Design.
+func (s *SubclassBuild) GetDesign() SubclassDesign {
+	return s.Design
+}
+
+// GetSlug returns the value of Slug.
+func (s *SubclassBuild) GetSlug() OptString {
+	return s.Slug
+}
+
+// GetLines returns the value of Lines.
+func (s *SubclassBuild) GetLines() []string {
+	return s.Lines
+}
+
+// SetEntry sets the value of Entry.
+func (s *SubclassBuild) SetEntry(val OptLibraryEntry) {
+	s.Entry = val
+}
+
+// SetDesign sets the value of Design.
+func (s *SubclassBuild) SetDesign(val SubclassDesign) {
+	s.Design = val
+}
+
+// SetSlug sets the value of Slug.
+func (s *SubclassBuild) SetSlug(val OptString) {
+	s.Slug = val
+}
+
+// SetLines sets the value of Lines.
+func (s *SubclassBuild) SetLines(val []string) {
+	s.Lines = val
+}
+
+// SubclassBuildHeaders wraps SubclassBuild with response headers.
+type SubclassBuildHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           SubclassBuild
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *SubclassBuildHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *SubclassBuildHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *SubclassBuildHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *SubclassBuildHeaders) GetResponse() SubclassBuild {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *SubclassBuildHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *SubclassBuildHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *SubclassBuildHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *SubclassBuildHeaders) SetResponse(val SubclassBuild) {
+	s.Response = val
+}
+
+func (*SubclassBuildHeaders) getSubclassBuildRes()  {}
+func (*SubclassBuildHeaders) previewSubclassRes()   {}
+func (*SubclassBuildHeaders) saveSubclassBuildRes() {}
+
+// A pick from listed options at a level.
+// Ref: #/components/schemas/SubclassChoice
+type SubclassChoice struct {
+	Level   int32    `json:"level"`
+	Name    string   `json:"name"`
+	Count   int32    `json:"count"`
+	Options []string `json:"options"`
+}
+
+// GetLevel returns the value of Level.
+func (s *SubclassChoice) GetLevel() int32 {
+	return s.Level
+}
+
+// GetName returns the value of Name.
+func (s *SubclassChoice) GetName() string {
+	return s.Name
+}
+
+// GetCount returns the value of Count.
+func (s *SubclassChoice) GetCount() int32 {
+	return s.Count
+}
+
+// GetOptions returns the value of Options.
+func (s *SubclassChoice) GetOptions() []string {
+	return s.Options
+}
+
+// SetLevel sets the value of Level.
+func (s *SubclassChoice) SetLevel(val int32) {
+	s.Level = val
+}
+
+// SetName sets the value of Name.
+func (s *SubclassChoice) SetName(val string) {
+	s.Name = val
+}
+
+// SetCount sets the value of Count.
+func (s *SubclassChoice) SetCount(val int32) {
+	s.Count = val
+}
+
+// SetOptions sets the value of Options.
+func (s *SubclassChoice) SetOptions(val []string) {
+	s.Options = val
+}
+
+// A homebrew subclass as the subclass builder makes it, from level-gated Features, the Resources they
+// spend and the choices they ask for.
+// Ref: #/components/schemas/SubclassDesign
+type SubclassDesign struct {
+	Class     string             `json:"class"`
+	Features  []SubclassFeature  `json:"features"`
+	Resources []SubclassResource `json:"resources"`
+	Choices   []SubclassChoice   `json:"choices"`
+}
+
+// GetClass returns the value of Class.
+func (s *SubclassDesign) GetClass() string {
+	return s.Class
+}
+
+// GetFeatures returns the value of Features.
+func (s *SubclassDesign) GetFeatures() []SubclassFeature {
+	return s.Features
+}
+
+// GetResources returns the value of Resources.
+func (s *SubclassDesign) GetResources() []SubclassResource {
+	return s.Resources
+}
+
+// GetChoices returns the value of Choices.
+func (s *SubclassDesign) GetChoices() []SubclassChoice {
+	return s.Choices
+}
+
+// SetClass sets the value of Class.
+func (s *SubclassDesign) SetClass(val string) {
+	s.Class = val
+}
+
+// SetFeatures sets the value of Features.
+func (s *SubclassDesign) SetFeatures(val []SubclassFeature) {
+	s.Features = val
+}
+
+// SetResources sets the value of Resources.
+func (s *SubclassDesign) SetResources(val []SubclassResource) {
+	s.Resources = val
+}
+
+// SetChoices sets the value of Choices.
+func (s *SubclassDesign) SetChoices(val []SubclassChoice) {
+	s.Choices = val
+}
+
+// A Feature gained at a class level; it may spend a use of a Resource, by key, and let its bearer cast
+// a spell.
+// Ref: #/components/schemas/SubclassFeature
+type SubclassFeature struct {
+	Level     int32     `json:"level"`
+	Name      string    `json:"name"`
+	Text      string    `json:"text"`
+	Uses      OptString `json:"uses"`
+	Spell     OptString `json:"spell"`
+	SpellName OptString `json:"spellName"`
+}
+
+// GetLevel returns the value of Level.
+func (s *SubclassFeature) GetLevel() int32 {
+	return s.Level
+}
+
+// GetName returns the value of Name.
+func (s *SubclassFeature) GetName() string {
+	return s.Name
+}
+
+// GetText returns the value of Text.
+func (s *SubclassFeature) GetText() string {
+	return s.Text
+}
+
+// GetUses returns the value of Uses.
+func (s *SubclassFeature) GetUses() OptString {
+	return s.Uses
+}
+
+// GetSpell returns the value of Spell.
+func (s *SubclassFeature) GetSpell() OptString {
+	return s.Spell
+}
+
+// GetSpellName returns the value of SpellName.
+func (s *SubclassFeature) GetSpellName() OptString {
+	return s.SpellName
+}
+
+// SetLevel sets the value of Level.
+func (s *SubclassFeature) SetLevel(val int32) {
+	s.Level = val
+}
+
+// SetName sets the value of Name.
+func (s *SubclassFeature) SetName(val string) {
+	s.Name = val
+}
+
+// SetText sets the value of Text.
+func (s *SubclassFeature) SetText(val string) {
+	s.Text = val
+}
+
+// SetUses sets the value of Uses.
+func (s *SubclassFeature) SetUses(val OptString) {
+	s.Uses = val
+}
+
+// SetSpell sets the value of Spell.
+func (s *SubclassFeature) SetSpell(val OptString) {
+	s.Spell = val
+}
+
+// SetSpellName sets the value of SpellName.
+func (s *SubclassFeature) SetSpellName(val OptString) {
+	s.SpellName = val
+}
+
+// A design to preview, with the subclass's name.
+// Ref: #/components/schemas/SubclassPreviewInput
+type SubclassPreviewInput struct {
+	Name   string         `json:"name"`
+	Design SubclassDesign `json:"design"`
+}
+
+// GetName returns the value of Name.
+func (s *SubclassPreviewInput) GetName() string {
+	return s.Name
+}
+
+// GetDesign returns the value of Design.
+func (s *SubclassPreviewInput) GetDesign() SubclassDesign {
+	return s.Design
+}
+
+// SetName sets the value of Name.
+func (s *SubclassPreviewInput) SetName(val string) {
+	s.Name = val
+}
+
+// SetDesign sets the value of Design.
+func (s *SubclassPreviewInput) SetDesign(val SubclassDesign) {
+	s.Design = val
+}
+
+// A pool of uses: a fixed number, some per class level, an ability modifier or the Proficiency Bonus,
+// from a level on, coming back on a rest or at dawn.
+// Ref: #/components/schemas/SubclassResource
+type SubclassResource struct {
+	Key       string    `json:"key"`
+	Name      string    `json:"name"`
+	Basis     string    `json:"basis"`
+	Amount    OptInt32  `json:"amount"`
+	Ability   OptString `json:"ability"`
+	FromLevel int32     `json:"fromLevel"`
+	Die       OptString `json:"die"`
+	Recharge  string    `json:"recharge"`
+}
+
+// GetKey returns the value of Key.
+func (s *SubclassResource) GetKey() string {
+	return s.Key
+}
+
+// GetName returns the value of Name.
+func (s *SubclassResource) GetName() string {
+	return s.Name
+}
+
+// GetBasis returns the value of Basis.
+func (s *SubclassResource) GetBasis() string {
+	return s.Basis
+}
+
+// GetAmount returns the value of Amount.
+func (s *SubclassResource) GetAmount() OptInt32 {
+	return s.Amount
+}
+
+// GetAbility returns the value of Ability.
+func (s *SubclassResource) GetAbility() OptString {
+	return s.Ability
+}
+
+// GetFromLevel returns the value of FromLevel.
+func (s *SubclassResource) GetFromLevel() int32 {
+	return s.FromLevel
+}
+
+// GetDie returns the value of Die.
+func (s *SubclassResource) GetDie() OptString {
+	return s.Die
+}
+
+// GetRecharge returns the value of Recharge.
+func (s *SubclassResource) GetRecharge() string {
+	return s.Recharge
+}
+
+// SetKey sets the value of Key.
+func (s *SubclassResource) SetKey(val string) {
+	s.Key = val
+}
+
+// SetName sets the value of Name.
+func (s *SubclassResource) SetName(val string) {
+	s.Name = val
+}
+
+// SetBasis sets the value of Basis.
+func (s *SubclassResource) SetBasis(val string) {
+	s.Basis = val
+}
+
+// SetAmount sets the value of Amount.
+func (s *SubclassResource) SetAmount(val OptInt32) {
+	s.Amount = val
+}
+
+// SetAbility sets the value of Ability.
+func (s *SubclassResource) SetAbility(val OptString) {
+	s.Ability = val
+}
+
+// SetFromLevel sets the value of FromLevel.
+func (s *SubclassResource) SetFromLevel(val int32) {
+	s.FromLevel = val
+}
+
+// SetDie sets the value of Die.
+func (s *SubclassResource) SetDie(val OptString) {
+	s.Die = val
+}
+
+// SetRecharge sets the value of Recharge.
+func (s *SubclassResource) SetRecharge(val string) {
+	s.Recharge = val
 }
 
 // SwitchLibraryCollectionOKHeaders wraps []LibraryCollection with response headers.

@@ -332,13 +332,13 @@ func TestCharacterPortFailuresSurface(t *testing.T) {
 		}
 	}
 	chars.Compendium = levelUpFails{}
-	if _, err := chars.PlanLevelUp(ctx, playerCaller, d.ID, sheet.ID, ""); !errors.Is(err, boom) {
+	if _, err := chars.PlanLevelUp(ctx, playerCaller, d.ID, sheet.ID, "", ""); !errors.Is(err, boom) {
 		t.Fatalf("level-up options error: %v", err)
 	}
 	chars.Compendium = fakeOptions{}
 	var rule *app.RuleError
 	for _, class := range []string{"bard", "wizard"} {
-		if _, err := chars.PlanLevelUp(ctx, playerCaller, d.ID, sheet.ID, class); !errors.As(err, &rule) {
+		if _, err := chars.PlanLevelUp(ctx, playerCaller, d.ID, sheet.ID, class, ""); !errors.As(err, &rule) {
 			t.Fatalf("level up into %s: %v", class, err)
 		}
 	}
@@ -542,10 +542,19 @@ func TestEveryCharacterDatabaseFaultSurfaces(t *testing.T) {
 		},
 		"delete": func(c *app.Characters) error { return c.Delete(ctx, playerCaller, d.ID, doomed.ID) },
 		"plan": func(c *app.Characters) error {
-			_, err := c.PlanLevelUp(ctx, playerCaller, d.ID, climber.ID, "")
+			_, err := c.PlanLevelUp(ctx, playerCaller, d.ID, climber.ID, "", "")
 			return err
 		},
 		"level up": func(c *app.Characters) error {
+			// Each run whose level commits before its fault climbs a level; start every run low again.
+			for _, q := range []string{
+				"UPDATE campaign.characters SET level = 1 WHERE id = $1",
+				"UPDATE campaign.character_classes SET level = 1 WHERE character_id = $1",
+			} {
+				if _, err := db.Pool().Exec(ctx, q, uuid.UUID(climber.ID)); err != nil {
+					t.Fatal(err)
+				}
+			}
 			if err := store.SetLevelUpReady(ctx, d.ID, climber.ID, true, time.Now()); err != nil {
 				t.Fatal(err)
 			}

@@ -97,7 +97,7 @@ func orEmpty(m map[string]int) map[string]int {
 // checkRetrain checks a rebuilt Character against the rules and returns it with its hit point maximum
 // adjusted for any change to its Constitution modifier.
 func (s *Characters) checkRetrain(ctx context.Context, sheet Sheet, next domain.Character) (domain.Character, error) {
-	o, err := s.Compendium.BuilderOptions(ctx, next.Ruleset)
+	o, err := s.options(ctx, next.CampaignID, next.Ruleset)
 	if err != nil {
 		return next, err
 	}
@@ -149,6 +149,10 @@ func samePicks(had, want []domain.Pick) error {
 // checkPicks checks each picked value against the options its choice offers the rebuilt Character, as
 // if that one choice were still open.
 func (s *Characters) checkPicks(ctx context.Context, o compendium.BuilderOptions, next domain.Character) error {
+	s, err := s.within(ctx, next.CampaignID)
+	if err != nil {
+		return err
+	}
 	cat, err := s.Compendium.Features(ctx)
 	if err != nil {
 		return err
@@ -192,6 +196,10 @@ func (s *Characters) RetrainChoices(ctx context.Context, c caller.Caller, id dom
 	}
 	if !sheet.Mine {
 		return nil, domain.ErrForbidden
+	}
+	s, err = s.within(ctx, id)
+	if err != nil {
+		return nil, err
 	}
 	o, err := s.Compendium.BuilderOptions(ctx, sheet.Ruleset)
 	if err != nil {

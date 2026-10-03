@@ -32,7 +32,7 @@ type CharacterService interface {
 	SaveDraft(ctx context.Context, c caller.Caller, id domain.CampaignID, step int, build []byte) (domain.Draft, error)
 	DiscardDraft(ctx context.Context, c caller.Caller, id domain.CampaignID) error
 	RollScores(ctx context.Context, c caller.Caller, id domain.CampaignID) (domain.Draft, error)
-	PlanLevelUp(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID, class string) (app.LevelUpPlan, error)
+	PlanLevelUp(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID, class, subclass string) (app.LevelUpPlan, error)
 	LevelUp(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID, req app.LevelUpRequest) (app.Sheet, error)
 	Spells(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID) (app.Spellcasting, error)
 	Prepare(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID, class string, spells []string) (app.Spellcasting, error)
@@ -44,6 +44,7 @@ type CharacterService interface {
 	RetrainChoices(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID) ([]app.RetrainChoice, error)
 	CharacterRevisions(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID) ([]domain.CharacterRevision, error)
 	DecideRetrain(ctx context.Context, c caller.Caller, id domain.CampaignID, retrain uuid.UUID, approve bool) (domain.Retrain, error)
+	Options(ctx context.Context, c caller.Caller, id domain.CampaignID) (compendium.BuilderOptions, error)
 }
 
 func baseMap(b oas.AbilityBase) map[string]int {
@@ -220,6 +221,9 @@ func slugsOf(in []string) []oas.Slug {
 
 // GetBuilderOptions lists what a first-level character can choose.
 func (h *Handler) GetBuilderOptions(ctx context.Context, p oas.GetBuilderOptionsParams) (oas.GetBuilderOptionsRes, error) {
+	if id, ok := p.CampaignId.Get(); ok {
+		return h.campaignBuilderOptions(ctx, domain.CampaignID(id))
+	}
 	tag, err := h.etag(ctx)
 	if err != nil {
 		h.Log.ErrorContext(ctx, "compendium version", "error", err)
@@ -236,6 +240,20 @@ func (h *Handler) GetBuilderOptions(ctx context.Context, p oas.GetBuilderOptions
 	return &oas.BuilderOptionsHeaders{ETag: oas.NewOptString(tag), Response: builderOut(o)}, nil
 }
 
+// campaignBuilderOptions are a Campaign's builder options with its homebrew classes; they change with its
+// Library, so they carry no ETag.
+func (h *Handler) campaignBuilderOptions(ctx context.Context, id domain.CampaignID) (oas.GetBuilderOptionsRes, error) {
+	c, ok := uiCaller(ctx)
+	if !ok {
+		return unauthorized(), nil
+	}
+	o, err := h.Characters.Options(ctx, c, id)
+	if err != nil {
+		return h.campaignProblem(ctx, "builder options", err), nil
+	}
+	return &oas.BuilderOptionsHeaders{Response: builderOut(o)}, nil
+}
+
 //nolint:gosec // every narrowing conversion here is of small, bounded game values
 func builderOut(o compendium.BuilderOptions) oas.BuilderOptions {
 	out := oas.BuilderOptions{
@@ -249,13 +267,14 @@ func builderOut(o compendium.BuilderOptions) oas.BuilderOptions {
 		for _, a := range c.Saves {
 			saves = append(saves, oas.Ability(a))
 		}
+		profile := c.Profile()
 		primary := make([]oas.Ability, 0, 2)
-		for _, a := range rules.PrimaryAbilities(c.Slug) {
+		for _, a := range profile.Primary {
 			primary = append(primary, oas.Ability(a))
 		}
 		out.Classes = append(out.Classes, oas.ClassChoice{
-			Slug: oas.Slug(c.Slug), Name: c.Name, HitDie: int32(c.HitDie), Saves: saves, SkillChoices: int32(rules.ClassSkillCount(c.Slug)),
-			PrimaryAbilities: primary, Caster: oas.NewOptClassChoiceCaster(oas.ClassChoiceCaster(rules.CasterFor(c.Slug))),
+			Slug: oas.Slug(c.Slug), Name: c.Name, HitDie: int32(c.HitDie), Saves: saves, SkillChoices: int32(profile.Skills),
+			PrimaryAbilities: primary, Caster: oas.NewOptClassChoiceCaster(oas.ClassChoiceCaster(profile.Casting.Kind)),
 		})
 	}
 	for _, s := range o.Species {

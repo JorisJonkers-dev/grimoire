@@ -194,6 +194,7 @@ func (s *Store) Commit(ctx context.Context, sess domain.Session, board *domain.M
 			return err
 		}
 		steps := []func() error{
+			func() error { return tx.saveLegends(ctx, sid, w.Legends) }, // a mythic phase raises the maximum before the hit points
 			func() error { return tx.write(ctx, sid, board, w, now) },
 			func() error { return tx.dismiss(ctx, sid, w.Dismissed) },
 			func() error { return tx.saveForms(ctx, sid, w) },
@@ -278,7 +279,8 @@ func (s *Store) write(ctx context.Context, sid uuid.UUID, board *domain.MapState
 		domain.ActionObjectPlaced, domain.ActionObjectRemoved, domain.ActionObjectToggled, domain.ActionObjectDamaged, domain.ActionObjectFound,
 		domain.ActionObjectUnlocked, domain.ActionTrapDisarmed, domain.ActionTrapSprung, domain.ActionThrown,
 		domain.ActionSneakStarted, domain.ActionSneakEnded, domain.ActionStealthRolled, domain.ActionPartyNoticed,
-		domain.ActionExplorationStarted, domain.ActionExplorationTurn, domain.ActionExplorationEnded:
+		domain.ActionExplorationStarted, domain.ActionExplorationTurn, domain.ActionExplorationEnded,
+		domain.ActionLegendaryAction, domain.ActionLairAction, domain.ActionLegendaryResistance:
 		return s.writeThrown(ctx, sid, w)
 	case domain.ActionDyingChanged, domain.ActionRevived:
 		if w.HP == nil {
@@ -343,6 +345,10 @@ func (s *Store) insertToken(ctx context.Context, sid uuid.UUID, t domain.Token) 
 		p.UnarmedDc = 10
 	}
 	p.AttacksPerAction = int32(max(1, min(4, st.AttacksPerAction)))
+	if st.Legend != nil {
+		p.Legend, _ = json.Marshal(st.Legend) //nolint:errchkjson // a Legend is plain data
+	}
+	p.CreatureType = st.CreatureType
 	if st.Strength > 0 {
 		p.Strength = int32(min(30, st.Strength))
 	}
@@ -571,7 +577,7 @@ func (s *Store) writeHP(ctx context.Context, sid uuid.UUID, w live.Write) error 
 		return err
 	}
 	for _, o := range w.Observers {
-		if err := s.q.ObserveDamage(ctx, queries.ObserveDamageParams{Observer: uuid.UUID(o), Attacker: uuid.UUID(w.Token.ID), Amount: int32(w.HP.Before - w.HP.After)}); err != nil {
+		if err := s.q.ObserveDamage(ctx, queries.ObserveDamageParams{Observer: uuid.UUID(o), Attacker: uuid.UUID(w.Token.ID), Amount: int32(w.HP.Lost())}); err != nil {
 			return err
 		}
 	}
@@ -1109,7 +1115,12 @@ func tokenFrom(t queries.SessionTokensRow) domain.Token {
 			Source: t.StatSource.String, AC: int(t.ArmorClass.Int32), HP: int(t.Hp.Int32), HPMax: int(t.HpMax.Int32), Attacks: []domain.Attack{},
 			Intelligence: int(t.Intelligence.Int32), SpellDC: int(t.SpellDc.Int32), Stealth: int(t.Stealth), Perception: int(t.Perception),
 			Initiative: int(t.Initiative), SpeedFt: int(t.SpeedFt), UnarmedDC: int(t.UnarmedDc), AttacksPerAction: int(t.AttacksPerAction), TempHP: int(t.TempHp),
-			Strength: int(t.Strength),
+			Strength: int(t.Strength), CreatureType: t.CreatureType,
+		}
+		if t.Legend != nil {
+			var l domain.Legend
+			_ = json.Unmarshal(t.Legend, &l) // written by insertToken and saveLegends
+			tok.Stats.Legend = &l
 		}
 	}
 	return tok

@@ -124,6 +124,17 @@ func (q *Queries) BumpSessionSeq(ctx context.Context, id uuid.UUID) (int64, erro
 	return seq, err
 }
 
+const campaignExhaustion = `-- name: CampaignExhaustion :one
+SELECT exhaustion_variant FROM campaign.campaigns WHERE id = $1
+`
+
+func (q *Queries) CampaignExhaustion(ctx context.Context, id uuid.UUID) (string, error) {
+	row := q.db.QueryRow(ctx, campaignExhaustion, id)
+	var exhaustion_variant string
+	err := row.Scan(&exhaustion_variant)
+	return exhaustion_variant, err
+}
+
 const campaignHighGround = `-- name: CampaignHighGround :one
 SELECT high_ground FROM campaign.campaigns WHERE id = $1
 `
@@ -133,6 +144,90 @@ func (q *Queries) CampaignHighGround(ctx context.Context, id uuid.UUID) (bool, e
 	var high_ground bool
 	err := row.Scan(&high_ground)
 	return high_ground, err
+}
+
+const campaignHomebrewItems = `-- name: CampaignHomebrewItems :many
+WITH visible AS (
+    SELECT l.entry_id FROM library.campaign_links l WHERE l.campaign_id = $1 AND l.direct
+    UNION
+    SELECT ce.entry_id FROM library.collection_entries ce
+    JOIN library.campaign_collections cc ON cc.collection_id = ce.collection_id WHERE cc.campaign_id = $1
+)
+SELECT e.id, coalesce(r.name, e.name)::text AS name, coalesce(r.design, e.design)::jsonb AS design
+FROM visible v
+JOIN library.entries e ON e.id = v.entry_id AND e.kind = 'item'
+LEFT JOIN library.campaign_links l ON l.entry_id = e.id AND l.campaign_id = $1
+LEFT JOIN library.entry_revisions r ON r.entry_id = e.id AND r.no = l.pinned_revision
+WHERE coalesce(r.design, e.design) IS NOT NULL
+ORDER BY e.id
+`
+
+type CampaignHomebrewItemsRow struct {
+	ID     uuid.UUID
+	Name   string
+	Design []byte
+}
+
+func (q *Queries) CampaignHomebrewItems(ctx context.Context, campaignID uuid.UUID) ([]CampaignHomebrewItemsRow, error) {
+	rows, err := q.db.Query(ctx, campaignHomebrewItems, campaignID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CampaignHomebrewItemsRow{}
+	for rows.Next() {
+		var i CampaignHomebrewItemsRow
+		if err := rows.Scan(&i.ID, &i.Name, &i.Design); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const campaignHomebrewSpells = `-- name: CampaignHomebrewSpells :many
+WITH visible AS (
+    SELECT l.entry_id FROM library.campaign_links l WHERE l.campaign_id = $1 AND l.direct
+    UNION
+    SELECT ce.entry_id FROM library.collection_entries ce
+    JOIN library.campaign_collections cc ON cc.collection_id = ce.collection_id WHERE cc.campaign_id = $1
+)
+SELECT e.id, coalesce(r.name, e.name)::text AS name, coalesce(r.design, e.design)::jsonb AS design
+FROM visible v
+JOIN library.entries e ON e.id = v.entry_id AND e.kind = 'spell'
+LEFT JOIN library.campaign_links l ON l.entry_id = e.id AND l.campaign_id = $1
+LEFT JOIN library.entry_revisions r ON r.entry_id = e.id AND r.no = l.pinned_revision
+WHERE coalesce(r.design, e.design) IS NOT NULL
+ORDER BY e.id
+`
+
+type CampaignHomebrewSpellsRow struct {
+	ID     uuid.UUID
+	Name   string
+	Design []byte
+}
+
+func (q *Queries) CampaignHomebrewSpells(ctx context.Context, campaignID uuid.UUID) ([]CampaignHomebrewSpellsRow, error) {
+	rows, err := q.db.Query(ctx, campaignHomebrewSpells, campaignID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CampaignHomebrewSpellsRow{}
+	for rows.Next() {
+		var i CampaignHomebrewSpellsRow
+		if err := rows.Scan(&i.ID, &i.Name, &i.Design); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const campaignInitiative = `-- name: CampaignInitiative :one
@@ -871,10 +966,10 @@ func (q *Queries) InsertSurface(ctx context.Context, arg InsertSurfaceParams) er
 
 const insertToken = `-- name: InsertToken :exec
 INSERT INTO play.tokens (id, session_id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class,
-    hp, hp_max, intelligence, can_shield, spell_dc, stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action, summon_effect_id, strength)
+    hp, hp_max, intelligence, can_shield, spell_dc, stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action, summon_effect_id, strength, creature_type, legend)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
     $11, $12, $13, $14, $15, $16, $17,
-    $18, $19, $20, $21, $22, $23, $24)
+    $18, $19, $20, $21, $22, $23, $24, $25, $26)
 `
 
 type InsertTokenParams struct {
@@ -902,6 +997,8 @@ type InsertTokenParams struct {
 	AttacksPerAction   int32
 	SummonEffectID     pgtype.UUID
 	Strength           int32
+	CreatureType       string
+	Legend             []byte
 }
 
 func (q *Queries) InsertToken(ctx context.Context, arg InsertTokenParams) error {
@@ -930,6 +1027,8 @@ func (q *Queries) InsertToken(ctx context.Context, arg InsertTokenParams) error 
 		arg.AttacksPerAction,
 		arg.SummonEffectID,
 		arg.Strength,
+		arg.CreatureType,
+		arg.Legend,
 	)
 	return err
 }
@@ -1329,7 +1428,7 @@ func (q *Queries) MonsterSaves(ctx context.Context, monsterID int64) ([]MonsterS
 
 const monsterStatblock = `-- name: MonsterStatblock :one
 SELECT m.id, m.name, m.armor_class, m.hit_points, m.intelligence, m.strength, m.dexterity, m.constitution, m.wisdom, m.charisma,
-       COALESCE(m.challenge_rating, 0)::float8 AS challenge_rating
+       COALESCE(m.challenge_rating, 0)::float8 AS challenge_rating, m.creature_type
 FROM compendium.monsters m
 JOIN compendium.documents d ON d.id = m.document_id
 WHERE m.slug = $1 AND ($2::text IS NULL OR d.key = $2::text)
@@ -1353,6 +1452,7 @@ type MonsterStatblockRow struct {
 	Wisdom          int32
 	Charisma        int32
 	ChallengeRating float64
+	CreatureType    string
 }
 
 func (q *Queries) MonsterStatblock(ctx context.Context, arg MonsterStatblockParams) (MonsterStatblockRow, error) {
@@ -1370,6 +1470,7 @@ func (q *Queries) MonsterStatblock(ctx context.Context, arg MonsterStatblockPara
 		&i.Wisdom,
 		&i.Charisma,
 		&i.ChallengeRating,
+		&i.CreatureType,
 	)
 	return i, err
 }
@@ -2454,7 +2555,7 @@ func (q *Queries) SessionTokenSenses(ctx context.Context, sessionID uuid.UUID) (
 
 const sessionTokens = `-- name: SessionTokens :many
 SELECT id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class, hp, hp_max, intelligence, tactics, can_shield, spell_dc,
-    stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action, temp_hp, summon_effect_id, disguise, strength FROM play.tokens WHERE session_id = $1 ORDER BY label, id
+    stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action, temp_hp, summon_effect_id, disguise, strength, creature_type, legend FROM play.tokens WHERE session_id = $1 ORDER BY label, id
 `
 
 type SessionTokensRow struct {
@@ -2484,6 +2585,8 @@ type SessionTokensRow struct {
 	SummonEffectID     pgtype.UUID
 	Disguise           pgtype.Text
 	Strength           int32
+	CreatureType       string
+	Legend             []byte
 }
 
 func (q *Queries) SessionTokens(ctx context.Context, sessionID uuid.UUID) ([]SessionTokensRow, error) {
@@ -2522,6 +2625,8 @@ func (q *Queries) SessionTokens(ctx context.Context, sessionID uuid.UUID) ([]Ses
 			&i.SummonEffectID,
 			&i.Disguise,
 			&i.Strength,
+			&i.CreatureType,
+			&i.Legend,
 		); err != nil {
 			return nil, err
 		}
@@ -2714,6 +2819,30 @@ type SetTokenHPParams struct {
 
 func (q *Queries) SetTokenHP(ctx context.Context, arg SetTokenHPParams) error {
 	_, err := q.db.Exec(ctx, setTokenHP, arg.Hp, arg.SessionID, arg.ID)
+	return err
+}
+
+const setTokenLegend = `-- name: SetTokenLegend :exec
+UPDATE play.tokens SET legend = $1, hp_max = coalesce($2::integer, hp_max), hp = coalesce($2::integer, hp)
+WHERE session_id = $3 AND id = $4
+`
+
+type SetTokenLegendParams struct {
+	Legend    []byte
+	HpMax     pgtype.Int4
+	SessionID uuid.UUID
+	ID        uuid.UUID
+}
+
+// A legendary creature's Legend as play leaves it. A mythic phase brings a new hit point maximum and
+// fills it, in one statement: the check on hit points holds at every step.
+func (q *Queries) SetTokenLegend(ctx context.Context, arg SetTokenLegendParams) error {
+	_, err := q.db.Exec(ctx, setTokenLegend,
+		arg.Legend,
+		arg.HpMax,
+		arg.SessionID,
+		arg.ID,
+	)
 	return err
 }
 

@@ -57,6 +57,8 @@ type LevelUpPlan struct {
 	Cantrips   int
 	Spells     int
 	SpellList  []compendium.SpellOption
+	// profile is what the rules read of the class.
+	profile rules.Class
 }
 
 // LevelUpRequest is what a player chose for the next level. Roll rolls the Hit Die instead of taking its
@@ -76,15 +78,20 @@ func featCategories() map[string]string {
 
 // PlanLevelUp is what the next level in a class offers a Character; an empty class means its starting
 // class. The owner or a DM, out of combat.
-func (s *Characters) PlanLevelUp(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID, class string) (LevelUpPlan, error) {
+func (s *Characters) PlanLevelUp(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID, class, subclass string) (LevelUpPlan, error) {
 	sheet, err := s.editable(ctx, c, id, ch)
 	if err != nil {
 		return LevelUpPlan{}, err
 	}
-	return s.plan(ctx, sheet, class)
+	return s.plan(ctx, sheet, class, subclass)
 }
 
-func (s *Characters) plan(ctx context.Context, sheet Sheet, class string) (LevelUpPlan, error) {
+// plan is what the next level in a class offers; a subclass picked on this level adds its choices.
+func (s *Characters) plan(ctx context.Context, sheet Sheet, class, subclass string) (LevelUpPlan, error) {
+	s, err := s.within(ctx, sheet.CampaignID)
+	if err != nil {
+		return LevelUpPlan{}, err
+	}
 	o, err := s.Compendium.BuilderOptions(ctx, sheet.Ruleset)
 	if err != nil {
 		return LevelUpPlan{}, err
@@ -105,11 +112,11 @@ func (s *Characters) plan(ctx context.Context, sheet Sheet, class string) (Level
 	if len(offer.Unmet) > 0 {
 		return LevelUpPlan{}, refuse("multiclassing into " + offer.Name + " needs " + strings.Join(offer.Unmet, ", "))
 	}
-	p.ClassLevel, p.HitDie = offer.Level+1, offer.HitDie
+	p.ClassLevel, p.HitDie, p.profile = offer.Level+1, offer.HitDie, sheet.Profile(class)
 	p.ConMod = rules.Modifier(sheet.Scores[rules.Constitution])
 	p.Average = rules.HitPointGain(p.HitDie, p.ConMod, 0)
-	p.Cantrips, p.Spells = newSpells(class, offer.Level)
-	lu, err := s.Compendium.LevelUpOptions(ctx, sheet.Ruleset, class, rules.MaxSpellLevel(class, p.ClassLevel))
+	p.Cantrips, p.Spells = newSpells(p.profile, offer.Level)
+	lu, err := s.Compendium.LevelUpOptions(ctx, sheet.Ruleset, class, p.profile.MaxSpellLevel(p.ClassLevel))
 	if err != nil {
 		return LevelUpPlan{}, err
 	}
@@ -117,7 +124,7 @@ func (s *Characters) plan(ctx context.Context, sheet Sheet, class string) (Level
 	if err != nil {
 		return LevelUpPlan{}, err
 	}
-	p.Choices = choicesFor(cat, lu, sheet, class, p.ClassLevel, offer.Level == 0)
+	p.Choices = choicesFor(cat, lu, sheet, levelChoice{class: class, subclass: subclass, level: p.ClassLevel, multiclass: offer.Level == 0})
 	p.SpellList = spellList(lu.Spells, sheet.Spells, p.Cantrips, p.Spells)
 	return p, nil
 }
@@ -125,18 +132,18 @@ func (s *Characters) plan(ctx context.Context, sheet Sheet, class string) (Level
 // newSpells are how many cantrips and spells a class's next level adds, from one it has at a level; a
 // new class grants its whole first level. A wizard writes its new spells into its spellbook: six at first
 // level and two each level after.
-func newSpells(class string, level int) (int, int) {
-	cantrips := rules.CantripsKnown(class, level+1) - rules.CantripsKnown(class, level)
+func newSpells(class rules.Class, level int) (int, int) {
+	cantrips := class.CantripsAt(level+1) - class.CantripsAt(level)
 	if level == 0 {
-		cantrips = rules.CantripsKnown(class, 1)
+		cantrips = class.CantripsAt(1)
 	}
 	switch {
-	case rules.KeepsSpellbook(class):
+	case class.Casting.Spellbook:
 		return cantrips, rules.SpellbookAllotment(level+1) - rules.SpellbookAllotment(level)*min(level, 1)
 	case level == 0:
-		return cantrips, rules.PreparedSpells(class, 1)
+		return cantrips, class.PreparedAt(1)
 	default:
-		return cantrips, rules.PreparedSpells(class, level+1) - rules.PreparedSpells(class, level)
+		return cantrips, class.PreparedAt(level+1) - class.PreparedAt(level)
 	}
 }
 
@@ -166,9 +173,9 @@ func spellList(list []compendium.SpellOption, learned []domain.LearnedSpell, can
 
 // classOffers are the classes the next level can go to, with what each new one still needs.
 func classOffers(o compendium.BuilderOptions, sheet Sheet) []LevelUpClass {
-	have := make([]string, 0, len(sheet.Classes))
+	have := make([]rules.Class, 0, len(sheet.Classes))
 	for _, x := range sheet.Classes {
-		have = append(have, x.Class)
+		have = append(have, sheet.Profile(x.Class))
 	}
 	out := make([]LevelUpClass, 0, len(o.Classes))
 	for _, cl := range o.Classes {
@@ -176,18 +183,34 @@ func classOffers(o compendium.BuilderOptions, sheet Sheet) []LevelUpClass {
 		if x, ok := find(sheet.Classes, func(x domain.ClassLevel) bool { return x.Class == cl.Slug }); ok {
 			level = x.Level
 		}
-		out = append(out, LevelUpClass{Slug: cl.Slug, Name: cl.Name, HitDie: cl.HitDie, Level: level, Unmet: rules.MulticlassUnmet(sheet.Scores, have, cl.Slug)})
+		out = append(out, LevelUpClass{Slug: cl.Slug, Name: cl.Name, HitDie: cl.HitDie, Level: level, Unmet: rules.MulticlassUnmet(sheet.Scores, have, cl.Profile())})
 	}
 	return out
+}
+
+// levelChoice is the class level a plan is for, and the subclass picked on it, if any.
+type levelChoice struct {
+	class      string
+	subclass   string
+	level      int
+	multiclass bool
 }
 
 // choicesFor are the picks a class level asks for, from its Feature data and its subclass's. Weapon
 // Mastery follows the weapons carried, so it is not picked here; a new class grants a skill only where
 // the multiclass rules give one.
-func choicesFor(cat features.Catalog, lu compendium.LevelUpOptions, sheet Sheet, class string, level int, multiclass bool) []LevelUpChoice {
+func choicesFor(cat features.Catalog, lu compendium.LevelUpOptions, sheet Sheet, at levelChoice) []LevelUpChoice {
+	class, level, multiclass := at.class, at.level, at.multiclass
 	raw := features.ChoicesAt(cat.Choices[features.Owner{Kind: "class", Slug: class}], level)
+	sub := ""
+	if slices.ContainsFunc(lu.Subclasses, func(x compendium.Named) bool { return x.Slug == at.subclass }) {
+		sub = at.subclass
+	}
 	if x, ok := find(sheet.Classes, func(x domain.ClassLevel) bool { return x.Class == class }); ok && x.Subclass != "" {
-		raw = append(raw, features.ChoicesAt(cat.Choices[features.Owner{Kind: "subclass", Slug: x.Subclass}], level)...)
+		sub = x.Subclass
+	}
+	if sub != "" {
+		raw = append(raw, features.ChoicesAt(cat.Choices[features.Owner{Kind: "subclass", Slug: sub}], level)...)
 	}
 	var out []LevelUpChoice
 	for _, ch := range raw {
@@ -224,8 +247,12 @@ func optionsFor(cat features.Catalog, lu compendium.LevelUpOptions, sheet Sheet,
 				out = append(out, LevelUpOption{Slug: string(sk.Skill), Name: titleCase(string(sk.Skill)), Unmet: nil})
 			}
 		}
-	case features.Listed, features.WeaponKind:
-		// No class level lists its own options in the SRD, and Weapon Mastery follows the weapons carried.
+	case features.Listed:
+		for _, o := range ch.Options {
+			out = append(out, LevelUpOption{Slug: o.Slug, Name: o.Name, Unmet: nil})
+		}
+	case features.WeaponKind:
+		// Weapon Mastery follows the weapons carried.
 	}
 	return out
 }
@@ -235,12 +262,12 @@ func optionsFor(cat features.Catalog, lu compendium.LevelUpOptions, sheet Sheet,
 func featOptions(cat features.Catalog, feats []compendium.FeatOption, sheet Sheet, ch features.Choice) []LevelUpOption {
 	taken := pickValues(sheet.Picks)
 	who := features.Candidate{
-		Level: sheet.Level + 1, Abilities: scoreMap(sheet.Scores), Spellcasting: rules.CasterFor(sheet.Class) != rules.NoCaster,
+		Level: sheet.Level + 1, Abilities: scoreMap(sheet.Scores), Spellcasting: sheet.Profile(sheet.Class).Caster(),
 		Feats: taken, Features: append(slices.Clone(taken), ch.Slug),
 	}
 	var out []LevelUpOption
 	for _, f := range feats {
-		if f.Category == featCategories()[ch.From] && (f.Slug == asi || !slices.Contains(taken, f.Slug)) {
+		if f.Category == featCategories()[ch.From] && (f.Repeatable || f.Slug == asi || !slices.Contains(taken, f.Slug)) {
 			out = append(out, LevelUpOption{Slug: f.Slug, Name: f.Name, Unmet: features.Unmet(cat.Prerequisites[features.Owner{Kind: "feat", Slug: f.Slug}], who)})
 		}
 	}
@@ -279,7 +306,7 @@ func (s *Characters) LevelUp(ctx context.Context, c caller.Caller, id domain.Cam
 	if err != nil {
 		return Sheet{}, err
 	}
-	p, err := s.plan(ctx, sheet, req.Class)
+	p, err := s.plan(ctx, sheet, req.Class, firstOf(req.Picks["subclass"]))
 	if err != nil {
 		return Sheet{}, err
 	}
@@ -370,8 +397,8 @@ func improvement(sheet Sheet, picks []domain.Pick, increase map[string]int) (map
 // Cantrips and the spells of most classes are prepared at once; a wizard's go into its spellbook and are
 // prepared while it has room.
 func spellsFor(p LevelUpPlan, spells []string, prepared int) ([]domain.LearnedSpell, error) {
-	limit := rules.PreparedSpells(p.Class, p.ClassLevel)
-	book := rules.KeepsSpellbook(p.Class)
+	limit := p.profile.PreparedAt(p.ClassLevel)
+	book := p.profile.Casting.Spellbook
 	cantrips, leveled := 0, 0
 	out := make([]domain.LearnedSpell, 0, len(spells))
 	for i, slug := range spells {
@@ -412,4 +439,12 @@ func advance(classes []domain.ClassLevel, p LevelUpPlan, picks []domain.Pick) []
 		}
 	}
 	return classes
+}
+
+// firstOf is a pick's first value, or nothing.
+func firstOf(values []string) string {
+	if len(values) == 0 {
+		return ""
+	}
+	return values[0]
 }

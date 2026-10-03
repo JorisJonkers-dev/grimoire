@@ -186,7 +186,7 @@ func TestMulticlassLevelUp(t *testing.T) {
 	base := "/api/v1/campaigns/" + id + "/characters"
 	fighter := base + "/" + decode(t, call(h, http.MethodPost, base, "player", srdFighter))["id"].(string)
 	rec := call(h, http.MethodGet, fighter+"/level-up?class=wizard", "player", "")
-	if rec.Code != http.StatusUnprocessableEntity || !strings.Contains(rec.Body.String(), "Intelligence 13+ (wizard)") {
+	if rec.Code != http.StatusUnprocessableEntity || !strings.Contains(rec.Body.String(), "Intelligence 13+ (Wizard)") {
 		t.Fatalf("multiclass without the score: %d %s", rec.Code, rec.Body.String())
 	}
 

@@ -3,8 +3,8 @@
 import { type InfiniteData, infiniteQueryOptions, queryOptions, type UseMutationOptions } from '@tanstack/vue-query';
 
 import { client } from '../client.gen';
-import { acceptAccountInvite, acceptFriendRequest, acceptInvite, approveRetrain, beginTwoStep, cancelFriendRequest, castRitual, clearTokenIcon, confirmTwoStep, copySpell, createAccessToken, createAccountInvite, createCampaign, createCharacter, createEncounterPool, createEncounterTable, createInvite, createLibraryCollection, createLibraryEntry, createLootTable, createNpc, createOidcAccount, createProposal, createPushSubscription, createRoll, createSettlement, createShop, declineFriendRequest, declineRetrain, deleteCharacter, deleteEncounterPool, deleteEncounterTable, deleteLootTable, deleteNpc, deletePushSubscription, deleteSettlement, deleteShop, diffNpcRevisions, disableTwoStep, discardCharacterDraft, draftReleaseNote, editReleaseNote, endSession, exportLibrary, finishOidc, getAccount, getAccountHistory, getActionLog, getAdminAccount, getAutomationCoverage, getBuilderOptions, getCampaign, getCharacter, getCharacterDraft, getEntry, getHealth, getInventory, getLibraryEntry, getMap, getMapImage, getMe, getMyCharacter, getNotificationPreferences, getNpc, getPortrait, getProposal, getPushKey, getReadiness, getRoll, getSession, getSessionLog, getSessionView, getSignInMethods, getSpell, getSpellcasting, getStatus, getTokenIcon, getUnseenReleaseNote, importLibrary, joinCampaign, keepRoll, levelUp, linkLibraryEntry, linkOidcAccount, listAccessTokens, listActivity, listAdminAccounts, listCampaignCollections, listCampaigns, listCharacterRevisions, listCharacters, listConversations, listDeletedNpcs, listEncounterChecks, listEncounterPoolRevisions, listEncounterPools, listEncounterTableRevisions, listEncounterTables, listEntries, listFriends, listInvites, listLibraryCollections, listLibraryEntries, listLinkedEntries, listLocations, listLootTableRevisions, listLootTables, listMaps, listMentionables, listMessages, listMyCharacters, listMySubmissions, listNotifications, listNpcRevisions, listNpcs, listProposals, listReleaseNotes, listRetrainChoices, listRetrains, listRolls, listSessions, listSettlementRevisions, listSettlements, listSharedEntries, listSharedSubmissions, listShopRevisions, listShops, listSources, listSpells, moveItem, type Options, passInspiration, passTwoStep, pinLibraryRevision, planLevelUp, prepareSpells, previewAccountInvite, previewCharacter, previewInvite, previewReach, previewSight, publishReleaseNote, readAllNotifications, readNotification, removeMember, requestRetrain, requestSignInLink, rerollDie, rerollStock, resetAccountTwoStep, resetRecoveryCodes, restoreEncounterPoolRevision, restoreEncounterTableRevision, restoreLootTableRevision, restoreNpcRevision, restoreSettlementRevision, restoreShopRevision, resubmitProposal, reviewProposal, reviewSharedSubmission, revokeAccessToken, revokeInvite, rollCharacterScores, rollRest, saveCharacterDraft, seeReleaseNote, sendAdminSignInLink, sendFriendRequest, sendLiveCommand, sendMessage, setAccountDisabled, setAccountPassword, setAdminRole, setCampaignOverride, setDie, setNotificationPreferences, setPortrait, setTokenIcon, shareLibraryEntry, signIn, signOut, startConversation, startOidcLink, startOidcSignIn, startSession, swapWeaponSet, switchLibraryCollection, takeFromStash, unblock, undoChange, unfriend, unlinkLibraryEntry, unlinkOidc, unpinLibraryRevision, updateAccount, updateCampaign, updateCharacter, updateEncounterPool, updateEncounterTable, updateLibraryCollection, updateLibraryEntry, updateLootTable, updateMap, updateMember, updateMyCharacter, updateNpc, updateSettlement, updateShop, uploadMap, useItem, useSignInLink } from '../sdk.gen';
-import type { AcceptAccountInviteData, AcceptAccountInviteError, AcceptAccountInviteResponse, AcceptFriendRequestData, AcceptFriendRequestError, AcceptFriendRequestResponse, AcceptInviteData, AcceptInviteError, AcceptInviteResponse, ApproveRetrainData, ApproveRetrainError, ApproveRetrainResponse, BeginTwoStepData, BeginTwoStepError, BeginTwoStepResponse, CancelFriendRequestData, CancelFriendRequestError, CancelFriendRequestResponse, CastRitualData, CastRitualError, CastRitualResponse, ClearTokenIconData, ClearTokenIconError, ClearTokenIconResponse, ConfirmTwoStepData, ConfirmTwoStepError, ConfirmTwoStepResponse, CopySpellData, CopySpellError, CopySpellResponse, CreateAccessTokenData, CreateAccessTokenError, CreateAccessTokenResponse, CreateAccountInviteData, CreateAccountInviteError, CreateAccountInviteResponse, CreateCampaignData, CreateCampaignError, CreateCampaignResponse, CreateCharacterData, CreateCharacterError, CreateCharacterResponse, CreateEncounterPoolData, CreateEncounterPoolError, CreateEncounterPoolResponse, CreateEncounterTableData, CreateEncounterTableError, CreateEncounterTableResponse, CreateInviteData, CreateInviteError, CreateInviteResponse, CreateLibraryCollectionData, CreateLibraryCollectionError, CreateLibraryCollectionResponse, CreateLibraryEntryData, CreateLibraryEntryError, CreateLibraryEntryResponse, CreateLootTableData, CreateLootTableError, CreateLootTableResponse, CreateNpcData, CreateNpcError, CreateNpcResponse, CreateOidcAccountData, CreateOidcAccountError, CreateOidcAccountResponse, CreateProposalData, CreateProposalError, CreateProposalResponse, CreatePushSubscriptionData, CreatePushSubscriptionError, CreatePushSubscriptionResponse, CreateRollData, CreateRollError, CreateRollResponse, CreateSettlementData, CreateSettlementError, CreateSettlementResponse, CreateShopData, CreateShopError, CreateShopResponse, DeclineFriendRequestData, DeclineFriendRequestError, DeclineFriendRequestResponse, DeclineRetrainData, DeclineRetrainError, DeclineRetrainResponse, DeleteCharacterData, DeleteCharacterError, DeleteCharacterResponse, DeleteEncounterPoolData, DeleteEncounterPoolError, DeleteEncounterPoolResponse, DeleteEncounterTableData, DeleteEncounterTableError, DeleteEncounterTableResponse, DeleteLootTableData, DeleteLootTableError, DeleteLootTableResponse, DeleteNpcData, DeleteNpcError, DeleteNpcResponse, DeletePushSubscriptionData, DeletePushSubscriptionError, DeletePushSubscriptionResponse, DeleteSettlementData, DeleteSettlementError, DeleteSettlementResponse, DeleteShopData, DeleteShopError, DeleteShopResponse, DiffNpcRevisionsData, DiffNpcRevisionsError, DiffNpcRevisionsResponse, DisableTwoStepData, DisableTwoStepError, DisableTwoStepResponse, DiscardCharacterDraftData, DiscardCharacterDraftError, DiscardCharacterDraftResponse, DraftReleaseNoteData, DraftReleaseNoteError, DraftReleaseNoteResponse, EditReleaseNoteData, EditReleaseNoteError, EditReleaseNoteResponse, EndSessionData, EndSessionError, EndSessionResponse, ExportLibraryData, ExportLibraryError, ExportLibraryResponse, FinishOidcData, FinishOidcError, FinishOidcResponse, GetAccountData, GetAccountError, GetAccountHistoryData, GetAccountHistoryError, GetAccountHistoryResponse, GetAccountResponse, GetActionLogData, GetActionLogError, GetActionLogResponse, GetAdminAccountData, GetAdminAccountError, GetAdminAccountResponse, GetAutomationCoverageData, GetAutomationCoverageError, GetAutomationCoverageResponse, GetBuilderOptionsData, GetBuilderOptionsError, GetBuilderOptionsResponse, GetCampaignData, GetCampaignError, GetCampaignResponse, GetCharacterData, GetCharacterDraftData, GetCharacterDraftError, GetCharacterDraftResponse, GetCharacterError, GetCharacterResponse, GetEntryData, GetEntryError, GetEntryResponse, GetHealthData, GetHealthError, GetHealthResponse, GetInventoryData, GetInventoryError, GetInventoryResponse, GetLibraryEntryData, GetLibraryEntryError, GetLibraryEntryResponse, GetMapData, GetMapError, GetMapImageData, GetMapImageError, GetMapImageResponse, GetMapResponse, GetMeData, GetMeError, GetMeResponse, GetMyCharacterData, GetMyCharacterError, GetMyCharacterResponse, GetNotificationPreferencesData, GetNotificationPreferencesError, GetNotificationPreferencesResponse, GetNpcData, GetNpcError, GetNpcResponse, GetPortraitData, GetPortraitError, GetPortraitResponse, GetProposalData, GetProposalError, GetProposalResponse, GetPushKeyData, GetPushKeyError, GetPushKeyResponse, GetReadinessData, GetReadinessError, GetReadinessResponse, GetRollData, GetRollError, GetRollResponse, GetSessionData, GetSessionError, GetSessionLogData, GetSessionLogError, GetSessionLogResponse, GetSessionResponse, GetSessionViewData, GetSessionViewError, GetSessionViewResponse, GetSignInMethodsData, GetSignInMethodsError, GetSignInMethodsResponse, GetSpellcastingData, GetSpellcastingError, GetSpellcastingResponse, GetSpellData, GetSpellError, GetSpellResponse, GetStatusData, GetStatusError, GetStatusResponse, GetTokenIconData, GetTokenIconError, GetTokenIconResponse, GetUnseenReleaseNoteData, GetUnseenReleaseNoteError, GetUnseenReleaseNoteResponse, ImportLibraryData, ImportLibraryError, ImportLibraryResponse, JoinCampaignData, JoinCampaignError, JoinCampaignResponse, KeepRollData, KeepRollError, KeepRollResponse, LevelUpData, LevelUpError, LevelUpResponse, LinkLibraryEntryData, LinkLibraryEntryError, LinkLibraryEntryResponse, LinkOidcAccountData, LinkOidcAccountError, LinkOidcAccountResponse, ListAccessTokensData, ListAccessTokensError, ListAccessTokensResponse, ListActivityData, ListActivityError, ListActivityResponse, ListAdminAccountsData, ListAdminAccountsError, ListAdminAccountsResponse, ListCampaignCollectionsData, ListCampaignCollectionsError, ListCampaignCollectionsResponse, ListCampaignsData, ListCampaignsError, ListCampaignsResponse, ListCharacterRevisionsData, ListCharacterRevisionsError, ListCharacterRevisionsResponse, ListCharactersData, ListCharactersError, ListCharactersResponse, ListConversationsData, ListConversationsError, ListConversationsResponse, ListDeletedNpcsData, ListDeletedNpcsError, ListDeletedNpcsResponse, ListEncounterChecksData, ListEncounterChecksError, ListEncounterChecksResponse, ListEncounterPoolRevisionsData, ListEncounterPoolRevisionsError, ListEncounterPoolRevisionsResponse, ListEncounterPoolsData, ListEncounterPoolsError, ListEncounterPoolsResponse, ListEncounterTableRevisionsData, ListEncounterTableRevisionsError, ListEncounterTableRevisionsResponse, ListEncounterTablesData, ListEncounterTablesError, ListEncounterTablesResponse, ListEntriesData, ListEntriesError, ListEntriesResponse, ListFriendsData, ListFriendsError, ListFriendsResponse, ListInvitesData, ListInvitesError, ListInvitesResponse, ListLibraryCollectionsData, ListLibraryCollectionsError, ListLibraryCollectionsResponse, ListLibraryEntriesData, ListLibraryEntriesError, ListLibraryEntriesResponse, ListLinkedEntriesData, ListLinkedEntriesError, ListLinkedEntriesResponse, ListLocationsData, ListLocationsError, ListLocationsResponse, ListLootTableRevisionsData, ListLootTableRevisionsError, ListLootTableRevisionsResponse, ListLootTablesData, ListLootTablesError, ListLootTablesResponse, ListMapsData, ListMapsError, ListMapsResponse, ListMentionablesData, ListMentionablesError, ListMentionablesResponse, ListMessagesData, ListMessagesError, ListMessagesResponse, ListMyCharactersData, ListMyCharactersError, ListMyCharactersResponse, ListMySubmissionsData, ListMySubmissionsError, ListMySubmissionsResponse, ListNotificationsData, ListNotificationsError, ListNotificationsResponse, ListNpcRevisionsData, ListNpcRevisionsError, ListNpcRevisionsResponse, ListNpcsData, ListNpcsError, ListNpcsResponse, ListProposalsData, ListProposalsError, ListProposalsResponse, ListReleaseNotesData, ListReleaseNotesError, ListReleaseNotesResponse, ListRetrainChoicesData, ListRetrainChoicesError, ListRetrainChoicesResponse, ListRetrainsData, ListRetrainsError, ListRetrainsResponse, ListRollsData, ListRollsError, ListRollsResponse, ListSessionsData, ListSessionsError, ListSessionsResponse, ListSettlementRevisionsData, ListSettlementRevisionsError, ListSettlementRevisionsResponse, ListSettlementsData, ListSettlementsError, ListSettlementsResponse, ListSharedEntriesData, ListSharedEntriesError, ListSharedEntriesResponse, ListSharedSubmissionsData, ListSharedSubmissionsError, ListSharedSubmissionsResponse, ListShopRevisionsData, ListShopRevisionsError, ListShopRevisionsResponse, ListShopsData, ListShopsError, ListShopsResponse, ListSourcesData, ListSourcesError, ListSourcesResponse, ListSpellsData, ListSpellsError, ListSpellsResponse, MoveItemData, MoveItemError, MoveItemResponse, PassInspirationData, PassInspirationError, PassInspirationResponse, PassTwoStepData, PassTwoStepError, PassTwoStepResponse, PinLibraryRevisionData, PinLibraryRevisionError, PinLibraryRevisionResponse, PlanLevelUpData, PlanLevelUpError, PlanLevelUpResponse, PrepareSpellsData, PrepareSpellsError, PrepareSpellsResponse, PreviewAccountInviteData, PreviewAccountInviteError, PreviewAccountInviteResponse, PreviewCharacterData, PreviewCharacterError, PreviewCharacterResponse, PreviewInviteData, PreviewInviteError, PreviewInviteResponse, PreviewReachData, PreviewReachError, PreviewReachResponse, PreviewSightData, PreviewSightError, PreviewSightResponse, PublishReleaseNoteData, PublishReleaseNoteError, PublishReleaseNoteResponse, ReadAllNotificationsData, ReadAllNotificationsError, ReadAllNotificationsResponse, ReadNotificationData, ReadNotificationError, ReadNotificationResponse, RemoveMemberData, RemoveMemberError, RemoveMemberResponse, RequestRetrainData, RequestRetrainError, RequestRetrainResponse, RequestSignInLinkData, RequestSignInLinkError, RerollDieData, RerollDieError, RerollDieResponse, RerollStockData, RerollStockError, RerollStockResponse, ResetAccountTwoStepData, ResetAccountTwoStepError, ResetAccountTwoStepResponse, ResetRecoveryCodesData, ResetRecoveryCodesError, ResetRecoveryCodesResponse, RestoreEncounterPoolRevisionData, RestoreEncounterPoolRevisionError, RestoreEncounterPoolRevisionResponse, RestoreEncounterTableRevisionData, RestoreEncounterTableRevisionError, RestoreEncounterTableRevisionResponse, RestoreLootTableRevisionData, RestoreLootTableRevisionError, RestoreLootTableRevisionResponse, RestoreNpcRevisionData, RestoreNpcRevisionError, RestoreNpcRevisionResponse, RestoreSettlementRevisionData, RestoreSettlementRevisionError, RestoreSettlementRevisionResponse, RestoreShopRevisionData, RestoreShopRevisionError, RestoreShopRevisionResponse, ResubmitProposalData, ResubmitProposalError, ResubmitProposalResponse, ReviewProposalData, ReviewProposalError, ReviewProposalResponse, ReviewSharedSubmissionData, ReviewSharedSubmissionError, ReviewSharedSubmissionResponse, RevokeAccessTokenData, RevokeAccessTokenError, RevokeAccessTokenResponse, RevokeInviteData, RevokeInviteError, RevokeInviteResponse, RollCharacterScoresData, RollCharacterScoresError, RollCharacterScoresResponse, RollRestData, RollRestError, RollRestResponse, SaveCharacterDraftData, SaveCharacterDraftError, SaveCharacterDraftResponse, SeeReleaseNoteData, SeeReleaseNoteError, SeeReleaseNoteResponse, SendAdminSignInLinkData, SendAdminSignInLinkError, SendFriendRequestData, SendFriendRequestError, SendLiveCommandData, SendLiveCommandError, SendLiveCommandResponse, SendMessageData, SendMessageError, SendMessageResponse, SetAccountDisabledData, SetAccountDisabledError, SetAccountDisabledResponse, SetAccountPasswordData, SetAccountPasswordError, SetAccountPasswordResponse, SetAdminRoleData, SetAdminRoleError, SetAdminRoleResponse, SetCampaignOverrideData, SetCampaignOverrideError, SetCampaignOverrideResponse, SetDieData, SetDieError, SetDieResponse, SetNotificationPreferencesData, SetNotificationPreferencesError, SetNotificationPreferencesResponse, SetPortraitData, SetPortraitError, SetPortraitResponse, SetTokenIconData, SetTokenIconError, SetTokenIconResponse, ShareLibraryEntryData, ShareLibraryEntryError, ShareLibraryEntryResponse, SignInData, SignInError, SignInResponse, SignOutData, SignOutError, SignOutResponse, StartConversationData, StartConversationError, StartConversationResponse, StartOidcLinkData, StartOidcLinkError, StartOidcLinkResponse, StartOidcSignInData, StartOidcSignInError, StartOidcSignInResponse, StartSessionData, StartSessionError, StartSessionResponse, SwapWeaponSetData, SwapWeaponSetError, SwapWeaponSetResponse, SwitchLibraryCollectionData, SwitchLibraryCollectionError, SwitchLibraryCollectionResponse, TakeFromStashData, TakeFromStashError, TakeFromStashResponse, UnblockData, UnblockError, UnblockResponse, UndoChangeData, UndoChangeError, UndoChangeResponse, UnfriendData, UnfriendError, UnfriendResponse, UnlinkLibraryEntryData, UnlinkLibraryEntryError, UnlinkLibraryEntryResponse, UnlinkOidcData, UnlinkOidcError, UnlinkOidcResponse, UnpinLibraryRevisionData, UnpinLibraryRevisionError, UnpinLibraryRevisionResponse, UpdateAccountData, UpdateAccountError, UpdateAccountResponse, UpdateCampaignData, UpdateCampaignError, UpdateCampaignResponse, UpdateCharacterData, UpdateCharacterError, UpdateCharacterResponse, UpdateEncounterPoolData, UpdateEncounterPoolError, UpdateEncounterPoolResponse, UpdateEncounterTableData, UpdateEncounterTableError, UpdateEncounterTableResponse, UpdateLibraryCollectionData, UpdateLibraryCollectionError, UpdateLibraryCollectionResponse, UpdateLibraryEntryData, UpdateLibraryEntryError, UpdateLibraryEntryResponse, UpdateLootTableData, UpdateLootTableError, UpdateLootTableResponse, UpdateMapData, UpdateMapError, UpdateMapResponse, UpdateMemberData, UpdateMemberError, UpdateMemberResponse, UpdateMyCharacterData, UpdateMyCharacterError, UpdateMyCharacterResponse, UpdateNpcData, UpdateNpcError, UpdateNpcResponse, UpdateSettlementData, UpdateSettlementError, UpdateSettlementResponse, UpdateShopData, UpdateShopError, UpdateShopResponse, UploadMapData, UploadMapError, UploadMapResponse, UseItemData, UseItemError, UseItemResponse, UseSignInLinkData, UseSignInLinkError, UseSignInLinkResponse } from '../types.gen';
+import { acceptAccountInvite, acceptFriendRequest, acceptInvite, approveRetrain, beginTwoStep, cancelFriendRequest, castRitual, clearTokenIcon, confirmTwoStep, copySpell, createAccessToken, createAccountInvite, createCampaign, createCharacter, createEncounterPool, createEncounterTable, createInvite, createLibraryCollection, createLibraryEntry, createLootTable, createNpc, createOidcAccount, createProposal, createPushSubscription, createRoll, createSettlement, createShop, declineFriendRequest, declineRetrain, deleteCharacter, deleteEncounterPool, deleteEncounterTable, deleteLootTable, deleteNpc, deletePushSubscription, deleteSettlement, deleteShop, diffNpcRevisions, disableTwoStep, discardCharacterDraft, draftReleaseNote, editReleaseNote, endSession, exportLibrary, finishOidc, getAccount, getAccountHistory, getActionLog, getAdminAccount, getAutomationCoverage, getBackgroundBuild, getBuilderOptions, getCampaign, getCharacter, getCharacterDraft, getClassBuild, getConditionBuild, getEntry, getFeatBuild, getHealth, getInventory, getItemBuild, getLibraryEntry, getMap, getMapImage, getMe, getMonsterBuild, getMyCharacter, getNotificationPreferences, getNpc, getPortrait, getProposal, getPushKey, getReadiness, getRoll, getSession, getSessionLog, getSessionView, getSignInMethods, getSpeciesBuild, getSpell, getSpellBuild, getSpellcasting, getStatus, getSubclassBuild, getTokenIcon, getUnseenReleaseNote, importLibrary, joinCampaign, keepRoll, levelUp, linkLibraryEntry, linkOidcAccount, listAccessTokens, listActivity, listAdminAccounts, listCampaignCollections, listCampaigns, listCharacterRevisions, listCharacters, listConversations, listDeletedNpcs, listEncounterChecks, listEncounterPoolRevisions, listEncounterPools, listEncounterTableRevisions, listEncounterTables, listEntries, listFriends, listInvites, listLibraryCollections, listLibraryEntries, listLinkedEntries, listLocations, listLootTableRevisions, listLootTables, listMaps, listMentionables, listMessages, listMyCharacters, listMySubmissions, listNotifications, listNpcRevisions, listNpcs, listProposals, listReleaseNotes, listRetrainChoices, listRetrains, listRolls, listSessions, listSettlementRevisions, listSettlements, listSharedEntries, listSharedSubmissions, listShopRevisions, listShops, listSources, listSpells, moveItem, type Options, passInspiration, passTwoStep, pinLibraryRevision, planLevelUp, prepareSpells, previewAccountInvite, previewBackground, previewCharacter, previewClass, previewCondition, previewFeat, previewInvite, previewItem, previewMonster, previewReach, previewSight, previewSpecies, previewSpell, previewSubclass, publishReleaseNote, readAllNotifications, readNotification, removeMember, requestRetrain, requestSignInLink, rerollDie, rerollStock, resetAccountTwoStep, resetRecoveryCodes, restoreEncounterPoolRevision, restoreEncounterTableRevision, restoreLootTableRevision, restoreNpcRevision, restoreSettlementRevision, restoreShopRevision, resubmitProposal, reviewProposal, reviewSharedSubmission, revokeAccessToken, revokeInvite, rollCharacterScores, rollRest, saveBackgroundBuild, saveCharacterDraft, saveClassBuild, saveConditionBuild, saveFeatBuild, saveItemBuild, saveMonsterBuild, saveSpeciesBuild, saveSpellBuild, saveSubclassBuild, seeReleaseNote, sendAdminSignInLink, sendFriendRequest, sendLiveCommand, sendMessage, setAccountDisabled, setAccountPassword, setAdminRole, setCampaignOverride, setDie, setNotificationPreferences, setPortrait, setTokenIcon, shareLibraryEntry, signIn, signOut, startConversation, startOidcLink, startOidcSignIn, startSession, swapWeaponSet, switchLibraryCollection, takeFromStash, unblock, undoChange, unfriend, unlinkLibraryEntry, unlinkOidc, unpinLibraryRevision, updateAccount, updateCampaign, updateCharacter, updateEncounterPool, updateEncounterTable, updateLibraryCollection, updateLibraryEntry, updateLootTable, updateMap, updateMember, updateMyCharacter, updateNpc, updateSettlement, updateShop, uploadMap, useItem, useSignInLink } from '../sdk.gen';
+import type { AcceptAccountInviteData, AcceptAccountInviteError, AcceptAccountInviteResponse, AcceptFriendRequestData, AcceptFriendRequestError, AcceptFriendRequestResponse, AcceptInviteData, AcceptInviteError, AcceptInviteResponse, ApproveRetrainData, ApproveRetrainError, ApproveRetrainResponse, BeginTwoStepData, BeginTwoStepError, BeginTwoStepResponse, CancelFriendRequestData, CancelFriendRequestError, CancelFriendRequestResponse, CastRitualData, CastRitualError, CastRitualResponse, ClearTokenIconData, ClearTokenIconError, ClearTokenIconResponse, ConfirmTwoStepData, ConfirmTwoStepError, ConfirmTwoStepResponse, CopySpellData, CopySpellError, CopySpellResponse, CreateAccessTokenData, CreateAccessTokenError, CreateAccessTokenResponse, CreateAccountInviteData, CreateAccountInviteError, CreateAccountInviteResponse, CreateCampaignData, CreateCampaignError, CreateCampaignResponse, CreateCharacterData, CreateCharacterError, CreateCharacterResponse, CreateEncounterPoolData, CreateEncounterPoolError, CreateEncounterPoolResponse, CreateEncounterTableData, CreateEncounterTableError, CreateEncounterTableResponse, CreateInviteData, CreateInviteError, CreateInviteResponse, CreateLibraryCollectionData, CreateLibraryCollectionError, CreateLibraryCollectionResponse, CreateLibraryEntryData, CreateLibraryEntryError, CreateLibraryEntryResponse, CreateLootTableData, CreateLootTableError, CreateLootTableResponse, CreateNpcData, CreateNpcError, CreateNpcResponse, CreateOidcAccountData, CreateOidcAccountError, CreateOidcAccountResponse, CreateProposalData, CreateProposalError, CreateProposalResponse, CreatePushSubscriptionData, CreatePushSubscriptionError, CreatePushSubscriptionResponse, CreateRollData, CreateRollError, CreateRollResponse, CreateSettlementData, CreateSettlementError, CreateSettlementResponse, CreateShopData, CreateShopError, CreateShopResponse, DeclineFriendRequestData, DeclineFriendRequestError, DeclineFriendRequestResponse, DeclineRetrainData, DeclineRetrainError, DeclineRetrainResponse, DeleteCharacterData, DeleteCharacterError, DeleteCharacterResponse, DeleteEncounterPoolData, DeleteEncounterPoolError, DeleteEncounterPoolResponse, DeleteEncounterTableData, DeleteEncounterTableError, DeleteEncounterTableResponse, DeleteLootTableData, DeleteLootTableError, DeleteLootTableResponse, DeleteNpcData, DeleteNpcError, DeleteNpcResponse, DeletePushSubscriptionData, DeletePushSubscriptionError, DeletePushSubscriptionResponse, DeleteSettlementData, DeleteSettlementError, DeleteSettlementResponse, DeleteShopData, DeleteShopError, DeleteShopResponse, DiffNpcRevisionsData, DiffNpcRevisionsError, DiffNpcRevisionsResponse, DisableTwoStepData, DisableTwoStepError, DisableTwoStepResponse, DiscardCharacterDraftData, DiscardCharacterDraftError, DiscardCharacterDraftResponse, DraftReleaseNoteData, DraftReleaseNoteError, DraftReleaseNoteResponse, EditReleaseNoteData, EditReleaseNoteError, EditReleaseNoteResponse, EndSessionData, EndSessionError, EndSessionResponse, ExportLibraryData, ExportLibraryError, ExportLibraryResponse, FinishOidcData, FinishOidcError, FinishOidcResponse, GetAccountData, GetAccountError, GetAccountHistoryData, GetAccountHistoryError, GetAccountHistoryResponse, GetAccountResponse, GetActionLogData, GetActionLogError, GetActionLogResponse, GetAdminAccountData, GetAdminAccountError, GetAdminAccountResponse, GetAutomationCoverageData, GetAutomationCoverageError, GetAutomationCoverageResponse, GetBackgroundBuildData, GetBackgroundBuildError, GetBackgroundBuildResponse, GetBuilderOptionsData, GetBuilderOptionsError, GetBuilderOptionsResponse, GetCampaignData, GetCampaignError, GetCampaignResponse, GetCharacterData, GetCharacterDraftData, GetCharacterDraftError, GetCharacterDraftResponse, GetCharacterError, GetCharacterResponse, GetClassBuildData, GetClassBuildError, GetClassBuildResponse, GetConditionBuildData, GetConditionBuildError, GetConditionBuildResponse, GetEntryData, GetEntryError, GetEntryResponse, GetFeatBuildData, GetFeatBuildError, GetFeatBuildResponse, GetHealthData, GetHealthError, GetHealthResponse, GetInventoryData, GetInventoryError, GetInventoryResponse, GetItemBuildData, GetItemBuildError, GetItemBuildResponse, GetLibraryEntryData, GetLibraryEntryError, GetLibraryEntryResponse, GetMapData, GetMapError, GetMapImageData, GetMapImageError, GetMapImageResponse, GetMapResponse, GetMeData, GetMeError, GetMeResponse, GetMonsterBuildData, GetMonsterBuildError, GetMonsterBuildResponse, GetMyCharacterData, GetMyCharacterError, GetMyCharacterResponse, GetNotificationPreferencesData, GetNotificationPreferencesError, GetNotificationPreferencesResponse, GetNpcData, GetNpcError, GetNpcResponse, GetPortraitData, GetPortraitError, GetPortraitResponse, GetProposalData, GetProposalError, GetProposalResponse, GetPushKeyData, GetPushKeyError, GetPushKeyResponse, GetReadinessData, GetReadinessError, GetReadinessResponse, GetRollData, GetRollError, GetRollResponse, GetSessionData, GetSessionError, GetSessionLogData, GetSessionLogError, GetSessionLogResponse, GetSessionResponse, GetSessionViewData, GetSessionViewError, GetSessionViewResponse, GetSignInMethodsData, GetSignInMethodsError, GetSignInMethodsResponse, GetSpeciesBuildData, GetSpeciesBuildError, GetSpeciesBuildResponse, GetSpellBuildData, GetSpellBuildError, GetSpellBuildResponse, GetSpellcastingData, GetSpellcastingError, GetSpellcastingResponse, GetSpellData, GetSpellError, GetSpellResponse, GetStatusData, GetStatusError, GetStatusResponse, GetSubclassBuildData, GetSubclassBuildError, GetSubclassBuildResponse, GetTokenIconData, GetTokenIconError, GetTokenIconResponse, GetUnseenReleaseNoteData, GetUnseenReleaseNoteError, GetUnseenReleaseNoteResponse, ImportLibraryData, ImportLibraryError, ImportLibraryResponse, JoinCampaignData, JoinCampaignError, JoinCampaignResponse, KeepRollData, KeepRollError, KeepRollResponse, LevelUpData, LevelUpError, LevelUpResponse, LinkLibraryEntryData, LinkLibraryEntryError, LinkLibraryEntryResponse, LinkOidcAccountData, LinkOidcAccountError, LinkOidcAccountResponse, ListAccessTokensData, ListAccessTokensError, ListAccessTokensResponse, ListActivityData, ListActivityError, ListActivityResponse, ListAdminAccountsData, ListAdminAccountsError, ListAdminAccountsResponse, ListCampaignCollectionsData, ListCampaignCollectionsError, ListCampaignCollectionsResponse, ListCampaignsData, ListCampaignsError, ListCampaignsResponse, ListCharacterRevisionsData, ListCharacterRevisionsError, ListCharacterRevisionsResponse, ListCharactersData, ListCharactersError, ListCharactersResponse, ListConversationsData, ListConversationsError, ListConversationsResponse, ListDeletedNpcsData, ListDeletedNpcsError, ListDeletedNpcsResponse, ListEncounterChecksData, ListEncounterChecksError, ListEncounterChecksResponse, ListEncounterPoolRevisionsData, ListEncounterPoolRevisionsError, ListEncounterPoolRevisionsResponse, ListEncounterPoolsData, ListEncounterPoolsError, ListEncounterPoolsResponse, ListEncounterTableRevisionsData, ListEncounterTableRevisionsError, ListEncounterTableRevisionsResponse, ListEncounterTablesData, ListEncounterTablesError, ListEncounterTablesResponse, ListEntriesData, ListEntriesError, ListEntriesResponse, ListFriendsData, ListFriendsError, ListFriendsResponse, ListInvitesData, ListInvitesError, ListInvitesResponse, ListLibraryCollectionsData, ListLibraryCollectionsError, ListLibraryCollectionsResponse, ListLibraryEntriesData, ListLibraryEntriesError, ListLibraryEntriesResponse, ListLinkedEntriesData, ListLinkedEntriesError, ListLinkedEntriesResponse, ListLocationsData, ListLocationsError, ListLocationsResponse, ListLootTableRevisionsData, ListLootTableRevisionsError, ListLootTableRevisionsResponse, ListLootTablesData, ListLootTablesError, ListLootTablesResponse, ListMapsData, ListMapsError, ListMapsResponse, ListMentionablesData, ListMentionablesError, ListMentionablesResponse, ListMessagesData, ListMessagesError, ListMessagesResponse, ListMyCharactersData, ListMyCharactersError, ListMyCharactersResponse, ListMySubmissionsData, ListMySubmissionsError, ListMySubmissionsResponse, ListNotificationsData, ListNotificationsError, ListNotificationsResponse, ListNpcRevisionsData, ListNpcRevisionsError, ListNpcRevisionsResponse, ListNpcsData, ListNpcsError, ListNpcsResponse, ListProposalsData, ListProposalsError, ListProposalsResponse, ListReleaseNotesData, ListReleaseNotesError, ListReleaseNotesResponse, ListRetrainChoicesData, ListRetrainChoicesError, ListRetrainChoicesResponse, ListRetrainsData, ListRetrainsError, ListRetrainsResponse, ListRollsData, ListRollsError, ListRollsResponse, ListSessionsData, ListSessionsError, ListSessionsResponse, ListSettlementRevisionsData, ListSettlementRevisionsError, ListSettlementRevisionsResponse, ListSettlementsData, ListSettlementsError, ListSettlementsResponse, ListSharedEntriesData, ListSharedEntriesError, ListSharedEntriesResponse, ListSharedSubmissionsData, ListSharedSubmissionsError, ListSharedSubmissionsResponse, ListShopRevisionsData, ListShopRevisionsError, ListShopRevisionsResponse, ListShopsData, ListShopsError, ListShopsResponse, ListSourcesData, ListSourcesError, ListSourcesResponse, ListSpellsData, ListSpellsError, ListSpellsResponse, MoveItemData, MoveItemError, MoveItemResponse, PassInspirationData, PassInspirationError, PassInspirationResponse, PassTwoStepData, PassTwoStepError, PassTwoStepResponse, PinLibraryRevisionData, PinLibraryRevisionError, PinLibraryRevisionResponse, PlanLevelUpData, PlanLevelUpError, PlanLevelUpResponse, PrepareSpellsData, PrepareSpellsError, PrepareSpellsResponse, PreviewAccountInviteData, PreviewAccountInviteError, PreviewAccountInviteResponse, PreviewBackgroundData, PreviewBackgroundError, PreviewBackgroundResponse, PreviewCharacterData, PreviewCharacterError, PreviewCharacterResponse, PreviewClassData, PreviewClassError, PreviewClassResponse, PreviewConditionData, PreviewConditionError, PreviewConditionResponse, PreviewFeatData, PreviewFeatError, PreviewFeatResponse, PreviewInviteData, PreviewInviteError, PreviewInviteResponse, PreviewItemData, PreviewItemError, PreviewItemResponse, PreviewMonsterData, PreviewMonsterError, PreviewMonsterResponse, PreviewReachData, PreviewReachError, PreviewReachResponse, PreviewSightData, PreviewSightError, PreviewSightResponse, PreviewSpeciesData, PreviewSpeciesError, PreviewSpeciesResponse, PreviewSpellData, PreviewSpellError, PreviewSpellResponse, PreviewSubclassData, PreviewSubclassError, PreviewSubclassResponse, PublishReleaseNoteData, PublishReleaseNoteError, PublishReleaseNoteResponse, ReadAllNotificationsData, ReadAllNotificationsError, ReadAllNotificationsResponse, ReadNotificationData, ReadNotificationError, ReadNotificationResponse, RemoveMemberData, RemoveMemberError, RemoveMemberResponse, RequestRetrainData, RequestRetrainError, RequestRetrainResponse, RequestSignInLinkData, RequestSignInLinkError, RerollDieData, RerollDieError, RerollDieResponse, RerollStockData, RerollStockError, RerollStockResponse, ResetAccountTwoStepData, ResetAccountTwoStepError, ResetAccountTwoStepResponse, ResetRecoveryCodesData, ResetRecoveryCodesError, ResetRecoveryCodesResponse, RestoreEncounterPoolRevisionData, RestoreEncounterPoolRevisionError, RestoreEncounterPoolRevisionResponse, RestoreEncounterTableRevisionData, RestoreEncounterTableRevisionError, RestoreEncounterTableRevisionResponse, RestoreLootTableRevisionData, RestoreLootTableRevisionError, RestoreLootTableRevisionResponse, RestoreNpcRevisionData, RestoreNpcRevisionError, RestoreNpcRevisionResponse, RestoreSettlementRevisionData, RestoreSettlementRevisionError, RestoreSettlementRevisionResponse, RestoreShopRevisionData, RestoreShopRevisionError, RestoreShopRevisionResponse, ResubmitProposalData, ResubmitProposalError, ResubmitProposalResponse, ReviewProposalData, ReviewProposalError, ReviewProposalResponse, ReviewSharedSubmissionData, ReviewSharedSubmissionError, ReviewSharedSubmissionResponse, RevokeAccessTokenData, RevokeAccessTokenError, RevokeAccessTokenResponse, RevokeInviteData, RevokeInviteError, RevokeInviteResponse, RollCharacterScoresData, RollCharacterScoresError, RollCharacterScoresResponse, RollRestData, RollRestError, RollRestResponse, SaveBackgroundBuildData, SaveBackgroundBuildError, SaveBackgroundBuildResponse, SaveCharacterDraftData, SaveCharacterDraftError, SaveCharacterDraftResponse, SaveClassBuildData, SaveClassBuildError, SaveClassBuildResponse, SaveConditionBuildData, SaveConditionBuildError, SaveConditionBuildResponse, SaveFeatBuildData, SaveFeatBuildError, SaveFeatBuildResponse, SaveItemBuildData, SaveItemBuildError, SaveItemBuildResponse, SaveMonsterBuildData, SaveMonsterBuildError, SaveMonsterBuildResponse, SaveSpeciesBuildData, SaveSpeciesBuildError, SaveSpeciesBuildResponse, SaveSpellBuildData, SaveSpellBuildError, SaveSpellBuildResponse, SaveSubclassBuildData, SaveSubclassBuildError, SaveSubclassBuildResponse, SeeReleaseNoteData, SeeReleaseNoteError, SeeReleaseNoteResponse, SendAdminSignInLinkData, SendAdminSignInLinkError, SendFriendRequestData, SendFriendRequestError, SendLiveCommandData, SendLiveCommandError, SendLiveCommandResponse, SendMessageData, SendMessageError, SendMessageResponse, SetAccountDisabledData, SetAccountDisabledError, SetAccountDisabledResponse, SetAccountPasswordData, SetAccountPasswordError, SetAccountPasswordResponse, SetAdminRoleData, SetAdminRoleError, SetAdminRoleResponse, SetCampaignOverrideData, SetCampaignOverrideError, SetCampaignOverrideResponse, SetDieData, SetDieError, SetDieResponse, SetNotificationPreferencesData, SetNotificationPreferencesError, SetNotificationPreferencesResponse, SetPortraitData, SetPortraitError, SetPortraitResponse, SetTokenIconData, SetTokenIconError, SetTokenIconResponse, ShareLibraryEntryData, ShareLibraryEntryError, ShareLibraryEntryResponse, SignInData, SignInError, SignInResponse, SignOutData, SignOutError, SignOutResponse, StartConversationData, StartConversationError, StartConversationResponse, StartOidcLinkData, StartOidcLinkError, StartOidcLinkResponse, StartOidcSignInData, StartOidcSignInError, StartOidcSignInResponse, StartSessionData, StartSessionError, StartSessionResponse, SwapWeaponSetData, SwapWeaponSetError, SwapWeaponSetResponse, SwitchLibraryCollectionData, SwitchLibraryCollectionError, SwitchLibraryCollectionResponse, TakeFromStashData, TakeFromStashError, TakeFromStashResponse, UnblockData, UnblockError, UnblockResponse, UndoChangeData, UndoChangeError, UndoChangeResponse, UnfriendData, UnfriendError, UnfriendResponse, UnlinkLibraryEntryData, UnlinkLibraryEntryError, UnlinkLibraryEntryResponse, UnlinkOidcData, UnlinkOidcError, UnlinkOidcResponse, UnpinLibraryRevisionData, UnpinLibraryRevisionError, UnpinLibraryRevisionResponse, UpdateAccountData, UpdateAccountError, UpdateAccountResponse, UpdateCampaignData, UpdateCampaignError, UpdateCampaignResponse, UpdateCharacterData, UpdateCharacterError, UpdateCharacterResponse, UpdateEncounterPoolData, UpdateEncounterPoolError, UpdateEncounterPoolResponse, UpdateEncounterTableData, UpdateEncounterTableError, UpdateEncounterTableResponse, UpdateLibraryCollectionData, UpdateLibraryCollectionError, UpdateLibraryCollectionResponse, UpdateLibraryEntryData, UpdateLibraryEntryError, UpdateLibraryEntryResponse, UpdateLootTableData, UpdateLootTableError, UpdateLootTableResponse, UpdateMapData, UpdateMapError, UpdateMapResponse, UpdateMemberData, UpdateMemberError, UpdateMemberResponse, UpdateMyCharacterData, UpdateMyCharacterError, UpdateMyCharacterResponse, UpdateNpcData, UpdateNpcError, UpdateNpcResponse, UpdateSettlementData, UpdateSettlementError, UpdateSettlementResponse, UpdateShopData, UpdateShopError, UpdateShopResponse, UploadMapData, UploadMapError, UploadMapResponse, UseItemData, UseItemError, UseItemResponse, UseSignInLinkData, UseSignInLinkError, UseSignInLinkResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -2873,6 +2873,528 @@ export const reviewSharedSubmissionMutation = (options?: Partial<Options<ReviewS
     const mutationOptions: UseMutationOptions<ReviewSharedSubmissionResponse, ReviewSharedSubmissionError, Options<ReviewSharedSubmissionData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await reviewSharedSubmission({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Preview a homebrew spell
+ *
+ * Builds a design without saving it: its rules text and its area drawn as hexes. A design the rules cannot run is refused with the reason.
+ */
+export const previewSpellMutation = (options?: Partial<Options<PreviewSpellData>>): UseMutationOptions<PreviewSpellResponse, PreviewSpellError, Options<PreviewSpellData>> => {
+    const mutationOptions: UseMutationOptions<PreviewSpellResponse, PreviewSpellError, Options<PreviewSpellData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await previewSpell({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getSpellBuildQueryKey = (options: Options<GetSpellBuildData>) => createQueryKey('getSpellBuild', options);
+
+/**
+ * Open a spell in the Effect builder
+ *
+ * A homebrew spell's design with its rules text and area: one of the caller's spells, or a Shared Library copy.
+ */
+export const getSpellBuildOptions = (options: Options<GetSpellBuildData>) => queryOptions<GetSpellBuildResponse, GetSpellBuildError, GetSpellBuildResponse, ReturnType<typeof getSpellBuildQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getSpellBuild({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getSpellBuildQueryKey(options)
+});
+
+/**
+ * Save a spell design
+ *
+ * Saves the design of one of the caller's spells as its next Revision; in a live Session it runs as an area spell.
+ */
+export const saveSpellBuildMutation = (options?: Partial<Options<SaveSpellBuildData>>): UseMutationOptions<SaveSpellBuildResponse, SaveSpellBuildError, Options<SaveSpellBuildData>> => {
+    const mutationOptions: UseMutationOptions<SaveSpellBuildResponse, SaveSpellBuildError, Options<SaveSpellBuildData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await saveSpellBuild({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Preview a homebrew item
+ *
+ * Checks a design without saving it: its item card and its Price Check. A design the rules refuse comes back with the reason.
+ */
+export const previewItemMutation = (options?: Partial<Options<PreviewItemData>>): UseMutationOptions<PreviewItemResponse, PreviewItemError, Options<PreviewItemData>> => {
+    const mutationOptions: UseMutationOptions<PreviewItemResponse, PreviewItemError, Options<PreviewItemData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await previewItem({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getItemBuildQueryKey = (options: Options<GetItemBuildData>) => createQueryKey('getItemBuild', options);
+
+/**
+ * Open an item in the item builder
+ *
+ * A homebrew item's design with its card and Price Check: one of the caller's items, or a Shared Library copy.
+ */
+export const getItemBuildOptions = (options: Options<GetItemBuildData>) => queryOptions<GetItemBuildResponse, GetItemBuildError, GetItemBuildResponse, ReturnType<typeof getItemBuildQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getItemBuild({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getItemBuildQueryKey(options)
+});
+
+/**
+ * Save an item design
+ *
+ * Saves the design of one of the caller's items as its next Revision; Campaigns that see it carry it in Inventories by its slug.
+ */
+export const saveItemBuildMutation = (options?: Partial<Options<SaveItemBuildData>>): UseMutationOptions<SaveItemBuildResponse, SaveItemBuildError, Options<SaveItemBuildData>> => {
+    const mutationOptions: UseMutationOptions<SaveItemBuildResponse, SaveItemBuildError, Options<SaveItemBuildData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await saveItemBuild({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Preview a homebrew subclass
+ *
+ * Checks a design without saving it and reads it back. A design the rules refuse comes back with the reason.
+ */
+export const previewSubclassMutation = (options?: Partial<Options<PreviewSubclassData>>): UseMutationOptions<PreviewSubclassResponse, PreviewSubclassError, Options<PreviewSubclassData>> => {
+    const mutationOptions: UseMutationOptions<PreviewSubclassResponse, PreviewSubclassError, Options<PreviewSubclassData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await previewSubclass({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getSubclassBuildQueryKey = (options: Options<GetSubclassBuildData>) => createQueryKey('getSubclassBuild', options);
+
+/**
+ * Open a subclass in the subclass builder
+ *
+ * A homebrew subclass's design, read back: one of the caller's subclasses, or a Shared Library copy.
+ */
+export const getSubclassBuildOptions = (options: Options<GetSubclassBuildData>) => queryOptions<GetSubclassBuildResponse, GetSubclassBuildError, GetSubclassBuildResponse, ReturnType<typeof getSubclassBuildQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getSubclassBuild({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getSubclassBuildQueryKey(options)
+});
+
+/**
+ * Save a subclass design
+ *
+ * Saves the design of one of the caller's subclasses as its next Revision; Campaigns that see it offer it on levelling up its class.
+ */
+export const saveSubclassBuildMutation = (options?: Partial<Options<SaveSubclassBuildData>>): UseMutationOptions<SaveSubclassBuildResponse, SaveSubclassBuildError, Options<SaveSubclassBuildData>> => {
+    const mutationOptions: UseMutationOptions<SaveSubclassBuildResponse, SaveSubclassBuildError, Options<SaveSubclassBuildData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await saveSubclassBuild({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Preview a homebrew class
+ *
+ * Checks a design without saving it and reads it back with its level table. A design the rules refuse comes back with the reason.
+ */
+export const previewClassMutation = (options?: Partial<Options<PreviewClassData>>): UseMutationOptions<PreviewClassResponse, PreviewClassError, Options<PreviewClassData>> => {
+    const mutationOptions: UseMutationOptions<PreviewClassResponse, PreviewClassError, Options<PreviewClassData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await previewClass({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getClassBuildQueryKey = (options: Options<GetClassBuildData>) => createQueryKey('getClassBuild', options);
+
+/**
+ * Open a class in the class builder
+ *
+ * A homebrew class's design, read back with its level table: one of the caller's classes, or a Shared Library copy.
+ */
+export const getClassBuildOptions = (options: Options<GetClassBuildData>) => queryOptions<GetClassBuildResponse, GetClassBuildError, GetClassBuildResponse, ReturnType<typeof getClassBuildQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getClassBuild({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getClassBuildQueryKey(options)
+});
+
+/**
+ * Save a class design
+ *
+ * Saves the design of one of the caller's classes as its next Revision; Campaigns that see it offer it in character creation and multiclassing.
+ */
+export const saveClassBuildMutation = (options?: Partial<Options<SaveClassBuildData>>): UseMutationOptions<SaveClassBuildResponse, SaveClassBuildError, Options<SaveClassBuildData>> => {
+    const mutationOptions: UseMutationOptions<SaveClassBuildResponse, SaveClassBuildError, Options<SaveClassBuildData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await saveClassBuild({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Preview a homebrew species
+ *
+ * Checks a design without saving it and reads it back. A design the rules refuse comes back with the reason.
+ */
+export const previewSpeciesMutation = (options?: Partial<Options<PreviewSpeciesData>>): UseMutationOptions<PreviewSpeciesResponse, PreviewSpeciesError, Options<PreviewSpeciesData>> => {
+    const mutationOptions: UseMutationOptions<PreviewSpeciesResponse, PreviewSpeciesError, Options<PreviewSpeciesData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await previewSpecies({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getSpeciesBuildQueryKey = (options: Options<GetSpeciesBuildData>) => createQueryKey('getSpeciesBuild', options);
+
+/**
+ * Open a species in the species builder
+ *
+ * A homebrew species's design, read back: one of the caller's, or a Shared Library copy.
+ */
+export const getSpeciesBuildOptions = (options: Options<GetSpeciesBuildData>) => queryOptions<GetSpeciesBuildResponse, GetSpeciesBuildError, GetSpeciesBuildResponse, ReturnType<typeof getSpeciesBuildQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getSpeciesBuild({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getSpeciesBuildQueryKey(options)
+});
+
+/**
+ * Save a species design
+ *
+ * Saves the design of one of the caller's species entries as its next Revision; Campaigns that see it offer it, and each of its lineages, in character creation.
+ */
+export const saveSpeciesBuildMutation = (options?: Partial<Options<SaveSpeciesBuildData>>): UseMutationOptions<SaveSpeciesBuildResponse, SaveSpeciesBuildError, Options<SaveSpeciesBuildData>> => {
+    const mutationOptions: UseMutationOptions<SaveSpeciesBuildResponse, SaveSpeciesBuildError, Options<SaveSpeciesBuildData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await saveSpeciesBuild({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Preview a homebrew feat
+ *
+ * Checks a design without saving it and reads it back. A design the rules refuse comes back with the reason.
+ */
+export const previewFeatMutation = (options?: Partial<Options<PreviewFeatData>>): UseMutationOptions<PreviewFeatResponse, PreviewFeatError, Options<PreviewFeatData>> => {
+    const mutationOptions: UseMutationOptions<PreviewFeatResponse, PreviewFeatError, Options<PreviewFeatData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await previewFeat({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getFeatBuildQueryKey = (options: Options<GetFeatBuildData>) => createQueryKey('getFeatBuild', options);
+
+/**
+ * Open a feat in the feat builder
+ *
+ * A homebrew feat's design, read back: one of the caller's, or a Shared Library copy.
+ */
+export const getFeatBuildOptions = (options: Options<GetFeatBuildData>) => queryOptions<GetFeatBuildResponse, GetFeatBuildError, GetFeatBuildResponse, ReturnType<typeof getFeatBuildQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getFeatBuild({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getFeatBuildQueryKey(options)
+});
+
+/**
+ * Save a feat design
+ *
+ * Saves the design of one of the caller's feat entries as its next Revision; Campaigns that see it offer it when a level grants a feat of its category.
+ */
+export const saveFeatBuildMutation = (options?: Partial<Options<SaveFeatBuildData>>): UseMutationOptions<SaveFeatBuildResponse, SaveFeatBuildError, Options<SaveFeatBuildData>> => {
+    const mutationOptions: UseMutationOptions<SaveFeatBuildResponse, SaveFeatBuildError, Options<SaveFeatBuildData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await saveFeatBuild({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Preview a homebrew background
+ *
+ * Checks a design without saving it and reads it back. A design the rules refuse comes back with the reason.
+ */
+export const previewBackgroundMutation = (options?: Partial<Options<PreviewBackgroundData>>): UseMutationOptions<PreviewBackgroundResponse, PreviewBackgroundError, Options<PreviewBackgroundData>> => {
+    const mutationOptions: UseMutationOptions<PreviewBackgroundResponse, PreviewBackgroundError, Options<PreviewBackgroundData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await previewBackground({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getBackgroundBuildQueryKey = (options: Options<GetBackgroundBuildData>) => createQueryKey('getBackgroundBuild', options);
+
+/**
+ * Open a background in the background builder
+ *
+ * A homebrew background's design, read back: one of the caller's, or a Shared Library copy.
+ */
+export const getBackgroundBuildOptions = (options: Options<GetBackgroundBuildData>) => queryOptions<GetBackgroundBuildResponse, GetBackgroundBuildError, GetBackgroundBuildResponse, ReturnType<typeof getBackgroundBuildQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getBackgroundBuild({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getBackgroundBuildQueryKey(options)
+});
+
+/**
+ * Save a background design
+ *
+ * Saves the design of one of the caller's background entries as its next Revision; Campaigns that see it offer it in character creation.
+ */
+export const saveBackgroundBuildMutation = (options?: Partial<Options<SaveBackgroundBuildData>>): UseMutationOptions<SaveBackgroundBuildResponse, SaveBackgroundBuildError, Options<SaveBackgroundBuildData>> => {
+    const mutationOptions: UseMutationOptions<SaveBackgroundBuildResponse, SaveBackgroundBuildError, Options<SaveBackgroundBuildData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await saveBackgroundBuild({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Preview a homebrew condition
+ *
+ * Checks a design without saving it and reads it back. A design the rules refuse comes back with the reason.
+ */
+export const previewConditionMutation = (options?: Partial<Options<PreviewConditionData>>): UseMutationOptions<PreviewConditionResponse, PreviewConditionError, Options<PreviewConditionData>> => {
+    const mutationOptions: UseMutationOptions<PreviewConditionResponse, PreviewConditionError, Options<PreviewConditionData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await previewCondition({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getConditionBuildQueryKey = (options: Options<GetConditionBuildData>) => createQueryKey('getConditionBuild', options);
+
+/**
+ * Open a condition in the condition builder
+ *
+ * A homebrew condition's design, read back: one of the caller's, or a Shared Library copy.
+ */
+export const getConditionBuildOptions = (options: Options<GetConditionBuildData>) => queryOptions<GetConditionBuildResponse, GetConditionBuildError, GetConditionBuildResponse, ReturnType<typeof getConditionBuildQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getConditionBuild({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getConditionBuildQueryKey(options)
+});
+
+/**
+ * Save a condition design
+ *
+ * Saves the design of one of the caller's condition entries as its next Revision; Campaigns that see it offer it in the DM's effect picker, with its icon on every token it is on.
+ */
+export const saveConditionBuildMutation = (options?: Partial<Options<SaveConditionBuildData>>): UseMutationOptions<SaveConditionBuildResponse, SaveConditionBuildError, Options<SaveConditionBuildData>> => {
+    const mutationOptions: UseMutationOptions<SaveConditionBuildResponse, SaveConditionBuildError, Options<SaveConditionBuildData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await saveConditionBuild({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Preview a homebrew creature
+ *
+ * Checks a design without saving it and reads it back. A design the rules refuse comes back with the reason.
+ */
+export const previewMonsterMutation = (options?: Partial<Options<PreviewMonsterData>>): UseMutationOptions<PreviewMonsterResponse, PreviewMonsterError, Options<PreviewMonsterData>> => {
+    const mutationOptions: UseMutationOptions<PreviewMonsterResponse, PreviewMonsterError, Options<PreviewMonsterData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await previewMonster({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getMonsterBuildQueryKey = (options: Options<GetMonsterBuildData>) => createQueryKey('getMonsterBuild', options);
+
+/**
+ * Open a creature in the creature builder
+ *
+ * A homebrew creature's design, read back: one of the caller's, or a Shared Library copy.
+ */
+export const getMonsterBuildOptions = (options: Options<GetMonsterBuildData>) => queryOptions<GetMonsterBuildResponse, GetMonsterBuildError, GetMonsterBuildResponse, ReturnType<typeof getMonsterBuildQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getMonsterBuild({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getMonsterBuildQueryKey(options)
+});
+
+/**
+ * Save a creature design
+ *
+ * Saves the design of one of the caller's creature entries as its next Revision; Campaigns that see it can place it by its slug, with its legendary and lair actions offered in the turn order.
+ */
+export const saveMonsterBuildMutation = (options?: Partial<Options<SaveMonsterBuildData>>): UseMutationOptions<SaveMonsterBuildResponse, SaveMonsterBuildError, Options<SaveMonsterBuildData>> => {
+    const mutationOptions: UseMutationOptions<SaveMonsterBuildResponse, SaveMonsterBuildError, Options<SaveMonsterBuildData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await saveMonsterBuild({
                 ...options,
                 ...fnOptions,
                 throwOnError: true

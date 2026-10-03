@@ -43,7 +43,7 @@ const tied = computed(() => {
         </span>
         <span v-if="dyingOf(c.tokenId)" class="fallen" data-testid="fallen">{{ dyingOf(c.tokenId) }}</span>
         <span v-if="effectsOf(c.tokenId).length" class="statuses" data-testid="statuses">
-          <StatusIcon v-for="e in effectsOf(c.tokenId)" :key="e.id" :slug="e.slug" :label="effectLabel(e)" :size="12" />
+          <StatusIcon v-for="e in effectsOf(c.tokenId)" :key="e.id" :slug="e.slug" :label="effectLabel(e)" :size="12" :icon="e.icon" :color="e.color" />
         </span>
         <span v-if="c.acting" class="sr-only">acting now</span>
       </li>

@@ -6,31 +6,6 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/dice"
 )
 
-// PrimaryAbilities are the abilities a class leans on most (2024 rules), highlighted when choosing a
-// class; a class Grimoire does not know has none.
-func PrimaryAbilities(class string) []Ability {
-	switch class {
-	case "barbarian":
-		return []Ability{Strength}
-	case "bard", "sorcerer", "warlock":
-		return []Ability{Charisma}
-	case "cleric", "druid":
-		return []Ability{Wisdom}
-	case "fighter":
-		return []Ability{Strength, Dexterity}
-	case "monk", "ranger":
-		return []Ability{Dexterity, Wisdom}
-	case "paladin":
-		return []Ability{Strength, Charisma}
-	case "rogue":
-		return []Ability{Dexterity}
-	case "wizard":
-		return []Ability{Intelligence}
-	default:
-		return nil
-	}
-}
-
 // HitPointsAt is a new Character's hit point maximum at a starting level: the whole Hit Die at first
 // level, then the fixed average of each later one, each level at least 1.
 func HitPointsAt(hitDie, conMod, level int) int {

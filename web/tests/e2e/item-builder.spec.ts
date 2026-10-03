@@ -1,0 +1,45 @@
+import AxeBuilder from '@axe-core/playwright'
+import { expect, test } from '@playwright/test'
+
+test('an author builds the Ashwood Bow in the item builder, checks its price and saves it', async ({ page }, info) => {
+  const name = `Ashwood Bow ${info.project.name} ${String(Date.now())}`
+  await page.goto('/library')
+  await page.getByTestId('library-kind').selectOption('item')
+  await page.getByTestId('library-name').fill(name)
+  await page.getByTestId('library-add').click()
+  await page.getByTestId('open-item-builder').click()
+  await expect(page.getByTestId('item-form')).toBeVisible()
+
+  await page.getByTestId('item-kind').selectOption('weapon')
+  await page.getByTestId('item-base').fill('longbow')
+  await page.getByTestId('item-rarity').selectOption('uncommon')
+  await page.getByTestId('item-value').fill('400')
+  await page.getByTestId('item-attunes').check()
+  await page.getByTestId('attune-kind').selectOption('class')
+  await page.getByTestId('attune-value').fill('ranger')
+  await page.getByTestId('item-charged').check()
+  await page.getByTestId('item-weapon').check()
+  await page.getByTestId('weapon-ammunition').check()
+  await page.getByTestId('weapon-two-handed').check()
+  await page.getByTestId('weapon-mastery').selectOption('slow')
+  await page.getByTestId('quick-boost').click()
+  await page.getByTestId('row-0-skill').selectOption('survival')
+  await page.getByTestId('add-property').selectOption('spell')
+  await page.getByTestId('add-row').click()
+  await page.getByTestId('row-1-name').fill("Hunter's Mark")
+  await page.getByTestId('row-1-spell').fill('hunters-mark')
+
+  await page.getByTestId('item-preview').click()
+  const card = page.getByTestId('item-card')
+  await expect(card).toContainText('You have Advantage on Survival checks.')
+  await expect(card).toContainText("You can expend 1 charge to cast Hunter's Mark from it.")
+  await expect(card).toContainText('It has 3 charges and regains 1d4 expended charges daily at dawn.')
+  await expect(page.getByTestId('price-check')).toContainText('Its properties point to rare, not uncommon.')
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+
+  await page.getByTestId('item-save').click()
+  await expect(page.getByTestId('item-status')).toHaveText('Saved as Revision 2.')
+  await page.reload()
+  await expect(page.getByTestId('item-card')).toContainText("Hunter's Mark")
+})

@@ -12,7 +12,7 @@ func TestWhoPreparesAndKeepsASpellbook(t *testing.T) {
 		"cleric": {true, false}, "druid": {true, false}, "paladin": {true, false}, "wizard": {true, true},
 		"bard": {false, false}, "sorcerer": {false, false}, "warlock": {false, false}, "ranger": {false, false}, "fighter": {false, false},
 	} {
-		if got := [2]bool{rules.PreparesAfterLongRest(class), rules.KeepsSpellbook(class)}; got != want {
+		if got := [2]bool{rules.SRD(class).Casting.AfterRest, rules.SRD(class).Casting.Spellbook}; got != want {
 			t.Errorf("%s = %v, want %v", class, got, want)
 		}
 	}
@@ -58,7 +58,7 @@ func TestPreparationLimits(t *testing.T) {
 		{"sorcerer", 2, nil, []string{"shield", "sleep"}},
 	}
 	for _, c := range ok {
-		if err := rules.CheckPreparation(c.class, c.limit, c.previous, c.next); err != nil {
+		if err := rules.CheckPreparation(rules.SRD(c.class), c.limit, c.previous, c.next); err != nil {
 			t.Errorf("%s %v -> %v: %v", c.class, c.previous, c.next, err)
 		}
 	}
@@ -72,7 +72,7 @@ func TestPreparationLimits(t *testing.T) {
 		{"bard", 2, []string{"charm-person", "sleep"}, []string{"healing-word", "heroism"}},
 	}
 	for _, c := range bad {
-		if err := rules.CheckPreparation(c.class, c.limit, c.previous, c.next); err == nil {
+		if err := rules.CheckPreparation(rules.SRD(c.class), c.limit, c.previous, c.next); err == nil {
 			t.Errorf("%s %v -> %v accepted", c.class, c.previous, c.next)
 		}
 	}

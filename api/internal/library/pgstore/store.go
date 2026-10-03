@@ -59,7 +59,7 @@ func decode(raw []byte) domain.Fields {
 
 func entryOf(r queries.LibraryEntry) domain.Entry {
 	return domain.Entry{
-		ID: r.ID, Owner: r.OwnerSubject, Kind: r.Kind, Name: r.Name, Fields: decode(r.Fields), Revision: int(r.Revision), Shared: r.Shared,
+		ID: r.ID, Owner: r.OwnerSubject, Kind: r.Kind, Name: r.Name, Fields: decode(r.Fields), Revision: int(r.Revision), Shared: r.Shared, Design: r.Design,
 		CreatedAt: r.CreatedAt, UpdatedAt: r.UpdatedAt,
 	}
 }
@@ -67,20 +67,20 @@ func entryOf(r queries.LibraryEntry) domain.Entry {
 // InsertEntry adds an entry.
 func (s *Store) InsertEntry(ctx context.Context, e domain.Entry) error {
 	return s.q.InsertLibraryEntry(ctx, queries.InsertLibraryEntryParams{
-		ID: e.ID, OwnerSubject: e.Owner, Kind: e.Kind, Name: e.Name, Fields: encode(e.Fields), Now: e.CreatedAt, Shared: e.Shared,
+		ID: e.ID, OwnerSubject: e.Owner, Kind: e.Kind, Name: e.Name, Fields: encode(e.Fields), Now: e.CreatedAt, Shared: e.Shared, Design: e.Design,
 	})
 }
 
 // UpdateEntry saves a new base and returns its Revision number.
-func (s *Store) UpdateEntry(ctx context.Context, id uuid.UUID, name string, fields domain.Fields, now time.Time) (int, error) {
-	no, err := s.q.UpdateLibraryEntry(ctx, queries.UpdateLibraryEntryParams{ID: id, Name: name, Fields: encode(fields), Now: now})
+func (s *Store) UpdateEntry(ctx context.Context, id uuid.UUID, name string, fields domain.Fields, design []byte, now time.Time) (int, error) {
+	no, err := s.q.UpdateLibraryEntry(ctx, queries.UpdateLibraryEntryParams{ID: id, Name: name, Fields: encode(fields), Design: design, Now: now})
 	return int(no), err
 }
 
 // InsertRevision records a Revision of an entry's base.
 func (s *Store) InsertRevision(ctx context.Context, entry uuid.UUID, r domain.Revision) error {
 	return s.q.InsertLibraryRevision(ctx, queries.InsertLibraryRevisionParams{
-		EntryID: entry, No: int32(r.No), Name: r.Name, Fields: encode(r.Fields), AuthorSubject: r.Author, Now: r.At, //nolint:gosec // revision numbers are small
+		EntryID: entry, No: int32(r.No), Name: r.Name, Fields: encode(r.Fields), Design: r.Design, AuthorSubject: r.Author, Now: r.At, //nolint:gosec // revision numbers are small
 	})
 }
 
@@ -108,7 +108,7 @@ func (s *Store) Revisions(ctx context.Context, entry uuid.UUID) ([]domain.Revisi
 	rows, err := s.q.LibraryRevisions(ctx, entry)
 	out := make([]domain.Revision, 0, len(rows))
 	for _, r := range rows {
-		out = append(out, domain.Revision{No: int(r.No), Name: r.Name, Fields: decode(r.Fields), Author: r.AuthorSubject, At: r.CreatedAt})
+		out = append(out, domain.Revision{No: int(r.No), Name: r.Name, Fields: decode(r.Fields), Design: r.Design, Author: r.AuthorSubject, At: r.CreatedAt})
 	}
 	return out, err
 }
@@ -172,11 +172,11 @@ func (s *Store) Linked(ctx context.Context, campaign uuid.UUID, entry *uuid.UUID
 	for _, r := range rows {
 		e := entryOf(queries.LibraryEntry{
 			ID: r.ID, OwnerSubject: r.OwnerSubject, Kind: r.Kind, Name: r.Name, Fields: r.Fields, Revision: r.Revision, CreatedAt: r.CreatedAt, UpdatedAt: r.UpdatedAt,
-			Shared: r.Shared,
+			Shared: r.Shared, Design: r.Design,
 		})
 		l := domain.Linked{Entry: e, Pinned: pinned(r.PinnedRevision), Base: e.Fields, BaseName: e.Name, Override: decode(r.Override), Direct: r.Direct, Via: r.Via}
 		if l.Pinned != nil {
-			l.Base, l.BaseName = decode(r.PinnedFields), r.PinnedName.String
+			l.Base, l.BaseName, l.Entry.Design = decode(r.PinnedFields), r.PinnedName.String, r.PinnedDesign
 		}
 		out = append(out, l)
 	}
@@ -337,7 +337,7 @@ func (s *Store) Reviews(ctx context.Context, proposal uuid.UUID) ([]domain.Revie
 func (s *Store) InsertSubmission(ctx context.Context, x domain.Submission) error {
 	return s.q.InsertSharedSubmission(ctx, queries.InsertSharedSubmissionParams{
 		ID: x.ID, EntryID: x.Entry, Revision: int32(x.Revision), Kind: x.Draft.Kind, Name: x.Draft.Name, Fields: encode(x.Draft.Fields), //nolint:gosec // revision numbers are small
-		Note: x.Note, SubmitterSubject: x.Submitter, Now: x.CreatedAt,
+		Note: x.Note, SubmitterSubject: x.Submitter, Now: x.CreatedAt, Design: x.Design,
 	})
 }
 
@@ -360,7 +360,7 @@ func submissionOf(r queries.LibrarySharedSubmission) domain.Submission {
 	x := domain.Submission{
 		ID: r.ID, Entry: r.EntryID, Revision: int(r.Revision), Draft: domain.Draft{Kind: r.Kind, Name: r.Name, Fields: decode(r.Fields)},
 		Note: r.Note, Submitter: r.SubmitterSubject, Status: r.Status, IPNote: r.IpNote, Message: r.Message, Reviewer: r.ReviewerSubject.String,
-		Shared: uuidOf(r.SharedEntryID), CreatedAt: r.CreatedAt,
+		Shared: uuidOf(r.SharedEntryID), CreatedAt: r.CreatedAt, Design: r.Design,
 	}
 	if r.IpClear.Valid {
 		x.IPClear = &r.IpClear.Bool

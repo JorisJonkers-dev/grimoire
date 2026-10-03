@@ -12,7 +12,7 @@ const base = `/api/v1/campaigns/${ID}/characters/${CH}`
 const classes = [
   { slug: 'fighter', name: 'Fighter', hitDie: 10, level: 3, unmet: [] },
   { slug: 'wizard', name: 'Wizard', hitDie: 6, level: 0, unmet: [] },
-  { slug: 'paladin', name: 'Paladin', hitDie: 10, level: 0, unmet: ['Charisma 13+ (paladin)'] },
+  { slug: 'paladin', name: 'Paladin', hitDie: 10, level: 0, unmet: ['Charisma 13+ (Paladin)'] },
 ]
 const fighterPlan = {
   ready: true, held: false, level: 4, classes, class: 'fighter', classLevel: 4, hitDie: 10, average: 8,
@@ -58,7 +58,7 @@ describe('level-up wizard', () => {
       [base]: () => sheet({ level: 4 }),
     })
     expect(wrapper.get('[data-testid="level-class-paladin"]').attributes('disabled')).toBeDefined()
-    expect(wrapper.text()).toContain('Needs Charisma 13+ (paladin)')
+    expect(wrapper.text()).toContain('Needs Charisma 13+ (Paladin)')
     await expectAccessible(wrapper.element as Element)
     await wrapper.get('[data-testid="next"]').trigger('click')
     expect(wrapper.find('[data-testid="step-choices"]').exists()).toBe(true)
@@ -91,6 +91,41 @@ describe('level-up wizard', () => {
       class: 'fighter', hitPoints: 'average', increase: { strength: 1, constitution: 1 }, spells: [],
       picks: [{ choice: 'feat', values: ['ability-score-improvement'] }, { choice: 'expertise', values: ['athletics', 'survival'] }],
     }])
+  })
+
+  it('asks for a homebrew subclass\'s own choices once it is picked, and sends only the choices the plan asks for', async () => {
+    const sent: unknown[] = []
+    const subclass = { slug: 'subclass', name: 'Subclass', pool: 'subclass', count: 1, options: [
+      { slug: 'champion', name: 'Champion', unmet: [] }, { slug: 'hb-0190c7a80000', name: 'Lantern Warden', unmet: [] },
+    ] }
+    const style = { slug: 'hb-0190c7a80000-lantern-style', name: 'Lantern Style', pool: 'listed', count: 1, options: [
+      { slug: 'bog-glass', name: 'Bog Glass', unmet: [] }, { slug: 'ember-wick', name: 'Ember Wick', unmet: [] },
+    ] }
+    const level3 = { ...fighterPlan, level: 3, classLevel: 3, choices: [subclass] }
+    const { wrapper } = await mountApp(`/campaigns/${ID}/characters/${CH}/level-up`, {
+      [`${base}/level-up`]: async (url, req) => {
+        if (req.method === 'POST') {
+          sent.push(await req.clone().json())
+          return sheet({ level: 3 })
+        }
+        return url.searchParams.get('subclass') === 'hb-0190c7a80000' ? { ...level3, choices: [subclass, style] } : level3
+      },
+      [base]: () => sheet({ level: 3 }),
+    })
+    await wrapper.get('[data-testid="next"]').trigger('click')
+    expect(wrapper.find('[data-testid="choice-hb-0190c7a80000-lantern-style"]').exists()).toBe(false)
+    await wrapper.get('[data-testid="pick-subclass-hb-0190c7a80000"]').setValue(true)
+    await flushPromises()
+    expect(wrapper.get('[data-testid="next"]').attributes('disabled')).toBeDefined()
+    await wrapper.get('[data-testid="pick-hb-0190c7a80000-lantern-style-ember-wick"]').setValue(true)
+    await wrapper.get('[data-testid="pick-subclass-champion"]').setValue(true)
+    await flushPromises()
+    expect(wrapper.find('[data-testid="choice-hb-0190c7a80000-lantern-style"]').exists()).toBe(false)
+    await wrapper.get('[data-testid="next"]').trigger('click')
+    await wrapper.get('[data-testid="next"]').trigger('click')
+    await wrapper.get('[data-testid="take-level"]').trigger('click')
+    await flushPromises()
+    expect(sent).toEqual([{ class: 'fighter', hitPoints: 'average', increase: {}, spells: [], picks: [{ choice: 'subclass', values: ['champion'] }] }])
   })
 
   it('multiclasses into wizard and learns a cantrip and a spell', async () => {
@@ -140,7 +175,7 @@ describe('level-up wizard', () => {
     expect(locked.wrapper.get('[data-testid="level-up-locked"]').text()).toContain('after a long rest')
     unmountAll()
     const broken = await mountApp(`/campaigns/${ID}/characters/${CH}/level-up`, {
-      [`${base}/level-up`]: () => jsonResponse({ type: 'about:blank', title: 'Not allowed', status: 422, detail: 'multiclassing into Wizard needs Intelligence 13+ (wizard)' }, 422),
+      [`${base}/level-up`]: () => jsonResponse({ type: 'about:blank', title: 'Not allowed', status: 422, detail: 'multiclassing into Wizard needs Intelligence 13+ (Wizard)' }, 422),
     })
     expect(broken.wrapper.get('[data-testid="level-up-error"]').text()).toContain('Intelligence 13+')
   })

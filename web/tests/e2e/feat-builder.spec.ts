@@ -1,0 +1,45 @@
+import AxeBuilder from '@axe-core/playwright'
+import { expect, test } from '@playwright/test'
+
+test('an author builds the Lampwright feat with a prerequisite and saves it', async ({ page }, info) => {
+  const name = `Lampwright ${info.project.name} ${String(Date.now())}`
+  await page.goto('/library')
+  await page.getByTestId('library-kind').selectOption('feat')
+  await page.getByTestId('library-name').fill(name)
+  await page.getByTestId('library-add').click()
+  await page.getByTestId('open-feat-builder').click()
+  await expect(page.getByTestId('feat-form')).toBeVisible()
+  await page.getByTestId('feat-repeatable').check()
+  await page.getByTestId('feat-text').fill('Your lanterns burn twice as long.')
+  await page.getByTestId('feat-add-pre').click()
+  await page.getByTestId('feat-preview').click()
+  const lines = page.getByTestId('feat-lines')
+  await expect(lines).toContainText('General feat, repeatable')
+  await expect(lines).toContainText('Prerequisites: Level 4+')
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  await page.getByTestId('feat-save').click()
+  await expect(page.getByTestId('feat-status')).toHaveText('Saved as Revision 2.')
+})
+
+test('an author builds the Bogwarden background and saves it', async ({ page }, info) => {
+  const name = `Bogwarden ${info.project.name} ${String(Date.now())}`
+  await page.goto('/library')
+  await page.getByTestId('library-kind').selectOption('background')
+  await page.getByTestId('library-name').fill(name)
+  await page.getByTestId('library-add').click()
+  await page.getByTestId('open-background-builder').click()
+  await expect(page.getByTestId('background-form')).toBeVisible()
+  await page.getByTestId('background-ability-1').selectOption('wisdom')
+  await page.getByTestId('background-skill-0').selectOption('nature')
+  await page.getByTestId('background-tool').fill('Herbalism Kit')
+  await page.getByTestId('background-equipment').fill('A lantern and a pole')
+  await page.getByTestId('background-preview').click()
+  const lines = page.getByTestId('background-lines')
+  await expect(lines).toContainText('Ability Scores: Strength, Wisdom, Constitution')
+  await expect(lines).toContainText('Equipment. Choose A lantern and a pole; or 50 GP.')
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  await page.getByTestId('background-save').click()
+  await expect(page.getByTestId('background-status')).toHaveText('Saved as Revision 2.')
+})

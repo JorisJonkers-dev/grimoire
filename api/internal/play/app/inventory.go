@@ -253,7 +253,41 @@ const (
 	Unattune = "unattune"
 	Study    = "identify"
 	Charge   = "charge"
+	Cast     = "cast"
 )
+
+// CastFrom casts a spell an item grants: at will, or for its charges. The item must be known, and
+// attuned when it needs attuning.
+func (s *Inventories) CastFrom(ctx context.Context, c caller.Caller, campaign, character uuid.UUID, ref ItemRef, spell string) (InventoryView, error) {
+	inv, dm, err := s.ready(ctx, c, campaign, character)
+	if err != nil {
+		return InventoryView{}, err
+	}
+	mine := characterContainer(inv, character)
+	h, ok := findItem(mine, ref)
+	if !ok {
+		return InventoryView{}, apperr.ErrNotFound
+	}
+	info := inv.Items[h.slug]
+	i := slices.IndexFunc(info.Spells, func(g domain.ItemSpell) bool { return g.Slug == spell })
+	known := h.instance == nil || h.instance.Identified
+	attuned := !info.RequiresAttunement || (h.instance != nil && h.instance.Attuned)
+	switch {
+	case i < 0:
+		return InventoryView{}, apperr.Refuse(info.Name + " grants no such spell")
+	case !known || !attuned:
+		return InventoryView{}, apperr.Refuse("identify and attune to " + info.Name + " before casting from it")
+	case info.Spells[i].Cost > 0:
+		change, err := spendCharges(ctx, inv, mine, h, info.Spells[i].Cost)
+		if err == nil {
+			err = s.Store.WriteInventory(ctx, change)
+		}
+		if err != nil {
+			return InventoryView{}, err
+		}
+	}
+	return s.after(ctx, campaign, character, dm)
+}
 
 // Use acts on one item in a Character's Inventory: drinks a potion, restoring hit points if it heals;
 // throws an item away; attunes or unattunes it; identifies it; or spends count of its charges.
@@ -320,7 +354,7 @@ func attune(ctx context.Context, inv domain.Inventory, mine domain.Container, h 
 			attuned++
 		}
 	}
-	caster := slices.ContainsFunc(b.Classes, func(c string) bool { return rules.CasterFor(c) != rules.NoCaster })
+	caster := slices.ContainsFunc(b.Classes, func(c string) bool { return rules.SRD(c).Caster() })
 	switch {
 	case !info.RequiresAttunement:
 		return nil, apperr.Refuse(info.Name + " needs no attunement")

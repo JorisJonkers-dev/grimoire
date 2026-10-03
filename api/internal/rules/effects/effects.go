@@ -191,12 +191,14 @@ type Reveal struct {
 	Qualities []string
 }
 
-// Exhausting is exhaustion: each level takes D20PerLevel from every d20 test and SpeedFtPerLevel from
-// speed, and at DeathAt levels the bearer dies.
+// Exhausting is exhaustion, or any condition that stacks: each level takes D20PerLevel from every d20
+// test and SpeedFtPerLevel from speed, at DeathAt levels the bearer dies, and it rises no higher than
+// MaxLevel (0 has no cap).
 type Exhausting struct {
 	D20PerLevel     int
 	SpeedFtPerLevel int
 	DeathAt         int
+	MaxLevel        int
 }
 
 func (BonusDie) isComponent()       {}
@@ -329,7 +331,7 @@ func (p *AttackProfile) attacking(d Definition, a Active) {
 		case Exhausting:
 			p.Penalty += c.D20PerLevel * levels
 			p.Notes = append(p.Notes, d.Name+" "+strconv.Itoa(levels)+": -"+strconv.Itoa(c.D20PerLevel*levels)+" to hit")
-		case ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, CritWithin, SpeedPenalty, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange, Choice, Branch, Summon, Form, Reveal:
+		case ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, CritWithin, SpeedPenalty, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange, Choice, Branch, Summon, Form, Reveal, AreaSave, Light:
 		}
 	}
 }
@@ -352,7 +354,7 @@ func (p *AttackProfile) attacked(d Definition, a Active, bySource, withinFive bo
 				p.Crit = true
 				p.Notes = append(p.Notes, d.Name+": a hit from this close is a Critical Hit")
 			}
-		case BonusDie, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, Exhausting, SpeedPenalty, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange, Choice, Branch, Summon, Form, Reveal:
+		case BonusDie, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, Exhausting, SpeedPenalty, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange, Choice, Branch, Summon, Form, Reveal, AreaSave, Light:
 		}
 	}
 }
@@ -453,7 +455,7 @@ func (cat Catalog) ForSave(bearer []Active, ability string) SaveProfile {
 				}
 			case Exhausting:
 				p.Penalty += c.D20PerLevel * a.levels()
-			case BonusDie, Edge, ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, CritWithin, SpeedPenalty, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange, Choice, Branch, Summon, Form, Reveal:
+			case BonusDie, Edge, ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, CritWithin, SpeedPenalty, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange, Choice, Branch, Summon, Form, Reveal, AreaSave, Light:
 			}
 		}
 	}
@@ -471,7 +473,7 @@ func (cat Catalog) SpeedPenaltyFt(bearer []Active) int {
 				ft += c.SpeedFtPerLevel * a.levels()
 			case SpeedPenalty:
 				worst = max(worst, c.Ft)
-			case BonusDie, Edge, ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, CritWithin, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange, Choice, Branch, Summon, Form, Reveal:
+			case BonusDie, Edge, ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, CritWithin, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange, Choice, Branch, Summon, Form, Reveal, AreaSave, Light:
 			}
 		}
 	}
@@ -539,7 +541,7 @@ func (cat Catalog) LandingOf(slug, mode string) Landing {
 		case ResourceChange:
 			out.Resources = append(out.Resources, c)
 		case BonusDie, Edge, ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge,
-			CritWithin, Exhausting, SpeedPenalty, Reacts, Teleport, ForcedMove, Counter, Choice, Branch, Summon:
+			CritWithin, Exhausting, SpeedPenalty, Reacts, Teleport, ForcedMove, Counter, Choice, Branch, Summon, AreaSave, Light:
 		}
 	}
 	return out
@@ -589,6 +591,16 @@ func (cat Catalog) Stacks(slug string) bool {
 	return slices.ContainsFunc(cat[slug].Components, func(c Component) bool { _, ok := c.(Exhausting); return ok })
 }
 
+// MaxLevel is the highest level a stacking Effect rises to; 0 when it has no cap or does not stack.
+func (cat Catalog) MaxLevel(slug string) int {
+	for _, c := range cat[slug].Components {
+		if e, ok := c.(Exhausting); ok {
+			return e.MaxLevel
+		}
+	}
+	return 0
+}
+
 // Instructions are the parts of an Effect the DM resolves by hand; an unknown Effect is one whole
 // instruction, so nothing is ever skipped silently.
 func (cat Catalog) Instructions(slug, name, mode string) []string {
@@ -616,6 +628,8 @@ type AreaSpell struct {
 	Push         ForcedMove
 	Reveals      []string
 	Instructions []string
+	// Light is the light the spell sheds where it lands, zero for none.
+	Light Light
 }
 
 // AreaOf finds a modelled area Effect.
@@ -640,6 +654,10 @@ func (cat Catalog) AreaOf(slug string) (AreaSpell, bool) {
 			out.Reveals = append(out.Reveals, c.Qualities...)
 		case ForcedMove:
 			out.Push = c
+		case AreaSave:
+			out.Save = c.Ability
+		case Light:
+			out.Light = c
 		case BonusDie, Edge, ExtraDamage, MoveCost, Incapacitated, Immobile, SaveEdge, CritWithin, Exhausting, SpeedPenalty, Reacts, TempHP, Teleport, Dispel, Counter, GrantFeature, ResourceChange, Choice, Branch, Summon, Form:
 		}
 	}

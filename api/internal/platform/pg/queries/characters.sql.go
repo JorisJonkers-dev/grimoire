@@ -117,6 +117,55 @@ func (q *Queries) CampaignClock(ctx context.Context, id uuid.UUID) (CampaignCloc
 	return i, err
 }
 
+const campaignHomebrewDesigns = `-- name: CampaignHomebrewDesigns :many
+WITH visible AS (
+    SELECT l.entry_id FROM library.campaign_links l WHERE l.campaign_id = $2 AND l.direct
+    UNION
+    SELECT ce.entry_id FROM library.collection_entries ce
+    JOIN library.campaign_collections cc ON cc.collection_id = ce.collection_id WHERE cc.campaign_id = $2
+)
+SELECT e.id, coalesce(r.name, e.name)::text AS name, coalesce(r.design, e.design)::jsonb AS design
+FROM visible v
+JOIN library.entries e ON e.id = v.entry_id AND e.kind = $1
+LEFT JOIN library.campaign_links l ON l.entry_id = e.id AND l.campaign_id = $2
+LEFT JOIN library.entry_revisions r ON r.entry_id = e.id AND r.no = l.pinned_revision
+WHERE coalesce(r.design, e.design) IS NOT NULL
+ORDER BY e.id
+`
+
+type CampaignHomebrewDesignsParams struct {
+	Kind       string
+	CampaignID uuid.UUID
+}
+
+type CampaignHomebrewDesignsRow struct {
+	ID     uuid.UUID
+	Name   string
+	Design []byte
+}
+
+// The homebrew designs of one kind a Campaign sees: linked directly or through a Collection switched
+// on, at the Revision a link pins.
+func (q *Queries) CampaignHomebrewDesigns(ctx context.Context, arg CampaignHomebrewDesignsParams) ([]CampaignHomebrewDesignsRow, error) {
+	rows, err := q.db.Query(ctx, campaignHomebrewDesigns, arg.Kind, arg.CampaignID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CampaignHomebrewDesignsRow{}
+	for rows.Next() {
+		var i CampaignHomebrewDesignsRow
+		if err := rows.Scan(&i.ID, &i.Name, &i.Design); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const characterAbilities = `-- name: CharacterAbilities :many
 SELECT ability, base, bonus, increase FROM campaign.character_abilities WHERE character_id = $1
 `

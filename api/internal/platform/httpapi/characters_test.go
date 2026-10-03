@@ -11,6 +11,7 @@ import (
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/campaign/app"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/campaign/domain"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/httpapi"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/oas"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
@@ -155,7 +156,7 @@ func (b brokenCharacters) RollScores(context.Context, caller.Caller, domain.Camp
 	return domain.Draft{}, b.err
 }
 
-func (b brokenCharacters) PlanLevelUp(context.Context, caller.Caller, domain.CampaignID, domain.CharacterID, string) (app.LevelUpPlan, error) {
+func (b brokenCharacters) PlanLevelUp(context.Context, caller.Caller, domain.CampaignID, domain.CharacterID, string, string) (app.LevelUpPlan, error) {
 	return app.LevelUpPlan{}, b.err
 }
 
@@ -193,6 +194,10 @@ func (b brokenCharacters) CharacterRevisions(context.Context, caller.Caller, dom
 
 func (b brokenCharacters) DecideRetrain(context.Context, caller.Caller, domain.CampaignID, uuid.UUID, bool) (domain.Retrain, error) {
 	return domain.Retrain{}, b.err
+}
+
+func (b brokenCharacters) Options(context.Context, caller.Caller, domain.CampaignID) (compendium.BuilderOptions, error) {
+	return compendium.BuilderOptions{}, b.err
 }
 
 func (b brokenCharacters) PassInspiration(context.Context, caller.Caller, domain.CampaignID, domain.CharacterID, domain.CharacterID) (app.Sheet, error) {
@@ -236,6 +241,7 @@ func TestCharacterErrorsBecomeProblems(t *testing.T) {
 		{http.MethodPost, one + "/retrains", `{"reason":"","build":{"species":"human","background":"sage","method":"point-buy","base":{"strength":8,"dexterity":8,"constitution":8,"intelligence":8,"wisdom":8,"charisma":8},"bonus":{},"increase":{},"skills":[],"picks":[]}}`},
 		{http.MethodGet, one + "/revisions", ""},
 		{http.MethodGet, one + "/retrains/choices", ""},
+		{http.MethodGet, "/api/v1/compendium/builder?ruleset=srd-2024&campaignId=0190c7a8-0000-7000-8000-000000000001", ""},
 		{http.MethodPost, "/api/v1/campaigns/0190c7a8-0000-7000-8000-000000000001/retrains/0190c7a8-0000-7000-8000-000000000004/approve", ""},
 		{http.MethodPost, "/api/v1/campaigns/0190c7a8-0000-7000-8000-000000000001/retrains/0190c7a8-0000-7000-8000-000000000004/decline", ""},
 	}
@@ -283,6 +289,7 @@ func TestCharacterErrorsBecomeProblems(t *testing.T) {
 	add(h.ListRetrainChoices(ctx, oas.ListRetrainChoicesParams{}))
 	add(h.ApproveRetrain(ctx, oas.ApproveRetrainParams{}))
 	add(h.DeclineRetrain(ctx, oas.DeclineRetrainParams{}))
+	add(h.GetBuilderOptions(ctx, oas.GetBuilderOptionsParams{CampaignId: oas.NewOptID(oas.ID(uuid.Nil))}))
 	for i, r := range results {
 		if p, ok := r.(*oas.ProblemStatusCodeWithHeaders); !ok || p.StatusCode != http.StatusUnauthorized {
 			t.Errorf("operation %d: %+v", i, r)

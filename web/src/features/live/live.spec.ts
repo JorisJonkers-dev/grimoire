@@ -590,6 +590,53 @@ describe('effects', () => {
     modifiers: [], createdAt: '2026-09-30T20:00:00Z',
   })
 
+  it('shows a homebrew condition with its own icon and offers the Campaign\'s conditions in the picker', async () => {
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, {
+      [`/api/v1/campaigns/${ID}/characters`]: () => [],
+      [`/api/v1/campaigns/${ID}`]: () => campaign(),
+    })
+    const s = FakeSocket.last()
+    const frost = { id: '0190c7a8-0000-7000-8000-000000000071', slug: 'hb-frost', name: 'Frostbite', concentration: false, level: 2, icon: 'snow', color: '#7fa8dd' }
+    s.receive(snapshot([{ ...aria, effects: [frost] }, goblin], 'dm', { conditions: [{ slug: 'hb-frost', name: 'Frostbite', icon: 'snow', color: '#7fa8dd' }] }))
+    await flushPromises()
+    await wrapper.get('[data-hex="0,0"]').trigger('click')
+    const panel = wrapper.get('[data-testid="effects-panel"]')
+    const icon = panel.get('svg[aria-label="Frostbite 2"]')
+    expect(icon.attributes('stroke')).toBe('#7fa8dd')
+    expect(panel.findAll('#known-effects option').map((o) => o.attributes('value'))).toContain('hb-frost')
+  })
+
+  it('offers the DM a legendary creature\'s legendary and lair actions and its Legendary Resistance', async () => {
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, {
+      [`/api/v1/campaigns/${ID}/characters`]: () => [],
+      [`/api/v1/campaigns/${ID}`]: () => campaign(),
+    })
+    const s = FakeSocket.last()
+    const legend = {
+      uses: 3, left: 1, ready: true, resistLeft: 1, phase: 0, phases: 1, threshold: 5, lairReady: false,
+      actions: [{ name: 'Tail Sweep', cost: 1, text: 'One Claw attack.' }, { name: 'Sink', cost: 2, text: 'It sinks.' }],
+      lair: [{ name: 'Rising Water', cost: 0, text: 'The water rises.' }],
+    }
+    s.receive(snapshot([aria, { ...goblin, legend }], 'dm'))
+    await flushPromises()
+    await wrapper.get(`[data-hex="${String(goblin.q)},${String(goblin.r)}"]`).trigger('click')
+    const panel = wrapper.get('[data-testid="legend-panel"]')
+    expect(panel.get('[data-testid="legend-left"]').text()).toContain('1 of 3 legendary actions left · ready now')
+    expect(panel.get('[data-testid="legend-phase"]').text()).toBe('Phase 1 of 2')
+    expect(panel.get('[data-testid="legendary-Sink"]').attributes('disabled')).toBeDefined()
+    expect(panel.get('[data-testid="lair-Rising Water"]').attributes('disabled')).toBeDefined()
+    await panel.get('[data-testid="legendary-Tail Sweep"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'legendary_action', tokenId: goblin.id, legend: 'Tail Sweep' })
+    await panel.get('[data-testid="legendary-resistance"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'legendary_resistance', tokenId: goblin.id })
+    s.receive(snapshot([aria, { ...goblin, legend: { ...legend, ready: false, lairReady: true, resistLeft: 0 } }], 'dm'))
+    await flushPromises()
+    const again = wrapper.get('[data-testid="legend-panel"]')
+    expect(again.get('[data-testid="legend-left"]').text()).toContain("after the next creature's turn")
+    await again.get('[data-testid="lair-Rising Water"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'lair_action', tokenId: goblin.id, legend: 'Rising Water' })
+  })
+
   it('lets the DM apply, end and resolve effects', async () => {
     const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, {
       [`/api/v1/campaigns/${ID}/rolls/`]: (u) => saveRoll(u.pathname.split('/')[6] ?? ''),

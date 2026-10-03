@@ -55,12 +55,13 @@ type settings struct {
 	creationMethods                           []string
 	startingLevel                             int32
 	holdLevelUps                              bool
+	exhaustionVariant                         string
 }
 
 func campaign(id uuid.UUID, name, ruleset string, timeout int32, o settings, created time.Time) domain.Campaign {
 	return domain.Campaign{
 		ID: domain.CampaignID(id), Name: name, Ruleset: ruleset, ReactionTimeoutS: int(timeout), HighGround: o.highGround, RestSupplies: o.restSupplies,
-		InitiativeMode: o.initiativeMode, ShareInitiative: o.shareInitiative, CreationMethods: o.creationMethods, StartingLevel: int(o.startingLevel), HoldLevelUps: o.holdLevelUps, CreatedAt: created,
+		InitiativeMode: o.initiativeMode, ShareInitiative: o.shareInitiative, CreationMethods: o.creationMethods, StartingLevel: int(o.startingLevel), HoldLevelUps: o.holdLevelUps, ExhaustionVariant: o.exhaustionVariant, CreatedAt: created,
 	}
 }
 
@@ -87,7 +88,7 @@ func (s *Store) CreateCampaign(ctx context.Context, name, ruleset, subject strin
 	if err != nil {
 		return domain.Campaign{}, err
 	}
-	return campaign(r.ID, r.Name, r.RulesetPref, r.ReactionTimeoutS, settings{highGround: r.HighGround, restSupplies: r.RestSupplies, shareInitiative: r.ShareInitiative, initiativeMode: r.InitiativeMode, creationMethods: r.CreationMethods, startingLevel: r.StartingLevel, holdLevelUps: r.HoldLevelUps}, r.CreatedAt), nil
+	return campaign(r.ID, r.Name, r.RulesetPref, r.ReactionTimeoutS, settings{highGround: r.HighGround, restSupplies: r.RestSupplies, shareInitiative: r.ShareInitiative, initiativeMode: r.InitiativeMode, creationMethods: r.CreationMethods, startingLevel: r.StartingLevel, holdLevelUps: r.HoldLevelUps, exhaustionVariant: r.ExhaustionVariant}, r.CreatedAt), nil
 }
 
 // UpdateCampaign changes the given fields.
@@ -110,6 +111,7 @@ func (s *Store) UpdateCampaign(ctx context.Context, id domain.CampaignID, change
 	if v := change.HoldLevelUps; v != nil {
 		p.HoldLevelUps = pgtype.Bool{Bool: *v, Valid: true}
 	}
+	p.ExhaustionVariant = optText(change.ExhaustionVariant)
 	if v := change.ReactionTimeoutS; v != nil {
 		p.ReactionTimeoutS = pgtype.Int4{Int32: int32(*v), Valid: true} //nolint:gosec // 3 to 120 seconds
 	}
@@ -117,7 +119,7 @@ func (s *Store) UpdateCampaign(ctx context.Context, id domain.CampaignID, change
 	if err != nil {
 		return domain.Campaign{}, notFound(err)
 	}
-	return campaign(r.ID, r.Name, r.RulesetPref, r.ReactionTimeoutS, settings{highGround: r.HighGround, restSupplies: r.RestSupplies, shareInitiative: r.ShareInitiative, initiativeMode: r.InitiativeMode, creationMethods: r.CreationMethods, startingLevel: r.StartingLevel, holdLevelUps: r.HoldLevelUps}, r.CreatedAt), nil
+	return campaign(r.ID, r.Name, r.RulesetPref, r.ReactionTimeoutS, settings{highGround: r.HighGround, restSupplies: r.RestSupplies, shareInitiative: r.ShareInitiative, initiativeMode: r.InitiativeMode, creationMethods: r.CreationMethods, startingLevel: r.StartingLevel, holdLevelUps: r.HoldLevelUps, exhaustionVariant: r.ExhaustionVariant}, r.CreatedAt), nil
 }
 
 // GetCampaign reads one Campaign.
@@ -126,7 +128,7 @@ func (s *Store) GetCampaign(ctx context.Context, id domain.CampaignID) (domain.C
 	if err != nil {
 		return domain.Campaign{}, notFound(err)
 	}
-	return campaign(r.ID, r.Name, r.RulesetPref, r.ReactionTimeoutS, settings{highGround: r.HighGround, restSupplies: r.RestSupplies, shareInitiative: r.ShareInitiative, initiativeMode: r.InitiativeMode, creationMethods: r.CreationMethods, startingLevel: r.StartingLevel, holdLevelUps: r.HoldLevelUps}, r.CreatedAt), nil
+	return campaign(r.ID, r.Name, r.RulesetPref, r.ReactionTimeoutS, settings{highGround: r.HighGround, restSupplies: r.RestSupplies, shareInitiative: r.ShareInitiative, initiativeMode: r.InitiativeMode, creationMethods: r.CreationMethods, startingLevel: r.StartingLevel, holdLevelUps: r.HoldLevelUps, exhaustionVariant: r.ExhaustionVariant}, r.CreatedAt), nil
 }
 
 // ListCampaigns returns a subject's Campaigns, newest first.
@@ -143,7 +145,7 @@ func (s *Store) ListCampaigns(ctx context.Context, subject string, after *domain
 	out := make([]domain.Summary, 0, len(rows))
 	for _, r := range rows {
 		out = append(out, domain.Summary{
-			Campaign: campaign(r.ID, r.Name, r.RulesetPref, r.ReactionTimeoutS, settings{highGround: r.HighGround, restSupplies: r.RestSupplies, shareInitiative: r.ShareInitiative, initiativeMode: r.InitiativeMode, creationMethods: r.CreationMethods, startingLevel: r.StartingLevel, holdLevelUps: r.HoldLevelUps}, r.CreatedAt), MyRole: domain.Role(r.Role), MemberCount: int(r.MemberCount),
+			Campaign: campaign(r.ID, r.Name, r.RulesetPref, r.ReactionTimeoutS, settings{highGround: r.HighGround, restSupplies: r.RestSupplies, shareInitiative: r.ShareInitiative, initiativeMode: r.InitiativeMode, creationMethods: r.CreationMethods, startingLevel: r.StartingLevel, holdLevelUps: r.HoldLevelUps, exhaustionVariant: r.ExhaustionVariant}, r.CreatedAt), MyRole: domain.Role(r.Role), MemberCount: int(r.MemberCount),
 		})
 	}
 	return out, nil

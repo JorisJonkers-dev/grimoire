@@ -79,13 +79,18 @@ const holdLevelUps = computed({
   get: () => holdChoice.value ?? campaign.data.value?.holdLevelUps ?? false,
   set: (v: boolean) => (holdChoice.value = v),
 })
+const exhaustionChoice = ref<string | null>(null)
+const exhaustion = computed({
+  get: () => exhaustionChoice.value ?? campaign.data.value?.exhaustion ?? 'srd-2024',
+  set: (v: string) => (exhaustionChoice.value = v),
+})
 const settings = useMutation(updateCampaignMutation())
 function saveSettings() {
   failed.value = ''
   settings.mutate({ ...path.value, body: {
     reactionTimeoutS: timeout.value, highGround: highGround.value, restSupplies: restSupplies.value, initiativeMode: initiativeMode.value,
     shareInitiative: shareInitiative.value, creationMethods: creationMethods.value, startingLevel: startingLevel.value,
-    holdLevelUps: holdLevelUps.value,
+    holdLevelUps: holdLevelUps.value, exhaustion: exhaustion.value,
   } }, { onSuccess: refresh, onError: onError('The settings could not be saved.') })
 }
 const failed = ref('')
@@ -272,6 +277,15 @@ const expires = (iso: string) => new Date(iso).toLocaleDateString(undefined, { d
         <label class="check">
           <input v-model="holdLevelUps" type="checkbox" data-testid="hold-level-ups" />
           <span>Hold level-ups: long rests stop unlocking the next level, and you grant levels from each sheet</span>
+        </label>
+        <label class="g-field">
+          <span>Exhaustion</span>
+          <select v-model="exhaustion" data-testid="exhaustion-variant">
+            <option value="srd-2024">SRD: −2 per level to D20 Tests, 5 feet of Speed, death at 6</option>
+            <option value="gentle">Gentle: −1 per level, 5 feet of Speed, death at 10</option>
+            <option value="grim">Grim: −2 per level, 10 feet of Speed, death at 4</option>
+            <option value="off">Off: exhaustion does nothing</option>
+          </select>
         </label>
         <GButton type="submit" :disabled="!creationMethods.length">Save settings</GButton>
         <p v-if="settings.isSuccess.value" role="status" data-testid="settings-saved">Saved.</p>

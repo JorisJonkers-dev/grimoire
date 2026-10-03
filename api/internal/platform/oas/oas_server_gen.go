@@ -604,6 +604,13 @@ type BuildHandler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/character-draft/roll
 	RollCharacterScores(ctx context.Context, params RollCharacterScoresParams) (RollCharacterScoresRes, error)
+	// SaveBackgroundBuild implements saveBackgroundBuild operation.
+	//
+	// Saves the design of one of the caller's background entries as its next Revision; Campaigns that see
+	// it offer it in character creation.
+	//
+	// PUT /api/v1/builders/backgrounds/{entryId}
+	SaveBackgroundBuild(ctx context.Context, req *BackgroundDesign, params SaveBackgroundBuildParams) (SaveBackgroundBuildRes, error)
 	// SaveCharacterDraft implements saveCharacterDraft operation.
 	//
 	// Keeps the wizard's choices so the caller can come back to them; rolled scores stay as the server
@@ -611,6 +618,62 @@ type BuildHandler interface {
 	//
 	// PUT /api/v1/campaigns/{campaignId}/character-draft
 	SaveCharacterDraft(ctx context.Context, req *CharacterDraftSave, params SaveCharacterDraftParams) (SaveCharacterDraftRes, error)
+	// SaveClassBuild implements saveClassBuild operation.
+	//
+	// Saves the design of one of the caller's classes as its next Revision; Campaigns that see it offer it
+	// in character creation and multiclassing.
+	//
+	// PUT /api/v1/builders/classes/{entryId}
+	SaveClassBuild(ctx context.Context, req *ClassDesign, params SaveClassBuildParams) (SaveClassBuildRes, error)
+	// SaveConditionBuild implements saveConditionBuild operation.
+	//
+	// Saves the design of one of the caller's condition entries as its next Revision; Campaigns that see
+	// it offer it in the DM's effect picker, with its icon on every token it is on.
+	//
+	// PUT /api/v1/builders/conditions/{entryId}
+	SaveConditionBuild(ctx context.Context, req *ConditionDesign, params SaveConditionBuildParams) (SaveConditionBuildRes, error)
+	// SaveFeatBuild implements saveFeatBuild operation.
+	//
+	// Saves the design of one of the caller's feat entries as its next Revision; Campaigns that see it
+	// offer it when a level grants a feat of its category.
+	//
+	// PUT /api/v1/builders/feats/{entryId}
+	SaveFeatBuild(ctx context.Context, req *FeatDesign, params SaveFeatBuildParams) (SaveFeatBuildRes, error)
+	// SaveItemBuild implements saveItemBuild operation.
+	//
+	// Saves the design of one of the caller's items as its next Revision; Campaigns that see it carry it
+	// in Inventories by its slug.
+	//
+	// PUT /api/v1/builders/items/{entryId}
+	SaveItemBuild(ctx context.Context, req *ItemDesign, params SaveItemBuildParams) (SaveItemBuildRes, error)
+	// SaveMonsterBuild implements saveMonsterBuild operation.
+	//
+	// Saves the design of one of the caller's creature entries as its next Revision; Campaigns that see it
+	// can place it by its slug, with its legendary and lair actions offered in the turn order.
+	//
+	// PUT /api/v1/builders/monsters/{entryId}
+	SaveMonsterBuild(ctx context.Context, req *MonsterDesign, params SaveMonsterBuildParams) (SaveMonsterBuildRes, error)
+	// SaveSpeciesBuild implements saveSpeciesBuild operation.
+	//
+	// Saves the design of one of the caller's species entries as its next Revision; Campaigns that see it
+	// offer it, and each of its lineages, in character creation.
+	//
+	// PUT /api/v1/builders/species/{entryId}
+	SaveSpeciesBuild(ctx context.Context, req *SpeciesDesign, params SaveSpeciesBuildParams) (SaveSpeciesBuildRes, error)
+	// SaveSpellBuild implements saveSpellBuild operation.
+	//
+	// Saves the design of one of the caller's spells as its next Revision; in a live Session it runs as an
+	// area spell.
+	//
+	// PUT /api/v1/builders/spells/{entryId}
+	SaveSpellBuild(ctx context.Context, req *SpellDesign, params SaveSpellBuildParams) (SaveSpellBuildRes, error)
+	// SaveSubclassBuild implements saveSubclassBuild operation.
+	//
+	// Saves the design of one of the caller's subclasses as its next Revision; Campaigns that see it offer
+	// it on levelling up its class.
+	//
+	// PUT /api/v1/builders/subclasses/{entryId}
+	SaveSubclassBuild(ctx context.Context, req *SubclassDesign, params SaveSubclassBuildParams) (SaveSubclassBuildRes, error)
 	// SetCampaignOverride implements setCampaignOverride operation.
 	//
 	// Replaces the fields this Campaign sees differently from the entry's base. DM only.
@@ -899,6 +962,12 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/compendium/automation
 	GetAutomationCoverage(ctx context.Context, params GetAutomationCoverageParams) (GetAutomationCoverageRes, error)
+	// GetBackgroundBuild implements getBackgroundBuild operation.
+	//
+	// A homebrew background's design, read back: one of the caller's, or a Shared Library copy.
+	//
+	// GET /api/v1/builders/backgrounds/{entryId}
+	GetBackgroundBuild(ctx context.Context, params GetBackgroundBuildParams) (GetBackgroundBuildRes, error)
 	// GetBuilderOptions implements getBuilderOptions operation.
 	//
 	// Every class, species, background, armour and weapon a first-level character can choose in one
@@ -925,12 +994,31 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/character-draft
 	GetCharacterDraft(ctx context.Context, params GetCharacterDraftParams) (GetCharacterDraftRes, error)
+	// GetClassBuild implements getClassBuild operation.
+	//
+	// A homebrew class's design, read back with its level table: one of the caller's classes, or a Shared
+	// Library copy.
+	//
+	// GET /api/v1/builders/classes/{entryId}
+	GetClassBuild(ctx context.Context, params GetClassBuildParams) (GetClassBuildRes, error)
+	// GetConditionBuild implements getConditionBuild operation.
+	//
+	// A homebrew condition's design, read back: one of the caller's, or a Shared Library copy.
+	//
+	// GET /api/v1/builders/conditions/{entryId}
+	GetConditionBuild(ctx context.Context, params GetConditionBuildParams) (GetConditionBuildRes, error)
 	// GetEntry implements getEntry operation.
 	//
 	// One entry rendered for reading, with the conditions its text mentions.
 	//
 	// GET /api/v1/compendium/entries/{kind}/{slug}
 	GetEntry(ctx context.Context, params GetEntryParams) (GetEntryRes, error)
+	// GetFeatBuild implements getFeatBuild operation.
+	//
+	// A homebrew feat's design, read back: one of the caller's, or a Shared Library copy.
+	//
+	// GET /api/v1/builders/feats/{entryId}
+	GetFeatBuild(ctx context.Context, params GetFeatBuildParams) (GetFeatBuildRes, error)
 	// GetHealth implements getHealth operation.
 	//
 	// Returns ok while the process is serving requests.
@@ -943,6 +1031,13 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/inventory
 	GetInventory(ctx context.Context, params GetInventoryParams) (GetInventoryRes, error)
+	// GetItemBuild implements getItemBuild operation.
+	//
+	// A homebrew item's design with its card and Price Check: one of the caller's items, or a Shared
+	// Library copy.
+	//
+	// GET /api/v1/builders/items/{entryId}
+	GetItemBuild(ctx context.Context, params GetItemBuildParams) (GetItemBuildRes, error)
 	// GetLibraryEntry implements getLibraryEntry operation.
 	//
 	// One of the caller's entries with its Revisions and the Campaigns it is linked into.
@@ -968,6 +1063,12 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/me
 	GetMe(ctx context.Context) (GetMeRes, error)
+	// GetMonsterBuild implements getMonsterBuild operation.
+	//
+	// A homebrew creature's design, read back: one of the caller's, or a Shared Library copy.
+	//
+	// GET /api/v1/builders/monsters/{entryId}
+	GetMonsterBuild(ctx context.Context, params GetMonsterBuildParams) (GetMonsterBuildRes, error)
 	// GetMyCharacter implements getMyCharacter operation.
 	//
 	// A Character the signed-in Account owns; anyone else's is not found.
@@ -1042,12 +1143,25 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/sign-in-methods
 	GetSignInMethods(ctx context.Context) (GetSignInMethodsRes, error)
+	// GetSpeciesBuild implements getSpeciesBuild operation.
+	//
+	// A homebrew species's design, read back: one of the caller's, or a Shared Library copy.
+	//
+	// GET /api/v1/builders/species/{entryId}
+	GetSpeciesBuild(ctx context.Context, params GetSpeciesBuildParams) (GetSpeciesBuildRes, error)
 	// GetSpell implements getSpell operation.
 	//
 	// One spell with its rules text and the conditions it mentions.
 	//
 	// GET /api/v1/compendium/spells/{slug}
 	GetSpell(ctx context.Context, params GetSpellParams) (GetSpellRes, error)
+	// GetSpellBuild implements getSpellBuild operation.
+	//
+	// A homebrew spell's design with its rules text and area: one of the caller's spells, or a Shared
+	// Library copy.
+	//
+	// GET /api/v1/builders/spells/{entryId}
+	GetSpellBuild(ctx context.Context, params GetSpellBuildParams) (GetSpellBuildRes, error)
 	// GetSpellcasting implements getSpellcasting operation.
 	//
 	// Cantrips, prepared and always-prepared spells per class, a wizard's spellbook, coins and the Game
@@ -1061,6 +1175,12 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/status
 	GetStatus(ctx context.Context) (GetStatusRes, error)
+	// GetSubclassBuild implements getSubclassBuild operation.
+	//
+	// A homebrew subclass's design, read back: one of the caller's subclasses, or a Shared Library copy.
+	//
+	// GET /api/v1/builders/subclasses/{entryId}
+	GetSubclassBuild(ctx context.Context, params GetSubclassBuildParams) (GetSubclassBuildRes, error)
 	// GetTokenIcon implements getTokenIcon operation.
 	//
 	// The picture itself, served only to Members of the Campaign.
@@ -1355,6 +1475,69 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/level-up
 	PlanLevelUp(ctx context.Context, params PlanLevelUpParams) (PlanLevelUpRes, error)
+	// PreviewBackground implements previewBackground operation.
+	//
+	// Checks a design without saving it and reads it back. A design the rules refuse comes back with the
+	// reason.
+	//
+	// POST /api/v1/builders/backgrounds/preview
+	PreviewBackground(ctx context.Context, req *BackgroundPreviewInput) (PreviewBackgroundRes, error)
+	// PreviewClass implements previewClass operation.
+	//
+	// Checks a design without saving it and reads it back with its level table. A design the rules refuse
+	// comes back with the reason.
+	//
+	// POST /api/v1/builders/classes/preview
+	PreviewClass(ctx context.Context, req *ClassPreviewInput) (PreviewClassRes, error)
+	// PreviewCondition implements previewCondition operation.
+	//
+	// Checks a design without saving it and reads it back. A design the rules refuse comes back with the
+	// reason.
+	//
+	// POST /api/v1/builders/conditions/preview
+	PreviewCondition(ctx context.Context, req *ConditionPreviewInput) (PreviewConditionRes, error)
+	// PreviewFeat implements previewFeat operation.
+	//
+	// Checks a design without saving it and reads it back. A design the rules refuse comes back with the
+	// reason.
+	//
+	// POST /api/v1/builders/feats/preview
+	PreviewFeat(ctx context.Context, req *FeatPreviewInput) (PreviewFeatRes, error)
+	// PreviewItem implements previewItem operation.
+	//
+	// Checks a design without saving it: its item card and its Price Check. A design the rules refuse
+	// comes back with the reason.
+	//
+	// POST /api/v1/builders/items/preview
+	PreviewItem(ctx context.Context, req *ItemPreviewInput) (PreviewItemRes, error)
+	// PreviewMonster implements previewMonster operation.
+	//
+	// Checks a design without saving it and reads it back. A design the rules refuse comes back with the
+	// reason.
+	//
+	// POST /api/v1/builders/monsters/preview
+	PreviewMonster(ctx context.Context, req *MonsterPreviewInput) (PreviewMonsterRes, error)
+	// PreviewSpecies implements previewSpecies operation.
+	//
+	// Checks a design without saving it and reads it back. A design the rules refuse comes back with the
+	// reason.
+	//
+	// POST /api/v1/builders/species/preview
+	PreviewSpecies(ctx context.Context, req *SpeciesPreviewInput) (PreviewSpeciesRes, error)
+	// PreviewSpell implements previewSpell operation.
+	//
+	// Builds a design without saving it: its rules text and its area drawn as hexes. A design the rules
+	// cannot run is refused with the reason.
+	//
+	// POST /api/v1/builders/spells/preview
+	PreviewSpell(ctx context.Context, req *SpellPreviewInput) (PreviewSpellRes, error)
+	// PreviewSubclass implements previewSubclass operation.
+	//
+	// Checks a design without saving it and reads it back. A design the rules refuse comes back with the
+	// reason.
+	//
+	// POST /api/v1/builders/subclasses/preview
+	PreviewSubclass(ctx context.Context, req *SubclassPreviewInput) (PreviewSubclassRes, error)
 }
 
 // Server implements http server based on OpenAPI v3 specification and

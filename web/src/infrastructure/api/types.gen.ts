@@ -59,6 +59,10 @@ export type CampaignSummary = {
      */
     holdLevelUps?: boolean;
     /**
+     * The exhaustion the Campaign plays with: srd-2024, gentle, grim or off.
+     */
+    exhaustion?: string;
+    /**
      * Identical monsters share one initiative roll.
      */
     shareInitiative?: boolean;
@@ -116,6 +120,10 @@ export type Campaign = {
      */
     holdLevelUps?: boolean;
     /**
+     * The exhaustion the Campaign plays with: srd-2024, gentle, grim or off.
+     */
+    exhaustion?: string;
+    /**
      * Identical monsters share one initiative roll.
      */
     shareInitiative?: boolean;
@@ -160,6 +168,10 @@ export type CampaignUpdate = {
      * Long rests stop unlocking the next level; the DM grants levels instead.
      */
     holdLevelUps?: boolean;
+    /**
+     * The exhaustion the Campaign plays with: srd-2024, gentle, grim or off.
+     */
+    exhaustion?: string;
     /**
      * Identical monsters share one initiative roll.
      */
@@ -1339,6 +1351,23 @@ export type ItemCard = {
     attunementDetail?: string;
     maxCharges?: number;
     fits: Array<EquipmentSlot>;
+    /**
+     * Spells the item lets its bearer cast, at will or for charges.
+     */
+    spells?: Array<ItemSpell>;
+    /**
+     * A homebrew item's card, as far as its holder knows it.
+     */
+    lines?: Array<string>;
+};
+
+/**
+ * A spell an item grants; cost is the charges it spends, 0 at will.
+ */
+export type ItemSpell = {
+    slug: Slug;
+    name: string;
+    cost: number;
 };
 
 /**
@@ -1408,11 +1437,12 @@ export type InventoryTake = {
 export type InventoryUse = {
     instanceId?: Id;
     slug?: Slug;
-    use: 'drink' | 'throw' | 'attune' | 'unattune' | 'identify' | 'charge';
+    use: 'drink' | 'throw' | 'attune' | 'unattune' | 'identify' | 'charge' | 'cast';
     /**
      * Charges to spend.
      */
     count?: number;
+    spell?: Slug;
 };
 
 /**
@@ -1570,9 +1600,9 @@ export type ClassChoice = {
      */
     primaryAbilities?: Array<Ability>;
     /**
-     * How the class casts spells.
+     * How the class casts spells: the SRD kinds, or a homebrew slot table or spell points.
      */
-    caster?: 'none' | 'full' | 'half' | 'pact';
+    caster?: 'none' | 'full' | 'half' | 'pact' | 'slots' | 'points';
 };
 
 /**
@@ -2242,6 +2272,7 @@ export type LiveToken = {
     effects?: Array<LiveEffect>;
     reactions?: Array<LiveReactionSetting>;
     dying?: LiveDying;
+    legend?: LiveLegend;
 };
 
 /**
@@ -2329,7 +2360,7 @@ export type LiveSessionView = {
  */
 export type LiveCommand = {
     nonce: string;
-    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'ping' | 'set_world' | 'add_node' | 'add_route' | 'remove_node' | 'remove_route' | 'place_party' | 'travel' | 'add_zone' | 'remove_zone' | 'hold_zone' | 'spring_zone' | 'rest' | 'encounter_check' | 'schedule_check' | 'roll_loot' | 'move_item' | 'move_coins' | 'claim_loot' | 'settle_loot' | 'trade' | 'open_shop' | 'close_shop' | 'buy' | 'sell' | 'haggle' | 'spawn_encounter' | 'adjust_hp' | 'undo' | 'propose_rest' | 'agree_rest' | 'spend_hit_die' | 'finish_rest' | 'interrupt_rest' | 'take_action' | 'unarmed' | 'interact' | 'swap_weapons' | 'set_reaction' | 'stabilise' | 'revive' | 'teleport' | 'summon' | 'command' | 'set_visibility' | 'place_object' | 'remove_object' | 'use_object' | 'damage_object' | 'find_object' | 'unlock' | 'disarm' | 'jump' | 'throw' | 'sneak' | 'explore' | 'pass_turn';
+    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'ping' | 'set_world' | 'add_node' | 'add_route' | 'remove_node' | 'remove_route' | 'place_party' | 'travel' | 'add_zone' | 'remove_zone' | 'hold_zone' | 'spring_zone' | 'rest' | 'encounter_check' | 'schedule_check' | 'roll_loot' | 'move_item' | 'move_coins' | 'claim_loot' | 'settle_loot' | 'trade' | 'open_shop' | 'close_shop' | 'buy' | 'sell' | 'haggle' | 'spawn_encounter' | 'adjust_hp' | 'undo' | 'propose_rest' | 'agree_rest' | 'spend_hit_die' | 'finish_rest' | 'interrupt_rest' | 'take_action' | 'unarmed' | 'interact' | 'swap_weapons' | 'set_reaction' | 'stabilise' | 'revive' | 'teleport' | 'summon' | 'command' | 'set_visibility' | 'place_object' | 'remove_object' | 'use_object' | 'damage_object' | 'find_object' | 'unlock' | 'disarm' | 'jump' | 'throw' | 'sneak' | 'explore' | 'pass_turn' | 'legendary_action' | 'lair_action' | 'legendary_resistance';
     tokenId?: Id;
     label?: string;
     tokenKind?: TokenKind;
@@ -2442,6 +2473,10 @@ export type LiveCommand = {
     sells?: Array<LiveTradeLine>;
     instanceId?: Id;
     action?: 'dash' | 'disengage' | 'dodge' | 'help' | 'hide' | 'influence' | 'magic' | 'ready' | 'search' | 'study' | 'utilize';
+    /**
+     * The legendary or lair action to take, by name.
+     */
+    legend?: string;
     detail?: string;
     trigger?: 'enters_reach';
     option?: 'grapple' | 'shove_push' | 'shove_prone' | 'medicine' | 'spell' | 'revivify' | 'raise_dead' | 'resurrection' | 'need' | 'greed' | 'pass';
@@ -2508,7 +2543,7 @@ export type SessionAction = {
 /**
  * What a Library entry is.
  */
-export type LibraryKind = 'creature' | 'npc' | 'location' | 'shop' | 'item' | 'spell' | 'table';
+export type LibraryKind = 'creature' | 'npc' | 'location' | 'shop' | 'item' | 'spell' | 'table' | 'subclass' | 'class' | 'species' | 'background' | 'feat' | 'condition';
 
 /**
  * One named value of a Library entry.
@@ -2856,6 +2891,588 @@ export type ImportReport = {
 export type ManualPart = {
     where: string;
     reason: string;
+};
+
+/**
+ * A homebrew spell as the Effect builder makes it, from Targeting and typed parts listed as rows.
+ */
+export type SpellDesign = {
+    targeting: {
+        shape: 'sphere' | 'cylinder' | 'emanation' | 'ring' | 'cone' | 'cube' | 'line' | 'wall';
+        sizeFt: number;
+        rangeFt: number;
+    };
+    save?: 'strength' | 'dexterity' | 'constitution' | 'intelligence' | 'wisdom' | 'charisma';
+    concentration: boolean;
+    duration: {
+        unit: 'instant' | 'rounds' | 'minutes' | 'hours' | 'until_dispelled';
+        amount?: number;
+    };
+    ritual: boolean;
+    castingTime: {
+        kind: 'action' | 'bonus_action' | 'reaction' | 'minutes';
+        minutes?: number;
+        trigger?: 'when_hit' | 'when_damaged' | 'ally_attacked' | 'creature_casts' | 'creature_enters_reach';
+    };
+    components: {
+        verbal: boolean;
+        somatic: boolean;
+        material?: {
+            text: string;
+            costGp?: number;
+            consumed?: boolean;
+            item?: string;
+        };
+    };
+    parts: Array<SpellPart>;
+};
+
+/**
+ * One row of a spell design; which fields count depends on its type.
+ */
+export type SpellPart = {
+    type: 'damage' | 'condition' | 'light' | 'reveal' | 'surface' | 'manual';
+    when?: 'on_cast' | 'start_of_turn';
+    dice?: string;
+    damageType?: string;
+    half?: boolean;
+    condition?: string;
+    onlyTypes?: Array<string>;
+    brightFt?: number;
+    dimFt?: number;
+    qualities?: Array<string>;
+    surface?: string;
+    rounds?: number;
+    text?: string;
+};
+
+/**
+ * A design to preview, with the spell's name.
+ */
+export type SpellPreviewInput = {
+    name: string;
+    design: SpellDesign;
+};
+
+/**
+ * A hex of an area, relative to its origin.
+ */
+export type BuilderHex = {
+    q: number;
+    r: number;
+};
+
+/**
+ * A homebrew spell in the Effect builder, the Effect slug it runs under in play, its rules text and its area as hexes.
+ */
+export type SpellBuild = {
+    entry?: LibraryEntry;
+    design: SpellDesign;
+    effect: string;
+    text: Array<string>;
+    hexes: Array<BuilderHex>;
+};
+
+/**
+ * A homebrew class as the class builder makes it, from its Hit Die, training, level table, features, subclass and feat levels, and spellcasting.
+ */
+export type ClassDesign = {
+    hitDie: number;
+    primary: Array<string>;
+    anyPrimary?: boolean;
+    saves: Array<string>;
+    armor: Array<string>;
+    weapons: Array<string>;
+    skills: number;
+    subclassLevel: number;
+    featLevels: Array<number>;
+    columns: Array<ClassColumn>;
+    features: Array<ClassFeature>;
+    casting: ClassCasting;
+};
+
+/**
+ * A custom column of the level table, one value for each of the 20 levels.
+ */
+export type ClassColumn = {
+    name: string;
+    values: Array<string>;
+};
+
+/**
+ * A feature gained at a class level.
+ */
+export type ClassFeature = {
+    level: number;
+    name: string;
+    text: string;
+};
+
+/**
+ * How the class casts: none, an SRD kind (full, half, pact), its own slot table or spell points, from an SRD class's spell list. Tables run over the 20 levels; slots and costs over the nine spell levels.
+ */
+export type ClassCasting = {
+    kind: string;
+    ability?: string;
+    spellList?: string;
+    cantrips?: Array<number>;
+    prepared?: Array<number>;
+    slots?: Array<Array<number>>;
+    points?: Array<number>;
+    costs?: Array<number>;
+    maxSpell?: Array<number>;
+    spellbook?: boolean;
+    afterRest?: boolean;
+};
+
+/**
+ * A design to preview, with the class's name.
+ */
+export type ClassPreviewInput = {
+    name: string;
+    design: ClassDesign;
+};
+
+/**
+ * A homebrew class in the class builder, the slug it is known by on a sheet, and how it reads back with its level table.
+ */
+export type ClassBuild = {
+    entry?: LibraryEntry;
+    design: ClassDesign;
+    slug?: string;
+    lines: Array<string>;
+};
+
+/**
+ * A design to preview, with the species's name.
+ */
+export type SpeciesPreviewInput = {
+    name: string;
+    design: SpeciesDesign;
+};
+
+/**
+ * A homebrew species in its builder, the slug it is known by, and how it reads back.
+ */
+export type SpeciesBuild = {
+    entry?: LibraryEntry;
+    design: SpeciesDesign;
+    slug?: string;
+    lines: Array<string>;
+};
+
+/**
+ * A homebrew species as the species builder makes it, from its sizes, creature type, speeds, senses, resistances, traits, innate spells and lineages.
+ */
+export type SpeciesDesign = {
+    sizes: Array<string>;
+    creatureType: string;
+    speedFt: number;
+    speeds: Array<SpeciesMeasure>;
+    senses: Array<SpeciesMeasure>;
+    resistances: Array<string>;
+    traits: Array<SpeciesTrait>;
+    spells: Array<SpeciesSpell>;
+    lineages: Array<SpeciesLineage>;
+};
+
+/**
+ * A speed beside walking, or a special sense, and how far it reaches.
+ */
+export type SpeciesMeasure = {
+    kind: string;
+    feet: number;
+};
+
+/**
+ * A named trait every member of the species has.
+ */
+export type SpeciesTrait = {
+    name: string;
+    text: string;
+};
+
+/**
+ * An innate spell gained at a character level, cast at will or once per long rest.
+ */
+export type SpeciesSpell = {
+    level: number;
+    spell: string;
+    name: string;
+    uses: string;
+};
+
+/**
+ * One branch of the species, picked at creation, with its own trait and spells.
+ */
+export type SpeciesLineage = {
+    name: string;
+    text: string;
+    spells: Array<SpeciesSpell>;
+};
+
+/**
+ * A design to preview, with the feat's name.
+ */
+export type FeatPreviewInput = {
+    name: string;
+    design: FeatDesign;
+};
+
+/**
+ * A homebrew feat in its builder, the slug it is known by, and how it reads back.
+ */
+export type FeatBuild = {
+    entry?: LibraryEntry;
+    design: FeatDesign;
+    slug?: string;
+    lines: Array<string>;
+};
+
+/**
+ * A design to preview, with the background's name.
+ */
+export type BackgroundPreviewInput = {
+    name: string;
+    design: BackgroundDesign;
+};
+
+/**
+ * A homebrew background in its builder, the slug it is known by, and how it reads back.
+ */
+export type BackgroundBuild = {
+    entry?: LibraryEntry;
+    design: BackgroundDesign;
+    slug?: string;
+    lines: Array<string>;
+};
+
+/**
+ * A homebrew feat as the feat builder makes it, with its category, text, prerequisites and whether it can be taken again.
+ */
+export type FeatDesign = {
+    category: string;
+    text: string;
+    repeatable?: boolean;
+    prerequisites: Array<FeatPrerequisite>;
+};
+
+/**
+ * One thing a feat needs; prerequisites in one group are alternatives, and every group must hold.
+ */
+export type FeatPrerequisite = {
+    kind: string;
+    ability?: string;
+    minimum?: number;
+    feat?: string;
+    group: number;
+};
+
+/**
+ * A homebrew background as the background builder makes it, shaped like the 2024 ones.
+ */
+export type BackgroundDesign = {
+    abilities: Array<string>;
+    skills: Array<string>;
+    feat: string;
+    featName: string;
+    tool?: string;
+    equipment?: string;
+    gold?: number;
+    text?: string;
+};
+
+/**
+ * A design to preview, with the condition's name.
+ */
+export type ConditionPreviewInput = {
+    name: string;
+    design: ConditionDesign;
+};
+
+/**
+ * A homebrew condition in its builder, the slug it is known by, and how it reads back.
+ */
+export type ConditionBuild = {
+    entry?: LibraryEntry;
+    design: ConditionDesign;
+    slug?: string;
+    lines: Array<string>;
+};
+
+/**
+ * A homebrew condition as the condition builder makes it, from its icon, how it ends, how it stacks and what it does.
+ */
+export type ConditionDesign = {
+    icon: string;
+    color: string;
+    text: string;
+    ends: string;
+    ability?: string;
+    stacks?: boolean;
+    maxLevel?: number;
+    perLevel: {
+        d20: number;
+        speedFt: number;
+        deathAt: number;
+    };
+    parts: Array<{
+        type: string;
+        ability?: string;
+        feet?: number;
+        text?: string;
+    }>;
+};
+
+/**
+ * A design to preview, with the creature's name.
+ */
+export type MonsterPreviewInput = {
+    name: string;
+    design: MonsterDesign;
+};
+
+/**
+ * A homebrew creature in its builder, the slug it is placed by, its stat block and an estimated Challenge.
+ */
+export type MonsterBuild = {
+    estimate: string;
+    entry?: LibraryEntry;
+    design: MonsterDesign;
+    slug?: string;
+    lines: Array<string>;
+};
+
+/**
+ * A homebrew creature as the monster builder makes it.
+ */
+export type MonsterDesign = {
+    size: string;
+    creatureType: string;
+    ac: number;
+    hp: number;
+    speedFt: number;
+    challenge: number;
+    abilities: {
+        [key: string]: number;
+    };
+    saves: Array<string>;
+    senses: Array<SpeciesMeasure>;
+    resistances: Array<string>;
+    immunities: Array<string>;
+    vulnerabilities: Array<string>;
+    threshold: number;
+    swarm?: boolean;
+    traits: Array<MonsterTrait>;
+    aura?: {
+        name: string;
+        feet: number;
+        text: string;
+    };
+    multiattack: number;
+    actions: Array<MonsterAction>;
+    legendary?: {
+        uses: number;
+        resistance: number;
+        actions: Array<{
+            name: string;
+            cost: number;
+            text: string;
+        }>;
+    };
+    lair?: {
+        actions: Array<MonsterTrait>;
+        regional: Array<string>;
+    };
+    phases: Array<{
+        name: string;
+        hp: number;
+        text: string;
+    }>;
+};
+
+/**
+ * A named rule of a creature's, or a lair action.
+ */
+export type MonsterTrait = {
+    name: string;
+    text: string;
+};
+
+/**
+ * Something a creature does with its action: a melee or ranged attack, a save it forces, or anything else as text.
+ */
+export type MonsterAction = {
+    name: string;
+    kind: string;
+    toHit?: number;
+    reachFt?: number;
+    rangeFt?: number;
+    longRangeFt?: number;
+    damage?: string;
+    damageBonus?: number;
+    damageType?: string;
+    saveAbility?: string;
+    dc?: number;
+    recharge?: number;
+    text?: string;
+};
+
+/**
+ * A homebrew subclass as the subclass builder makes it, from level-gated Features, the Resources they spend and the choices they ask for.
+ */
+export type SubclassDesign = {
+    class: string;
+    features: Array<SubclassFeature>;
+    resources: Array<SubclassResource>;
+    choices: Array<SubclassChoice>;
+};
+
+/**
+ * A Feature gained at a class level; it may spend a use of a Resource, by key, and let its bearer cast a spell.
+ */
+export type SubclassFeature = {
+    level: number;
+    name: string;
+    text: string;
+    uses?: string;
+    spell?: string;
+    spellName?: string;
+};
+
+/**
+ * A pool of uses: a fixed number, some per class level, an ability modifier or the Proficiency Bonus, from a level on, coming back on a rest or at dawn.
+ */
+export type SubclassResource = {
+    key: string;
+    name: string;
+    basis: string;
+    amount?: number;
+    ability?: string;
+    fromLevel: number;
+    die?: string;
+    recharge: string;
+};
+
+/**
+ * A pick from listed options at a level.
+ */
+export type SubclassChoice = {
+    level: number;
+    name: string;
+    count: number;
+    options: Array<string>;
+};
+
+/**
+ * A design to preview, with the subclass's name.
+ */
+export type SubclassPreviewInput = {
+    name: string;
+    design: SubclassDesign;
+};
+
+/**
+ * A homebrew subclass in the subclass builder, the slug it is known by on a sheet, and how it reads back.
+ */
+export type SubclassBuild = {
+    entry?: LibraryEntry;
+    design: SubclassDesign;
+    slug?: string;
+    lines: Array<string>;
+};
+
+/**
+ * A homebrew item as the item builder makes it, from its kind, base item, rarity, enchantment, attunement, charges and Item Properties.
+ */
+export type ItemDesign = {
+    kind: string;
+    base?: string;
+    rarity: 'common' | 'uncommon' | 'rare' | 'very_rare' | 'legendary';
+    enchantment: number;
+    weightLb: number;
+    valueGp: number;
+    attunement?: {
+        kind?: string;
+        value?: string;
+    };
+    weapon?: {
+        properties: Array<string>;
+        mastery?: string;
+        custom?: string;
+    };
+    charges?: {
+        max: number;
+        on: string;
+        dice?: number;
+        faces?: number;
+        bonus?: number;
+    };
+    properties: Array<ItemProperty>;
+};
+
+/**
+ * One Item Property row; which fields count depends on its type. A hidden one shows once the item is identified or attuned.
+ */
+export type ItemProperty = {
+    type: string;
+    hidden?: boolean;
+    skill?: string;
+    mode?: string;
+    target?: string;
+    value?: number;
+    dice?: string;
+    damage?: string;
+    sense?: string;
+    speed?: string;
+    feet?: number;
+    spell?: string;
+    name?: string;
+    level?: number;
+    cost?: number;
+    brightFt?: number;
+    dimFt?: number;
+    uses?: string;
+    hits?: number;
+    text?: string;
+    cannotDrop?: boolean;
+    atLevel?: number;
+    set?: string;
+    pieces?: number;
+    capacityLb?: number;
+    weightless?: boolean;
+    onlyKind?: string;
+    misfire?: number;
+    reload?: number;
+    burst?: number;
+};
+
+/**
+ * A design to preview, with the item's name.
+ */
+export type ItemPreviewInput = {
+    name: string;
+    design: ItemDesign;
+};
+
+/**
+ * A homebrew item in the item builder, the slug it is known by in play, its card as players read it once known, and its Price Check.
+ */
+export type ItemBuild = {
+    entry?: LibraryEntry;
+    design: ItemDesign;
+    slug?: string;
+    card: Array<string>;
+    /**
+     * Whether the rarity and value fit what the properties are worth.
+     */
+    price: {
+        points: number;
+        suggested: string;
+        priceGp: number;
+        fits: boolean;
+        notes: Array<string>;
+    };
 };
 
 /**
@@ -3284,6 +3901,39 @@ export type LiveEffect = {
      * The hexes an emanation covers around the token where it stands now; it moves with the token.
      */
     hexes?: Array<HexCoord>;
+    /**
+     * A homebrew condition's glyph.
+     */
+    icon?: string;
+    /**
+     * A homebrew condition's colour.
+     */
+    color?: string;
+};
+
+/**
+ * A legendary creature's actions and what it has left, for the DM only: legendary actions once another creature's turn ends (ready), the lair's once a round from initiative count 20 (lairReady), Legendary Resistance, and its mythic phases.
+ */
+export type LiveLegend = {
+    uses: number;
+    left: number;
+    ready: boolean;
+    actions: Array<LiveLegendAction>;
+    lair: Array<LiveLegendAction>;
+    lairReady: boolean;
+    resistLeft: number;
+    phase: number;
+    phases: number;
+    threshold: number;
+};
+
+/**
+ * A legendary or lair action.
+ */
+export type LiveLegendAction = {
+    name: string;
+    cost: number;
+    text: string;
 };
 
 /**
@@ -3520,6 +4170,15 @@ export type LiveView = {
     surfaceKinds?: Array<{
         kind: string;
         name: string;
+    }>;
+    /**
+     * The Campaign's homebrew conditions, for the DM's effect picker.
+     */
+    conditions?: Array<{
+        slug: string;
+        name: string;
+        icon: string;
+        color: string;
     }>;
     /**
      * The Map Objects the audience knows; the party never gets secret ones or ones outside what it has seen.
@@ -4134,6 +4793,10 @@ export type GetBuilderOptionsData = {
          * The ruleset to build in.
          */
         ruleset: Ruleset;
+        /**
+         * A Campaign the caller belongs to, whose Library adds homebrew classes; its options carry no ETag.
+         */
+        campaignId?: Id;
     };
     url: '/api/v1/compendium/builder';
 };
@@ -4739,6 +5402,10 @@ export type PlanLevelUpData = {
          * The class to level in; the starting class when omitted.
          */
         class?: Slug;
+        /**
+         * A subclass picked on this level, so the plan adds the choices it asks for at once.
+         */
+        subclass?: Slug;
     };
     url: '/api/v1/campaigns/{campaignId}/characters/{characterId}/level-up';
 };
@@ -9041,6 +9708,879 @@ export type ReviewSharedSubmissionResponses = {
 };
 
 export type ReviewSharedSubmissionResponse = ReviewSharedSubmissionResponses[keyof ReviewSharedSubmissionResponses];
+
+export type PreviewSpellData = {
+    body: SpellPreviewInput;
+    path?: never;
+    query?: never;
+    url: '/api/v1/builders/spells/preview';
+};
+
+export type PreviewSpellErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type PreviewSpellError = PreviewSpellErrors[keyof PreviewSpellErrors];
+
+export type PreviewSpellResponses = {
+    /**
+     * The preview.
+     */
+    200: SpellBuild;
+};
+
+export type PreviewSpellResponse = PreviewSpellResponses[keyof PreviewSpellResponses];
+
+export type GetSpellBuildData = {
+    body?: never;
+    path: {
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/builders/spells/{entryId}';
+};
+
+export type GetSpellBuildErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetSpellBuildError = GetSpellBuildErrors[keyof GetSpellBuildErrors];
+
+export type GetSpellBuildResponses = {
+    /**
+     * The spell.
+     */
+    200: SpellBuild;
+};
+
+export type GetSpellBuildResponse = GetSpellBuildResponses[keyof GetSpellBuildResponses];
+
+export type SaveSpellBuildData = {
+    body: SpellDesign;
+    path: {
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/builders/spells/{entryId}';
+};
+
+export type SaveSpellBuildErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SaveSpellBuildError = SaveSpellBuildErrors[keyof SaveSpellBuildErrors];
+
+export type SaveSpellBuildResponses = {
+    /**
+     * The spell.
+     */
+    200: SpellBuild;
+};
+
+export type SaveSpellBuildResponse = SaveSpellBuildResponses[keyof SaveSpellBuildResponses];
+
+export type PreviewItemData = {
+    body: ItemPreviewInput;
+    path?: never;
+    query?: never;
+    url: '/api/v1/builders/items/preview';
+};
+
+export type PreviewItemErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type PreviewItemError = PreviewItemErrors[keyof PreviewItemErrors];
+
+export type PreviewItemResponses = {
+    /**
+     * The preview.
+     */
+    200: ItemBuild;
+};
+
+export type PreviewItemResponse = PreviewItemResponses[keyof PreviewItemResponses];
+
+export type GetItemBuildData = {
+    body?: never;
+    path: {
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/builders/items/{entryId}';
+};
+
+export type GetItemBuildErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetItemBuildError = GetItemBuildErrors[keyof GetItemBuildErrors];
+
+export type GetItemBuildResponses = {
+    /**
+     * The item.
+     */
+    200: ItemBuild;
+};
+
+export type GetItemBuildResponse = GetItemBuildResponses[keyof GetItemBuildResponses];
+
+export type SaveItemBuildData = {
+    body: ItemDesign;
+    path: {
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/builders/items/{entryId}';
+};
+
+export type SaveItemBuildErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SaveItemBuildError = SaveItemBuildErrors[keyof SaveItemBuildErrors];
+
+export type SaveItemBuildResponses = {
+    /**
+     * The item.
+     */
+    200: ItemBuild;
+};
+
+export type SaveItemBuildResponse = SaveItemBuildResponses[keyof SaveItemBuildResponses];
+
+export type PreviewSubclassData = {
+    body: SubclassPreviewInput;
+    path?: never;
+    query?: never;
+    url: '/api/v1/builders/subclasses/preview';
+};
+
+export type PreviewSubclassErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type PreviewSubclassError = PreviewSubclassErrors[keyof PreviewSubclassErrors];
+
+export type PreviewSubclassResponses = {
+    /**
+     * The preview.
+     */
+    200: SubclassBuild;
+};
+
+export type PreviewSubclassResponse = PreviewSubclassResponses[keyof PreviewSubclassResponses];
+
+export type GetSubclassBuildData = {
+    body?: never;
+    path: {
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/builders/subclasses/{entryId}';
+};
+
+export type GetSubclassBuildErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetSubclassBuildError = GetSubclassBuildErrors[keyof GetSubclassBuildErrors];
+
+export type GetSubclassBuildResponses = {
+    /**
+     * The subclass.
+     */
+    200: SubclassBuild;
+};
+
+export type GetSubclassBuildResponse = GetSubclassBuildResponses[keyof GetSubclassBuildResponses];
+
+export type SaveSubclassBuildData = {
+    body: SubclassDesign;
+    path: {
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/builders/subclasses/{entryId}';
+};
+
+export type SaveSubclassBuildErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SaveSubclassBuildError = SaveSubclassBuildErrors[keyof SaveSubclassBuildErrors];
+
+export type SaveSubclassBuildResponses = {
+    /**
+     * The subclass.
+     */
+    200: SubclassBuild;
+};
+
+export type SaveSubclassBuildResponse = SaveSubclassBuildResponses[keyof SaveSubclassBuildResponses];
+
+export type PreviewClassData = {
+    body: ClassPreviewInput;
+    path?: never;
+    query?: never;
+    url: '/api/v1/builders/classes/preview';
+};
+
+export type PreviewClassErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type PreviewClassError = PreviewClassErrors[keyof PreviewClassErrors];
+
+export type PreviewClassResponses = {
+    /**
+     * The preview.
+     */
+    200: ClassBuild;
+};
+
+export type PreviewClassResponse = PreviewClassResponses[keyof PreviewClassResponses];
+
+export type GetClassBuildData = {
+    body?: never;
+    path: {
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/builders/classes/{entryId}';
+};
+
+export type GetClassBuildErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetClassBuildError = GetClassBuildErrors[keyof GetClassBuildErrors];
+
+export type GetClassBuildResponses = {
+    /**
+     * The class.
+     */
+    200: ClassBuild;
+};
+
+export type GetClassBuildResponse = GetClassBuildResponses[keyof GetClassBuildResponses];
+
+export type SaveClassBuildData = {
+    body: ClassDesign;
+    path: {
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/builders/classes/{entryId}';
+};
+
+export type SaveClassBuildErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SaveClassBuildError = SaveClassBuildErrors[keyof SaveClassBuildErrors];
+
+export type SaveClassBuildResponses = {
+    /**
+     * The class.
+     */
+    200: ClassBuild;
+};
+
+export type SaveClassBuildResponse = SaveClassBuildResponses[keyof SaveClassBuildResponses];
+
+export type PreviewSpeciesData = {
+    body: SpeciesPreviewInput;
+    path?: never;
+    query?: never;
+    url: '/api/v1/builders/species/preview';
+};
+
+export type PreviewSpeciesErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type PreviewSpeciesError = PreviewSpeciesErrors[keyof PreviewSpeciesErrors];
+
+export type PreviewSpeciesResponses = {
+    /**
+     * The preview.
+     */
+    200: SpeciesBuild;
+};
+
+export type PreviewSpeciesResponse = PreviewSpeciesResponses[keyof PreviewSpeciesResponses];
+
+export type GetSpeciesBuildData = {
+    body?: never;
+    path: {
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/builders/species/{entryId}';
+};
+
+export type GetSpeciesBuildErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetSpeciesBuildError = GetSpeciesBuildErrors[keyof GetSpeciesBuildErrors];
+
+export type GetSpeciesBuildResponses = {
+    /**
+     * The species.
+     */
+    200: SpeciesBuild;
+};
+
+export type GetSpeciesBuildResponse = GetSpeciesBuildResponses[keyof GetSpeciesBuildResponses];
+
+export type SaveSpeciesBuildData = {
+    body: SpeciesDesign;
+    path: {
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/builders/species/{entryId}';
+};
+
+export type SaveSpeciesBuildErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SaveSpeciesBuildError = SaveSpeciesBuildErrors[keyof SaveSpeciesBuildErrors];
+
+export type SaveSpeciesBuildResponses = {
+    /**
+     * The species.
+     */
+    200: SpeciesBuild;
+};
+
+export type SaveSpeciesBuildResponse = SaveSpeciesBuildResponses[keyof SaveSpeciesBuildResponses];
+
+export type PreviewFeatData = {
+    body: FeatPreviewInput;
+    path?: never;
+    query?: never;
+    url: '/api/v1/builders/feats/preview';
+};
+
+export type PreviewFeatErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type PreviewFeatError = PreviewFeatErrors[keyof PreviewFeatErrors];
+
+export type PreviewFeatResponses = {
+    /**
+     * The preview.
+     */
+    200: FeatBuild;
+};
+
+export type PreviewFeatResponse = PreviewFeatResponses[keyof PreviewFeatResponses];
+
+export type GetFeatBuildData = {
+    body?: never;
+    path: {
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/builders/feats/{entryId}';
+};
+
+export type GetFeatBuildErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetFeatBuildError = GetFeatBuildErrors[keyof GetFeatBuildErrors];
+
+export type GetFeatBuildResponses = {
+    /**
+     * The feat.
+     */
+    200: FeatBuild;
+};
+
+export type GetFeatBuildResponse = GetFeatBuildResponses[keyof GetFeatBuildResponses];
+
+export type SaveFeatBuildData = {
+    body: FeatDesign;
+    path: {
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/builders/feats/{entryId}';
+};
+
+export type SaveFeatBuildErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SaveFeatBuildError = SaveFeatBuildErrors[keyof SaveFeatBuildErrors];
+
+export type SaveFeatBuildResponses = {
+    /**
+     * The feat.
+     */
+    200: FeatBuild;
+};
+
+export type SaveFeatBuildResponse = SaveFeatBuildResponses[keyof SaveFeatBuildResponses];
+
+export type PreviewBackgroundData = {
+    body: BackgroundPreviewInput;
+    path?: never;
+    query?: never;
+    url: '/api/v1/builders/backgrounds/preview';
+};
+
+export type PreviewBackgroundErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type PreviewBackgroundError = PreviewBackgroundErrors[keyof PreviewBackgroundErrors];
+
+export type PreviewBackgroundResponses = {
+    /**
+     * The preview.
+     */
+    200: BackgroundBuild;
+};
+
+export type PreviewBackgroundResponse = PreviewBackgroundResponses[keyof PreviewBackgroundResponses];
+
+export type GetBackgroundBuildData = {
+    body?: never;
+    path: {
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/builders/backgrounds/{entryId}';
+};
+
+export type GetBackgroundBuildErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetBackgroundBuildError = GetBackgroundBuildErrors[keyof GetBackgroundBuildErrors];
+
+export type GetBackgroundBuildResponses = {
+    /**
+     * The background.
+     */
+    200: BackgroundBuild;
+};
+
+export type GetBackgroundBuildResponse = GetBackgroundBuildResponses[keyof GetBackgroundBuildResponses];
+
+export type SaveBackgroundBuildData = {
+    body: BackgroundDesign;
+    path: {
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/builders/backgrounds/{entryId}';
+};
+
+export type SaveBackgroundBuildErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SaveBackgroundBuildError = SaveBackgroundBuildErrors[keyof SaveBackgroundBuildErrors];
+
+export type SaveBackgroundBuildResponses = {
+    /**
+     * The background.
+     */
+    200: BackgroundBuild;
+};
+
+export type SaveBackgroundBuildResponse = SaveBackgroundBuildResponses[keyof SaveBackgroundBuildResponses];
+
+export type PreviewConditionData = {
+    body: ConditionPreviewInput;
+    path?: never;
+    query?: never;
+    url: '/api/v1/builders/conditions/preview';
+};
+
+export type PreviewConditionErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type PreviewConditionError = PreviewConditionErrors[keyof PreviewConditionErrors];
+
+export type PreviewConditionResponses = {
+    /**
+     * The preview.
+     */
+    200: ConditionBuild;
+};
+
+export type PreviewConditionResponse = PreviewConditionResponses[keyof PreviewConditionResponses];
+
+export type GetConditionBuildData = {
+    body?: never;
+    path: {
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/builders/conditions/{entryId}';
+};
+
+export type GetConditionBuildErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetConditionBuildError = GetConditionBuildErrors[keyof GetConditionBuildErrors];
+
+export type GetConditionBuildResponses = {
+    /**
+     * The condition.
+     */
+    200: ConditionBuild;
+};
+
+export type GetConditionBuildResponse = GetConditionBuildResponses[keyof GetConditionBuildResponses];
+
+export type SaveConditionBuildData = {
+    body: ConditionDesign;
+    path: {
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/builders/conditions/{entryId}';
+};
+
+export type SaveConditionBuildErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SaveConditionBuildError = SaveConditionBuildErrors[keyof SaveConditionBuildErrors];
+
+export type SaveConditionBuildResponses = {
+    /**
+     * The condition.
+     */
+    200: ConditionBuild;
+};
+
+export type SaveConditionBuildResponse = SaveConditionBuildResponses[keyof SaveConditionBuildResponses];
+
+export type PreviewMonsterData = {
+    body: MonsterPreviewInput;
+    path?: never;
+    query?: never;
+    url: '/api/v1/builders/monsters/preview';
+};
+
+export type PreviewMonsterErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type PreviewMonsterError = PreviewMonsterErrors[keyof PreviewMonsterErrors];
+
+export type PreviewMonsterResponses = {
+    /**
+     * The preview.
+     */
+    200: MonsterBuild;
+};
+
+export type PreviewMonsterResponse = PreviewMonsterResponses[keyof PreviewMonsterResponses];
+
+export type GetMonsterBuildData = {
+    body?: never;
+    path: {
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/builders/monsters/{entryId}';
+};
+
+export type GetMonsterBuildErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetMonsterBuildError = GetMonsterBuildErrors[keyof GetMonsterBuildErrors];
+
+export type GetMonsterBuildResponses = {
+    /**
+     * The creature.
+     */
+    200: MonsterBuild;
+};
+
+export type GetMonsterBuildResponse = GetMonsterBuildResponses[keyof GetMonsterBuildResponses];
+
+export type SaveMonsterBuildData = {
+    body: MonsterDesign;
+    path: {
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/builders/monsters/{entryId}';
+};
+
+export type SaveMonsterBuildErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SaveMonsterBuildError = SaveMonsterBuildErrors[keyof SaveMonsterBuildErrors];
+
+export type SaveMonsterBuildResponses = {
+    /**
+     * The creature.
+     */
+    200: MonsterBuild;
+};
+
+export type SaveMonsterBuildResponse = SaveMonsterBuildResponses[keyof SaveMonsterBuildResponses];
 
 export type GetMeData = {
     body?: never;

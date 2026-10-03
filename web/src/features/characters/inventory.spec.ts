@@ -191,4 +191,43 @@ describe('magic items on the inventory screen', () => {
       { instanceId: '0190c7a8-0000-7000-8000-0000000000e3', use: 'charge' },
     ])
   })
+
+  it('casts the spells a homebrew item grants, worn or carried, and shows its card', async () => {
+    const BOW = '0190c7a8-0000-7000-8000-0000000000f1'
+    const sent: unknown[] = []
+    const bow = card('hb-0190c7a80000', 'Ashwood Bow', 'weapon', {
+      instanceId: BOW, slot: 'ranged_main', maxCharges: 3, charges: 1, fits: ['ranged_main'],
+      spells: [{ slug: 'hunters-mark', name: "Hunter's Mark", cost: 1 }, { slug: 'longstrider', name: 'Longstrider', cost: 2 }],
+    })
+    const lantern = card('hb-0190c7a80001', 'Marsh Lantern', 'wondrous-item', {
+      spells: [{ slug: 'light', name: 'Light', cost: 0 }], lines: ['Wondrous item, common', 'Sheds dim light in a 10-foot radius.'],
+    })
+    const homebrew = view({
+      slots: slots.map((slot) => (slot === 'ranged_main' ? { slot, item: bow } : { slot })),
+      bag: [lantern],
+    })
+    const { wrapper } = await mountApp(`/campaigns/${ID}/characters/${CH}/inventory`, {
+      [`${base}/use`]: async (_u, req) => {
+        sent.push(await req.clone().json())
+        return { inventory: homebrew, healed: 0 }
+      },
+      [base]: () => homebrew,
+    })
+    expect(wrapper.get('[data-testid="item-hb-0190c7a80001"]').text()).toContain('Sheds dim light in a 10-foot radius.')
+    const spells = wrapper.get('[data-testid="item-spells"]')
+    expect(spells.text()).toContain('1/3 charges')
+    expect(spells.get('[data-testid="cast-hb-0190c7a80000-longstrider"]').attributes('disabled')).toBeDefined()
+    expect(spells.get('[data-testid="cast-hb-0190c7a80000-longstrider"]').text()).toBe('Cast Longstrider (2 charges)')
+    expect(spells.get('[data-testid="cast-hb-0190c7a80001-light"]').text()).toBe('Cast Light (at will)')
+    await expectAccessible(wrapper.element as Element)
+    await spells.get('[data-testid="cast-hb-0190c7a80000-hunters-mark"]').trigger('click')
+    await flushPromises()
+    expect(wrapper.get('[data-testid="inventory-status"]').text()).toBe("You cast Hunter's Mark from Ashwood Bow.")
+    await wrapper.get('[data-testid="cast-hb-0190c7a80001-light"]').trigger('click')
+    await flushPromises()
+    expect(sent).toEqual([
+      { instanceId: BOW, use: 'cast', spell: 'hunters-mark' },
+      { slug: 'hb-0190c7a80001', use: 'cast', spell: 'light' },
+    ])
+  })
 })

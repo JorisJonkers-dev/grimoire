@@ -68,12 +68,21 @@ type Sheet struct {
 	Weapons        []compendium.WeaponOption
 	Mine           bool
 	Editable       bool
-	// ClassNames name every class of the ruleset by slug.
+	// ClassNames name every class of the ruleset by slug, and Profiles are what the rules read of each.
 	ClassNames map[string]string
+	Profiles   map[string]rules.Class
 	// Attacks, Traits and Proficiencies are filled in for a saved Character's sheet.
 	Attacks       []Attack
 	Traits        []compendium.Trait
 	Proficiencies rules.Proficiencies
+}
+
+// Profile is what the rules read of one of the ruleset's classes.
+func (s Sheet) Profile(class string) rules.Class {
+	if p, ok := s.Profiles[class]; ok {
+		return p
+	}
+	return rules.SRD(class)
 }
 
 // Attack is one weapon attack as the sheet shows it, with the Weapon Mastery the Character has.
@@ -156,7 +165,7 @@ func derive(o compendium.BuilderOptions, c domain.Character) (Sheet, error) {
 	if err != nil {
 		return Sheet{}, err
 	}
-	if err := rules.ValidateSkills(c.Class, toSkills(c.Skills), toSkills(background.Skills)); err != nil {
+	if err := rules.ValidateSkills(class.Profile(), toSkills(c.Skills), toSkills(background.Skills)); err != nil {
 		return Sheet{}, invalid(err)
 	}
 	armor, shield, weapons, err := equipment(o, c.Build)
@@ -171,7 +180,7 @@ func derive(o compendium.BuilderOptions, c domain.Character) (Sheet, error) {
 		scores[rules.Ability(a)] += n
 	}
 	derived := rules.BuildSheet(rules.SheetInput{
-		Class: c.Class, Level: max(c.Level, 1), HitDie: class.HitDie, Scores: scores,
+		Class: class.Profile(), Level: max(c.Level, 1), HitDie: class.HitDie, Scores: scores,
 		SaveProfs:  toAbilities(class.Saves),
 		SkillProfs: toSkills(append(append(slices.Clone(c.Skills), background.Skills...), picked(c.Picks, "skills")...)),
 		Expertise:  toSkills(picked(c.Picks, "expertise")),
@@ -186,12 +195,12 @@ func derive(o compendium.BuilderOptions, c domain.Character) (Sheet, error) {
 		c.HPMax = rules.HitPointsAt(class.HitDie, rules.Modifier(scores[rules.Constitution]), max(c.Level, 1))
 		c.HPCurrent = c.HPMax
 	}
-	names := make(map[string]string, len(o.Classes))
+	names, profiles := make(map[string]string, len(o.Classes)), make(map[string]rules.Class, len(o.Classes))
 	for _, x := range o.Classes {
-		names[x.Slug] = x.Name
+		names[x.Slug], profiles[x.Slug] = x.Name, x.Profile()
 	}
 	return Sheet{
-		ClassNames: names, Character: c, ClassName: class.Name, SpeciesName: species.Name, BackgroundName: background.Name, Scores: scores,
+		ClassNames: names, Profiles: profiles, Character: c, ClassName: class.Name, SpeciesName: species.Name, BackgroundName: background.Name, Scores: scores,
 		Derived: derived, Armor: armor, Weapons: weapons,
 	}, nil
 }
@@ -223,7 +232,7 @@ func classLevels(o compendium.BuilderOptions, classes []domain.ClassLevel) []rul
 	out := make([]rules.ClassLevel, 0, len(classes))
 	for _, x := range classes {
 		cl, _ := find(o.Classes, func(c compendium.ClassOption) bool { return c.Slug == x.Class })
-		out = append(out, rules.ClassLevel{Class: x.Class, Level: x.Level, HitDie: cl.HitDie})
+		out = append(out, rules.ClassLevel{Class: cl.Profile(), Level: x.Level, HitDie: cl.HitDie})
 	}
 	return out
 }
@@ -298,7 +307,7 @@ func (s *Characters) prepare(ctx context.Context, c caller.Caller, id domain.Cam
 			return Sheet{}, err
 		}
 	}
-	o, err := s.Compendium.BuilderOptions(ctx, camp.Ruleset)
+	o, err := s.options(ctx, id, camp.Ruleset)
 	if err != nil {
 		return Sheet{}, err
 	}
@@ -406,7 +415,7 @@ func (s *Characters) get(ctx context.Context, c caller.Caller, id domain.Campaig
 	if holding != nil {
 		holding(&stored)
 	}
-	o, err := s.Compendium.BuilderOptions(ctx, stored.Ruleset)
+	o, err := s.options(ctx, id, stored.Ruleset)
 	if err != nil {
 		return Sheet{}, err
 	}
@@ -426,6 +435,10 @@ func (s *Characters) get(ctx context.Context, c caller.Caller, id domain.Campaig
 // extras adds what a saved Character's sheet shows beyond its build: attacks with Weapon Mastery,
 // class features and species traits up to its level, and its training.
 func (s *Characters) extras(ctx context.Context, sheet Sheet) (Sheet, error) {
+	s, err := s.within(ctx, sheet.CampaignID)
+	if err != nil {
+		return Sheet{}, err
+	}
 	cat, err := s.Compendium.Features(ctx)
 	if err != nil {
 		return Sheet{}, err
@@ -436,10 +449,17 @@ func (s *Characters) extras(ctx context.Context, sheet Sheet) (Sheet, error) {
 		classes = append(classes, compendium.ClassLevel{Class: x.Class, Subclass: x.Subclass, Level: x.Level})
 		masteries = max(masteries, cat.MasteryCount(x.Class, x.Level))
 	}
-	if sheet.Traits, err = s.Compendium.Traits(ctx, sheet.Ruleset, sheet.Species, classes, pickValues(sheet.Picks)); err != nil {
+	h, _ := s.Compendium.(homebrew)
+	background, origin := h.background(sheet.Background)
+	feats := pickValues(sheet.Picks)
+	if origin != "" {
+		feats = append(feats, origin)
+	}
+	if sheet.Traits, err = s.Compendium.Traits(ctx, sheet.Ruleset, sheet.Species, classes, feats); err != nil {
 		return Sheet{}, err
 	}
-	sheet.Proficiencies = rules.ClassProficiencies(sheet.Class)
+	sheet.Traits = append(sheet.Traits, background...)
+	sheet.Proficiencies = sheet.Profile(sheet.Class).Proficiencies
 	var carried []string
 	for _, w := range sheet.Weapons {
 		carried = append(carried, w.Slug)
@@ -540,7 +560,7 @@ func (s *Characters) Update(ctx context.Context, c caller.Caller, id domain.Camp
 	if e.Weapons != nil {
 		next.Weapons = e.Weapons
 	}
-	o, err := s.Compendium.BuilderOptions(ctx, next.Ruleset)
+	o, err := s.options(ctx, id, next.Ruleset)
 	if err != nil {
 		return Sheet{}, err
 	}

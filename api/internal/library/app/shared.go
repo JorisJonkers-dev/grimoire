@@ -32,7 +32,7 @@ func (s *Service) Share(ctx context.Context, c caller.Caller, entry uuid.UUID, n
 		return domain.Submission{}, apperr.Refuse("this entry already waits for an Admin")
 	}
 	x := domain.Submission{
-		ID: uuid.New(), Entry: e.ID, Revision: e.Revision, Draft: domain.Draft{Kind: e.Kind, Name: e.Name, Fields: e.Fields}, Note: note,
+		ID: uuid.New(), Entry: e.ID, Revision: e.Revision, Draft: domain.Draft{Kind: e.Kind, Name: e.Name, Fields: e.Fields}, Design: e.Design, Note: note,
 		Submitter: c.Subject, Status: domain.SubmissionPending, CreatedAt: s.Now(),
 	}
 	return x, s.Repo.InsertSubmission(ctx, x)
@@ -86,13 +86,13 @@ func (s *Service) ReviewSubmission(ctx context.Context, c caller.Caller, id uuid
 	return x, s.Repo.InTx(ctx, func(r Repository) error {
 		if approve {
 			copied := domain.Entry{
-				ID: uuid.New(), Owner: domain.SharedOwner, Kind: x.Draft.Kind, Name: x.Draft.Name, Fields: x.Draft.Fields, Revision: 1,
+				ID: uuid.New(), Owner: domain.SharedOwner, Kind: x.Draft.Kind, Name: x.Draft.Name, Fields: x.Draft.Fields, Design: x.Design, Revision: 1,
 				Shared: true, CreatedAt: now, UpdatedAt: now,
 			}
 			if err := r.InsertEntry(ctx, copied); err != nil {
 				return err
 			}
-			if err := r.InsertRevision(ctx, copied.ID, domain.Revision{No: 1, Name: copied.Name, Fields: copied.Fields, Author: c.Subject, At: now}); err != nil {
+			if err := r.InsertRevision(ctx, copied.ID, domain.Revision{No: 1, Name: copied.Name, Fields: copied.Fields, Design: copied.Design, Author: c.Subject, At: now}); err != nil {
 				return err
 			}
 			x.Status, x.Shared = domain.SubmissionApproved, &copied.ID
