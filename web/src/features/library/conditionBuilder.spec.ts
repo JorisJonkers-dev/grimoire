@@ -73,6 +73,34 @@ describe('condition builder', () => {
     })
   })
 
+  it('builds a lingering injury: a condition that lasts until its cure, which it names', async () => {
+    const sent: unknown[] = []
+    const { wrapper } = await mountApp(`/library/${COND}/condition`, {
+      [`/api/v1/builders/conditions/${COND}`]: async (_u, req) => {
+        if (req.method === 'PUT') {
+          sent.push(await req.clone().json())
+          return build(start, { entry: { ...entry, revision: 2 } })
+        }
+        return build(structuredClone(start))
+      },
+    })
+    const set = (id: string, value: string) => wrapper.get(`[data-testid="${id}"]`).setValue(value)
+    expect(wrapper.find('[data-testid="condition-cure"]').exists()).toBe(false)
+    await set('condition-ends', 'cure')
+    await set('condition-cure', 'Regenerate, or a month of rest')
+    await expectAccessible(wrapper.element as Element)
+    await wrapper.get('[data-testid="condition-form"]').trigger('submit')
+    await flushPromises()
+    expect(sent.at(-1)).toMatchObject({ ends: 'cure', cure: 'Regenerate, or a month of rest' })
+    // Made to last some other way, it names no cure.
+    await set('condition-ends', 'removed')
+    expect(wrapper.find('[data-testid="condition-cure"]').exists()).toBe(false)
+    await wrapper.get('[data-testid="condition-form"]').trigger('submit')
+    await flushPromises()
+    expect(sent.at(-1)).toMatchObject({ ends: 'removed' })
+    expect(sent.at(-1)).not.toHaveProperty('cure')
+  })
+
   it('shows a Shared Library copy, reports a design that will not build, and opens from the entry', async () => {
     const { wrapper } = await mountApp(`/library/${COND}/condition`, {
       '/api/v1/builders/conditions/preview': () => jsonResponse({ type: 'about:blank', title: 'Not allowed', status: 422, detail: 'choose an icon' }, 422),

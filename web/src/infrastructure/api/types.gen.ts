@@ -2612,6 +2612,10 @@ export type LiveCommand = {
     saveAbility?: Ability;
     saveDc?: number;
     effectId?: Id;
+    /**
+     * With end_effect, says a lingering injury ends because its cure was applied; without it such an Effect is not ended.
+     */
+    cured?: boolean;
     manualId?: Id;
     /**
      * With paint_surface, a Surface from the catalogue; leave it out to clear.
@@ -3473,6 +3477,10 @@ export type ConditionDesign = {
     text: string;
     ends: string;
     ability?: string;
+    /**
+     * What cures a condition that lasts until cured: a lingering injury.
+     */
+    cure?: string;
     stacks?: boolean;
     maxLevel?: number;
     perLevel: {
@@ -4232,6 +4240,10 @@ export type LiveEffect = {
      * The option chosen when the Effect offers a choice.
      */
     mode?: string;
+    /**
+     * What cures a lingering injury: no rest ends it, and it is ended only as cured.
+     */
+    cure?: string;
     /**
      * The hexes an emanation covers around the token where it stands now; it moves with the token.
      */

@@ -18,11 +18,13 @@ func (e DesignError) Error() string { return string(e) }
 
 // Design is a homebrew condition as its author builds it.
 type Design struct {
-	Icon     string  `json:"icon"`
-	Color    string  `json:"color"`
-	Text     string  `json:"text"`
-	Ends     string  `json:"ends"`
-	Ability  string  `json:"ability,omitempty"`
+	Icon    string `json:"icon"`
+	Color   string `json:"color"`
+	Text    string `json:"text"`
+	Ends    string `json:"ends"`
+	Ability string `json:"ability,omitempty"`
+	// Cure is what ends a condition that lasts until cured: a lingering injury.
+	Cure     string  `json:"cure,omitempty"`
 	Stacks   bool    `json:"stacks,omitempty"`
 	MaxLevel int     `json:"maxLevel,omitempty"`
 	PerLevel Penalty `json:"perLevel"`
@@ -50,8 +52,10 @@ type Condition struct {
 	Icon       string
 	Color      string
 	Text       string
-	ends       string
-	ability    string
+	// Cure is what ends a lingering injury; empty for any other condition.
+	Cure    string
+	ends    string
+	ability string
 }
 
 var colorPattern = regexp.MustCompile(`^#[0-9a-fA-F]{6}$`)
@@ -81,10 +85,16 @@ func Check(d Design) error {
 		return DesignError("pick a colour like #7fa8dd")
 	case len([]rune(d.Text)) > 2000:
 		return DesignError("describe the condition in up to 2000 characters")
-	case !slices.Contains([]string{"removed", "rest", "save"}, d.Ends):
-		return DesignError("make it last until removed, on a rest, or until a save")
+	case !slices.Contains([]string{"removed", "rest", "save", "cure"}, d.Ends):
+		return DesignError("make it last until removed, on a rest, until a save, or until cured")
 	case d.Ends == "save" && !slices.Contains(abilities(), d.Ability):
 		return DesignError("choose the ability its save uses")
+	case d.Ends == "cure" && strings.TrimSpace(d.Cure) == "":
+		return DesignError("name its cure")
+	case len([]rune(strings.TrimSpace(d.Cure))) > 80:
+		return DesignError("name its cure in up to 80 characters")
+	case d.Ends != "cure" && d.Cure != "":
+		return DesignError("only a condition that lasts until cured names a cure")
 	case len(d.Parts) > 20:
 		return DesignError("keep it to up to 20 parts")
 	}
@@ -137,6 +147,8 @@ func Compile(slug, name string, d Design) Condition {
 		duration.Kind = effects.UntilRest
 	case "save":
 		duration.RepeatSave = d.Ability
+	case "cure":
+		duration.Kind = effects.UntilCured
 	}
 	components := make([]effects.Component, 0, len(d.Parts)+1)
 	if d.Stacks {
@@ -147,7 +159,7 @@ func Compile(slug, name string, d Design) Condition {
 	}
 	return Condition{
 		Definition: effects.Definition{Slug: slug, Name: name, Owner: effects.OwnedByCondition, Concentration: false, Duration: duration, Scaling: nil, Components: components},
-		Icon:       d.Icon, Color: strings.ToLower(d.Color), Text: strings.TrimSpace(d.Text), ends: d.Ends, ability: d.Ability,
+		Icon:       d.Icon, Color: strings.ToLower(d.Color), Text: strings.TrimSpace(d.Text), Cure: strings.TrimSpace(d.Cure), ends: d.Ends, ability: d.Ability,
 	}
 }
 
@@ -193,6 +205,8 @@ func Lines(c Condition) []string {
 		out = append(out, "Ends on a rest.")
 	case "save":
 		out = append(out, "Ends when the creature succeeds on a "+strings.ToUpper(c.ability[:1])+c.ability[1:]+" saving throw at the end of its turn.")
+	case "cure":
+		out = append(out, "Lingers through every rest until cured: "+c.Cure+".")
 	default:
 		out = append(out, "Lasts until removed.")
 	}

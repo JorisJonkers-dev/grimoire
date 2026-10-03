@@ -2,6 +2,7 @@ package conditionbuild_test
 
 import (
 	"reflect"
+	"slices"
 	"strings"
 	"testing"
 
@@ -91,6 +92,51 @@ func TestFrostbiteBuildsIntoAStackingCondition(t *testing.T) {
 	}
 }
 
+// A lingering injury is a condition that lasts until its cure: it names the cure, no rest ends it, and
+// it reads back as lingering.
+func TestALingeringInjuryLastsUntilItsCure(t *testing.T) {
+	t.Parallel()
+	d := conditionbuild.Design{
+		Icon: "skull", Color: "#aa3344", Text: "The leg never set right.", Ends: "cure", Cure: "  Regenerate, or a month of rest ", PerLevel: conditionbuild.Penalty{},
+		Parts: []conditionbuild.Part{{Type: "speed_penalty", Feet: 10}},
+	}
+	if err := conditionbuild.Check(d); err != nil {
+		t.Fatal(err)
+	}
+	c := conditionbuild.Compile("hb-limp", "Limp", d)
+	if c.Definition.Duration != (effects.Duration{Kind: effects.UntilCured, Amount: 0, RepeatSave: ""}) || !c.Definition.Duration.Lingers() || c.Definition.Duration.EndsOnRest() {
+		t.Fatalf("duration = %+v", c.Definition.Duration)
+	}
+	if c.Cure != "Regenerate, or a month of rest" {
+		t.Fatalf("cure = %q", c.Cure)
+	}
+	lines := conditionbuild.Lines(c)
+	if !slices.Contains(lines, "Lingers through every rest until cured: Regenerate, or a month of rest.") || slices.Contains(lines, "Lasts until removed.") {
+		t.Fatalf("lines = %q", lines)
+	}
+	// Any other condition has no cure to name, and says nothing of one.
+	plain := conditionbuild.Compile("hb-x", "X", conditionbuild.Design{Icon: "skull", Color: "#aa3344", Ends: "removed", Cure: "", Parts: nil})
+	if plain.Cure != "" || plain.Definition.Duration.Lingers() || !slices.Contains(conditionbuild.Lines(plain), "Lasts until removed.") {
+		t.Fatalf("a plain condition = %+v", plain)
+	}
+	for want, change := range map[string]func(*conditionbuild.Design){
+		"name its cure":               func(d *conditionbuild.Design) { d.Cure = "  " },
+		"in up to 80 characters":      func(d *conditionbuild.Design) { d.Cure = strings.Repeat("x", 81) },
+		"only a condition that lasts": func(d *conditionbuild.Design) { d.Ends = "rest" },
+	} {
+		bad := d
+		change(&bad)
+		if err := conditionbuild.Check(bad); err == nil || !strings.Contains(err.Error(), want) {
+			t.Errorf("%s: %v", want, err)
+		}
+	}
+	longest := d
+	longest.Cure = strings.Repeat("x", 80)
+	if err := conditionbuild.Check(longest); err != nil {
+		t.Errorf("the longest cure: %v", err)
+	}
+}
+
 func TestExhaustionVariants(t *testing.T) {
 	t.Parallel()
 	for variant, want := range map[string]effects.Exhausting{
@@ -115,20 +161,20 @@ func TestExhaustionVariants(t *testing.T) {
 func TestConditionDesignsThatDoNotBuild(t *testing.T) {
 	t.Parallel()
 	for want, change := range map[string]func(*conditionbuild.Design){
-		"choose an icon":             func(d *conditionbuild.Design) { d.Icon = "rocket" },
-		"a colour like #7fa8dd":      func(d *conditionbuild.Design) { d.Color = "blue" },
-		"in up to 2000 characters":   func(d *conditionbuild.Design) { d.Text = strings.Repeat("x", 2001) },
-		"removed, on a rest, or":     func(d *conditionbuild.Design) { d.Ends = "never" },
-		"the ability its save uses":  func(d *conditionbuild.Design) { d.Ends, d.Ability = "save", "luck" },
-		"stack 2 to 10 levels":       func(d *conditionbuild.Design) { d.MaxLevel = 1 },
-		"a −0 to −5 penalty":         func(d *conditionbuild.Design) { d.PerLevel.D20 = 6 },
-		"0 to 30 feet per level":     func(d *conditionbuild.Design) { d.PerLevel.SpeedFt = 31 },
-		"kill at a level up to its":  func(d *conditionbuild.Design) { d.PerLevel.DeathAt = 5 },
-		"up to 20 parts":             func(d *conditionbuild.Design) { d.Parts = make([]conditionbuild.Part, 21) },
-		"choose each part":           func(d *conditionbuild.Design) { d.Parts[0].Type = "explode" },
-		"the ability each save part": func(d *conditionbuild.Design) { d.Parts[2].Ability = "" },
-		"5 to 60 feet":               func(d *conditionbuild.Design) { d.Parts[9].Feet = 0 },
-		"describe each manual part":  func(d *conditionbuild.Design) { d.Parts[11].Text = "" },
+		"choose an icon":              func(d *conditionbuild.Design) { d.Icon = "rocket" },
+		"a colour like #7fa8dd":       func(d *conditionbuild.Design) { d.Color = "blue" },
+		"in up to 2000 characters":    func(d *conditionbuild.Design) { d.Text = strings.Repeat("x", 2001) },
+		"on a rest, until a save, or": func(d *conditionbuild.Design) { d.Ends = "never" },
+		"the ability its save uses":   func(d *conditionbuild.Design) { d.Ends, d.Ability = "save", "luck" },
+		"stack 2 to 10 levels":        func(d *conditionbuild.Design) { d.MaxLevel = 1 },
+		"a −0 to −5 penalty":          func(d *conditionbuild.Design) { d.PerLevel.D20 = 6 },
+		"0 to 30 feet per level":      func(d *conditionbuild.Design) { d.PerLevel.SpeedFt = 31 },
+		"kill at a level up to its":   func(d *conditionbuild.Design) { d.PerLevel.DeathAt = 5 },
+		"up to 20 parts":              func(d *conditionbuild.Design) { d.Parts = make([]conditionbuild.Part, 21) },
+		"choose each part":            func(d *conditionbuild.Design) { d.Parts[0].Type = "explode" },
+		"the ability each save part":  func(d *conditionbuild.Design) { d.Parts[2].Ability = "" },
+		"5 to 60 feet":                func(d *conditionbuild.Design) { d.Parts[9].Feet = 0 },
+		"describe each manual part":   func(d *conditionbuild.Design) { d.Parts[11].Text = "" },
 	} {
 		d := frostbite()
 		change(&d)

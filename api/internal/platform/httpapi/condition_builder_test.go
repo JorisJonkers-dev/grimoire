@@ -27,6 +27,15 @@ func TestTheConditionBuilderAndExhaustionVariants(t *testing.T) {
 	if rec := call(h, http.MethodPost, "/api/v1/builders/conditions/preview", "dm", `{"name":"X","design":`+strings.Replace(frostbiteDesign, `"snow"`, `"rocket"`, 1)+`}`); rec.Code != http.StatusUnprocessableEntity {
 		t.Fatalf("a rocket icon: %d", rec.Code)
 	}
+	// A lingering injury names its cure and reads back as lasting until it; without a cure it does not build.
+	limp := `{"icon":"skull","color":"#aa3344","text":"","ends":"cure","cure":"Regenerate","perLevel":{"d20":0,"speedFt":0,"deathAt":0},"parts":[]}`
+	rec = call(h, http.MethodPost, "/api/v1/builders/conditions/preview", "dm", `{"name":"Limp","design":`+limp+`}`)
+	if got := decode(t, rec); rec.Code != http.StatusOK || got["design"].(map[string]any)["cure"] != "Regenerate" || !strings.Contains(strings.Join(toStrings(got["lines"].([]any)), "\n"), "Lingers through every rest until cured: Regenerate.") {
+		t.Fatalf("a lingering injury: %d %s", rec.Code, rec.Body.String())
+	}
+	if rec := call(h, http.MethodPost, "/api/v1/builders/conditions/preview", "dm", `{"name":"Limp","design":`+strings.Replace(limp, `"cure":"Regenerate",`, "", 1)+`}`); rec.Code != http.StatusUnprocessableEntity || !strings.Contains(rec.Body.String(), "name its cure") {
+		t.Fatalf("a lingering injury with no cure: %d %s", rec.Code, rec.Body.String())
+	}
 	if rec := call(h, http.MethodGet, "/api/v1/builders/conditions/"+npc, "dm", ""); rec.Code != http.StatusUnprocessableEntity {
 		t.Fatalf("an NPC in the condition builder: %d", rec.Code)
 	}

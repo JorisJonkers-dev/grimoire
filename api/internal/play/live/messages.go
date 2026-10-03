@@ -294,9 +294,11 @@ type Command struct {
 	// the group rejoin_party brings back, or table_follow has the Table Display follow.
 	TokenIDs  []string `json:"tokenIds,omitempty"`
 	SessionID string   `json:"sessionId,omitempty"`
-	promptID  uuid.UUID
-	rollID    domain.RollID
-	crossed   *crossings
+	// Cured says end_effect ends a lingering injury because its cure was applied.
+	Cured    bool `json:"cured,omitempty"`
+	promptID uuid.UUID
+	rollID   domain.RollID
+	crossed  *crossings
 }
 
 // Update kinds. A snapshot answers a join or resync; a view follows every change.
@@ -394,6 +396,8 @@ type EffectView struct {
 	// Icon and Color are how a homebrew condition shows.
 	Icon  string `json:"icon,omitempty"`
 	Color string `json:"color,omitempty"`
+	// Cure is what ends a lingering injury: the only thing that does.
+	Cure string `json:"cure,omitempty"`
 }
 
 // RosterEntry is one creature on the roster strip: hit points for the DM and the party's own, a rough

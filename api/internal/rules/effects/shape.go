@@ -167,6 +167,8 @@ const (
 	UntilRest      DurationKind = "until_rest"
 	Permanent      DurationKind = "permanent"
 	EndOfNextTurn  DurationKind = "end_of_next_turn"
+	// UntilCured is a lingering injury: it lasts until its own cure is applied.
+	UntilCured DurationKind = "until_cured"
 )
 
 // Duration is how long an Effect lasts, and the save its bearer repeats to end it early. The zero
@@ -192,7 +194,7 @@ func (d Duration) Rounds() int {
 		return d.Amount * RoundsPerMinute * 60
 	case EndOfNextTurn:
 		return 1
-	case Instant, UntilDispelled, UntilRest, Permanent:
+	case Instant, UntilDispelled, UntilRest, Permanent, UntilCured:
 	}
 	return 0
 }
@@ -200,6 +202,12 @@ func (d Duration) Rounds() int {
 // EndsOnRest reports whether finishing a rest ends the Effect.
 func (d Duration) EndsOnRest() bool {
 	return d.Kind == UntilRest
+}
+
+// Lingers reports whether the Effect lasts until its own cure: no rest ends it, and it goes with its
+// bearer from one Session to the next.
+func (d Duration) Lingers() bool {
+	return d.Kind == UntilCured
 }
 
 // Axis is what an Effect scales with.

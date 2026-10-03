@@ -109,6 +109,15 @@ type CampaignCharacterDraft struct {
 	UpdatedAt    time.Time
 }
 
+type CampaignCharacterInjury struct {
+	CharacterID uuid.UUID
+	Slug        string
+	Name        string
+	Cure        string
+	Level       int32
+	CreatedAt   time.Time
+}
+
 type CampaignCharacterPick struct {
 	CharacterID uuid.UUID
 	Level       int32

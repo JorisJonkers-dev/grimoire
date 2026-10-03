@@ -133,6 +133,10 @@ type Write struct {
 	Minute int
 	// ShortRests is the count of Short Rests since the last Long Rest, once a rest changes it.
 	ShortRests *int
+	// Injured are the lingering injuries a change leaves on Characters, and Cured the ones it ends:
+	// both are kept with the Character, beyond the Session.
+	Injured []domain.Injury
+	Cured   []domain.Injury
 	// Note is what the Action Log says of a Rule Variant of the Campaign's own firing or of a Roll
 	// Table's result. hook is the hook point an attack's d20 fires; tableResult the result to show.
 	Note        string
@@ -275,15 +279,15 @@ func withHomebrew(cat effects.Catalog, ground surface.Catalog, brew Brew) (effec
 	return cat, ground
 }
 
-// look is how a homebrew condition shows on a token.
+// look is how a homebrew condition shows on a token, and what cures it when it is a lingering injury.
 type look struct {
-	name, icon, color string
+	name, icon, color, cure string
 }
 
 func looksOf(conditions []conditionbuild.Condition) map[string]look {
 	out := make(map[string]look, len(conditions))
 	for _, c := range conditions {
-		out[c.Definition.Slug] = look{name: c.Definition.Name, icon: c.Icon, color: c.Color}
+		out[c.Definition.Slug] = look{name: c.Definition.Name, icon: c.Icon, color: c.Color, cure: c.Cure}
 	}
 	return out
 }
@@ -353,6 +357,8 @@ type Store interface {
 	// the Roll Tables of the Library the Campaign sees, at the Revision each is pinned to.
 	RuleHooks(ctx context.Context, campaign uuid.UUID) ([]Hook, error)
 	RollTables(ctx context.Context, campaign uuid.UUID) ([]Table, error)
+	// Injuries reads the lingering injuries a Character carries.
+	Injuries(ctx context.Context, character uuid.UUID) ([]domain.Injury, error)
 	// Observations is how much damage each creature has seen each other creature deal from range.
 	Observations(ctx context.Context, id domain.SessionID) (map[domain.TokenID]map[domain.TokenID]int, error)
 	Roll(ctx context.Context, campaign uuid.UUID, id domain.RollID) (domain.Roll, error)
@@ -1032,7 +1038,9 @@ func apply(s *state, w *Write) {
 	fell := heights != nil && s.falls(w, heights)
 	s.formBroken(w)
 	changed := w.effect != nil || len(w.ended)+len(w.manuals)+len(w.newSaves) > 0 || w.resolved != uuid.Nil || w.saved != domain.RollID{}
+	w.Cured = s.curedBy(w)
 	applyEffects(s, w)
+	w.Injured = s.injuredBy(w)
 	started := map[domain.TokenID]bool{}
 	for id := range s.acting() {
 		started[id] = !before[id]

@@ -225,7 +225,7 @@ func (d Duration) Text(concentration bool) string {
 	length := map[DurationKind]string{
 		Instant: "Instantaneous", Rounds: plural(d.Amount, "round"), Minutes: plural(d.Amount, "minute"), Hours: plural(d.Amount, "hour"),
 		UntilDispelled: "Until dispelled", UntilRest: "Until the target finishes a Short or Long Rest", Permanent: "Permanent",
-		EndOfNextTurn: "Until the end of the target's next turn",
+		EndOfNextTurn: "Until the end of the target's next turn", UntilCured: "Until cured",
 	}[d.Kind]
 	switch {
 	case length == "":

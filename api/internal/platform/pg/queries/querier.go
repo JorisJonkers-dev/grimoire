@@ -118,6 +118,7 @@ type Querier interface {
 	// What a Character carries: every item in its own Container and the bags inside it, and its coins.
 	CharacterCarried(ctx context.Context, owner pgtype.UUID) (float64, error)
 	CharacterClasses(ctx context.Context, characterID uuid.UUID) ([]CharacterClassesRow, error)
+	CharacterInjuries(ctx context.Context, characterID uuid.UUID) ([]CharacterInjuriesRow, error)
 	CharacterPicks(ctx context.Context, characterID uuid.UUID) ([]CharacterPicksRow, error)
 	// The coins in a Character's own container; none when it has never held any.
 	CharacterPurse(ctx context.Context, characterID pgtype.UUID) ([]CharacterPurseRow, error)
@@ -193,6 +194,7 @@ type Querier interface {
 	DeleteBlock(ctx context.Context, arg DeleteBlockParams) (int64, error)
 	DeleteCharacter(ctx context.Context, arg DeleteCharacterParams) error
 	DeleteCharacterDraft(ctx context.Context, arg DeleteCharacterDraftParams) error
+	DeleteCharacterInjury(ctx context.Context, arg DeleteCharacterInjuryParams) error
 	DeleteCompanion(ctx context.Context, arg DeleteCompanionParams) (int64, error)
 	DeleteContainer(ctx context.Context, id uuid.UUID) error
 	DeleteContainerCoins(ctx context.Context, arg DeleteContainerCoinsParams) error
@@ -825,6 +827,7 @@ type Querier interface {
 	UpdateToken(ctx context.Context, arg UpdateTokenParams) error
 	UpsertArmor(ctx context.Context, arg UpsertArmorParams) error
 	UpsertBackground(ctx context.Context, arg UpsertBackgroundParams) (int64, error)
+	UpsertCharacterInjury(ctx context.Context, arg UpsertCharacterInjuryParams) error
 	UpsertClass(ctx context.Context, arg UpsertClassParams) (int64, error)
 	UpsertCondition(ctx context.Context, arg UpsertConditionParams) error
 	UpsertDamageType(ctx context.Context, arg UpsertDamageTypeParams) (int64, error)

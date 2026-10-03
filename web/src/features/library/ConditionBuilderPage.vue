@@ -17,6 +17,11 @@ const { design, shown, status, name, readOnly, problem, runPreview, runSave } = 
   entryId, data: condition.data, key: computed(() => getConditionBuildOptions(path.value).queryKey), preview, save, fallback: 'Condition',
 })
 
+// Only a condition that lasts until cured names a cure.
+function lasts() {
+  if (design.value && design.value.ends !== 'cure') delete design.value.cure
+}
+
 const icons = ['drop', 'flame', 'snow', 'skull', 'spiral', 'eye', 'chain', 'star', 'moon', 'leaf', 'bolt', 'heart', 'shield', 'cloud']
 const parts = [
   { value: 'attack_advantage', label: 'Its attacks have Advantage' },
@@ -56,12 +61,14 @@ const parts = [
           <label class="g-field"><span>What it is</span><textarea v-model="design.text" rows="3" maxlength="2000" data-testid="condition-text" /></label>
           <div class="grid">
             <label class="g-field"><span>Lasts</span>
-              <select v-model="design.ends" data-testid="condition-ends">
+              <select v-model="design.ends" data-testid="condition-ends" @change="lasts()">
                 <option value="removed">until removed</option>
                 <option value="rest">until a rest</option>
                 <option value="save">until a save at the end of each turn</option>
+                <option value="cure">until cured: a lingering injury</option>
               </select>
             </label>
+            <label v-if="design.ends === 'cure'" class="g-field"><span>What cures it</span><input v-model="design.cure" maxlength="80" data-testid="condition-cure" /></label>
             <label v-if="design.ends === 'save'" class="g-field"><span>Save</span>
               <select v-model="design.ability" data-testid="condition-ability"><option v-for="a in abilities" :key="a" :value="a">{{ a }}</option></select>
             </label>
