@@ -63,6 +63,10 @@ export type CampaignSummary = {
      */
     noUndo?: boolean;
     /**
+     * The DC of a check is shown on its Roll Card; without it the DC is the DM's to know.
+     */
+    showDcs?: boolean;
+    /**
      * The exhaustion the Campaign plays with: srd-2024, gentle, grim or off.
      */
     exhaustion?: string;
@@ -128,6 +132,10 @@ export type Campaign = {
      */
     noUndo?: boolean;
     /**
+     * The DC of a check is shown on its Roll Card; without it the DC is the DM's to know.
+     */
+    showDcs?: boolean;
+    /**
      * The exhaustion the Campaign plays with: srd-2024, gentle, grim or off.
      */
     exhaustion?: string;
@@ -180,6 +188,10 @@ export type CampaignUpdate = {
      * The Campaign is played without undo: nothing is taken back, no Checkpoint is kept and there is no rewind.
      */
     noUndo?: boolean;
+    /**
+     * The DC of a check is shown on its Roll Card; without it the DC is the DM's to know.
+     */
+    showDcs?: boolean;
     /**
      * The exhaustion the Campaign plays with: srd-2024, gentle, grim or off.
      */
@@ -2403,6 +2415,10 @@ export type LiveToken = {
      * How a creature of a Faction first takes to the party, by the Faction's Standing. For the DM alone; factionId itself goes to every screen that sees the creature.
      */
     firstReaction?: 'hostile' | 'indifferent' | 'friendly';
+    /**
+     * How the creature takes to each Character an Influence check has moved it towards. A check that meets the DC moves it a step towards friendly, one that misses by five or more a step towards hostile; a friendly creature gives Advantage on the next check and a hostile one Disadvantage.
+     */
+    attitudes?: Array<LiveAttitude>;
     q: number;
     r: number;
     hidden: boolean;
@@ -3948,6 +3964,14 @@ export type LiveTravelPlan = {
     pace: TravelPace;
     minutes: number;
     days: number;
+};
+
+/**
+ * A creature's attitude towards one Character.
+ */
+export type LiveAttitude = {
+    characterId: Id;
+    attitude: 'hostile' | 'indifferent' | 'friendly';
 };
 
 /**

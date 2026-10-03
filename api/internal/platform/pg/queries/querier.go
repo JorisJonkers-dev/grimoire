@@ -105,6 +105,7 @@ type Querier interface {
 	CampaignRuleset(ctx context.Context, id uuid.UUID) (string, error)
 	CampaignShopStock(ctx context.Context, campaignID uuid.UUID) ([]PrepShopStock, error)
 	CampaignShops(ctx context.Context, campaignID uuid.UUID) ([]PrepShop, error)
+	CampaignShowDCs(ctx context.Context, id uuid.UUID) (bool, error)
 	CampaignTableEntries(ctx context.Context, campaignID uuid.UUID) ([]PrepTableEntry, error)
 	CastHexes(ctx context.Context, castID uuid.UUID) ([]CastHexesRow, error)
 	CastTargets(ctx context.Context, castID uuid.UUID) ([]CastTargetsRow, error)
@@ -639,6 +640,8 @@ type Querier interface {
 	SeenUserAgent(ctx context.Context, arg SeenUserAgentParams) (SeenUserAgentRow, error)
 	SessionAccount(ctx context.Context, arg SessionAccountParams) (SessionAccountRow, error)
 	SessionActionBySeq(ctx context.Context, arg SessionActionBySeqParams) (SessionActionBySeqRow, error)
+	// The attitudes of the creatures on a Session's map towards the Campaign's Characters.
+	SessionAttitudes(ctx context.Context, sessionID uuid.UUID) ([]PlayTokenAttitude, error)
 	SessionByID(ctx context.Context, id uuid.UUID) (PlaySession, error)
 	SessionCast(ctx context.Context, sessionID uuid.UUID) (SessionCastRow, error)
 	SessionChecks(ctx context.Context, sessionID pgtype.UUID) ([]SessionChecksRow, error)
@@ -676,6 +679,8 @@ type Querier interface {
 	SetAccountCharacterActionBars(ctx context.Context, arg SetAccountCharacterActionBarsParams) error
 	SetAccountDisabled(ctx context.Context, arg SetAccountDisabledParams) error
 	SetAccountPassword(ctx context.Context, arg SetAccountPasswordParams) error
+	// Only a creature of the Session takes an attitude, and only towards a Character of the Session's Campaign.
+	SetAttitude(ctx context.Context, arg SetAttitudeParams) error
 	SetCampaignClock(ctx context.Context, arg SetCampaignClockParams) error
 	SetCanPrepare(ctx context.Context, arg SetCanPrepareParams) error
 	SetCharacterAbility(ctx context.Context, arg SetCharacterAbilityParams) error

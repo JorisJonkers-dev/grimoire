@@ -3776,6 +3776,8 @@ type Campaign struct {
 	// The Campaign is played without undo: nothing is taken back, no Checkpoint is kept and there is no
 	// rewind.
 	NoUndo OptBool `json:"noUndo"`
+	// The DC of a check is shown on its Roll Card; without it the DC is the DM's to know.
+	ShowDcs OptBool `json:"showDcs"`
 	// The exhaustion the Campaign plays with: srd-2024, gentle, grim or off.
 	Exhaustion OptString `json:"exhaustion"`
 	// Identical monsters share one initiative roll.
@@ -3852,6 +3854,11 @@ func (s *Campaign) GetHoldLevelUps() OptBool {
 // GetNoUndo returns the value of NoUndo.
 func (s *Campaign) GetNoUndo() OptBool {
 	return s.NoUndo
+}
+
+// GetShowDcs returns the value of ShowDcs.
+func (s *Campaign) GetShowDcs() OptBool {
+	return s.ShowDcs
 }
 
 // GetExhaustion returns the value of Exhaustion.
@@ -3942,6 +3949,11 @@ func (s *Campaign) SetHoldLevelUps(val OptBool) {
 // SetNoUndo sets the value of NoUndo.
 func (s *Campaign) SetNoUndo(val OptBool) {
 	s.NoUndo = val
+}
+
+// SetShowDcs sets the value of ShowDcs.
+func (s *Campaign) SetShowDcs(val OptBool) {
+	s.ShowDcs = val
 }
 
 // SetExhaustion sets the value of Exhaustion.
@@ -4346,6 +4358,8 @@ type CampaignSummary struct {
 	// The Campaign is played without undo: nothing is taken back, no Checkpoint is kept and there is no
 	// rewind.
 	NoUndo OptBool `json:"noUndo"`
+	// The DC of a check is shown on its Roll Card; without it the DC is the DM's to know.
+	ShowDcs OptBool `json:"showDcs"`
 	// The exhaustion the Campaign plays with: srd-2024, gentle, grim or off.
 	Exhaustion OptString `json:"exhaustion"`
 	// Identical monsters share one initiative roll.
@@ -4420,6 +4434,11 @@ func (s *CampaignSummary) GetHoldLevelUps() OptBool {
 // GetNoUndo returns the value of NoUndo.
 func (s *CampaignSummary) GetNoUndo() OptBool {
 	return s.NoUndo
+}
+
+// GetShowDcs returns the value of ShowDcs.
+func (s *CampaignSummary) GetShowDcs() OptBool {
+	return s.ShowDcs
 }
 
 // GetExhaustion returns the value of Exhaustion.
@@ -4502,6 +4521,11 @@ func (s *CampaignSummary) SetNoUndo(val OptBool) {
 	s.NoUndo = val
 }
 
+// SetShowDcs sets the value of ShowDcs.
+func (s *CampaignSummary) SetShowDcs(val OptBool) {
+	s.ShowDcs = val
+}
+
 // SetExhaustion sets the value of Exhaustion.
 func (s *CampaignSummary) SetExhaustion(val OptString) {
 	s.Exhaustion = val
@@ -4582,6 +4606,8 @@ type CampaignUpdate struct {
 	// The Campaign is played without undo: nothing is taken back, no Checkpoint is kept and there is no
 	// rewind.
 	NoUndo OptBool `json:"noUndo"`
+	// The DC of a check is shown on its Roll Card; without it the DC is the DM's to know.
+	ShowDcs OptBool `json:"showDcs"`
 	// The exhaustion the Campaign plays with: srd-2024, gentle, grim or off.
 	Exhaustion OptString `json:"exhaustion"`
 	// Identical monsters share one initiative roll.
@@ -4636,6 +4662,11 @@ func (s *CampaignUpdate) GetHoldLevelUps() OptBool {
 // GetNoUndo returns the value of NoUndo.
 func (s *CampaignUpdate) GetNoUndo() OptBool {
 	return s.NoUndo
+}
+
+// GetShowDcs returns the value of ShowDcs.
+func (s *CampaignUpdate) GetShowDcs() OptBool {
+	return s.ShowDcs
 }
 
 // GetExhaustion returns the value of Exhaustion.
@@ -4696,6 +4727,11 @@ func (s *CampaignUpdate) SetHoldLevelUps(val OptBool) {
 // SetNoUndo sets the value of NoUndo.
 func (s *CampaignUpdate) SetNoUndo(val OptBool) {
 	s.NoUndo = val
+}
+
+// SetShowDcs sets the value of ShowDcs.
+func (s *CampaignUpdate) SetShowDcs(val OptBool) {
+	s.ShowDcs = val
 }
 
 // SetExhaustion sets the value of Exhaustion.
@@ -20046,6 +20082,81 @@ func (s *LiveAttackPreviewMode) UnmarshalText(data []byte) error {
 	}
 }
 
+// A creature's attitude towards one Character.
+// Ref: #/components/schemas/LiveAttitude
+type LiveAttitude struct {
+	CharacterId ID                   `json:"characterId"`
+	Attitude    LiveAttitudeAttitude `json:"attitude"`
+}
+
+// GetCharacterId returns the value of CharacterId.
+func (s *LiveAttitude) GetCharacterId() ID {
+	return s.CharacterId
+}
+
+// GetAttitude returns the value of Attitude.
+func (s *LiveAttitude) GetAttitude() LiveAttitudeAttitude {
+	return s.Attitude
+}
+
+// SetCharacterId sets the value of CharacterId.
+func (s *LiveAttitude) SetCharacterId(val ID) {
+	s.CharacterId = val
+}
+
+// SetAttitude sets the value of Attitude.
+func (s *LiveAttitude) SetAttitude(val LiveAttitudeAttitude) {
+	s.Attitude = val
+}
+
+type LiveAttitudeAttitude string
+
+const (
+	LiveAttitudeAttitudeHostile     LiveAttitudeAttitude = "hostile"
+	LiveAttitudeAttitudeIndifferent LiveAttitudeAttitude = "indifferent"
+	LiveAttitudeAttitudeFriendly    LiveAttitudeAttitude = "friendly"
+)
+
+// AllValues returns all LiveAttitudeAttitude values.
+func (LiveAttitudeAttitude) AllValues() []LiveAttitudeAttitude {
+	return []LiveAttitudeAttitude{
+		LiveAttitudeAttitudeHostile,
+		LiveAttitudeAttitudeIndifferent,
+		LiveAttitudeAttitudeFriendly,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveAttitudeAttitude) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveAttitudeAttitudeHostile:
+		return []byte(s), nil
+	case LiveAttitudeAttitudeIndifferent:
+		return []byte(s), nil
+	case LiveAttitudeAttitudeFriendly:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveAttitudeAttitude) UnmarshalText(data []byte) error {
+	switch LiveAttitudeAttitude(data) {
+	case LiveAttitudeAttitudeHostile:
+		*s = LiveAttitudeAttitudeHostile
+		return nil
+	case LiveAttitudeAttitudeIndifferent:
+		*s = LiveAttitudeAttitudeIndifferent
+		return nil
+	case LiveAttitudeAttitudeFriendly:
+		*s = LiveAttitudeAttitudeFriendly
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // An Encounter Check. Everyone sees what set it off and its outcome, and an open check's roll; only
 // the DM sees its table, mode, seed, entry and creatures.
 // Ref: #/components/schemas/LiveCheck
@@ -27178,14 +27289,18 @@ type LiveToken struct {
 	// How a creature of a Faction first takes to the party, by the Faction's Standing. For the DM alone;
 	// factionId itself goes to every screen that sees the creature.
 	FirstReaction OptLiveTokenFirstReaction `json:"firstReaction"`
-	Q             int32                     `json:"q"`
-	R             int32                     `json:"r"`
-	Hidden        bool                      `json:"hidden"`
-	ControllerId  OptID                     `json:"controllerId"`
-	CharacterId   OptID                     `json:"characterId"`
-	Ac            OptInt32                  `json:"ac"`
-	Hp            OptInt32                  `json:"hp"`
-	HpMax         OptInt32                  `json:"hpMax"`
+	// How the creature takes to each Character an Influence check has moved it towards. A check that meets
+	// the DC moves it a step towards friendly, one that misses by five or more a step towards hostile; a
+	// friendly creature gives Advantage on the next check and a hostile one Disadvantage.
+	Attitudes    []LiveAttitude `json:"attitudes"`
+	Q            int32          `json:"q"`
+	R            int32          `json:"r"`
+	Hidden       bool           `json:"hidden"`
+	ControllerId OptID          `json:"controllerId"`
+	CharacterId  OptID          `json:"characterId"`
+	Ac           OptInt32       `json:"ac"`
+	Hp           OptInt32       `json:"hp"`
+	HpMax        OptInt32       `json:"hpMax"`
 	// Temporary hit points, lost before hit points.
 	TempHp OptInt32 `json:"tempHp"`
 	// The creature whose shape the token has taken.
@@ -27237,6 +27352,11 @@ func (s *LiveToken) GetFactionId() OptID {
 // GetFirstReaction returns the value of FirstReaction.
 func (s *LiveToken) GetFirstReaction() OptLiveTokenFirstReaction {
 	return s.FirstReaction
+}
+
+// GetAttitudes returns the value of Attitudes.
+func (s *LiveToken) GetAttitudes() []LiveAttitude {
+	return s.Attitudes
 }
 
 // GetQ returns the value of Q.
@@ -27367,6 +27487,11 @@ func (s *LiveToken) SetFactionId(val OptID) {
 // SetFirstReaction sets the value of FirstReaction.
 func (s *LiveToken) SetFirstReaction(val OptLiveTokenFirstReaction) {
 	s.FirstReaction = val
+}
+
+// SetAttitudes sets the value of Attitudes.
+func (s *LiveToken) SetAttitudes(val []LiveAttitude) {
+	s.Attitudes = val
 }
 
 // SetQ sets the value of Q.

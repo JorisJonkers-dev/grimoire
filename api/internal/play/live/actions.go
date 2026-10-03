@@ -75,15 +75,17 @@ func (r *runtime) planAction(m domain.Member, cmd Command) (Write, string) {
 	case actions.Ready:
 		return r.ready(t, cmd, w)
 	case actions.Influence:
-		notation, line, reason := r.swayed(m, t, cmd.TargetID)
+		plan, reason := r.swayed(m, t, cmd.TargetID)
 		if reason != "" {
 			return Write{}, reason
 		}
-		roll := r.abilityCheck(m, t, info, notation)
-		if line != nil {
-			roll.Modifiers = append(roll.Modifiers, *line)
-		}
+		roll := r.abilityCheck(m, t, info, plan.notation)
+		roll.Purpose += plan.shownDC
+		roll.Modifiers = append(roll.Modifiers, plan.lines...)
 		w.Rolls = []domain.Roll{roll}
+		if plan.target != nil {
+			w.Pending = &domain.PendingAction{RollID: roll.ID, Actor: t.ID, Target: plan.target, Action: string(actions.Influence), DC: plan.dc}
+		}
 	case actions.Hide, actions.Search, actions.Study:
 		w.Rolls = []domain.Roll{r.abilityCheck(m, t, info, attack.D20(attack.Normal))}
 		if info.Action == actions.Hide {
@@ -234,6 +236,8 @@ func (r *runtime) actionRolled(p domain.PendingAction) {
 				w.ended = append(w.ended, e.ID)
 			}
 		}
+	case p.Action == string(actions.Influence):
+		w.Attitude = r.st.swayedTo(a, *p.Target, roll.Total, p.DC)
 	case p.Action == string(actions.Hide) && roll.Total >= p.DC:
 		e := domain.Effect{ID: domain.EffectID(uuid.New()), Target: a.ID, Slug: "invisible", Name: "Invisible", Level: 1}
 		w.effect = &e
@@ -277,6 +281,9 @@ func (s *state) occupied(c hex.Coord) bool {
 func applyResolved(s *state, w *Write) {
 	applyDying(s, w)
 	s.pending = slices.DeleteFunc(s.pending, func(p domain.PendingAction) bool { return p.RollID == w.Settled })
+	if a := w.Attitude; a != nil {
+		s.attitudes = append(slices.DeleteFunc(s.attitudes, func(x domain.Attitude) bool { return x.Token == a.Token && x.Character == a.Character }), *a)
+	}
 	if w.Pushed != nil {
 		s.tokens[w.Pushed.ID] = *w.Pushed
 	}

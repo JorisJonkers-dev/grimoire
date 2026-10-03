@@ -119,6 +119,9 @@ const companions = useQuery(computed(() => ({ ...listCompanionsOptions({ path: {
 // The DM places a creature as one of a Faction, openly: its Standing then shapes social checks with it.
 const factions = useQuery(computed(() => ({ ...listFactionsOptions({ path: { campaignId } }), retry: false })))
 const faction = ref('')
+// How a creature takes to each Character an Influence check has moved it towards.
+const attitudeNames = { hostile: 'Hostile', indifferent: 'Indifferent', friendly: 'Friendly' }
+const characterName = (id: string) => characters.data.value?.find((c) => c.id === id)?.name ?? 'a Character'
 // An Influence check is aimed at a creature: how its Faction regards whoever tries shapes the roll.
 const swayed = ref('')
 const swayable = computed(() => (view.value?.tokens ?? []).filter((t) => t.kind === 'npc' || t.kind === 'enemy'))
@@ -837,6 +840,9 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
             <p v-if="chosen.factionId" class="hint" data-testid="token-faction-line">
               Of {{ factionName(chosen.factionId) }}.<template v-if="chosen.firstReaction"> First reaction: {{ chosen.firstReaction }}.</template>
             </p>
+            <ul v-if="chosen.attitudes?.length" class="g-list" aria-label="Attitudes">
+              <li v-for="a in chosen.attitudes" :key="a.characterId" data-testid="token-attitude">{{ attitudeNames[a.attitude] }} towards {{ characterName(a.characterId) }}</li>
+            </ul>
             <label v-if="isDM && chosen.companionId" class="g-field">
               <span>Run by</span>
               <select

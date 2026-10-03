@@ -54,6 +54,7 @@ func (s *Store) saveActions(ctx context.Context, sess domain.Session, w live.Wri
 	if err := s.savePending(ctx, sid, w); err != nil {
 		return err
 	}
+
 	if err := s.saveSneak(ctx, sid, w); err != nil {
 		return err
 	}
@@ -93,7 +94,15 @@ func (s *Store) savePending(ctx context.Context, sid uuid.UUID, w live.Write) er
 	if w.Settled == (domain.RollID{}) {
 		return nil
 	}
-	return s.q.DeletePendingAction(ctx, uuid.UUID(w.Settled))
+	if err := s.q.DeletePendingAction(ctx, uuid.UUID(w.Settled)); err != nil {
+		return err
+	}
+	// What the settled check left behind: the attitude an Influence check moved.
+	a := w.Attitude
+	if a == nil {
+		return nil
+	}
+	return s.q.SetAttitude(ctx, queries.SetAttitudeParams{SessionID: sid, TokenID: uuid.UUID(a.Token), CharacterID: a.Character, Attitude: a.Value})
 }
 
 // LoadDying reads the Characters of a Session at 0 hit points.
@@ -231,4 +240,22 @@ func (s *Store) LoadExploration(ctx context.Context, id domain.SessionID) (*doma
 		out.Order = append(out.Order, domain.TokenID(t))
 	}
 	return out, nil
+}
+
+// LoadAttitudes reads how the creatures of a Session take to the Campaign's Characters.
+func (s *Store) LoadAttitudes(ctx context.Context, id domain.SessionID) ([]domain.Attitude, error) {
+	rows, err := s.q.SessionAttitudes(ctx, uuid.UUID(id))
+	if err != nil {
+		return nil, err
+	}
+	out := make([]domain.Attitude, 0, len(rows))
+	for _, r := range rows {
+		out = append(out, domain.Attitude{Token: domain.TokenID(r.TokenID), Character: r.CharacterID, Value: r.Attitude})
+	}
+	return out, nil
+}
+
+// ShowDCs reads whether the Campaign shows the DC of a check on its Roll Card.
+func (s *Store) ShowDCs(ctx context.Context, campaign uuid.UUID) (bool, error) {
+	return s.q.CampaignShowDCs(ctx, campaign)
 }

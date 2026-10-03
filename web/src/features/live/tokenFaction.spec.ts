@@ -14,14 +14,19 @@ const campaign = (as: 'dm' | 'player') => ({
   me: as === 'dm' ? { ...dm, isMe: true } : { ...player, isMe: true }, members: [dm, player],
 })
 const factions = [{ id: WATCH, name: 'The Lantern Watch', archetype: 'city-watch', tier: 'allied', personal: [], changes: [], dm: { goals: '', territory: '', notes: '', score: 80 } }]
-const watchman: LiveToken = { id: '0190c7a8-0000-7000-8000-00000000000a', label: 'Watchman', kind: 'npc', q: 1, r: 0, hidden: false, darkvisionFt: 0, factionId: WATCH, firstReaction: 'friendly' }
-const stray: LiveToken = { ...watchman, id: '0190c7a8-0000-7000-8000-00000000000c', label: 'Stray', q: 0, r: 1, factionId: undefined, firstReaction: undefined }
+const ARIA = '0190c7a8-0000-7000-8000-0000000000a1'
+const BROM = '0190c7a8-0000-7000-8000-0000000000a2'
+const watchman: LiveToken = {
+  id: '0190c7a8-0000-7000-8000-00000000000a', label: 'Watchman', kind: 'npc', q: 1, r: 0, hidden: false, darkvisionFt: 0, factionId: WATCH, firstReaction: 'friendly',
+  attitudes: [{ characterId: ARIA, attitude: 'friendly' }, { characterId: BROM, attitude: 'hostile' }],
+}
+const stray: LiveToken = { ...watchman, id: '0190c7a8-0000-7000-8000-00000000000c', label: 'Stray', q: 0, r: 1, factionId: undefined, firstReaction: undefined, attitudes: undefined }
 
 async function open(as: 'dm' | 'player', tokens: LiveToken[]) {
   const mounted = await mountApp(`/campaigns/${ID}/sessions/${SID}`, {
     [`/api/v1/campaigns/${ID}/factions`]: () => factions,
     [`/api/v1/campaigns/${ID}/maps`]: () => [],
-    [`/api/v1/campaigns/${ID}/characters`]: () => [],
+    [`/api/v1/campaigns/${ID}/characters`]: () => [{ id: ARIA, name: 'Aria', ownerName: 'T', mine: false, species: 'human', class: 'fighter', level: 1, hpCurrent: 1, hpMax: 1 }],
     [`/api/v1/campaigns/${ID}`]: () => campaign(as),
   })
   const s = FakeSocket.last()
@@ -51,9 +56,12 @@ describe('a creature of a Faction', () => {
 
     await wrapper.get('[data-hex="1,0"]').trigger('click')
     expect(wrapper.get('[data-testid="token-faction-line"]').text()).toBe('Of The Lantern Watch. First reaction: friendly.')
+    // How it takes to each Character an Influence check has moved it towards; one the list does not know is still told.
+    expect(wrapper.findAll('[data-testid="token-attitude"]').map((li) => li.text())).toEqual(['Friendly towards Aria', 'Hostile towards a Character'])
     // A swaying check is aimed at whoever is chosen: the Standing with its Faction shapes the roll.
     await wrapper.get('[data-hex="0,1"]').trigger('click')
     expect(wrapper.find('[data-testid="token-faction-line"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="token-attitude"]').exists()).toBe(false)
   })
 
   it('lets a Player aim an Influence check at a creature', async () => {
