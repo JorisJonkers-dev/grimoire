@@ -70,7 +70,8 @@ watch(acting, async (id) => {
 <template>
   <section :class="['roster', { 'roster--reveal': phase, 'roster--settle': phase === 'settle' }]" aria-label="Roster" data-testid="roster-strip">
     <h2 v-if="combat" class="round" data-testid="initiative-rail">{{ combat.status === 'rolling' ? 'Rolling initiative' : `Round ${String(combat.round)}` }}</h2>
-    <TransitionGroup ref="strip" tag="ol" name="slot">
+    <!-- The strip scrolls sideways when it is wider than the screen, so the keyboard has to be able to reach it. -->
+    <TransitionGroup ref="strip" tag="ol" name="slot" tabindex="0" aria-label="Creatures, in order">
       <li
         v-for="e in shown"
         :key="e.tokenId"
@@ -125,6 +126,10 @@ watch(acting, async (id) => {
   margin: 0;
   font-size: 14px;
   color: var(--color-text-2);
+}
+ol:focus-visible {
+  outline: 2px solid var(--color-gold-high);
+  outline-offset: 2px;
 }
 ol {
   display: flex;

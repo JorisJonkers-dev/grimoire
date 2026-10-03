@@ -70,6 +70,8 @@ describe('phone shell', () => {
     const tab = (key: string) => wrapper.get(`[data-testid="page-${key}"]`)
     expect(wrapper.findAll('[data-testid="phone-pages"] button').map((b) => b.text())).toEqual(['Map', 'Actions', 'Spells', 'Character', 'Party'])
     expect(tab('map').attributes('aria-current')).toBe('page')
+    // On a narrow screen the roster scrolls sideways, so the keyboard can reach it.
+    expect(wrapper.get('[data-testid="roster-strip"] ol').attributes()).toMatchObject({ tabindex: '0', 'aria-label': 'Creatures, in order' })
     expect(dock.classes()).toContain('dock--page-map')
     // What a page holds is marked on it: the hotbar is on Actions, the spell list on Spells.
     expect(wrapper.get('[data-testid="hotbar-Aria"]').attributes('data-page')).toBe('actions')
