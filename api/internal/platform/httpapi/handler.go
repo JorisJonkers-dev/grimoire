@@ -45,6 +45,7 @@ type Handler struct {
 	Notifications NotificationService
 	Releases      ReleaseService
 	Library       LibraryService
+	Spells        SpellBuilder
 	// LiveTimeout bounds how long a REST call waits for a live Session; zero means ten seconds.
 	LiveTimeout time.Duration
 	Log         *slog.Logger

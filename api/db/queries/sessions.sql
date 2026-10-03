@@ -24,14 +24,14 @@ UPDATE play.sessions SET seq = seq + 1 WHERE id = $1 RETURNING seq;
 
 -- name: SessionTokens :many
 SELECT id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class, hp, hp_max, intelligence, tactics, can_shield, spell_dc,
-    stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action, temp_hp, summon_effect_id, disguise, strength FROM play.tokens WHERE session_id = $1 ORDER BY label, id;
+    stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action, temp_hp, summon_effect_id, disguise, strength, creature_type FROM play.tokens WHERE session_id = $1 ORDER BY label, id;
 
 -- name: InsertToken :exec
 INSERT INTO play.tokens (id, session_id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class,
-    hp, hp_max, intelligence, can_shield, spell_dc, stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action, summon_effect_id, strength)
+    hp, hp_max, intelligence, can_shield, spell_dc, stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action, summon_effect_id, strength, creature_type)
 VALUES (@id, @session_id, @label, @kind, @q, @r, @hidden, @darkvision_ft, @controller_member_id, sqlc.narg(stat_source),
     sqlc.narg(armor_class), sqlc.narg(hp), sqlc.narg(hp_max), sqlc.narg(intelligence), @can_shield, sqlc.narg(spell_dc), @stealth,
-    @perception, @initiative, @speed_ft, @unarmed_dc, @attacks_per_action, sqlc.narg(summon_effect_id), @strength);
+    @perception, @initiative, @speed_ft, @unarmed_dc, @attacks_per_action, sqlc.narg(summon_effect_id), @strength, @creature_type);
 
 -- name: UpdateToken :exec
 UPDATE play.tokens SET q = @q, r = @r, hidden = @hidden WHERE session_id = @session_id AND id = @id;
@@ -129,7 +129,7 @@ SELECT ruleset_pref FROM campaign.campaigns WHERE id = $1;
 
 -- name: MonsterStatblock :one
 SELECT m.id, m.name, m.armor_class, m.hit_points, m.intelligence, m.strength, m.dexterity, m.constitution, m.wisdom, m.charisma,
-       COALESCE(m.challenge_rating, 0)::float8 AS challenge_rating
+       COALESCE(m.challenge_rating, 0)::float8 AS challenge_rating, m.creature_type
 FROM compendium.monsters m
 JOIN compendium.documents d ON d.id = m.document_id
 WHERE m.slug = @slug AND (sqlc.narg(ruleset)::text IS NULL OR d.key = sqlc.narg(ruleset)::text)
@@ -424,3 +424,18 @@ DELETE FROM play.token_attacks WHERE token_id = @token_id;
 
 -- name: SetTokenArmorClass :exec
 UPDATE play.tokens SET armor_class = @armor_class WHERE session_id = @session_id AND id = @id;
+
+-- name: CampaignHomebrewSpells :many
+WITH visible AS (
+    SELECT l.entry_id FROM library.campaign_links l WHERE l.campaign_id = @campaign_id AND l.direct
+    UNION
+    SELECT ce.entry_id FROM library.collection_entries ce
+    JOIN library.campaign_collections cc ON cc.collection_id = ce.collection_id WHERE cc.campaign_id = @campaign_id
+)
+SELECT e.id, coalesce(r.name, e.name)::text AS name, coalesce(r.design, e.design)::jsonb AS design
+FROM visible v
+JOIN library.entries e ON e.id = v.entry_id AND e.kind = 'spell'
+LEFT JOIN library.campaign_links l ON l.entry_id = e.id AND l.campaign_id = @campaign_id
+LEFT JOIN library.entry_revisions r ON r.entry_id = e.id AND r.no = l.pinned_revision
+WHERE coalesce(r.design, e.design) IS NOT NULL
+ORDER BY e.id;

@@ -3195,6 +3195,33 @@ func (s *BuildSnapshotMethod) UnmarshalText(data []byte) error {
 	}
 }
 
+// A hex of an area, relative to its origin.
+// Ref: #/components/schemas/BuilderHex
+type BuilderHex struct {
+	Q int32 `json:"q"`
+	R int32 `json:"r"`
+}
+
+// GetQ returns the value of Q.
+func (s *BuilderHex) GetQ() int32 {
+	return s.Q
+}
+
+// GetR returns the value of R.
+func (s *BuilderHex) GetR() int32 {
+	return s.R
+}
+
+// SetQ sets the value of Q.
+func (s *BuilderHex) SetQ(val int32) {
+	s.Q = val
+}
+
+// SetR sets the value of R.
+func (s *BuilderHex) SetR(val int32) {
+	s.R = val
+}
+
 // What a first-level character can choose in one ruleset.
 // Ref: #/components/schemas/BuilderOptions
 type BuilderOptions struct {
@@ -26731,6 +26758,52 @@ func (o OptLevelUpRequestHitPoints) Or(d LevelUpRequestHitPoints) LevelUpRequest
 	return d
 }
 
+// NewOptLibraryEntry returns new OptLibraryEntry with value set to v.
+func NewOptLibraryEntry(v LibraryEntry) OptLibraryEntry {
+	return OptLibraryEntry{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLibraryEntry is optional LibraryEntry.
+type OptLibraryEntry struct {
+	Value LibraryEntry
+	Set   bool
+}
+
+// IsSet returns true if OptLibraryEntry was set.
+func (o OptLibraryEntry) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLibraryEntry) Reset() {
+	var v LibraryEntry
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLibraryEntry) SetTo(v LibraryEntry) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLibraryEntry) Get() (v LibraryEntry, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLibraryEntry) Or(d LibraryEntry) LibraryEntry {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptLibraryKind returns new OptLibraryKind with value set to v.
 func NewOptLibraryKind(v LibraryKind) OptLibraryKind {
 	return OptLibraryKind{
@@ -28893,6 +28966,190 @@ func (o OptSlug) Or(d Slug) Slug {
 	return d
 }
 
+// NewOptSpellDesignCastingTimeTrigger returns new OptSpellDesignCastingTimeTrigger with value set to v.
+func NewOptSpellDesignCastingTimeTrigger(v SpellDesignCastingTimeTrigger) OptSpellDesignCastingTimeTrigger {
+	return OptSpellDesignCastingTimeTrigger{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptSpellDesignCastingTimeTrigger is optional SpellDesignCastingTimeTrigger.
+type OptSpellDesignCastingTimeTrigger struct {
+	Value SpellDesignCastingTimeTrigger
+	Set   bool
+}
+
+// IsSet returns true if OptSpellDesignCastingTimeTrigger was set.
+func (o OptSpellDesignCastingTimeTrigger) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptSpellDesignCastingTimeTrigger) Reset() {
+	var v SpellDesignCastingTimeTrigger
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptSpellDesignCastingTimeTrigger) SetTo(v SpellDesignCastingTimeTrigger) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptSpellDesignCastingTimeTrigger) Get() (v SpellDesignCastingTimeTrigger, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptSpellDesignCastingTimeTrigger) Or(d SpellDesignCastingTimeTrigger) SpellDesignCastingTimeTrigger {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptSpellDesignComponentsMaterial returns new OptSpellDesignComponentsMaterial with value set to v.
+func NewOptSpellDesignComponentsMaterial(v SpellDesignComponentsMaterial) OptSpellDesignComponentsMaterial {
+	return OptSpellDesignComponentsMaterial{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptSpellDesignComponentsMaterial is optional SpellDesignComponentsMaterial.
+type OptSpellDesignComponentsMaterial struct {
+	Value SpellDesignComponentsMaterial
+	Set   bool
+}
+
+// IsSet returns true if OptSpellDesignComponentsMaterial was set.
+func (o OptSpellDesignComponentsMaterial) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptSpellDesignComponentsMaterial) Reset() {
+	var v SpellDesignComponentsMaterial
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptSpellDesignComponentsMaterial) SetTo(v SpellDesignComponentsMaterial) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptSpellDesignComponentsMaterial) Get() (v SpellDesignComponentsMaterial, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptSpellDesignComponentsMaterial) Or(d SpellDesignComponentsMaterial) SpellDesignComponentsMaterial {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptSpellDesignSave returns new OptSpellDesignSave with value set to v.
+func NewOptSpellDesignSave(v SpellDesignSave) OptSpellDesignSave {
+	return OptSpellDesignSave{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptSpellDesignSave is optional SpellDesignSave.
+type OptSpellDesignSave struct {
+	Value SpellDesignSave
+	Set   bool
+}
+
+// IsSet returns true if OptSpellDesignSave was set.
+func (o OptSpellDesignSave) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptSpellDesignSave) Reset() {
+	var v SpellDesignSave
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptSpellDesignSave) SetTo(v SpellDesignSave) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptSpellDesignSave) Get() (v SpellDesignSave, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptSpellDesignSave) Or(d SpellDesignSave) SpellDesignSave {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptSpellPartWhen returns new OptSpellPartWhen with value set to v.
+func NewOptSpellPartWhen(v SpellPartWhen) OptSpellPartWhen {
+	return OptSpellPartWhen{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptSpellPartWhen is optional SpellPartWhen.
+type OptSpellPartWhen struct {
+	Value SpellPartWhen
+	Set   bool
+}
+
+// IsSet returns true if OptSpellPartWhen was set.
+func (o OptSpellPartWhen) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptSpellPartWhen) Reset() {
+	var v SpellPartWhen
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptSpellPartWhen) SetTo(v SpellPartWhen) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptSpellPartWhen) Get() (v SpellPartWhen, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptSpellPartWhen) Or(d SpellPartWhen) SpellPartWhen {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptString returns new OptString with value set to v.
 func NewOptString(v string) OptString {
 	return OptString{
@@ -29903,6 +30160,7 @@ func (*ProblemStatusCodeWithHeaders) getSessionLogRes()                 {}
 func (*ProblemStatusCodeWithHeaders) getSessionRes()                    {}
 func (*ProblemStatusCodeWithHeaders) getSessionViewRes()                {}
 func (*ProblemStatusCodeWithHeaders) getSignInMethodsRes()              {}
+func (*ProblemStatusCodeWithHeaders) getSpellBuildRes()                 {}
 func (*ProblemStatusCodeWithHeaders) getSpellRes()                      {}
 func (*ProblemStatusCodeWithHeaders) getSpellcastingRes()               {}
 func (*ProblemStatusCodeWithHeaders) getStatusRes()                     {}
@@ -29970,6 +30228,7 @@ func (*ProblemStatusCodeWithHeaders) previewCharacterRes()              {}
 func (*ProblemStatusCodeWithHeaders) previewInviteRes()                 {}
 func (*ProblemStatusCodeWithHeaders) previewReachRes()                  {}
 func (*ProblemStatusCodeWithHeaders) previewSightRes()                  {}
+func (*ProblemStatusCodeWithHeaders) previewSpellRes()                  {}
 func (*ProblemStatusCodeWithHeaders) publishReleaseNoteRes()            {}
 func (*ProblemStatusCodeWithHeaders) readAllNotificationsRes()          {}
 func (*ProblemStatusCodeWithHeaders) readNotificationRes()              {}
@@ -29994,6 +30253,7 @@ func (*ProblemStatusCodeWithHeaders) revokeInviteRes()                  {}
 func (*ProblemStatusCodeWithHeaders) rollCharacterScoresRes()           {}
 func (*ProblemStatusCodeWithHeaders) rollRestRes()                      {}
 func (*ProblemStatusCodeWithHeaders) saveCharacterDraftRes()            {}
+func (*ProblemStatusCodeWithHeaders) saveSpellBuildRes()                {}
 func (*ProblemStatusCodeWithHeaders) seeReleaseNoteRes()                {}
 func (*ProblemStatusCodeWithHeaders) sendAdminSignInLinkRes()           {}
 func (*ProblemStatusCodeWithHeaders) sendFriendRequestRes()             {}
@@ -35437,6 +35697,119 @@ func (s *Spell) SetMentions(val []ConditionRef) {
 	s.Mentions = val
 }
 
+// A homebrew spell in the Effect builder, the Effect slug it runs under in play, its rules text and
+// its area as hexes.
+// Ref: #/components/schemas/SpellBuild
+type SpellBuild struct {
+	Entry  OptLibraryEntry `json:"entry"`
+	Design SpellDesign     `json:"design"`
+	Effect string          `json:"effect"`
+	Text   []string        `json:"text"`
+	Hexes  []BuilderHex    `json:"hexes"`
+}
+
+// GetEntry returns the value of Entry.
+func (s *SpellBuild) GetEntry() OptLibraryEntry {
+	return s.Entry
+}
+
+// GetDesign returns the value of Design.
+func (s *SpellBuild) GetDesign() SpellDesign {
+	return s.Design
+}
+
+// GetEffect returns the value of Effect.
+func (s *SpellBuild) GetEffect() string {
+	return s.Effect
+}
+
+// GetText returns the value of Text.
+func (s *SpellBuild) GetText() []string {
+	return s.Text
+}
+
+// GetHexes returns the value of Hexes.
+func (s *SpellBuild) GetHexes() []BuilderHex {
+	return s.Hexes
+}
+
+// SetEntry sets the value of Entry.
+func (s *SpellBuild) SetEntry(val OptLibraryEntry) {
+	s.Entry = val
+}
+
+// SetDesign sets the value of Design.
+func (s *SpellBuild) SetDesign(val SpellDesign) {
+	s.Design = val
+}
+
+// SetEffect sets the value of Effect.
+func (s *SpellBuild) SetEffect(val string) {
+	s.Effect = val
+}
+
+// SetText sets the value of Text.
+func (s *SpellBuild) SetText(val []string) {
+	s.Text = val
+}
+
+// SetHexes sets the value of Hexes.
+func (s *SpellBuild) SetHexes(val []BuilderHex) {
+	s.Hexes = val
+}
+
+// SpellBuildHeaders wraps SpellBuild with response headers.
+type SpellBuildHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           SpellBuild
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *SpellBuildHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *SpellBuildHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *SpellBuildHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *SpellBuildHeaders) GetResponse() SpellBuild {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *SpellBuildHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *SpellBuildHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *SpellBuildHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *SpellBuildHeaders) SetResponse(val SpellBuild) {
+	s.Response = val
+}
+
+func (*SpellBuildHeaders) getSpellBuildRes()  {}
+func (*SpellBuildHeaders) previewSpellRes()   {}
+func (*SpellBuildHeaders) saveSpellBuildRes() {}
+
 // One spell by slug.
 // Ref: #/components/schemas/SpellChoice
 type SpellChoice struct {
@@ -35451,6 +35824,610 @@ func (s *SpellChoice) GetSpell() Slug {
 // SetSpell sets the value of Spell.
 func (s *SpellChoice) SetSpell(val Slug) {
 	s.Spell = val
+}
+
+// A homebrew spell as the Effect builder makes it, from Targeting and typed parts listed as rows.
+// Ref: #/components/schemas/SpellDesign
+type SpellDesign struct {
+	Targeting     SpellDesignTargeting   `json:"targeting"`
+	Save          OptSpellDesignSave     `json:"save"`
+	Concentration bool                   `json:"concentration"`
+	Duration      SpellDesignDuration    `json:"duration"`
+	Ritual        bool                   `json:"ritual"`
+	CastingTime   SpellDesignCastingTime `json:"castingTime"`
+	Components    SpellDesignComponents  `json:"components"`
+	Parts         []SpellPart            `json:"parts"`
+}
+
+// GetTargeting returns the value of Targeting.
+func (s *SpellDesign) GetTargeting() SpellDesignTargeting {
+	return s.Targeting
+}
+
+// GetSave returns the value of Save.
+func (s *SpellDesign) GetSave() OptSpellDesignSave {
+	return s.Save
+}
+
+// GetConcentration returns the value of Concentration.
+func (s *SpellDesign) GetConcentration() bool {
+	return s.Concentration
+}
+
+// GetDuration returns the value of Duration.
+func (s *SpellDesign) GetDuration() SpellDesignDuration {
+	return s.Duration
+}
+
+// GetRitual returns the value of Ritual.
+func (s *SpellDesign) GetRitual() bool {
+	return s.Ritual
+}
+
+// GetCastingTime returns the value of CastingTime.
+func (s *SpellDesign) GetCastingTime() SpellDesignCastingTime {
+	return s.CastingTime
+}
+
+// GetComponents returns the value of Components.
+func (s *SpellDesign) GetComponents() SpellDesignComponents {
+	return s.Components
+}
+
+// GetParts returns the value of Parts.
+func (s *SpellDesign) GetParts() []SpellPart {
+	return s.Parts
+}
+
+// SetTargeting sets the value of Targeting.
+func (s *SpellDesign) SetTargeting(val SpellDesignTargeting) {
+	s.Targeting = val
+}
+
+// SetSave sets the value of Save.
+func (s *SpellDesign) SetSave(val OptSpellDesignSave) {
+	s.Save = val
+}
+
+// SetConcentration sets the value of Concentration.
+func (s *SpellDesign) SetConcentration(val bool) {
+	s.Concentration = val
+}
+
+// SetDuration sets the value of Duration.
+func (s *SpellDesign) SetDuration(val SpellDesignDuration) {
+	s.Duration = val
+}
+
+// SetRitual sets the value of Ritual.
+func (s *SpellDesign) SetRitual(val bool) {
+	s.Ritual = val
+}
+
+// SetCastingTime sets the value of CastingTime.
+func (s *SpellDesign) SetCastingTime(val SpellDesignCastingTime) {
+	s.CastingTime = val
+}
+
+// SetComponents sets the value of Components.
+func (s *SpellDesign) SetComponents(val SpellDesignComponents) {
+	s.Components = val
+}
+
+// SetParts sets the value of Parts.
+func (s *SpellDesign) SetParts(val []SpellPart) {
+	s.Parts = val
+}
+
+type SpellDesignCastingTime struct {
+	Kind    SpellDesignCastingTimeKind       `json:"kind"`
+	Minutes OptInt32                         `json:"minutes"`
+	Trigger OptSpellDesignCastingTimeTrigger `json:"trigger"`
+}
+
+// GetKind returns the value of Kind.
+func (s *SpellDesignCastingTime) GetKind() SpellDesignCastingTimeKind {
+	return s.Kind
+}
+
+// GetMinutes returns the value of Minutes.
+func (s *SpellDesignCastingTime) GetMinutes() OptInt32 {
+	return s.Minutes
+}
+
+// GetTrigger returns the value of Trigger.
+func (s *SpellDesignCastingTime) GetTrigger() OptSpellDesignCastingTimeTrigger {
+	return s.Trigger
+}
+
+// SetKind sets the value of Kind.
+func (s *SpellDesignCastingTime) SetKind(val SpellDesignCastingTimeKind) {
+	s.Kind = val
+}
+
+// SetMinutes sets the value of Minutes.
+func (s *SpellDesignCastingTime) SetMinutes(val OptInt32) {
+	s.Minutes = val
+}
+
+// SetTrigger sets the value of Trigger.
+func (s *SpellDesignCastingTime) SetTrigger(val OptSpellDesignCastingTimeTrigger) {
+	s.Trigger = val
+}
+
+type SpellDesignCastingTimeKind string
+
+const (
+	SpellDesignCastingTimeKindAction      SpellDesignCastingTimeKind = "action"
+	SpellDesignCastingTimeKindBonusAction SpellDesignCastingTimeKind = "bonus_action"
+	SpellDesignCastingTimeKindReaction    SpellDesignCastingTimeKind = "reaction"
+	SpellDesignCastingTimeKindMinutes     SpellDesignCastingTimeKind = "minutes"
+)
+
+// AllValues returns all SpellDesignCastingTimeKind values.
+func (SpellDesignCastingTimeKind) AllValues() []SpellDesignCastingTimeKind {
+	return []SpellDesignCastingTimeKind{
+		SpellDesignCastingTimeKindAction,
+		SpellDesignCastingTimeKindBonusAction,
+		SpellDesignCastingTimeKindReaction,
+		SpellDesignCastingTimeKindMinutes,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s SpellDesignCastingTimeKind) MarshalText() ([]byte, error) {
+	switch s {
+	case SpellDesignCastingTimeKindAction:
+		return []byte(s), nil
+	case SpellDesignCastingTimeKindBonusAction:
+		return []byte(s), nil
+	case SpellDesignCastingTimeKindReaction:
+		return []byte(s), nil
+	case SpellDesignCastingTimeKindMinutes:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *SpellDesignCastingTimeKind) UnmarshalText(data []byte) error {
+	switch SpellDesignCastingTimeKind(data) {
+	case SpellDesignCastingTimeKindAction:
+		*s = SpellDesignCastingTimeKindAction
+		return nil
+	case SpellDesignCastingTimeKindBonusAction:
+		*s = SpellDesignCastingTimeKindBonusAction
+		return nil
+	case SpellDesignCastingTimeKindReaction:
+		*s = SpellDesignCastingTimeKindReaction
+		return nil
+	case SpellDesignCastingTimeKindMinutes:
+		*s = SpellDesignCastingTimeKindMinutes
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type SpellDesignCastingTimeTrigger string
+
+const (
+	SpellDesignCastingTimeTriggerWhenHit             SpellDesignCastingTimeTrigger = "when_hit"
+	SpellDesignCastingTimeTriggerWhenDamaged         SpellDesignCastingTimeTrigger = "when_damaged"
+	SpellDesignCastingTimeTriggerAllyAttacked        SpellDesignCastingTimeTrigger = "ally_attacked"
+	SpellDesignCastingTimeTriggerCreatureCasts       SpellDesignCastingTimeTrigger = "creature_casts"
+	SpellDesignCastingTimeTriggerCreatureEntersReach SpellDesignCastingTimeTrigger = "creature_enters_reach"
+)
+
+// AllValues returns all SpellDesignCastingTimeTrigger values.
+func (SpellDesignCastingTimeTrigger) AllValues() []SpellDesignCastingTimeTrigger {
+	return []SpellDesignCastingTimeTrigger{
+		SpellDesignCastingTimeTriggerWhenHit,
+		SpellDesignCastingTimeTriggerWhenDamaged,
+		SpellDesignCastingTimeTriggerAllyAttacked,
+		SpellDesignCastingTimeTriggerCreatureCasts,
+		SpellDesignCastingTimeTriggerCreatureEntersReach,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s SpellDesignCastingTimeTrigger) MarshalText() ([]byte, error) {
+	switch s {
+	case SpellDesignCastingTimeTriggerWhenHit:
+		return []byte(s), nil
+	case SpellDesignCastingTimeTriggerWhenDamaged:
+		return []byte(s), nil
+	case SpellDesignCastingTimeTriggerAllyAttacked:
+		return []byte(s), nil
+	case SpellDesignCastingTimeTriggerCreatureCasts:
+		return []byte(s), nil
+	case SpellDesignCastingTimeTriggerCreatureEntersReach:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *SpellDesignCastingTimeTrigger) UnmarshalText(data []byte) error {
+	switch SpellDesignCastingTimeTrigger(data) {
+	case SpellDesignCastingTimeTriggerWhenHit:
+		*s = SpellDesignCastingTimeTriggerWhenHit
+		return nil
+	case SpellDesignCastingTimeTriggerWhenDamaged:
+		*s = SpellDesignCastingTimeTriggerWhenDamaged
+		return nil
+	case SpellDesignCastingTimeTriggerAllyAttacked:
+		*s = SpellDesignCastingTimeTriggerAllyAttacked
+		return nil
+	case SpellDesignCastingTimeTriggerCreatureCasts:
+		*s = SpellDesignCastingTimeTriggerCreatureCasts
+		return nil
+	case SpellDesignCastingTimeTriggerCreatureEntersReach:
+		*s = SpellDesignCastingTimeTriggerCreatureEntersReach
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type SpellDesignComponents struct {
+	Verbal   bool                             `json:"verbal"`
+	Somatic  bool                             `json:"somatic"`
+	Material OptSpellDesignComponentsMaterial `json:"material"`
+}
+
+// GetVerbal returns the value of Verbal.
+func (s *SpellDesignComponents) GetVerbal() bool {
+	return s.Verbal
+}
+
+// GetSomatic returns the value of Somatic.
+func (s *SpellDesignComponents) GetSomatic() bool {
+	return s.Somatic
+}
+
+// GetMaterial returns the value of Material.
+func (s *SpellDesignComponents) GetMaterial() OptSpellDesignComponentsMaterial {
+	return s.Material
+}
+
+// SetVerbal sets the value of Verbal.
+func (s *SpellDesignComponents) SetVerbal(val bool) {
+	s.Verbal = val
+}
+
+// SetSomatic sets the value of Somatic.
+func (s *SpellDesignComponents) SetSomatic(val bool) {
+	s.Somatic = val
+}
+
+// SetMaterial sets the value of Material.
+func (s *SpellDesignComponents) SetMaterial(val OptSpellDesignComponentsMaterial) {
+	s.Material = val
+}
+
+type SpellDesignComponentsMaterial struct {
+	Text     string    `json:"text"`
+	CostGp   OptInt32  `json:"costGp"`
+	Consumed OptBool   `json:"consumed"`
+	Item     OptString `json:"item"`
+}
+
+// GetText returns the value of Text.
+func (s *SpellDesignComponentsMaterial) GetText() string {
+	return s.Text
+}
+
+// GetCostGp returns the value of CostGp.
+func (s *SpellDesignComponentsMaterial) GetCostGp() OptInt32 {
+	return s.CostGp
+}
+
+// GetConsumed returns the value of Consumed.
+func (s *SpellDesignComponentsMaterial) GetConsumed() OptBool {
+	return s.Consumed
+}
+
+// GetItem returns the value of Item.
+func (s *SpellDesignComponentsMaterial) GetItem() OptString {
+	return s.Item
+}
+
+// SetText sets the value of Text.
+func (s *SpellDesignComponentsMaterial) SetText(val string) {
+	s.Text = val
+}
+
+// SetCostGp sets the value of CostGp.
+func (s *SpellDesignComponentsMaterial) SetCostGp(val OptInt32) {
+	s.CostGp = val
+}
+
+// SetConsumed sets the value of Consumed.
+func (s *SpellDesignComponentsMaterial) SetConsumed(val OptBool) {
+	s.Consumed = val
+}
+
+// SetItem sets the value of Item.
+func (s *SpellDesignComponentsMaterial) SetItem(val OptString) {
+	s.Item = val
+}
+
+type SpellDesignDuration struct {
+	Unit   SpellDesignDurationUnit `json:"unit"`
+	Amount OptInt32                `json:"amount"`
+}
+
+// GetUnit returns the value of Unit.
+func (s *SpellDesignDuration) GetUnit() SpellDesignDurationUnit {
+	return s.Unit
+}
+
+// GetAmount returns the value of Amount.
+func (s *SpellDesignDuration) GetAmount() OptInt32 {
+	return s.Amount
+}
+
+// SetUnit sets the value of Unit.
+func (s *SpellDesignDuration) SetUnit(val SpellDesignDurationUnit) {
+	s.Unit = val
+}
+
+// SetAmount sets the value of Amount.
+func (s *SpellDesignDuration) SetAmount(val OptInt32) {
+	s.Amount = val
+}
+
+type SpellDesignDurationUnit string
+
+const (
+	SpellDesignDurationUnitInstant        SpellDesignDurationUnit = "instant"
+	SpellDesignDurationUnitRounds         SpellDesignDurationUnit = "rounds"
+	SpellDesignDurationUnitMinutes        SpellDesignDurationUnit = "minutes"
+	SpellDesignDurationUnitHours          SpellDesignDurationUnit = "hours"
+	SpellDesignDurationUnitUntilDispelled SpellDesignDurationUnit = "until_dispelled"
+)
+
+// AllValues returns all SpellDesignDurationUnit values.
+func (SpellDesignDurationUnit) AllValues() []SpellDesignDurationUnit {
+	return []SpellDesignDurationUnit{
+		SpellDesignDurationUnitInstant,
+		SpellDesignDurationUnitRounds,
+		SpellDesignDurationUnitMinutes,
+		SpellDesignDurationUnitHours,
+		SpellDesignDurationUnitUntilDispelled,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s SpellDesignDurationUnit) MarshalText() ([]byte, error) {
+	switch s {
+	case SpellDesignDurationUnitInstant:
+		return []byte(s), nil
+	case SpellDesignDurationUnitRounds:
+		return []byte(s), nil
+	case SpellDesignDurationUnitMinutes:
+		return []byte(s), nil
+	case SpellDesignDurationUnitHours:
+		return []byte(s), nil
+	case SpellDesignDurationUnitUntilDispelled:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *SpellDesignDurationUnit) UnmarshalText(data []byte) error {
+	switch SpellDesignDurationUnit(data) {
+	case SpellDesignDurationUnitInstant:
+		*s = SpellDesignDurationUnitInstant
+		return nil
+	case SpellDesignDurationUnitRounds:
+		*s = SpellDesignDurationUnitRounds
+		return nil
+	case SpellDesignDurationUnitMinutes:
+		*s = SpellDesignDurationUnitMinutes
+		return nil
+	case SpellDesignDurationUnitHours:
+		*s = SpellDesignDurationUnitHours
+		return nil
+	case SpellDesignDurationUnitUntilDispelled:
+		*s = SpellDesignDurationUnitUntilDispelled
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type SpellDesignSave string
+
+const (
+	SpellDesignSaveStrength     SpellDesignSave = "strength"
+	SpellDesignSaveDexterity    SpellDesignSave = "dexterity"
+	SpellDesignSaveConstitution SpellDesignSave = "constitution"
+	SpellDesignSaveIntelligence SpellDesignSave = "intelligence"
+	SpellDesignSaveWisdom       SpellDesignSave = "wisdom"
+	SpellDesignSaveCharisma     SpellDesignSave = "charisma"
+)
+
+// AllValues returns all SpellDesignSave values.
+func (SpellDesignSave) AllValues() []SpellDesignSave {
+	return []SpellDesignSave{
+		SpellDesignSaveStrength,
+		SpellDesignSaveDexterity,
+		SpellDesignSaveConstitution,
+		SpellDesignSaveIntelligence,
+		SpellDesignSaveWisdom,
+		SpellDesignSaveCharisma,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s SpellDesignSave) MarshalText() ([]byte, error) {
+	switch s {
+	case SpellDesignSaveStrength:
+		return []byte(s), nil
+	case SpellDesignSaveDexterity:
+		return []byte(s), nil
+	case SpellDesignSaveConstitution:
+		return []byte(s), nil
+	case SpellDesignSaveIntelligence:
+		return []byte(s), nil
+	case SpellDesignSaveWisdom:
+		return []byte(s), nil
+	case SpellDesignSaveCharisma:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *SpellDesignSave) UnmarshalText(data []byte) error {
+	switch SpellDesignSave(data) {
+	case SpellDesignSaveStrength:
+		*s = SpellDesignSaveStrength
+		return nil
+	case SpellDesignSaveDexterity:
+		*s = SpellDesignSaveDexterity
+		return nil
+	case SpellDesignSaveConstitution:
+		*s = SpellDesignSaveConstitution
+		return nil
+	case SpellDesignSaveIntelligence:
+		*s = SpellDesignSaveIntelligence
+		return nil
+	case SpellDesignSaveWisdom:
+		*s = SpellDesignSaveWisdom
+		return nil
+	case SpellDesignSaveCharisma:
+		*s = SpellDesignSaveCharisma
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type SpellDesignTargeting struct {
+	Shape   SpellDesignTargetingShape `json:"shape"`
+	SizeFt  int32                     `json:"sizeFt"`
+	RangeFt int32                     `json:"rangeFt"`
+}
+
+// GetShape returns the value of Shape.
+func (s *SpellDesignTargeting) GetShape() SpellDesignTargetingShape {
+	return s.Shape
+}
+
+// GetSizeFt returns the value of SizeFt.
+func (s *SpellDesignTargeting) GetSizeFt() int32 {
+	return s.SizeFt
+}
+
+// GetRangeFt returns the value of RangeFt.
+func (s *SpellDesignTargeting) GetRangeFt() int32 {
+	return s.RangeFt
+}
+
+// SetShape sets the value of Shape.
+func (s *SpellDesignTargeting) SetShape(val SpellDesignTargetingShape) {
+	s.Shape = val
+}
+
+// SetSizeFt sets the value of SizeFt.
+func (s *SpellDesignTargeting) SetSizeFt(val int32) {
+	s.SizeFt = val
+}
+
+// SetRangeFt sets the value of RangeFt.
+func (s *SpellDesignTargeting) SetRangeFt(val int32) {
+	s.RangeFt = val
+}
+
+type SpellDesignTargetingShape string
+
+const (
+	SpellDesignTargetingShapeSphere    SpellDesignTargetingShape = "sphere"
+	SpellDesignTargetingShapeCylinder  SpellDesignTargetingShape = "cylinder"
+	SpellDesignTargetingShapeEmanation SpellDesignTargetingShape = "emanation"
+	SpellDesignTargetingShapeRing      SpellDesignTargetingShape = "ring"
+	SpellDesignTargetingShapeCone      SpellDesignTargetingShape = "cone"
+	SpellDesignTargetingShapeCube      SpellDesignTargetingShape = "cube"
+	SpellDesignTargetingShapeLine      SpellDesignTargetingShape = "line"
+	SpellDesignTargetingShapeWall      SpellDesignTargetingShape = "wall"
+)
+
+// AllValues returns all SpellDesignTargetingShape values.
+func (SpellDesignTargetingShape) AllValues() []SpellDesignTargetingShape {
+	return []SpellDesignTargetingShape{
+		SpellDesignTargetingShapeSphere,
+		SpellDesignTargetingShapeCylinder,
+		SpellDesignTargetingShapeEmanation,
+		SpellDesignTargetingShapeRing,
+		SpellDesignTargetingShapeCone,
+		SpellDesignTargetingShapeCube,
+		SpellDesignTargetingShapeLine,
+		SpellDesignTargetingShapeWall,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s SpellDesignTargetingShape) MarshalText() ([]byte, error) {
+	switch s {
+	case SpellDesignTargetingShapeSphere:
+		return []byte(s), nil
+	case SpellDesignTargetingShapeCylinder:
+		return []byte(s), nil
+	case SpellDesignTargetingShapeEmanation:
+		return []byte(s), nil
+	case SpellDesignTargetingShapeRing:
+		return []byte(s), nil
+	case SpellDesignTargetingShapeCone:
+		return []byte(s), nil
+	case SpellDesignTargetingShapeCube:
+		return []byte(s), nil
+	case SpellDesignTargetingShapeLine:
+		return []byte(s), nil
+	case SpellDesignTargetingShapeWall:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *SpellDesignTargetingShape) UnmarshalText(data []byte) error {
+	switch SpellDesignTargetingShape(data) {
+	case SpellDesignTargetingShapeSphere:
+		*s = SpellDesignTargetingShapeSphere
+		return nil
+	case SpellDesignTargetingShapeCylinder:
+		*s = SpellDesignTargetingShapeCylinder
+		return nil
+	case SpellDesignTargetingShapeEmanation:
+		*s = SpellDesignTargetingShapeEmanation
+		return nil
+	case SpellDesignTargetingShapeRing:
+		*s = SpellDesignTargetingShapeRing
+		return nil
+	case SpellDesignTargetingShapeCone:
+		*s = SpellDesignTargetingShapeCone
+		return nil
+	case SpellDesignTargetingShapeCube:
+		*s = SpellDesignTargetingShapeCube
+		return nil
+	case SpellDesignTargetingShapeLine:
+		*s = SpellDesignTargetingShapeLine
+		return nil
+	case SpellDesignTargetingShapeWall:
+		*s = SpellDesignTargetingShapeWall
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 // SpellHeaders wraps Spell with response headers.
@@ -35602,6 +36579,264 @@ func (s *SpellPageHeaders) SetResponse(val SpellPage) {
 
 func (*SpellPageHeaders) listSpellsRes() {}
 
+// One row of a spell design; which fields count depends on its type.
+// Ref: #/components/schemas/SpellPart
+type SpellPart struct {
+	Type       SpellPartType    `json:"type"`
+	When       OptSpellPartWhen `json:"when"`
+	Dice       OptString        `json:"dice"`
+	DamageType OptString        `json:"damageType"`
+	Half       OptBool          `json:"half"`
+	Condition  OptString        `json:"condition"`
+	OnlyTypes  []string         `json:"onlyTypes"`
+	BrightFt   OptInt32         `json:"brightFt"`
+	DimFt      OptInt32         `json:"dimFt"`
+	Qualities  []string         `json:"qualities"`
+	Surface    OptString        `json:"surface"`
+	Rounds     OptInt32         `json:"rounds"`
+	Text       OptString        `json:"text"`
+}
+
+// GetType returns the value of Type.
+func (s *SpellPart) GetType() SpellPartType {
+	return s.Type
+}
+
+// GetWhen returns the value of When.
+func (s *SpellPart) GetWhen() OptSpellPartWhen {
+	return s.When
+}
+
+// GetDice returns the value of Dice.
+func (s *SpellPart) GetDice() OptString {
+	return s.Dice
+}
+
+// GetDamageType returns the value of DamageType.
+func (s *SpellPart) GetDamageType() OptString {
+	return s.DamageType
+}
+
+// GetHalf returns the value of Half.
+func (s *SpellPart) GetHalf() OptBool {
+	return s.Half
+}
+
+// GetCondition returns the value of Condition.
+func (s *SpellPart) GetCondition() OptString {
+	return s.Condition
+}
+
+// GetOnlyTypes returns the value of OnlyTypes.
+func (s *SpellPart) GetOnlyTypes() []string {
+	return s.OnlyTypes
+}
+
+// GetBrightFt returns the value of BrightFt.
+func (s *SpellPart) GetBrightFt() OptInt32 {
+	return s.BrightFt
+}
+
+// GetDimFt returns the value of DimFt.
+func (s *SpellPart) GetDimFt() OptInt32 {
+	return s.DimFt
+}
+
+// GetQualities returns the value of Qualities.
+func (s *SpellPart) GetQualities() []string {
+	return s.Qualities
+}
+
+// GetSurface returns the value of Surface.
+func (s *SpellPart) GetSurface() OptString {
+	return s.Surface
+}
+
+// GetRounds returns the value of Rounds.
+func (s *SpellPart) GetRounds() OptInt32 {
+	return s.Rounds
+}
+
+// GetText returns the value of Text.
+func (s *SpellPart) GetText() OptString {
+	return s.Text
+}
+
+// SetType sets the value of Type.
+func (s *SpellPart) SetType(val SpellPartType) {
+	s.Type = val
+}
+
+// SetWhen sets the value of When.
+func (s *SpellPart) SetWhen(val OptSpellPartWhen) {
+	s.When = val
+}
+
+// SetDice sets the value of Dice.
+func (s *SpellPart) SetDice(val OptString) {
+	s.Dice = val
+}
+
+// SetDamageType sets the value of DamageType.
+func (s *SpellPart) SetDamageType(val OptString) {
+	s.DamageType = val
+}
+
+// SetHalf sets the value of Half.
+func (s *SpellPart) SetHalf(val OptBool) {
+	s.Half = val
+}
+
+// SetCondition sets the value of Condition.
+func (s *SpellPart) SetCondition(val OptString) {
+	s.Condition = val
+}
+
+// SetOnlyTypes sets the value of OnlyTypes.
+func (s *SpellPart) SetOnlyTypes(val []string) {
+	s.OnlyTypes = val
+}
+
+// SetBrightFt sets the value of BrightFt.
+func (s *SpellPart) SetBrightFt(val OptInt32) {
+	s.BrightFt = val
+}
+
+// SetDimFt sets the value of DimFt.
+func (s *SpellPart) SetDimFt(val OptInt32) {
+	s.DimFt = val
+}
+
+// SetQualities sets the value of Qualities.
+func (s *SpellPart) SetQualities(val []string) {
+	s.Qualities = val
+}
+
+// SetSurface sets the value of Surface.
+func (s *SpellPart) SetSurface(val OptString) {
+	s.Surface = val
+}
+
+// SetRounds sets the value of Rounds.
+func (s *SpellPart) SetRounds(val OptInt32) {
+	s.Rounds = val
+}
+
+// SetText sets the value of Text.
+func (s *SpellPart) SetText(val OptString) {
+	s.Text = val
+}
+
+type SpellPartType string
+
+const (
+	SpellPartTypeDamage    SpellPartType = "damage"
+	SpellPartTypeCondition SpellPartType = "condition"
+	SpellPartTypeLight     SpellPartType = "light"
+	SpellPartTypeReveal    SpellPartType = "reveal"
+	SpellPartTypeSurface   SpellPartType = "surface"
+	SpellPartTypeManual    SpellPartType = "manual"
+)
+
+// AllValues returns all SpellPartType values.
+func (SpellPartType) AllValues() []SpellPartType {
+	return []SpellPartType{
+		SpellPartTypeDamage,
+		SpellPartTypeCondition,
+		SpellPartTypeLight,
+		SpellPartTypeReveal,
+		SpellPartTypeSurface,
+		SpellPartTypeManual,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s SpellPartType) MarshalText() ([]byte, error) {
+	switch s {
+	case SpellPartTypeDamage:
+		return []byte(s), nil
+	case SpellPartTypeCondition:
+		return []byte(s), nil
+	case SpellPartTypeLight:
+		return []byte(s), nil
+	case SpellPartTypeReveal:
+		return []byte(s), nil
+	case SpellPartTypeSurface:
+		return []byte(s), nil
+	case SpellPartTypeManual:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *SpellPartType) UnmarshalText(data []byte) error {
+	switch SpellPartType(data) {
+	case SpellPartTypeDamage:
+		*s = SpellPartTypeDamage
+		return nil
+	case SpellPartTypeCondition:
+		*s = SpellPartTypeCondition
+		return nil
+	case SpellPartTypeLight:
+		*s = SpellPartTypeLight
+		return nil
+	case SpellPartTypeReveal:
+		*s = SpellPartTypeReveal
+		return nil
+	case SpellPartTypeSurface:
+		*s = SpellPartTypeSurface
+		return nil
+	case SpellPartTypeManual:
+		*s = SpellPartTypeManual
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type SpellPartWhen string
+
+const (
+	SpellPartWhenOnCast      SpellPartWhen = "on_cast"
+	SpellPartWhenStartOfTurn SpellPartWhen = "start_of_turn"
+)
+
+// AllValues returns all SpellPartWhen values.
+func (SpellPartWhen) AllValues() []SpellPartWhen {
+	return []SpellPartWhen{
+		SpellPartWhenOnCast,
+		SpellPartWhenStartOfTurn,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s SpellPartWhen) MarshalText() ([]byte, error) {
+	switch s {
+	case SpellPartWhenOnCast:
+		return []byte(s), nil
+	case SpellPartWhenStartOfTurn:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *SpellPartWhen) UnmarshalText(data []byte) error {
+	switch SpellPartWhen(data) {
+	case SpellPartWhenOnCast:
+		*s = SpellPartWhenOnCast
+		return nil
+	case SpellPartWhenStartOfTurn:
+		*s = SpellPartWhenStartOfTurn
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // A cantrip (level 0) or spell on a class's list.
 // Ref: #/components/schemas/SpellPick
 type SpellPick struct {
@@ -35678,6 +36913,33 @@ func (s *SpellPreparation) SetClass(val Slug) {
 // SetSpells sets the value of Spells.
 func (s *SpellPreparation) SetSpells(val []Slug) {
 	s.Spells = val
+}
+
+// A design to preview, with the spell's name.
+// Ref: #/components/schemas/SpellPreviewInput
+type SpellPreviewInput struct {
+	Name   string      `json:"name"`
+	Design SpellDesign `json:"design"`
+}
+
+// GetName returns the value of Name.
+func (s *SpellPreviewInput) GetName() string {
+	return s.Name
+}
+
+// GetDesign returns the value of Design.
+func (s *SpellPreviewInput) GetDesign() SpellDesign {
+	return s.Design
+}
+
+// SetName sets the value of Name.
+func (s *SpellPreviewInput) SetName(val string) {
+	s.Name = val
+}
+
+// SetDesign sets the value of Design.
+func (s *SpellPreviewInput) SetDesign(val SpellDesign) {
+	s.Design = val
 }
 
 // Damage at a higher slot or character level.

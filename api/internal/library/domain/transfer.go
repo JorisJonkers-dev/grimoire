@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"encoding/json"
 	"fmt"
 	"maps"
 	"slices"
@@ -20,6 +21,8 @@ type Exported struct {
 	Kind   string
 	Name   string
 	Fields Fields
+	// Design is a spell's Effect builder design, its one typed part so far.
+	Design []byte
 }
 
 // ExportedCollection is one Collection in an export, naming its entries by key.
@@ -90,6 +93,11 @@ func planEntry(i int, e Incoming, keys map[string]bool, note func(string, string
 	x := Exported{Key: e.Key, Kind: e.Kind, Name: name, Fields: takeFields(e.Fields, where, note)}
 	for j, p := range e.Parts {
 		kind, _ := p["type"].(string)
+		design, isDesign := p["design"].(map[string]any)
+		if kind == "spell" && isDesign && e.Kind == "spell" && x.Design == nil {
+			x.Design, _ = json.Marshal(design) //nolint:errchkjson // decoded JSON marshals back
+			continue
+		}
 		if kind == "" {
 			kind = "untyped"
 		}

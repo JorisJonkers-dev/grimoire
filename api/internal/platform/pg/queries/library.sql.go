@@ -100,9 +100,9 @@ WITH visible AS (
     SELECT ce.entry_id FROM library.collection_entries ce
     JOIN library.campaign_collections cc ON cc.collection_id = ce.collection_id WHERE cc.campaign_id = $1
 )
-SELECT e.id, e.owner_subject, e.kind, e.name, e.fields, e.revision, e.created_at, e.updated_at, e.shared,
+SELECT e.id, e.owner_subject, e.kind, e.name, e.fields, e.revision, e.created_at, e.updated_at, e.shared, e.design,
     l.pinned_revision, coalesce(l.override, '{}'::jsonb)::jsonb AS override, coalesce(l.direct, false)::boolean AS direct,
-    r.name AS pinned_name, r.fields AS pinned_fields,
+    r.name AS pinned_name, r.fields AS pinned_fields, r.design AS pinned_design,
     ARRAY(SELECT c.name FROM library.collection_entries ce
         JOIN library.campaign_collections cc ON cc.collection_id = ce.collection_id AND cc.campaign_id = $1
         JOIN library.collections c ON c.id = ce.collection_id
@@ -130,11 +130,13 @@ type CampaignLibraryLinksRow struct {
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
 	Shared         bool
+	Design         []byte
 	PinnedRevision pgtype.Int4
 	Override       []byte
 	Direct         bool
 	PinnedName     pgtype.Text
 	PinnedFields   []byte
+	PinnedDesign   []byte
 	Via            []string
 }
 
@@ -157,11 +159,13 @@ func (q *Queries) CampaignLibraryLinks(ctx context.Context, arg CampaignLibraryL
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.Shared,
+			&i.Design,
 			&i.PinnedRevision,
 			&i.Override,
 			&i.Direct,
 			&i.PinnedName,
 			&i.PinnedFields,
+			&i.PinnedDesign,
 			&i.Via,
 		); err != nil {
 			return nil, err
@@ -300,8 +304,8 @@ func (q *Queries) InsertLibraryCollection(ctx context.Context, arg InsertLibrary
 }
 
 const insertLibraryEntry = `-- name: InsertLibraryEntry :exec
-INSERT INTO library.entries (id, owner_subject, kind, name, fields, revision, created_at, updated_at, shared)
-VALUES ($1, $2, $3, $4, $5, 1, $6, $6, $7)
+INSERT INTO library.entries (id, owner_subject, kind, name, fields, revision, created_at, updated_at, shared, design)
+VALUES ($1, $2, $3, $4, $5, 1, $6, $6, $7, $8)
 `
 
 type InsertLibraryEntryParams struct {
@@ -312,6 +316,7 @@ type InsertLibraryEntryParams struct {
 	Fields       []byte
 	Now          time.Time
 	Shared       bool
+	Design       []byte
 }
 
 func (q *Queries) InsertLibraryEntry(ctx context.Context, arg InsertLibraryEntryParams) error {
@@ -323,13 +328,14 @@ func (q *Queries) InsertLibraryEntry(ctx context.Context, arg InsertLibraryEntry
 		arg.Fields,
 		arg.Now,
 		arg.Shared,
+		arg.Design,
 	)
 	return err
 }
 
 const insertLibraryRevision = `-- name: InsertLibraryRevision :exec
-INSERT INTO library.entry_revisions (entry_id, no, name, fields, author_subject, created_at)
-VALUES ($1, $2, $3, $4, $5, $6)
+INSERT INTO library.entry_revisions (entry_id, no, name, fields, author_subject, created_at, design)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
 `
 
 type InsertLibraryRevisionParams struct {
@@ -339,6 +345,7 @@ type InsertLibraryRevisionParams struct {
 	Fields        []byte
 	AuthorSubject string
 	Now           time.Time
+	Design        []byte
 }
 
 func (q *Queries) InsertLibraryRevision(ctx context.Context, arg InsertLibraryRevisionParams) error {
@@ -349,6 +356,7 @@ func (q *Queries) InsertLibraryRevision(ctx context.Context, arg InsertLibraryRe
 		arg.Fields,
 		arg.AuthorSubject,
 		arg.Now,
+		arg.Design,
 	)
 	return err
 }
@@ -412,8 +420,8 @@ func (q *Queries) InsertProposalReview(ctx context.Context, arg InsertProposalRe
 }
 
 const insertSharedSubmission = `-- name: InsertSharedSubmission :exec
-INSERT INTO library.shared_submissions (id, entry_id, revision, kind, name, fields, note, submitter_subject, status, created_at)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'pending', $9)
+INSERT INTO library.shared_submissions (id, entry_id, revision, kind, name, fields, note, submitter_subject, status, created_at, design)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'pending', $9, $10)
 `
 
 type InsertSharedSubmissionParams struct {
@@ -426,6 +434,7 @@ type InsertSharedSubmissionParams struct {
 	Note             string
 	SubmitterSubject string
 	Now              time.Time
+	Design           []byte
 }
 
 func (q *Queries) InsertSharedSubmission(ctx context.Context, arg InsertSharedSubmissionParams) error {
@@ -439,6 +448,7 @@ func (q *Queries) InsertSharedSubmission(ctx context.Context, arg InsertSharedSu
 		arg.Note,
 		arg.SubmitterSubject,
 		arg.Now,
+		arg.Design,
 	)
 	return err
 }
@@ -475,7 +485,7 @@ func (q *Queries) LibraryCollection(ctx context.Context, id uuid.UUID) (LibraryC
 }
 
 const libraryEntries = `-- name: LibraryEntries :many
-SELECT id, owner_subject, kind, name, fields, revision, created_at, updated_at, shared FROM library.entries
+SELECT id, owner_subject, kind, name, fields, revision, created_at, updated_at, shared, design FROM library.entries
 WHERE owner_subject = $1 AND ($2::text IS NULL OR kind = $2::text)
 ORDER BY kind, lower(name), id
 `
@@ -504,6 +514,7 @@ func (q *Queries) LibraryEntries(ctx context.Context, arg LibraryEntriesParams) 
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.Shared,
+			&i.Design,
 		); err != nil {
 			return nil, err
 		}
@@ -516,7 +527,7 @@ func (q *Queries) LibraryEntries(ctx context.Context, arg LibraryEntriesParams) 
 }
 
 const libraryEntry = `-- name: LibraryEntry :one
-SELECT id, owner_subject, kind, name, fields, revision, created_at, updated_at, shared FROM library.entries WHERE id = $1
+SELECT id, owner_subject, kind, name, fields, revision, created_at, updated_at, shared, design FROM library.entries WHERE id = $1
 `
 
 func (q *Queries) LibraryEntry(ctx context.Context, id uuid.UUID) (LibraryEntry, error) {
@@ -532,6 +543,7 @@ func (q *Queries) LibraryEntry(ctx context.Context, id uuid.UUID) (LibraryEntry,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Shared,
+		&i.Design,
 	)
 	return i, err
 }
@@ -588,7 +600,7 @@ func (q *Queries) LibraryRevisionExists(ctx context.Context, arg LibraryRevision
 }
 
 const libraryRevisions = `-- name: LibraryRevisions :many
-SELECT no, name, fields, author_subject, created_at FROM library.entry_revisions WHERE entry_id = $1 ORDER BY no DESC
+SELECT no, name, fields, author_subject, created_at, design FROM library.entry_revisions WHERE entry_id = $1 ORDER BY no DESC
 `
 
 type LibraryRevisionsRow struct {
@@ -597,6 +609,7 @@ type LibraryRevisionsRow struct {
 	Fields        []byte
 	AuthorSubject string
 	CreatedAt     time.Time
+	Design        []byte
 }
 
 func (q *Queries) LibraryRevisions(ctx context.Context, entryID uuid.UUID) ([]LibraryRevisionsRow, error) {
@@ -614,6 +627,7 @@ func (q *Queries) LibraryRevisions(ctx context.Context, entryID uuid.UUID) ([]Li
 			&i.Fields,
 			&i.AuthorSubject,
 			&i.CreatedAt,
+			&i.Design,
 		); err != nil {
 			return nil, err
 		}
@@ -765,7 +779,7 @@ func (q *Queries) SetLibraryOverride(ctx context.Context, arg SetLibraryOverride
 
 const sharedSubmission = `-- name: SharedSubmission :one
 SELECT id, entry_id, revision, kind, name, fields, note, submitter_subject, status, ip_clear, ip_note, message, reviewer_subject,
-    shared_entry_id, created_at, decided_at
+    shared_entry_id, created_at, decided_at, design
 FROM library.shared_submissions WHERE id = $1
 `
 
@@ -789,13 +803,14 @@ func (q *Queries) SharedSubmission(ctx context.Context, id uuid.UUID) (LibrarySh
 		&i.SharedEntryID,
 		&i.CreatedAt,
 		&i.DecidedAt,
+		&i.Design,
 	)
 	return i, err
 }
 
 const sharedSubmissions = `-- name: SharedSubmissions :many
 SELECT id, entry_id, revision, kind, name, fields, note, submitter_subject, status, ip_clear, ip_note, message, reviewer_subject,
-    shared_entry_id, created_at, decided_at
+    shared_entry_id, created_at, decided_at, design
 FROM library.shared_submissions
 WHERE $1::text IS NULL OR submitter_subject = $1::text
 ORDER BY status = 'pending' DESC, created_at DESC, id
@@ -827,6 +842,7 @@ func (q *Queries) SharedSubmissions(ctx context.Context, submitterSubject pgtype
 			&i.SharedEntryID,
 			&i.CreatedAt,
 			&i.DecidedAt,
+			&i.Design,
 		); err != nil {
 			return nil, err
 		}
@@ -907,12 +923,14 @@ func (q *Queries) UpdateLibraryCollection(ctx context.Context, arg UpdateLibrary
 }
 
 const updateLibraryEntry = `-- name: UpdateLibraryEntry :one
-UPDATE library.entries SET name = $1, fields = $2, revision = revision + 1, updated_at = $3 WHERE id = $4 RETURNING revision
+UPDATE library.entries SET name = $1, fields = $2, design = $3, revision = revision + 1, updated_at = $4
+WHERE id = $5 RETURNING revision
 `
 
 type UpdateLibraryEntryParams struct {
 	Name   string
 	Fields []byte
+	Design []byte
 	Now    time.Time
 	ID     uuid.UUID
 }
@@ -921,6 +939,7 @@ func (q *Queries) UpdateLibraryEntry(ctx context.Context, arg UpdateLibraryEntry
 	row := q.db.QueryRow(ctx, updateLibraryEntry,
 		arg.Name,
 		arg.Fields,
+		arg.Design,
 		arg.Now,
 		arg.ID,
 	)

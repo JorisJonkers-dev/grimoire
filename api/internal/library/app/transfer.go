@@ -2,12 +2,15 @@ package app
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"slices"
 	"time"
 
 	"github.com/google/uuid"
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/library/domain"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/spellbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
 
@@ -58,7 +61,7 @@ func (s *Service) Export(ctx context.Context, c caller.Caller, collection, entry
 }
 
 func exported(e domain.Entry) domain.Exported {
-	return domain.Exported{Key: e.ID.String(), Kind: e.Kind, Name: e.Name, Fields: e.Fields}
+	return domain.Exported{Key: e.ID.String(), Kind: e.Kind, Name: e.Name, Fields: e.Fields, Design: e.Design}
 }
 
 func exportedCollection(c domain.Collection) domain.ExportedCollection {
@@ -73,6 +76,12 @@ func exportedCollection(c domain.Collection) domain.ExportedCollection {
 // first Revision. What cannot be taken is reported as Manual, never refused whole.
 func (s *Service) Import(ctx context.Context, c caller.Caller, in []domain.Incoming, cols []domain.ExportedCollection) (Report, error) {
 	entries, collections, manual := domain.PlanImport(in, cols)
+	for i, x := range entries {
+		if reason := s.checkDesign(ctx, x); reason != "" {
+			manual = append(manual, domain.Manual{Where: fmt.Sprintf("entries %q design", x.Name), Reason: reason})
+			entries[i].Design = nil
+		}
+	}
 	r := Report{Entries: []domain.Entry{}, Collections: []domain.Collection{}, Manual: manual}
 	now := s.Now()
 	err := s.Repo.InTx(ctx, func(repo Repository) error {
@@ -99,11 +108,11 @@ func (s *Service) Import(ctx context.Context, c caller.Caller, in []domain.Incom
 
 // importEntry adds one imported entry as its first Revision.
 func (s *Service) importEntry(ctx context.Context, repo Repository, c caller.Caller, x domain.Exported, now time.Time) (domain.Entry, error) {
-	e := domain.Entry{ID: uuid.New(), Owner: c.Subject, Kind: x.Kind, Name: x.Name, Fields: x.Fields, Revision: 1, CreatedAt: now, UpdatedAt: now}
+	e := domain.Entry{ID: uuid.New(), Owner: c.Subject, Kind: x.Kind, Name: x.Name, Fields: x.Fields, Design: x.Design, Revision: 1, CreatedAt: now, UpdatedAt: now}
 	if err := repo.InsertEntry(ctx, e); err != nil {
 		return e, err
 	}
-	return e, repo.InsertRevision(ctx, e.ID, domain.Revision{No: 1, Name: e.Name, Fields: e.Fields, Author: c.Subject, At: now})
+	return e, repo.InsertRevision(ctx, e.ID, domain.Revision{No: 1, Name: e.Name, Fields: e.Fields, Design: e.Design, Author: c.Subject, At: now})
 }
 
 // importCollection adds one imported Collection holding the imported entries it names.
@@ -116,4 +125,20 @@ func importCollection(ctx context.Context, repo Repository, c caller.Caller, x d
 		return col, err
 	}
 	return col, repo.UpdateCollection(ctx, col)
+}
+
+// checkDesign says why an imported spell's design cannot be run, or nothing when it can or there is none.
+func (s *Service) checkDesign(ctx context.Context, x domain.Exported) string {
+	if x.Design == nil {
+		return ""
+	}
+	var d spellbuild.Design
+	err := json.Unmarshal(x.Design, &d)
+	if err == nil {
+		_, err = s.build(ctx, uuid.Nil, x.Name, d)
+	}
+	if err != nil {
+		return err.Error()
+	}
+	return ""
 }

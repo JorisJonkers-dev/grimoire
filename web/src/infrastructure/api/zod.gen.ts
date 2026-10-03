@@ -1898,6 +1898,126 @@ export const zImportReport = z.object({
 });
 
 /**
+ * One row of a spell design; which fields count depends on its type.
+ */
+export const zSpellPart = z.object({
+    type: z.enum([
+        'damage',
+        'condition',
+        'light',
+        'reveal',
+        'surface',
+        'manual'
+    ]),
+    when: z.enum(['on_cast', 'start_of_turn']).optional(),
+    dice: z.string().max(20).optional(),
+    damageType: z.string().max(20).optional(),
+    half: z.boolean().optional(),
+    condition: z.string().max(40).optional(),
+    onlyTypes: z.array(z.string().max(20)).max(14).optional(),
+    brightFt: z.int().gte(0).lte(1000).optional(),
+    dimFt: z.int().gte(-1000).lte(1000).optional(),
+    qualities: z.array(z.string().max(20)).max(8).optional(),
+    surface: z.string().max(40).optional(),
+    rounds: z.int().gte(0).lte(1000).optional(),
+    text: z.string().max(1000).optional()
+});
+
+/**
+ * A homebrew spell as the Effect builder makes it, from Targeting and typed parts listed as rows.
+ */
+export const zSpellDesign = z.object({
+    targeting: z.object({
+        shape: z.enum([
+            'sphere',
+            'cylinder',
+            'emanation',
+            'ring',
+            'cone',
+            'cube',
+            'line',
+            'wall'
+        ]),
+        sizeFt: z.int().gte(0).lte(1000),
+        rangeFt: z.int().gte(0).lte(5000)
+    }),
+    save: z.enum([
+        'strength',
+        'dexterity',
+        'constitution',
+        'intelligence',
+        'wisdom',
+        'charisma'
+    ]).optional(),
+    concentration: z.boolean(),
+    duration: z.object({
+        unit: z.enum([
+            'instant',
+            'rounds',
+            'minutes',
+            'hours',
+            'until_dispelled'
+        ]),
+        amount: z.int().gte(0).lte(1000).optional()
+    }),
+    ritual: z.boolean(),
+    castingTime: z.object({
+        kind: z.enum([
+            'action',
+            'bonus_action',
+            'reaction',
+            'minutes'
+        ]),
+        minutes: z.int().gte(0).lte(10000).optional(),
+        trigger: z.enum([
+            'when_hit',
+            'when_damaged',
+            'ally_attacked',
+            'creature_casts',
+            'creature_enters_reach'
+        ]).optional()
+    }),
+    components: z.object({
+        verbal: z.boolean(),
+        somatic: z.boolean(),
+        material: z.object({
+            text: z.string().max(400),
+            costGp: z.int().gte(0).lte(1000000).optional(),
+            consumed: z.boolean().optional(),
+            item: z.string().max(80).optional()
+        }).optional()
+    }),
+    parts: z.array(zSpellPart).max(100)
+});
+
+/**
+ * A design to preview, with the spell's name.
+ */
+export const zSpellPreviewInput = z.object({
+    name: z.string().min(1).max(80),
+    design: zSpellDesign
+});
+
+/**
+ * A hex of an area, relative to its origin.
+ */
+export const zBuilderHex = z.object({
+    q: z.int().gte(-1000).lte(1000),
+    r: z.int().gte(-1000).lte(1000)
+});
+
+/**
+ * A homebrew spell in the Effect builder, the Effect slug it runs under in play, its rules text and its area as hexes.
+ */
+export const zSpellBuild = z.object({
+    entry: zLibraryEntry.optional(),
+    design: zSpellDesign,
+    effect: z.string().max(40),
+    text: z.array(z.string().max(1000)).max(200),
+    hexes: z.array(zBuilderHex).max(20000)
+});
+
+/**
  * A Character's need or greed call on a loot pile's item, with the d20 it rolled. Need beats greed, then the higher roll, then the earlier claim.
  */
 export const zLiveClaim = z.object({
@@ -5540,6 +5660,33 @@ export const zReviewSharedSubmissionPath = z.object({
  * The request.
  */
 export const zReviewSharedSubmissionResponse = zSharedSubmission;
+
+export const zPreviewSpellBody = zSpellPreviewInput;
+
+/**
+ * The preview.
+ */
+export const zPreviewSpellResponse = zSpellBuild;
+
+export const zGetSpellBuildPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The spell.
+ */
+export const zGetSpellBuildResponse = zSpellBuild;
+
+export const zSaveSpellBuildBody = zSpellDesign;
+
+export const zSaveSpellBuildPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The spell.
+ */
+export const zSaveSpellBuildResponse = zSpellBuild;
 
 /**
  * The signed-in account.

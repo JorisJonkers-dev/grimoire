@@ -81,6 +81,7 @@ function linkInto() {
     <p v-else-if="!d">Opening the entry…</p>
     <template v-else>
       <h1>{{ d.entry.name }} <span class="g-tag">{{ kindNames[d.entry.kind] }}</span></h1>
+      <RouterLink v-if="d.entry.kind === 'spell'" :to="{ name: 'spell-builder', params: { entryId: d.entry.id } }" data-testid="open-builder">Open in the Effect builder</RouterLink>
       <p v-if="status" role="status" class="g-tag" data-testid="entry-status">{{ status }}</p>
       <p v-if="shared" class="g-card hint" data-testid="entry-shared">A read-only copy from the Shared Library. Link it into a Campaign, then override its fields there.</p>
       <dl v-if="shared" class="g-card fields" data-testid="entry-fields">

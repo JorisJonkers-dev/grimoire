@@ -18,6 +18,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/effects"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/features"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/spellbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/surface"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
@@ -189,6 +190,11 @@ func (h *Hub) loadRules(ctx context.Context, s domain.Session) (loaded, error) {
 	if out.surfaces, err = h.Store.Surfaces(ctx); err != nil {
 		return out, err
 	}
+	brewed, err := h.Store.Homebrew(ctx, s.CampaignID)
+	if err != nil {
+		return out, err
+	}
+	out.catalog, out.surfaces = withHomebrew(out.catalog, out.surfaces, brewed)
 	if out.rest, err = h.Store.LoadRest(ctx, s.CampaignID, s.ID); err != nil {
 		return out, err
 	}
@@ -205,8 +211,23 @@ func (h *Hub) loadRules(ctx context.Context, s domain.Session) (loaded, error) {
 	return out, err
 }
 
+// withHomebrew adds a Campaign's homebrew spells, and the Surfaces their start-of-turn damage lies on,
+// to copies of the shared catalogues.
+func withHomebrew(cat effects.Catalog, ground surface.Catalog, brewed []spellbuild.Built) (effects.Catalog, surface.Catalog) {
+	cat, ground = maps.Clone(cat), maps.Clone(ground)
+	for _, b := range brewed {
+		cat[b.Definition.Slug] = b.Definition
+		if g := b.Surface; g != nil {
+			ground[surface.Kind(g.Slug)] = surface.Definition{Kind: surface.Kind(g.Slug), Name: g.Name, Cost: 1, HazardDice: g.Dice, HazardType: g.Type}
+		}
+	}
+	return cat, ground
+}
+
 // Store is the runtime's persistence port.
 type Store interface {
+	// Homebrew builds the homebrew spells a Campaign sees.
+	Homebrew(ctx context.Context, campaign uuid.UUID) ([]spellbuild.Built, error)
 	Load(ctx context.Context, id domain.SessionID) (domain.Session, []domain.Token, *domain.MapState, error)
 	LoadMap(ctx context.Context, campaign uuid.UUID, id domain.MapID) (*domain.MapState, error)
 	LoadCombat(ctx context.Context, id domain.SessionID) (*domain.Combat, error)

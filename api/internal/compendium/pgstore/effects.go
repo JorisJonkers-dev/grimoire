@@ -223,6 +223,8 @@ func componentRow(ctx context.Context, q *queries.Queries, id int64, ord int32, 
 				EffectID: id, Ordinal: ord, Condition: string(c.When.Kind), N: int32(c.When.N), CreatureType: c.When.Type, //nolint:gosec // bounded by a check
 			})
 		}
+	case effects.AreaSave, effects.Light:
+		// The Effect builder's parts live in a spell's design, never in the catalogue's tables.
 	}
 	return "", func() error { return nil }
 }
@@ -260,7 +262,7 @@ func widerRow(ctx context.Context, q *queries.Queries, id int64, ord int32, c ef
 		}
 	case effects.BonusDie, effects.Edge, effects.ExtraDamage, effects.MoveCost, effects.Manual, effects.Area, effects.SaveDamage, effects.SaveCondition,
 		effects.CreateSurface, effects.Incapacitated, effects.Immobile, effects.SaveEdge, effects.CritWithin, effects.Exhausting, effects.SpeedPenalty, effects.Reacts,
-		effects.Choice, effects.Branch, effects.Summon, effects.Form, effects.Reveal:
+		effects.Choice, effects.Branch, effects.Summon, effects.Form, effects.Reveal, effects.AreaSave, effects.Light:
 	}
 	return "", func() error { return nil }
 }

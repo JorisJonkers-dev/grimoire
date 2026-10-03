@@ -217,6 +217,10 @@ func (r *runtime) areaRolled() {
 	for _, t := range r.st.revealed(c.Hexes, spell.Reveals) {
 		r.commit(request{}, Write{Kind: domain.ActionVisibilitySet, Token: t}, actor, sys)
 	}
+	if l := spell.Light; l.BrightFt > 0 && r.st.board != nil {
+		at := lightAt(caster, spell.Area, c.Hexes)
+		r.commit(request{}, Write{Kind: domain.ActionLightPlaced, Light: domain.MapLight{ID: domain.LightID(uuid.New()), At: at, BrightFt: l.BrightFt, DimFt: l.DimFt}}, actor, sys)
+	}
 	if spell.Condition == "" {
 		return
 	}
@@ -284,7 +288,7 @@ func (s *state) branched(c *domain.AreaCast, totals map[domain.RollID]int) ([]do
 		if !ok || t.Stats == nil {
 			continue
 		}
-		at := effects.Situation{Saved: true, Margin: 0, HP: t.Stats.HP, First: true, Type: ""}
+		at := effects.Situation{Saved: true, Margin: 0, HP: t.Stats.HP, First: true, Type: t.Stats.CreatureType}
 		if target.SaveRoll != nil {
 			total := totals[*target.SaveRoll]
 			at.Saved, at.Margin = total >= c.DC, c.DC-total
@@ -514,4 +518,17 @@ func compareHex(a, b Hex) int {
 		return a.Q - b.Q
 	}
 	return a.R - b.R
+}
+
+// lightAt is where an area spell's light shines from: the caster, for an area that starts there, or the
+// hex at the middle of the area.
+func lightAt(caster domain.Token, area effects.Area, hexes []hex.Coord) hex.Coord {
+	if area.RangeFt == 0 || len(hexes) == 0 {
+		return hex.Coord{Q: caster.Q, R: caster.R}
+	}
+	var q, r int
+	for _, h := range hexes {
+		q, r = q+h.Q, r+h.R
+	}
+	return hex.Coord{Q: q / len(hexes), R: r / len(hexes)}
 }

@@ -584,6 +584,20 @@ func encodePreviewSightRequest(
 	return nil
 }
 
+func encodePreviewSpellRequest(
+	req *SpellPreviewInput,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodePublishReleaseNoteRequest(
 	req *ReleaseNotePublish,
 	r *http.Request,
@@ -698,6 +712,20 @@ func encodeReviewSharedSubmissionRequest(
 
 func encodeSaveCharacterDraftRequest(
 	req *CharacterDraftSave,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeSaveSpellBuildRequest(
+	req *SpellDesign,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"

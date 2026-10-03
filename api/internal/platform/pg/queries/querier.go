@@ -79,6 +79,7 @@ type Querier interface {
 	CampaignHasLiveSession(ctx context.Context, campaignID uuid.UUID) (bool, error)
 	CampaignHighGround(ctx context.Context, id uuid.UUID) (bool, error)
 	CampaignHome(ctx context.Context, campaignID uuid.UUID) (uuid.UUID, error)
+	CampaignHomebrewSpells(ctx context.Context, campaignID uuid.UUID) ([]CampaignHomebrewSpellsRow, error)
 	CampaignInitiative(ctx context.Context, id uuid.UUID) (CampaignInitiativeRow, error)
 	CampaignItemInstances(ctx context.Context, campaignID uuid.UUID) ([]CampaignItemInstancesRow, error)
 	CampaignLibraryCollections(ctx context.Context, arg CampaignLibraryCollectionsParams) ([]CampaignLibraryCollectionsRow, error)

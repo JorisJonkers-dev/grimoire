@@ -4526,6 +4526,96 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/builders/spells/preview:
+    post:
+      operationId: previewSpell
+      x-ogen-operation-group: Read
+      summary: Preview a homebrew spell
+      description: "Builds a design without saving it: its rules text and its area drawn as hexes. A design the rules cannot run is refused with the reason."
+      tags: [Library]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SpellPreviewInput"
+      responses:
+        "200":
+          description: The preview.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpellBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/builders/spells/{entryId}:
+    get:
+      operationId: getSpellBuild
+      x-ogen-operation-group: Read
+      summary: Open a spell in the Effect builder
+      description: "A homebrew spell's design with its rules text and area: one of the caller's spells, or a Shared Library copy."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/LibraryEntryId"
+      responses:
+        "200":
+          description: The spell.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpellBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    put:
+      operationId: saveSpellBuild
+      x-ogen-operation-group: Build
+      summary: Save a spell design
+      description: "Saves the design of one of the caller's spells as its next Revision; in a live Session it runs as an area spell."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/LibraryEntryId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SpellDesign"
+      responses:
+        "200":
+          description: The spell.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpellBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /api/v1/me:
     get:
       operationId: getMe
@@ -9791,6 +9881,116 @@ components:
       properties:
         where: { type: string, maxLength: 300 }
         reason: { type: string, maxLength: 300 }
+    SpellDesign:
+      type: object
+      description: A homebrew spell as the Effect builder makes it, from Targeting and typed parts listed as rows.
+      additionalProperties: false
+      required: [targeting, concentration, duration, ritual, castingTime, components, parts]
+      properties:
+        targeting:
+          type: object
+          additionalProperties: false
+          required: [shape, sizeFt, rangeFt]
+          properties:
+            shape: { type: string, enum: [sphere, cylinder, emanation, ring, cone, cube, line, wall] }
+            sizeFt: { type: integer, format: int32, minimum: 0, maximum: 1000 }
+            rangeFt: { type: integer, format: int32, minimum: 0, maximum: 5000 }
+        save: { type: string, enum: [strength, dexterity, constitution, intelligence, wisdom, charisma] }
+        concentration: { type: boolean }
+        duration:
+          type: object
+          additionalProperties: false
+          required: [unit]
+          properties:
+            unit: { type: string, enum: [instant, rounds, minutes, hours, until_dispelled] }
+            amount: { type: integer, format: int32, minimum: 0, maximum: 1000 }
+        ritual: { type: boolean }
+        castingTime:
+          type: object
+          additionalProperties: false
+          required: [kind]
+          properties:
+            kind: { type: string, enum: [action, bonus_action, reaction, minutes] }
+            minutes: { type: integer, format: int32, minimum: 0, maximum: 10000 }
+            trigger: { type: string, enum: [when_hit, when_damaged, ally_attacked, creature_casts, creature_enters_reach] }
+        components:
+          type: object
+          additionalProperties: false
+          required: [verbal, somatic]
+          properties:
+            verbal: { type: boolean }
+            somatic: { type: boolean }
+            material:
+              type: object
+              additionalProperties: false
+              required: [text]
+              properties:
+                text: { type: string, maxLength: 400 }
+                costGp: { type: integer, format: int32, minimum: 0, maximum: 1000000 }
+                consumed: { type: boolean }
+                item: { type: string, maxLength: 80 }
+        parts:
+          type: array
+          maxItems: 100
+          items: { $ref: "#/components/schemas/SpellPart" }
+    SpellPart:
+      type: object
+      description: One row of a spell design; which fields count depends on its type.
+      additionalProperties: false
+      required: [type]
+      properties:
+        type: { type: string, enum: [damage, condition, light, reveal, surface, manual] }
+        when: { type: string, enum: [on_cast, start_of_turn] }
+        dice: { type: string, maxLength: 20 }
+        damageType: { type: string, maxLength: 20 }
+        half: { type: boolean }
+        condition: { type: string, maxLength: 40 }
+        onlyTypes:
+          type: array
+          maxItems: 14
+          items: { type: string, maxLength: 20 }
+        brightFt: { type: integer, format: int32, minimum: 0, maximum: 1000 }
+        dimFt: { type: integer, format: int32, minimum: -1000, maximum: 1000 }
+        qualities:
+          type: array
+          maxItems: 8
+          items: { type: string, maxLength: 20 }
+        surface: { type: string, maxLength: 40 }
+        rounds: { type: integer, format: int32, minimum: 0, maximum: 1000 }
+        text: { type: string, maxLength: 1000 }
+    SpellPreviewInput:
+      type: object
+      description: A design to preview, with the spell's name.
+      additionalProperties: false
+      required: [name, design]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        design: { $ref: "#/components/schemas/SpellDesign" }
+    BuilderHex:
+      type: object
+      description: A hex of an area, relative to its origin.
+      additionalProperties: false
+      required: [q, r]
+      properties:
+        q: { type: integer, format: int32, minimum: -1000, maximum: 1000 }
+        r: { type: integer, format: int32, minimum: -1000, maximum: 1000 }
+    SpellBuild:
+      type: object
+      description: A homebrew spell in the Effect builder, the Effect slug it runs under in play, its rules text and its area as hexes.
+      additionalProperties: false
+      required: [design, effect, text, hexes]
+      properties:
+        entry: { $ref: "#/components/schemas/LibraryEntry" }
+        design: { $ref: "#/components/schemas/SpellDesign" }
+        effect: { type: string, maxLength: 40 }
+        text:
+          type: array
+          maxItems: 200
+          items: { type: string, maxLength: 1000 }
+        hexes:
+          type: array
+          maxItems: 20000
+          items: { $ref: "#/components/schemas/BuilderHex" }
     LiveContainer:
       type: object
       description: A Character's Inventory, the Party Stash, a drop of loot, or a bag inside another container, with what it weighs including its bags. A Character's names its owner and how much they can carry.

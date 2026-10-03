@@ -140,6 +140,7 @@ func TestAreaSpellsSavesAndSurfaces(t *testing.T) {
 	drain(tb.dm)
 	drain(tb.player)
 	now := look(t, w, tb.dm)
+	look(t, w, tb.player) // the player's queue may still hold the resolution's updates
 	if now.Area != nil || *token(now, "Goblin").HP != 0 || *token(now, "Archer").HP != 1 || *token(now, "Brom").HP != 6 {
 		t.Fatalf("12 thunder: the goblin fails, the archer and brom halve it to 6 = %+v %+v %+v", token(now, "Goblin"), token(now, "Archer"), token(now, "Brom"))
 	}

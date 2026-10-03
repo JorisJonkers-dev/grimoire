@@ -611,6 +611,13 @@ type BuildHandler interface {
 	//
 	// PUT /api/v1/campaigns/{campaignId}/character-draft
 	SaveCharacterDraft(ctx context.Context, req *CharacterDraftSave, params SaveCharacterDraftParams) (SaveCharacterDraftRes, error)
+	// SaveSpellBuild implements saveSpellBuild operation.
+	//
+	// Saves the design of one of the caller's spells as its next Revision; in a live Session it runs as an
+	// area spell.
+	//
+	// PUT /api/v1/builders/spells/{entryId}
+	SaveSpellBuild(ctx context.Context, req *SpellDesign, params SaveSpellBuildParams) (SaveSpellBuildRes, error)
 	// SetCampaignOverride implements setCampaignOverride operation.
 	//
 	// Replaces the fields this Campaign sees differently from the entry's base. DM only.
@@ -1048,6 +1055,13 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/compendium/spells/{slug}
 	GetSpell(ctx context.Context, params GetSpellParams) (GetSpellRes, error)
+	// GetSpellBuild implements getSpellBuild operation.
+	//
+	// A homebrew spell's design with its rules text and area: one of the caller's spells, or a Shared
+	// Library copy.
+	//
+	// GET /api/v1/builders/spells/{entryId}
+	GetSpellBuild(ctx context.Context, params GetSpellBuildParams) (GetSpellBuildRes, error)
 	// GetSpellcasting implements getSpellcasting operation.
 	//
 	// Cantrips, prepared and always-prepared spells per class, a wizard's spellbook, coins and the Game
@@ -1355,6 +1369,13 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/level-up
 	PlanLevelUp(ctx context.Context, params PlanLevelUpParams) (PlanLevelUpRes, error)
+	// PreviewSpell implements previewSpell operation.
+	//
+	// Builds a design without saving it: its rules text and its area drawn as hexes. A design the rules
+	// cannot run is refused with the reason.
+	//
+	// POST /api/v1/builders/spells/preview
+	PreviewSpell(ctx context.Context, req *SpellPreviewInput) (PreviewSpellRes, error)
 }
 
 // Server implements http server based on OpenAPI v3 specification and

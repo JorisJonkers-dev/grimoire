@@ -1167,6 +1167,7 @@ type LibraryEntry struct {
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 	Shared       bool
+	Design       []byte
 }
 
 type LibraryEntryRevision struct {
@@ -1176,6 +1177,7 @@ type LibraryEntryRevision struct {
 	Fields        []byte
 	AuthorSubject string
 	CreatedAt     time.Time
+	Design        []byte
 }
 
 type LibraryProposal struct {
@@ -1221,6 +1223,7 @@ type LibrarySharedSubmission struct {
 	SharedEntryID    pgtype.UUID
 	CreatedAt        time.Time
 	DecidedAt        pgtype.Timestamptz
+	Design           []byte
 }
 
 type OpsCompendiumImport struct {
@@ -1624,6 +1627,7 @@ type PlayToken struct {
 	SummonEffectID     pgtype.UUID
 	Disguise           pgtype.Text
 	Strength           int32
+	CreatureType       string
 }
 
 type PlayTokenAttack struct {

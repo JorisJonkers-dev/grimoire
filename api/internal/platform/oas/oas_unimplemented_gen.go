@@ -693,6 +693,16 @@ func (UnimplementedHandler) GetSpell(ctx context.Context, params GetSpellParams)
 	return r, ht.ErrNotImplemented
 }
 
+// GetSpellBuild implements getSpellBuild operation.
+//
+// A homebrew spell's design with its rules text and area: one of the caller's spells, or a Shared
+// Library copy.
+//
+// GET /api/v1/builders/spells/{entryId}
+func (UnimplementedHandler) GetSpellBuild(ctx context.Context, params GetSpellBuildParams) (r GetSpellBuildRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetSpellcasting implements getSpellcasting operation.
 //
 // Cantrips, prepared and always-prepared spells per class, a wizard's spellbook, coins and the Game
@@ -1302,6 +1312,16 @@ func (UnimplementedHandler) PreviewSight(ctx context.Context, req *SightRequest)
 	return r, ht.ErrNotImplemented
 }
 
+// PreviewSpell implements previewSpell operation.
+//
+// Builds a design without saving it: its rules text and its area drawn as hexes. A design the rules
+// cannot run is refused with the reason.
+//
+// POST /api/v1/builders/spells/preview
+func (UnimplementedHandler) PreviewSpell(ctx context.Context, req *SpellPreviewInput) (r PreviewSpellRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // PublishReleaseNote implements publishReleaseNote operation.
 //
 // Puts it live now, or at a later moment; once live it is announced in every bell. For Admins.
@@ -1529,6 +1549,16 @@ func (UnimplementedHandler) RollRest(ctx context.Context, params RollRestParams)
 //
 // PUT /api/v1/campaigns/{campaignId}/character-draft
 func (UnimplementedHandler) SaveCharacterDraft(ctx context.Context, req *CharacterDraftSave, params SaveCharacterDraftParams) (r SaveCharacterDraftRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// SaveSpellBuild implements saveSpellBuild operation.
+//
+// Saves the design of one of the caller's spells as its next Revision; in a live Session it runs as an
+// area spell.
+//
+// PUT /api/v1/builders/spells/{entryId}
+func (UnimplementedHandler) SaveSpellBuild(ctx context.Context, req *SpellDesign, params SaveSpellBuildParams) (r SaveSpellBuildRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

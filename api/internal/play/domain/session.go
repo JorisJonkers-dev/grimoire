@@ -93,7 +93,9 @@ type Stats struct {
 	// jumping and throwing use, 10 when the statblock gives none.
 	Senses   map[string]int
 	Strength int
-	Attacks  []Attack
+	// CreatureType is what kind of creature it is (undead, fey, humanoid), empty when unknown.
+	CreatureType string
+	Attacks      []Attack
 	// Intelligence drives Tactics; 0 when the statblock has none.
 	Intelligence int
 	// Shield is set for statblocks that can cast the Shield spell.

@@ -2859,6 +2859,86 @@ export type ManualPart = {
 };
 
 /**
+ * A homebrew spell as the Effect builder makes it, from Targeting and typed parts listed as rows.
+ */
+export type SpellDesign = {
+    targeting: {
+        shape: 'sphere' | 'cylinder' | 'emanation' | 'ring' | 'cone' | 'cube' | 'line' | 'wall';
+        sizeFt: number;
+        rangeFt: number;
+    };
+    save?: 'strength' | 'dexterity' | 'constitution' | 'intelligence' | 'wisdom' | 'charisma';
+    concentration: boolean;
+    duration: {
+        unit: 'instant' | 'rounds' | 'minutes' | 'hours' | 'until_dispelled';
+        amount?: number;
+    };
+    ritual: boolean;
+    castingTime: {
+        kind: 'action' | 'bonus_action' | 'reaction' | 'minutes';
+        minutes?: number;
+        trigger?: 'when_hit' | 'when_damaged' | 'ally_attacked' | 'creature_casts' | 'creature_enters_reach';
+    };
+    components: {
+        verbal: boolean;
+        somatic: boolean;
+        material?: {
+            text: string;
+            costGp?: number;
+            consumed?: boolean;
+            item?: string;
+        };
+    };
+    parts: Array<SpellPart>;
+};
+
+/**
+ * One row of a spell design; which fields count depends on its type.
+ */
+export type SpellPart = {
+    type: 'damage' | 'condition' | 'light' | 'reveal' | 'surface' | 'manual';
+    when?: 'on_cast' | 'start_of_turn';
+    dice?: string;
+    damageType?: string;
+    half?: boolean;
+    condition?: string;
+    onlyTypes?: Array<string>;
+    brightFt?: number;
+    dimFt?: number;
+    qualities?: Array<string>;
+    surface?: string;
+    rounds?: number;
+    text?: string;
+};
+
+/**
+ * A design to preview, with the spell's name.
+ */
+export type SpellPreviewInput = {
+    name: string;
+    design: SpellDesign;
+};
+
+/**
+ * A hex of an area, relative to its origin.
+ */
+export type BuilderHex = {
+    q: number;
+    r: number;
+};
+
+/**
+ * A homebrew spell in the Effect builder, the Effect slug it runs under in play, its rules text and its area as hexes.
+ */
+export type SpellBuild = {
+    entry?: LibraryEntry;
+    design: SpellDesign;
+    effect: string;
+    text: Array<string>;
+    hexes: Array<BuilderHex>;
+};
+
+/**
  * A Character's Inventory, the Party Stash, a drop of loot, or a bag inside another container, with what it weighs including its bags. A Character's names its owner and how much they can carry.
  */
 export type LiveContainer = {
@@ -9041,6 +9121,103 @@ export type ReviewSharedSubmissionResponses = {
 };
 
 export type ReviewSharedSubmissionResponse = ReviewSharedSubmissionResponses[keyof ReviewSharedSubmissionResponses];
+
+export type PreviewSpellData = {
+    body: SpellPreviewInput;
+    path?: never;
+    query?: never;
+    url: '/api/v1/builders/spells/preview';
+};
+
+export type PreviewSpellErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type PreviewSpellError = PreviewSpellErrors[keyof PreviewSpellErrors];
+
+export type PreviewSpellResponses = {
+    /**
+     * The preview.
+     */
+    200: SpellBuild;
+};
+
+export type PreviewSpellResponse = PreviewSpellResponses[keyof PreviewSpellResponses];
+
+export type GetSpellBuildData = {
+    body?: never;
+    path: {
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/builders/spells/{entryId}';
+};
+
+export type GetSpellBuildErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetSpellBuildError = GetSpellBuildErrors[keyof GetSpellBuildErrors];
+
+export type GetSpellBuildResponses = {
+    /**
+     * The spell.
+     */
+    200: SpellBuild;
+};
+
+export type GetSpellBuildResponse = GetSpellBuildResponses[keyof GetSpellBuildResponses];
+
+export type SaveSpellBuildData = {
+    body: SpellDesign;
+    path: {
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/builders/spells/{entryId}';
+};
+
+export type SaveSpellBuildErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SaveSpellBuildError = SaveSpellBuildErrors[keyof SaveSpellBuildErrors];
+
+export type SaveSpellBuildResponses = {
+    /**
+     * The spell.
+     */
+    200: SpellBuild;
+};
+
+export type SaveSpellBuildResponse = SaveSpellBuildResponses[keyof SaveSpellBuildResponses];
 
 export type GetMeData = {
     body?: never;

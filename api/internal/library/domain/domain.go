@@ -38,7 +38,9 @@ type Entry struct {
 	Fields   Fields
 	Revision int
 	// Shared marks a read-only copy in the Shared Library.
-	Shared    bool
+	Shared bool
+	// Design is a homebrew spell's design as the Effect builder saves it, nil for any other entry.
+	Design    []byte
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
@@ -60,6 +62,7 @@ type Submission struct {
 	Entry     uuid.UUID
 	Revision  int
 	Draft     Draft
+	Design    []byte
 	Note      string
 	Submitter string
 	Status    string
@@ -77,6 +80,7 @@ type Revision struct {
 	No     int
 	Name   string
 	Fields Fields
+	Design []byte
 	Author string
 	At     time.Time
 }

@@ -114,6 +114,10 @@ func lastSentence(c Component) string {
 			return "The target regains " + plural(c.Delta, "use") + " of " + title(c.Resource) + "."
 		}
 		return "The target expends " + plural(-c.Delta, "use") + " of " + title(c.Resource) + "."
+	case AreaSave:
+		return "Each creature in the area makes a " + title(c.Ability) + " saving throw."
+	case Light:
+		return "Bright light fills " + strconv.Itoa(c.BrightFt) + " feet around where it lands, and dim light another " + strconv.Itoa(c.DimFt) + " feet."
 	case Choice:
 		modes := make([]string, 0, len(c.Modes))
 		for _, m := range c.Modes {

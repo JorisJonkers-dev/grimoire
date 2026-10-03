@@ -135,6 +135,48 @@ func (q *Queries) CampaignHighGround(ctx context.Context, id uuid.UUID) (bool, e
 	return high_ground, err
 }
 
+const campaignHomebrewSpells = `-- name: CampaignHomebrewSpells :many
+WITH visible AS (
+    SELECT l.entry_id FROM library.campaign_links l WHERE l.campaign_id = $1 AND l.direct
+    UNION
+    SELECT ce.entry_id FROM library.collection_entries ce
+    JOIN library.campaign_collections cc ON cc.collection_id = ce.collection_id WHERE cc.campaign_id = $1
+)
+SELECT e.id, coalesce(r.name, e.name)::text AS name, coalesce(r.design, e.design)::jsonb AS design
+FROM visible v
+JOIN library.entries e ON e.id = v.entry_id AND e.kind = 'spell'
+LEFT JOIN library.campaign_links l ON l.entry_id = e.id AND l.campaign_id = $1
+LEFT JOIN library.entry_revisions r ON r.entry_id = e.id AND r.no = l.pinned_revision
+WHERE coalesce(r.design, e.design) IS NOT NULL
+ORDER BY e.id
+`
+
+type CampaignHomebrewSpellsRow struct {
+	ID     uuid.UUID
+	Name   string
+	Design []byte
+}
+
+func (q *Queries) CampaignHomebrewSpells(ctx context.Context, campaignID uuid.UUID) ([]CampaignHomebrewSpellsRow, error) {
+	rows, err := q.db.Query(ctx, campaignHomebrewSpells, campaignID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CampaignHomebrewSpellsRow{}
+	for rows.Next() {
+		var i CampaignHomebrewSpellsRow
+		if err := rows.Scan(&i.ID, &i.Name, &i.Design); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const campaignInitiative = `-- name: CampaignInitiative :one
 SELECT initiative_mode, share_initiative FROM campaign.campaigns WHERE id = $1
 `
@@ -871,10 +913,10 @@ func (q *Queries) InsertSurface(ctx context.Context, arg InsertSurfaceParams) er
 
 const insertToken = `-- name: InsertToken :exec
 INSERT INTO play.tokens (id, session_id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class,
-    hp, hp_max, intelligence, can_shield, spell_dc, stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action, summon_effect_id, strength)
+    hp, hp_max, intelligence, can_shield, spell_dc, stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action, summon_effect_id, strength, creature_type)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
     $11, $12, $13, $14, $15, $16, $17,
-    $18, $19, $20, $21, $22, $23, $24)
+    $18, $19, $20, $21, $22, $23, $24, $25)
 `
 
 type InsertTokenParams struct {
@@ -902,6 +944,7 @@ type InsertTokenParams struct {
 	AttacksPerAction   int32
 	SummonEffectID     pgtype.UUID
 	Strength           int32
+	CreatureType       string
 }
 
 func (q *Queries) InsertToken(ctx context.Context, arg InsertTokenParams) error {
@@ -930,6 +973,7 @@ func (q *Queries) InsertToken(ctx context.Context, arg InsertTokenParams) error 
 		arg.AttacksPerAction,
 		arg.SummonEffectID,
 		arg.Strength,
+		arg.CreatureType,
 	)
 	return err
 }
@@ -1329,7 +1373,7 @@ func (q *Queries) MonsterSaves(ctx context.Context, monsterID int64) ([]MonsterS
 
 const monsterStatblock = `-- name: MonsterStatblock :one
 SELECT m.id, m.name, m.armor_class, m.hit_points, m.intelligence, m.strength, m.dexterity, m.constitution, m.wisdom, m.charisma,
-       COALESCE(m.challenge_rating, 0)::float8 AS challenge_rating
+       COALESCE(m.challenge_rating, 0)::float8 AS challenge_rating, m.creature_type
 FROM compendium.monsters m
 JOIN compendium.documents d ON d.id = m.document_id
 WHERE m.slug = $1 AND ($2::text IS NULL OR d.key = $2::text)
@@ -1353,6 +1397,7 @@ type MonsterStatblockRow struct {
 	Wisdom          int32
 	Charisma        int32
 	ChallengeRating float64
+	CreatureType    string
 }
 
 func (q *Queries) MonsterStatblock(ctx context.Context, arg MonsterStatblockParams) (MonsterStatblockRow, error) {
@@ -1370,6 +1415,7 @@ func (q *Queries) MonsterStatblock(ctx context.Context, arg MonsterStatblockPara
 		&i.Wisdom,
 		&i.Charisma,
 		&i.ChallengeRating,
+		&i.CreatureType,
 	)
 	return i, err
 }
@@ -2454,7 +2500,7 @@ func (q *Queries) SessionTokenSenses(ctx context.Context, sessionID uuid.UUID) (
 
 const sessionTokens = `-- name: SessionTokens :many
 SELECT id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class, hp, hp_max, intelligence, tactics, can_shield, spell_dc,
-    stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action, temp_hp, summon_effect_id, disguise, strength FROM play.tokens WHERE session_id = $1 ORDER BY label, id
+    stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action, temp_hp, summon_effect_id, disguise, strength, creature_type FROM play.tokens WHERE session_id = $1 ORDER BY label, id
 `
 
 type SessionTokensRow struct {
@@ -2484,6 +2530,7 @@ type SessionTokensRow struct {
 	SummonEffectID     pgtype.UUID
 	Disguise           pgtype.Text
 	Strength           int32
+	CreatureType       string
 }
 
 func (q *Queries) SessionTokens(ctx context.Context, sessionID uuid.UUID) ([]SessionTokensRow, error) {
@@ -2522,6 +2569,7 @@ func (q *Queries) SessionTokens(ctx context.Context, sessionID uuid.UUID) ([]Ses
 			&i.SummonEffectID,
 			&i.Disguise,
 			&i.Strength,
+			&i.CreatureType,
 		); err != nil {
 			return nil, err
 		}

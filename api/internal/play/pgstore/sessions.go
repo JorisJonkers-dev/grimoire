@@ -343,6 +343,7 @@ func (s *Store) insertToken(ctx context.Context, sid uuid.UUID, t domain.Token) 
 		p.UnarmedDc = 10
 	}
 	p.AttacksPerAction = int32(max(1, min(4, st.AttacksPerAction)))
+	p.CreatureType = st.CreatureType
 	if st.Strength > 0 {
 		p.Strength = int32(min(30, st.Strength))
 	}
@@ -1109,7 +1110,7 @@ func tokenFrom(t queries.SessionTokensRow) domain.Token {
 			Source: t.StatSource.String, AC: int(t.ArmorClass.Int32), HP: int(t.Hp.Int32), HPMax: int(t.HpMax.Int32), Attacks: []domain.Attack{},
 			Intelligence: int(t.Intelligence.Int32), SpellDC: int(t.SpellDc.Int32), Stealth: int(t.Stealth), Perception: int(t.Perception),
 			Initiative: int(t.Initiative), SpeedFt: int(t.SpeedFt), UnarmedDC: int(t.UnarmedDc), AttacksPerAction: int(t.AttacksPerAction), TempHP: int(t.TempHp),
-			Strength: int(t.Strength),
+			Strength: int(t.Strength), CreatureType: t.CreatureType,
 		}
 	}
 	return tok

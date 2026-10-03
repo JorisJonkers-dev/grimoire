@@ -19,7 +19,7 @@ import (
 type Repository interface {
 	InsertEntry(ctx context.Context, e domain.Entry) error
 	// UpdateEntry saves a new base and returns its Revision number.
-	UpdateEntry(ctx context.Context, id uuid.UUID, name string, fields domain.Fields, now time.Time) (int, error)
+	UpdateEntry(ctx context.Context, id uuid.UUID, name string, fields domain.Fields, design []byte, now time.Time) (int, error)
 	InsertRevision(ctx context.Context, entry uuid.UUID, r domain.Revision) error
 	Entry(ctx context.Context, id uuid.UUID) (domain.Entry, error)
 	Entries(ctx context.Context, owner, kind string) ([]domain.Entry, error)
@@ -75,6 +75,8 @@ type Service struct {
 	Log     *slog.Logger
 	// Admins says who reviews the Shared Library.
 	Admins Admins
+	// Surfaces are the Surface kinds a homebrew spell may lay down.
+	Surfaces Surfaces
 }
 
 // Admins tells Admins apart.
@@ -150,11 +152,11 @@ func (s *Service) Update(ctx context.Context, c caller.Caller, id uuid.UUID, d d
 	}
 	now := s.Now()
 	err = s.Repo.InTx(ctx, func(r Repository) error {
-		no, err := r.UpdateEntry(ctx, id, d.Name, d.Fields, now)
+		no, err := r.UpdateEntry(ctx, id, d.Name, d.Fields, e.Design, now)
 		if err != nil {
 			return err
 		}
-		return r.InsertRevision(ctx, id, domain.Revision{No: no, Name: d.Name, Fields: d.Fields, Author: c.Subject, At: now})
+		return r.InsertRevision(ctx, id, domain.Revision{No: no, Name: d.Name, Fields: d.Fields, Design: e.Design, Author: c.Subject, At: now})
 	})
 	if err != nil {
 		return domain.Detail{}, err

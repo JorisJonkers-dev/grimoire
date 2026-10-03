@@ -550,8 +550,12 @@ func (h *Handler) ExportLibrary(ctx context.Context, p oas.ExportLibraryParams) 
 	}
 	out := oas.LibraryExport{Format: oas.LibraryExportFormatGrimoireLibrary, Version: domain.ExportVersion, Entries: []oas.ExportedEntry{}, Collections: []oas.ExportedCollection{}}
 	for _, e := range x.Entries {
+		parts := []oas.ExportedEntryPartsItem{}
+		if e.Design != nil {
+			parts = append(parts, oas.ExportedEntryPartsItem{"type": jx.Raw(`"spell"`), "design": jx.Raw(e.Design)})
+		}
 		out.Entries = append(out.Entries, oas.ExportedEntry{
-			Key: e.Key, Kind: oas.LibraryKind(e.Kind), Name: e.Name, Fields: oas.ExportedEntryFields(e.Fields), Parts: []oas.ExportedEntryPartsItem{},
+			Key: e.Key, Kind: oas.LibraryKind(e.Kind), Name: e.Name, Fields: oas.ExportedEntryFields(e.Fields), Parts: parts,
 		})
 	}
 	for _, c := range x.Collections {

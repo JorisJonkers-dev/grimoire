@@ -293,6 +293,10 @@ type GetSignInMethodsRes interface {
 	getSignInMethodsRes()
 }
 
+type GetSpellBuildRes interface {
+	getSpellBuildRes()
+}
+
 type GetSpellRes interface {
 	getSpellRes()
 }
@@ -561,6 +565,10 @@ type PreviewSightRes interface {
 	previewSightRes()
 }
 
+type PreviewSpellRes interface {
+	previewSpellRes()
+}
+
 type PublishReleaseNoteRes interface {
 	publishReleaseNoteRes()
 }
@@ -655,6 +663,10 @@ type RollRestRes interface {
 
 type SaveCharacterDraftRes interface {
 	saveCharacterDraftRes()
+}
+
+type SaveSpellBuildRes interface {
+	saveSpellBuildRes()
 }
 
 type SeeReleaseNoteRes interface {

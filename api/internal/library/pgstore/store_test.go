@@ -16,6 +16,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg/pgtest"
 	playpg "github.com/JorisJonkers-dev/grimoire/api/internal/play/pgstore"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/spellbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
 
@@ -37,7 +38,7 @@ func TestEveryLibraryDatabaseFaultSurfaces(t *testing.T) {
 	campaign := uuid.UUID(camp.ID)
 	members := playpg.CampaignMembers{Store: campaignpg.New(pool)}
 	service := func(repo app.Repository) *app.Service {
-		return &app.Service{Repo: repo, Members: members, Now: time.Now, Admins: everyone{}}
+		return &app.Service{Repo: repo, Members: members, Now: time.Now, Admins: everyone{}, Surfaces: playpg.New(pool).SurfaceKinds}
 	}
 	base := service(pgstore.New(pool))
 	draft := domain.Draft{Kind: "npc", Name: "Odo", Fields: domain.Fields{"Mood": "cheery"}}
@@ -165,6 +166,21 @@ func TestEveryLibraryDatabaseFaultSurfaces(t *testing.T) {
 		},
 		"import": func(s *app.Service) error {
 			_, err := s.Import(ctx, dm, []domain.Incoming{{Key: "a", Kind: "npc", Name: "Odo"}}, []domain.ExportedCollection{{Name: "In", Entries: []string{"a"}}})
+			return err
+		},
+		"spell build": func(s *app.Service) error {
+			e, err := base.Create(ctx, dm, domain.Draft{Kind: "spell", Name: "Glow"})
+			if err != nil {
+				t.Fatal(err)
+			}
+			d := spellbuild.Design{
+				Targeting: spellbuild.Targeting{Shape: "sphere", SizeFt: 10, RangeFt: 30}, Duration: spellbuild.Duration{Unit: "instant"},
+				CastingTime: spellbuild.CastingTime{Kind: "action"}, Components: spellbuild.Components{Verbal: true},
+			}
+			if _, err := s.SaveSpell(ctx, dm, e.ID, d); err != nil {
+				return err
+			}
+			_, err = s.Spell(ctx, dm, e.ID)
 			return err
 		},
 	}

@@ -66,7 +66,7 @@ func libraryStackWith(t *testing.T, bell libraryapp.Notifier) http.Handler {
 	repo := campaignpg.New(store.Pool())
 	lib := &libraryapp.Service{
 		Repo: librarypg.New(store.Pool()), Members: playpg.CampaignMembers{Store: repo}, Now: time.Now, Notices: bell, Log: quiet,
-		Admins: admins{"admin": true},
+		Admins: admins{"admin": true}, Surfaces: playpg.New(store.Pool()).SurfaceKinds,
 	}
 	return campaignServer(t, app.NewService(repo), httpapi.LibraryService(lib))
 }
@@ -543,7 +543,8 @@ func TestHomebrewExportAndImport(t *testing.T) {
 	t.Parallel()
 	h := libraryStack(t)
 	hag := decode(t, call(h, http.MethodPost, "/api/v1/library", "dm", `{"kind":"creature","name":"Bog Hag","fields":[{"name":"HP","value":"52"},{"name":"Lair","value":"Fen"}]}`))["id"].(string)
-	call(h, http.MethodPost, "/api/v1/library", "dm", `{"kind":"spell","name":"Frost Lance","fields":[{"name":"Damage","value":"3d8"}]}`)
+	lance := decode(t, call(h, http.MethodPost, "/api/v1/library", "dm", `{"kind":"spell","name":"Frost Lance","fields":[{"name":"Damage","value":"3d8"}]}`))["id"].(string)
+	call(h, http.MethodPut, "/api/v1/builders/spells/"+lance, "dm", lanternDesign)
 	col := decode(t, call(h, http.MethodPost, "/api/v1/library/collections", "dm", `{"name":"Fen","description":"Bog things"}`))["id"].(string)
 	call(h, http.MethodPut, "/api/v1/library/collections/"+col, "dm", `{"name":"Fen","description":"Bog things","entryIds":["`+hag+`"]}`)
 
@@ -574,7 +575,7 @@ func TestHomebrewExportAndImport(t *testing.T) {
 		var out []string
 		for _, e := range d["entries"].([]any) {
 			m := e.(map[string]any)
-			out = append(out, m["kind"].(string)+"/"+m["name"].(string)+"/"+mustJSON(t, m["fields"]))
+			out = append(out, m["kind"].(string)+"/"+m["name"].(string)+"/"+mustJSON(t, m["fields"])+"/"+mustJSON(t, m["parts"]))
 		}
 		for _, c := range d["collections"].([]any) {
 			m := c.(map[string]any)
@@ -588,10 +589,11 @@ func TestHomebrewExportAndImport(t *testing.T) {
 
 	odd := `{"format":"grimoire-library","version":1,"entries":[
 		{"key":"a","kind":"creature","name":"Ogre","fields":{"HP":59,"AC":"11"},"parts":[{"type":"effect"}]},
-		{"key":"b","kind":"vehicle","name":"Cart"}],
+		{"key":"b","kind":"vehicle","name":"Cart"},
+		{"key":"c","kind":"spell","name":"Odd","parts":[{"type":"spell","design":{"targeting":{"shape":"blob","sizeFt":5,"rangeFt":0}}}]}],
 		"collections":[{"name":"Mixed","description":"","entries":["a","b"]}]}`
 	report = decode(t, call(h, http.MethodPost, "/api/v1/library/import", "player", odd))
-	if len(report["entries"].([]any)) != 1 || len(report["manual"].([]any)) != 4 {
+	if len(report["entries"].([]any)) != 2 || len(report["manual"].([]any)) != 5 {
 		t.Fatalf("an import with odd parts = %v", report)
 	}
 	if rec := call(h, http.MethodPost, "/api/v1/library/import", "player", `{"format":"other","version":1,"entries":[]}`); rec.Code != http.StatusBadRequest {
@@ -606,6 +608,70 @@ func mustJSON(t *testing.T, v any) string {
 		t.Fatal(err)
 	}
 	return string(raw)
+}
+
+const lanternDesign = `{"targeting":{"shape":"emanation","sizeFt":10,"rangeFt":0},"save":"wisdom","concentration":true,
+"duration":{"unit":"minutes","amount":1},"ritual":true,"castingTime":{"kind":"action"},
+"components":{"verbal":true,"somatic":false,"material":{"text":"a lantern of bog glass","costGp":25,"consumed":true,"item":"lantern"}},
+"parts":[{"type":"light","brightFt":20,"dimFt":20},{"type":"reveal","qualities":["invisible"]},
+{"type":"condition","condition":"charmed","onlyTypes":["undead","fey"]},{"type":"damage","when":"start_of_turn","dice":"1d6","damageType":"radiant"}]}`
+
+// An author builds a spell in the Effect builder: a fresh spell opens with a starting design, a preview
+// draws the area and writes the rules text, a design the rules cannot run is refused with the reason,
+// and saving keeps the design as the spell's next Revision.
+func TestTheEffectBuilder(t *testing.T) {
+	t.Parallel()
+	h := libraryStack(t)
+	spell := decode(t, call(h, http.MethodPost, "/api/v1/library", "dm", `{"kind":"spell","name":"Marsh Lantern","fields":[]}`))["id"].(string)
+	npc := decode(t, call(h, http.MethodPost, "/api/v1/library", "dm", `{"kind":"npc","name":"Odo","fields":[]}`))["id"].(string)
+	path := "/api/v1/builders/spells/" + spell
+	rec := call(h, http.MethodGet, path, "dm", "")
+	fresh := decode(t, rec)
+	if rec.Code != http.StatusOK || fresh["design"].(map[string]any)["targeting"].(map[string]any)["shape"] != "sphere" || !strings.HasPrefix(fresh["effect"].(string), "hb-") {
+		t.Fatalf("a fresh spell: %d %v", rec.Code, fresh)
+	}
+	rec = call(h, http.MethodPost, "/api/v1/builders/spells/preview", "dm", `{"name":"Marsh Lantern","design":`+lanternDesign+`}`)
+	preview := decode(t, rec)
+	text := strings.Join(toStrings(preview["text"].([]any)), "\n")
+	if rec.Code != http.StatusOK || len(preview["hexes"].([]any)) != 18 || !strings.Contains(text, "Casting Time: 1 action or Ritual.") ||
+		!strings.Contains(text, "has the Charmed condition, if it is Undead or Fey.") || !strings.Contains(text, "starts its turn in the area takes 1d6 radiant damage") {
+		t.Fatalf("preview: %d %v", rec.Code, preview)
+	}
+	bad := strings.Replace(lanternDesign, `"save":"wisdom",`, "", 1)
+	if rec := call(h, http.MethodPost, "/api/v1/builders/spells/preview", "dm", `{"name":"X","design":`+bad+`}`); rec.Code != http.StatusUnprocessableEntity || !strings.Contains(rec.Body.String(), "needs the save") {
+		t.Fatalf("a condition without a save: %d %s", rec.Code, rec.Body.String())
+	}
+	if rec := call(h, http.MethodPut, path, "player", lanternDesign); rec.Code != http.StatusNotFound {
+		t.Fatalf("saving another account's spell: %d", rec.Code)
+	}
+	for _, p := range []string{"/api/v1/builders/spells/" + npc} {
+		if rec := call(h, http.MethodGet, p, "dm", ""); rec.Code != http.StatusUnprocessableEntity {
+			t.Fatalf("an NPC in the spell builder: %d", rec.Code)
+		}
+		if rec := call(h, http.MethodPut, p, "dm", lanternDesign); rec.Code != http.StatusUnprocessableEntity {
+			t.Fatalf("saving a design on an NPC: %d", rec.Code)
+		}
+	}
+	rec = call(h, http.MethodPut, path, "dm", lanternDesign)
+	saved := decode(t, rec)
+	if rec.Code != http.StatusOK || saved["entry"].(map[string]any)["revision"] != float64(2) || len(saved["design"].(map[string]any)["parts"].([]any)) != 4 {
+		t.Fatalf("save: %d %v", rec.Code, saved)
+	}
+	if again := decode(t, call(h, http.MethodGet, path, "dm", "")); again["design"].(map[string]any)["save"] != "wisdom" {
+		t.Fatalf("the design is kept = %v", again)
+	}
+	call(h, http.MethodPut, "/api/v1/library/"+spell, "dm", `{"name":"Marsh Lantern","fields":[{"name":"School","value":"Evocation"}]}`)
+	if kept := decode(t, call(h, http.MethodGet, path, "dm", "")); kept["design"].(map[string]any)["save"] != "wisdom" {
+		t.Fatalf("editing the fields keeps the design = %v", kept)
+	}
+}
+
+func toStrings(in []any) []string {
+	out := make([]string, 0, len(in))
+	for _, v := range in {
+		out = append(out, v.(string))
+	}
+	return out
 }
 
 // mute is a bell that never rings.
