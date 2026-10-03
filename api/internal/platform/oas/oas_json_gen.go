@@ -36507,6 +36507,12 @@ func (s *LiveCommand) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.Controlled.Set {
+			e.FieldStart("controlled")
+			s.Controlled.Encode(e)
+		}
+	}
+	{
 		if s.ManualId.Set {
 			e.FieldStart("manualId")
 			s.ManualId.Encode(e)
@@ -36846,7 +36852,7 @@ func (s *LiveCommand) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfLiveCommand = [109]string{
+var jsonFieldsNameOfLiveCommand = [110]string{
 	0:   "nonce",
 	1:   "kind",
 	2:   "caption",
@@ -36903,59 +36909,60 @@ var jsonFieldsNameOfLiveCommand = [109]string{
 	53:  "saveDc",
 	54:  "effectId",
 	55:  "cured",
-	56:  "manualId",
-	57:  "surface",
-	58:  "elevationFt",
-	59:  "camera",
-	60:  "zoomPct",
-	61:  "scene",
-	62:  "title",
-	63:  "body",
-	64:  "nodeId",
-	65:  "toNodeId",
-	66:  "routeId",
-	67:  "distanceMi",
-	68:  "pace",
-	69:  "zoneId",
-	70:  "radiusHexes",
-	71:  "dmOnly",
-	72:  "rest",
-	73:  "tableId",
-	74:  "mode",
-	75:  "entry",
-	76:  "due",
-	77:  "lootTableId",
-	78:  "fromId",
-	79:  "buys",
-	80:  "sells",
-	81:  "instanceId",
-	82:  "action",
-	83:  "legend",
-	84:  "detail",
-	85:  "trigger",
-	86:  "option",
-	87:  "offHand",
-	88:  "cleave",
-	89:  "reactionKind",
-	90:  "reactionMode",
-	91:  "condition",
-	92:  "toId",
-	93:  "itemSlug",
-	94:  "coin",
-	95:  "count",
-	96:  "shopId",
-	97:  "monsters",
-	98:  "hpDelta",
-	99:  "seq",
-	100: "name",
-	101: "checkpointId",
-	102: "characterIds",
-	103: "gameDay",
-	104: "gameMinute",
-	105: "factionId",
-	106: "companionId",
-	107: "tokenIds",
-	108: "sessionId",
+	56:  "controlled",
+	57:  "manualId",
+	58:  "surface",
+	59:  "elevationFt",
+	60:  "camera",
+	61:  "zoomPct",
+	62:  "scene",
+	63:  "title",
+	64:  "body",
+	65:  "nodeId",
+	66:  "toNodeId",
+	67:  "routeId",
+	68:  "distanceMi",
+	69:  "pace",
+	70:  "zoneId",
+	71:  "radiusHexes",
+	72:  "dmOnly",
+	73:  "rest",
+	74:  "tableId",
+	75:  "mode",
+	76:  "entry",
+	77:  "due",
+	78:  "lootTableId",
+	79:  "fromId",
+	80:  "buys",
+	81:  "sells",
+	82:  "instanceId",
+	83:  "action",
+	84:  "legend",
+	85:  "detail",
+	86:  "trigger",
+	87:  "option",
+	88:  "offHand",
+	89:  "cleave",
+	90:  "reactionKind",
+	91:  "reactionMode",
+	92:  "condition",
+	93:  "toId",
+	94:  "itemSlug",
+	95:  "coin",
+	96:  "count",
+	97:  "shopId",
+	98:  "monsters",
+	99:  "hpDelta",
+	100: "seq",
+	101: "name",
+	102: "checkpointId",
+	103: "characterIds",
+	104: "gameDay",
+	105: "gameMinute",
+	106: "factionId",
+	107: "companionId",
+	108: "tokenIds",
+	109: "sessionId",
 }
 
 // Decode decodes LiveCommand from json.
@@ -37569,6 +37576,16 @@ func (s *LiveCommand) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"cured\"")
+			}
+		case "controlled":
+			if err := func() error {
+				s.Controlled.Reset()
+				if err := s.Controlled.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"controlled\"")
 			}
 		case "manualId":
 			if err := func() error {
@@ -38532,6 +38549,10 @@ func (s *LiveCommandKind) Decode(d *jx.Decoder) error {
 		*s = LiveCommandKindJump
 	case LiveCommandKindThrow:
 		*s = LiveCommandKindThrow
+	case LiveCommandKindMount:
+		*s = LiveCommandKindMount
+	case LiveCommandKindDismount:
+		*s = LiveCommandKindDismount
 	case LiveCommandKindSneak:
 		*s = LiveCommandKindSneak
 	case LiveCommandKindExplore:
@@ -47254,6 +47275,24 @@ func (s *LiveToken) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.MountId.Set {
+			e.FieldStart("mountId")
+			s.MountId.Encode(e)
+		}
+	}
+	{
+		if s.MountControlled.Set {
+			e.FieldStart("mountControlled")
+			s.MountControlled.Encode(e)
+		}
+	}
+	{
+		if s.RiderId.Set {
+			e.FieldStart("riderId")
+			s.RiderId.Encode(e)
+		}
+	}
+	{
 		if s.FactionId.Set {
 			e.FieldStart("factionId")
 			s.FactionId.Encode(e)
@@ -47401,34 +47440,37 @@ func (s *LiveToken) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfLiveToken = [27]string{
+var jsonFieldsNameOfLiveToken = [30]string{
 	0:  "id",
 	1:  "label",
 	2:  "kind",
 	3:  "darkvisionFt",
 	4:  "companionId",
-	5:  "factionId",
-	6:  "firstReaction",
-	7:  "attitudes",
-	8:  "q",
-	9:  "r",
-	10: "hidden",
-	11: "controllerId",
-	12: "characterId",
-	13: "ac",
-	14: "hp",
-	15: "hpMax",
-	16: "tempHp",
-	17: "form",
-	18: "qualities",
-	19: "disguise",
-	20: "health",
-	21: "attacks",
-	22: "shield",
-	23: "effects",
-	24: "reactions",
-	25: "dying",
-	26: "legend",
+	5:  "mountId",
+	6:  "mountControlled",
+	7:  "riderId",
+	8:  "factionId",
+	9:  "firstReaction",
+	10: "attitudes",
+	11: "q",
+	12: "r",
+	13: "hidden",
+	14: "controllerId",
+	15: "characterId",
+	16: "ac",
+	17: "hp",
+	18: "hpMax",
+	19: "tempHp",
+	20: "form",
+	21: "qualities",
+	22: "disguise",
+	23: "health",
+	24: "attacks",
+	25: "shield",
+	26: "effects",
+	27: "reactions",
+	28: "dying",
+	29: "legend",
 }
 
 // Decode decodes LiveToken from json.
@@ -47494,6 +47536,36 @@ func (s *LiveToken) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"companionId\"")
 			}
+		case "mountId":
+			if err := func() error {
+				s.MountId.Reset()
+				if err := s.MountId.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"mountId\"")
+			}
+		case "mountControlled":
+			if err := func() error {
+				s.MountControlled.Reset()
+				if err := s.MountControlled.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"mountControlled\"")
+			}
+		case "riderId":
+			if err := func() error {
+				s.RiderId.Reset()
+				if err := s.RiderId.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"riderId\"")
+			}
 		case "factionId":
 			if err := func() error {
 				s.FactionId.Reset()
@@ -47532,7 +47604,7 @@ func (s *LiveToken) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"attitudes\"")
 			}
 		case "q":
-			requiredBitSet[1] |= 1 << 0
+			requiredBitSet[1] |= 1 << 3
 			if err := func() error {
 				v, err := d.Int32()
 				s.Q = int32(v)
@@ -47544,7 +47616,7 @@ func (s *LiveToken) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"q\"")
 			}
 		case "r":
-			requiredBitSet[1] |= 1 << 1
+			requiredBitSet[1] |= 1 << 4
 			if err := func() error {
 				v, err := d.Int32()
 				s.R = int32(v)
@@ -47556,7 +47628,7 @@ func (s *LiveToken) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"r\"")
 			}
 		case "hidden":
-			requiredBitSet[1] |= 1 << 2
+			requiredBitSet[1] |= 1 << 5
 			if err := func() error {
 				v, err := d.Bool()
 				s.Hidden = bool(v)
@@ -47766,7 +47838,7 @@ func (s *LiveToken) Decode(d *jx.Decoder) error {
 	var failures []validate.FieldError
 	for i, mask := range [4]uint8{
 		0b00001111,
-		0b00000111,
+		0b00111000,
 		0b00000000,
 		0b00000000,
 	} {

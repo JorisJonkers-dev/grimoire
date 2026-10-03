@@ -163,6 +163,11 @@ type Write struct {
 	Settled  domain.RollID
 	Pushed   *domain.Token
 	Dragged  *domain.Token
+	// Riders are riders a change carried along with their mounts or took off them; unseated are those
+	// who must save to stay on, and thrown those who fall with no save.
+	Riders   []domain.Token
+	unseated []domain.TokenID
+	thrown   []domain.TokenID
 	taken    *takenAction
 	cleave   *domain.TokenID
 	// Dying is a Character's death saves after the change; Undying the one that woke or was revived.
@@ -946,7 +951,7 @@ func (r *runtime) handle(req request) {
 func playerMay(kind string) bool {
 	switch kind {
 	case CmdWalk, CmdEndTurn, CmdSpend, CmdAttack, CmdReact, CmdCastArea, CmdMoveItem, CmdMoveCoins, CmdClaimLoot, CmdBuy, CmdSell, CmdHaggle, CmdTrade,
-		CmdProposeRest, CmdAgreeRest, CmdSpendHitDie, CmdTakeAction, CmdUnarmed, CmdInteract, CmdSwapWeapons, CmdSetReaction, CmdStabilise, CmdRevive, CmdTeleport, CmdSummon, CmdCommand, CmdUseObject, CmdUnlock, CmdDisarm, CmdJump, CmdThrow, CmdSneak, CmdPassTurn, CmdSetMarchingOrder:
+		CmdProposeRest, CmdAgreeRest, CmdSpendHitDie, CmdTakeAction, CmdUnarmed, CmdInteract, CmdSwapWeapons, CmdSetReaction, CmdStabilise, CmdRevive, CmdTeleport, CmdSummon, CmdCommand, CmdUseObject, CmdUnlock, CmdDisarm, CmdJump, CmdThrow, CmdSneak, CmdPassTurn, CmdSetMarchingOrder, CmdMount, CmdDismount:
 		return true
 	}
 	return false
@@ -1012,7 +1017,7 @@ func (r *runtime) viewUpdate(a Audience, seq int64, w *Write) Update {
 // apply changes a copy of the state, then its Effects: those the write adds or ends, those that count
 // down as turns start, concentration broken by damage, and those of a removed token.
 func apply(s *state, w *Write) {
-	before := s.acting()
+	before, seats := s.acting(), s.seats()
 	var heights map[domain.TokenID]int
 	if w.forced || w.Pushed != nil {
 		heights = s.heights()
@@ -1040,6 +1045,7 @@ func apply(s *state, w *Write) {
 	changed := w.effect != nil || len(w.ended)+len(w.manuals)+len(w.newSaves) > 0 || w.resolved != uuid.Nil || w.saved != domain.RollID{}
 	w.Cured = s.curedBy(w)
 	applyEffects(s, w)
+	s.ride(w, seats)
 	w.Injured = s.injuredBy(w)
 	started := map[domain.TokenID]bool{}
 	for id := range s.acting() {
@@ -1117,6 +1123,8 @@ func change(s *state, w *Write) {
 		return
 	case domain.ActionJumped:
 		applyJump(s, w)
+	case domain.ActionMounted, domain.ActionDismounted, domain.ActionSeatChecked, domain.ActionUnseated:
+		applySeat(s, w)
 	case domain.ActionSneakStarted, domain.ActionSneakEnded, domain.ActionStealthRolled, domain.ActionPartyNoticed:
 		s.sneak, w.Sneak, w.SaveSneak = w.sneak, w.sneak, true
 		return
@@ -1234,6 +1242,7 @@ func walk(s *state, w *Write) {
 	for _, c := range w.Path[1:] {
 		w.Token.Q, w.Token.R = c.Q, c.R
 		s.tokens[w.Token.ID] = w.Token
+		s.carry(w.Token)
 		s.reveal(w)
 		w.frames = append(w.frames, s.clone())
 	}

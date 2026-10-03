@@ -24,8 +24,11 @@ func (r *runtime) route(m domain.Member, a Audience, cmd Command) (domain.Token,
 	if err != nil || !ok || (!whole && !r.st.shows(t, seen)) {
 		return domain.Token{}, nil, 0, "No such token."
 	}
-	if !m.DM && (t.Controller == nil || *t.Controller != m.ID) {
+	if !r.st.steers(m, t) {
 		return domain.Token{}, nil, 0, "That token is not yours to move."
+	}
+	if t.Mount != nil {
+		return domain.Token{}, nil, 0, t.Label + " is riding " + r.st.tokens[*t.Mount].Label + ": dismount first."
 	}
 	start, to := hex.Coord{Q: t.Q, R: t.R}, hex.Coord{Q: cmd.Q, R: cmd.R}
 	if start == to {

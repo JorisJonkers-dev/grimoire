@@ -318,6 +318,7 @@ func (r *runtime) follow(w Write, actor domain.Member, c caller.Caller) {
 	r.lifeAndDeath(w, actor, c)
 	r.ruleHooks(w, actor, c)
 	r.carryInjuries(w, actor, c)
+	r.unseat(w, actor, c)
 	if w.Kind == domain.ActionTurnEnded || w.Kind == domain.ActionInitiativeRolled {
 		r.deathSaves(actor, c)
 	}

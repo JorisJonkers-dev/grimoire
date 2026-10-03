@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import type { LiveMap, LiveView } from '@/infrastructure/api/types.gen'
 import { type Coord, corners, toPixel } from '@/shared/hex'
-import { type Captions, DANGER_NOTE, describe, groundNotes, initials } from './board'
+import { type Captions, DANGER_NOTE, describeStack, groundNotes, initials, stacks } from './board'
 import { cellsFor, key, layoutOf, squareLines } from './geometry'
 
 const props = withDefaults(
@@ -22,7 +22,7 @@ const visible = computed(() => new Set(props.view.visible.map(key)))
 const remembered = computed(() => new Set(props.view.remembered.map(key)))
 const walls = computed(() => new Set((props.view.walls ?? []).map(key)))
 const lights = computed(() => new Map((props.view.lights ?? []).map((l) => [key(l), l])))
-const tokens = computed(() => new Map(props.view.tokens.map((t) => [key(t), t])))
+const tokens = computed(() => stacks(props.view.tokens))
 const route = computed(() => new Set(props.path.map(key)))
 const danger = computed(() => new Set(props.danger.map(key)))
 const surfaces = computed(() => new Map((props.view.surfaces ?? []).map((s) => [key(s), s])))
@@ -46,11 +46,12 @@ const cells = computed(() =>
   cellsFor(layout.value, props.map.width, props.map.height).map((c) => {
     const k = key(c)
     const fog = !props.view.fog || visible.value.has(k) ? 'lit' : remembered.value.has(k) ? 'remembered' : 'unseen'
-    const t = tokens.value.get(k)
+    const there = tokens.value.get(k) ?? []
+    const t = there[0]
     const label = [
       `Hex ${k.replace(',', ', ')}`,
       fog === 'unseen' ? 'never seen' : fog === 'remembered' ? 'remembered' : '',
-      t ? describe(t) : '',
+      describeStack(there),
       t ? (props.captions[t.id]?.note ?? '') : '',
       walls.value.has(k) ? 'wall' : '',
       lights.value.has(k) ? 'light' : '',
@@ -62,7 +63,7 @@ const cells = computed(() =>
     ]
       .filter(Boolean)
       .join(': ')
-    return { ...c, k, fog, token: t, points: points(c), centre: toPixel(layout.value, c), label }
+    return { ...c, k, fog, token: t, under: there[1], picked: there.some((o) => o.id === props.selected), points: points(c), centre: toPixel(layout.value, c), label }
   }),
 )
 </script>
@@ -84,7 +85,7 @@ const cells = computed(() =>
       <g
         v-for="c in cells"
         :key="c.k"
-        :class="['cell', `cell--${c.fog}`, { 'cell--wall': walls.has(c.k), 'cell--selected': c.token && c.token.id === selected, 'cell--dm': dm, 'cell--path': route.has(c.k), 'cell--danger': danger.has(c.k), 'cell--area': area.has(c.k), 'cell--zone': zone.has(c.k), 'cell--watched': reach.has(c.k) }, surfaces.has(c.k) ? `cell--surface-${surfaces.get(c.k)?.kind ?? ''}` : '']"
+        :class="['cell', `cell--${c.fog}`, { 'cell--wall': walls.has(c.k), 'cell--selected': c.picked, 'cell--dm': dm, 'cell--path': route.has(c.k), 'cell--danger': danger.has(c.k), 'cell--area': area.has(c.k), 'cell--zone': zone.has(c.k), 'cell--watched': reach.has(c.k) }, surfaces.has(c.k) ? `cell--surface-${surfaces.get(c.k)?.kind ?? ''}` : '']"
         role="button"
         tabindex="0"
         :aria-label="c.label"
@@ -96,6 +97,7 @@ const cells = computed(() =>
         <polygon v-if="heights.has(c.k)" :points="c.points" :class="['height', (heights.get(c.k) ?? 0) > 0 ? 'height--up' : 'height--down']" :style="{ opacity: shade(heights.get(c.k) ?? 0) }" :data-height="heights.get(c.k)" />
         <circle v-if="lights.has(c.k)" :cx="c.centre.x" :cy="c.centre.y" :r="layout.size * 0.22" class="light" />
         <template v-if="c.token">
+          <circle v-if="c.under" :cx="c.centre.x" :cy="c.centre.y" :r="layout.size * 0.8" :class="['token', 'token--under', `token--${c.under.kind}`, { 'token--hidden': c.under.hidden }]" data-testid="token-under" />
           <circle :cx="c.centre.x" :cy="c.centre.y" :r="layout.size * 0.62" :class="['token', `token--${c.token.kind}`, { 'token--hidden': c.token.hidden }]" />
           <text :x="c.centre.x" :y="c.centre.y + layout.size * 0.2" text-anchor="middle" class="mark" aria-hidden="true">{{ initials(c.token.label) }}</text>
           <text
@@ -237,6 +239,9 @@ const cells = computed(() =>
 .token--object {
   fill: #3a3326;
   stroke: var(--color-bronze);
+}
+.token--under {
+  opacity: 0.55;
 }
 .token--hidden {
   stroke-dasharray: 5 4;

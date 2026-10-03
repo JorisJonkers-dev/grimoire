@@ -22,6 +22,27 @@ export function describe(t: LiveToken): string {
   return `${t.label}${form}${t.hidden ? ' (hidden)' : ''}${health}${effects}`
 }
 
+const keyOf = (c: Coord) => `${String(c.q)},${String(c.r)}`
+
+/** The tokens on each hex, the one it shows first: a rider sits on top of its mount. */
+export function stacks(tokens: LiveToken[]): Map<string, LiveToken[]> {
+  const at = new Map<string, LiveToken[]>()
+  for (const t of tokens) {
+    const there = at.get(keyOf(t)) ?? []
+    at.set(keyOf(t), t.mountId ? [t, ...there] : [...there, t])
+  }
+  return at
+}
+
+/** The token of a hex that comes after one of them: the first when none is named, none after the last. */
+export function after(at: Map<string, LiveToken[]>, c: Coord, id: string | null | undefined): LiveToken | undefined {
+  const there = at.get(keyOf(c)) ?? []
+  return there[there.findIndex((t) => t.id === id) + 1]
+}
+
+/** The tokens of one hex as the screen reader names them: a rider, then what it rides. */
+export const describeStack = (there: LiveToken[]) => there.map(describe).join(there[0]?.mountId ? ', riding ' : ', with ')
+
 /** The hexes every emanation on the board covers, around whoever carries it. */
 export function emanations(tokens: LiveToken[]): Coord[] {
   return tokens.flatMap((t) => (t.effects ?? []).flatMap((e) => e.hexes ?? []))
@@ -56,8 +77,8 @@ export function zoneHexes(zones: { q: number; r: number; radiusHexes: number }[]
 
 /** Paints tokens, a walk preview, Surfaces and an area onto the grid; hidden tokens only ever arrive for the DM. */
 export function board(radius: number, tokens: LiveToken[], selected: string | null, path: Coord[] = [], ground: Ground = {}): GridCell[] {
-  const key = (c: Coord) => `${String(c.q)},${String(c.r)}`
-  const at = new Map(tokens.map((t) => [key(t), t]))
+  const key = keyOf
+  const at = stacks(tokens)
   const route = new Set(path.map(key))
   const surfaces = new Map((ground.surfaces ?? []).map((s) => [key(s), s]))
   const area = new Set((ground.area ?? []).map(key))
@@ -66,7 +87,8 @@ export function board(radius: number, tokens: LiveToken[], selected: string | nu
   const danger = new Set((ground.danger ?? []).map(key))
   return hexes(radius).map((c) => {
     const k = key(c)
-    const t = at.get(k)
+    const there = at.get(k) ?? []
+    const t = there[0]
     const notes = [...groundNotes(k, surfaces, area, zone, reach), danger.has(k) ? DANGER_NOTE : ''].filter(Boolean)
     if (!t) {
       const tone = danger.has(k) ? 'danger' : route.has(k) ? 'path' : area.has(k) ? 'area' : surfaces.has(k) ? `surface-${surfaces.get(k)?.kind ?? ''}` : zone.has(k) ? 'zone' : reach.has(k) ? 'watched' : undefined
@@ -75,6 +97,7 @@ export function board(radius: number, tokens: LiveToken[], selected: string | nu
     }
     const tone = t.hidden ? 'hidden' : t.kind === 'party' ? 'ally' : t.kind
     const caption = ground.captions?.[t.id]
-    return { ...c, tone: t.id === selected ? 'selected' : tone, label: [describe(t), ...notes, caption?.note ?? ''].filter(Boolean).join(', '), mark: initials(t.label), caption: caption?.text, captionKey: t.id }
+    const picked = there.some((o) => o.id === selected)
+    return { ...c, tone: picked ? 'selected' : tone, label: [describeStack(there), ...notes, caption?.note ?? ''].filter(Boolean).join(', '), mark: initials(t.label), caption: caption?.text, captionKey: t.id }
   })
 }

@@ -360,6 +360,10 @@ _Avoid_: Rest day, free day
 What crafting makes an Item from: its ingredients, the tool it needs at hand, the Downtime Days it takes and its cost.
 _Avoid_: Blueprint, formula, schematic
 
+**Mount**:
+A creature another creature rides. A controlled Mount takes its rider's initiative, moves at the rider's word and only Dashes, Disengages or Dodges; an independent Mount acts for itself.
+_Avoid_: Steed, ride, vehicle
+
 **Track**:
 A Campaign-specific score such as sanity, stress, honour or renown, with thresholds that trigger Effects or Roll Tables.
 _Avoid_: Meter, counter, stat

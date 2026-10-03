@@ -183,6 +183,8 @@ func (s *state) attackBlocked(a domain.Token, cmd Command) string {
 		return a.Label + " can't act while Incapacitated."
 	case s.uncommanded(a) != "":
 		return s.uncommanded(a)
+	case s.reined(a, "") != "":
+		return s.reined(a, "")
 	case cmd.Cleave && (x.CleaveFrom == nil || x.Cleaved):
 		return a.Label + " has no Cleave attack open: it follows a Cleave hit, once a turn."
 	case cmd.Cleave:

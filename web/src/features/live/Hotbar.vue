@@ -38,6 +38,7 @@ const emit = defineEmits<{
   teleport: []
   summon: [effect: string]
   jump: []
+  ride: []
   throw: []
   command: [tokenId: string]
 }>()
@@ -64,6 +65,7 @@ function arrangeBars() {
 const moves: Record<string, () => void> = {
   swap: () => { emit('swap') },
   jump: () => { emit('jump') },
+  mount: () => { emit('ride') },
   throw: () => { emit('throw') },
   'misty-step': () => { emit('teleport') },
 }
@@ -181,6 +183,7 @@ function play(key: string) {
     </label>
     <template v-if="!bars.layout.value">
       <GButton data-testid="jump" title="Leap as far as your Strength score in feet with a run-up." @click="emit('jump')">Jump</GButton>
+      <GButton data-testid="ride" title="Get onto a willing creature next to you, or off the one you ride: half your Speed." @click="emit('ride')">{{ token.mountId ? 'Dismount' : 'Mount' }}</GButton>
       <GButton :disabled="blocked !== ''" data-testid="throw" title="Throw the creature you grapple, or a barrel or chest next to you." @click="emit('throw')">Throw</GButton>
       <GButton :disabled="blocked !== ''" data-testid="misty-step" title="Bonus Action: teleport up to 30 feet to a free hex." @click="emit('teleport')">Misty Step</GButton>
     </template>

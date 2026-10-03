@@ -49,7 +49,7 @@ func (s *Store) LoadPendingActions(ctx context.Context, id domain.SessionID) ([]
 func (s *Store) saveActions(ctx context.Context, sess domain.Session, w live.Write, actor domain.Member, c caller.Caller, now time.Time) error {
 	sid := uuid.UUID(sess.ID)
 	opens := w.Kind == domain.ActionTaken || w.Kind == domain.ActionUnarmed || w.Kind == domain.ActionMasteryUsed || w.Kind == domain.ActionConcentrationChecked ||
-		w.Kind == domain.ActionDyingChanged || w.Kind == domain.ActionSneakStarted || w.Kind == domain.ActionHookFired
+		w.Kind == domain.ActionDyingChanged || w.Kind == domain.ActionSneakStarted || w.Kind == domain.ActionHookFired || w.Kind == domain.ActionSeatChecked
 	if opens && w.Combat == nil {
 		if err := s.openRolls(ctx, sess, w.Rolls, actor, c, now); err != nil {
 			return err
@@ -68,6 +68,14 @@ func (s *Store) saveActions(ctx context.Context, sess domain.Session, w live.Wri
 	if err := s.saveDying(ctx, sid, w); err != nil {
 		return err
 	}
+	return s.saveCarried(ctx, sid, w)
+}
+
+// saveCarried writes where a change left the creatures it moved besides its own: one shoved, one
+// dragged, and riders taken along by their mounts or off them.
+//
+//nolint:gosec // coordinates are bounded by the map
+func (s *Store) saveCarried(ctx context.Context, sid uuid.UUID, w live.Write) error {
 	for _, t := range []*domain.Token{w.Pushed, w.Dragged} {
 		if t == nil {
 			continue
@@ -76,7 +84,23 @@ func (s *Store) saveActions(ctx context.Context, sess domain.Session, w live.Wri
 			return err
 		}
 	}
+	for _, t := range w.Riders {
+		if err := s.saveSeat(ctx, sid, t); err != nil {
+			return err
+		}
+	}
 	return nil
+}
+
+// saveSeat writes where a rider is and what it rides.
+//
+//nolint:gosec // coordinates are bounded by the map
+func (s *Store) saveSeat(ctx context.Context, sid uuid.UUID, t domain.Token) error {
+	p := queries.SetTokenSeatParams{SessionID: sid, ID: uuid.UUID(t.ID), Q: int32(t.Q), R: int32(t.R), MountControlled: t.Steers}
+	if t.Mount != nil {
+		p.MountTokenID = pgtype.UUID{Bytes: *t.Mount, Valid: true}
+	}
+	return s.q.SetTokenSeat(ctx, p)
 }
 
 // savePending writes a Hide, Grapple or Shove that waits on its roll, or clears one that settled.

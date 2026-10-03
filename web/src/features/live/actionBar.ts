@@ -74,6 +74,7 @@ export function tilesOf(token: LiveToken): Tile[] {
       ? [{ key: 'move:swap', name: 'Swap weapons', testid: 'swap-weapons', tip: 'Put your weapons away and draw your other set: each costs the equip of an attack or your free interaction; a shield takes your action.' }]
       : []),
     { key: 'move:jump', name: 'Jump', testid: 'jump', tip: 'Leap as far as your Strength score in feet with a run-up.' },
+    { key: 'move:mount', name: token.mountId ? 'Dismount' : 'Mount', testid: 'ride', tip: 'Get onto a willing creature next to you, or off the one you ride: half your Speed.' },
     { key: 'move:throw', name: 'Throw', testid: 'throw', tip: 'Throw the creature you grapple, or a barrel or chest next to you.' },
     { key: 'move:misty-step', name: 'Misty Step', testid: 'misty-step', tip: 'Bonus Action: teleport up to 30 feet to a free hex.' },
   ]

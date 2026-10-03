@@ -2410,6 +2410,12 @@ export type LiveToken = {
     kind: TokenKind;
     darkvisionFt: number;
     companionId?: Id;
+    mountId?: Id;
+    /**
+     * Set when the token rides mountId and controls it. A rider goes where its mount goes; one knocked Prone, or whose mount is moved against its will, makes a DC 10 Dexterity save or falls off Prone beside it.
+     */
+    mountControlled?: boolean;
+    riderId?: Id;
     factionId?: Id;
     /**
      * How a creature of a Faction first takes to the party, by the Faction's Standing. For the DM alone; factionId itself goes to every screen that sees the creature.
@@ -2540,7 +2546,7 @@ export type LiveSessionView = {
  */
 export type LiveCommand = {
     nonce: string;
-    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'table_caption' | 'ping' | 'set_world' | 'add_node' | 'add_route' | 'remove_node' | 'remove_route' | 'place_party' | 'travel' | 'add_zone' | 'remove_zone' | 'hold_zone' | 'spring_zone' | 'rest' | 'encounter_check' | 'schedule_check' | 'roll_loot' | 'move_item' | 'move_coins' | 'claim_loot' | 'settle_loot' | 'trade' | 'open_shop' | 'close_shop' | 'buy' | 'sell' | 'haggle' | 'spawn_encounter' | 'adjust_hp' | 'undo' | 'propose_rest' | 'agree_rest' | 'spend_hit_die' | 'finish_rest' | 'interrupt_rest' | 'take_action' | 'unarmed' | 'interact' | 'swap_weapons' | 'set_reaction' | 'stabilise' | 'revive' | 'teleport' | 'summon' | 'command' | 'set_visibility' | 'place_object' | 'remove_object' | 'use_object' | 'damage_object' | 'find_object' | 'unlock' | 'disarm' | 'jump' | 'throw' | 'sneak' | 'explore' | 'pass_turn' | 'legendary_action' | 'lair_action' | 'legendary_resistance' | 'checkpoint' | 'rewind' | 'split_party' | 'rejoin_party' | 'table_follow' | 'assign_control' | 'measure_route' | 'find_map' | 'set_clock' | 'set_marching_order';
+    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'table_caption' | 'ping' | 'set_world' | 'add_node' | 'add_route' | 'remove_node' | 'remove_route' | 'place_party' | 'travel' | 'add_zone' | 'remove_zone' | 'hold_zone' | 'spring_zone' | 'rest' | 'encounter_check' | 'schedule_check' | 'roll_loot' | 'move_item' | 'move_coins' | 'claim_loot' | 'settle_loot' | 'trade' | 'open_shop' | 'close_shop' | 'buy' | 'sell' | 'haggle' | 'spawn_encounter' | 'adjust_hp' | 'undo' | 'propose_rest' | 'agree_rest' | 'spend_hit_die' | 'finish_rest' | 'interrupt_rest' | 'take_action' | 'unarmed' | 'interact' | 'swap_weapons' | 'set_reaction' | 'stabilise' | 'revive' | 'teleport' | 'summon' | 'command' | 'set_visibility' | 'place_object' | 'remove_object' | 'use_object' | 'damage_object' | 'find_object' | 'unlock' | 'disarm' | 'jump' | 'throw' | 'mount' | 'dismount' | 'sneak' | 'explore' | 'pass_turn' | 'legendary_action' | 'lair_action' | 'legendary_resistance' | 'checkpoint' | 'rewind' | 'split_party' | 'rejoin_party' | 'table_follow' | 'assign_control' | 'measure_route' | 'find_map' | 'set_clock' | 'set_marching_order';
     caption?: string;
     tokenId?: Id;
     label?: string;
@@ -2616,6 +2622,10 @@ export type LiveCommand = {
      * With end_effect, says a lingering injury ends because its cure was applied; without it such an Effect is not ended.
      */
     cured?: boolean;
+    /**
+     * With mount, tokenId gets onto targetId, a willing creature of its own side within 5 feet, for half its Speed. A Player gets a creature only onto one they run themselves; the DM puts any creature on any. Set, the rider controls the mount: it takes the rider's initiative, moves at the rider's word and only Dashes, Disengages or Dodges. Left out, the mount acts for itself. The reins give its rider's Player its movement, those three actions and the end of its turn, and nothing else of it. With dismount, tokenId gets off onto the free hex q and r next to its mount that it could step onto, for half its Speed.
+     */
+    controlled?: boolean;
     manualId?: Id;
     /**
      * With paint_surface, a Surface from the catalogue; leave it out to clear.

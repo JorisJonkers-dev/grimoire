@@ -101,7 +101,7 @@ describe('action bars', () => {
   })
 
   it('plays tiles by tap and by the keys 1 to 0, and leaves a tile the Character lacks greyed in its place', async () => {
-    const placed = [['attack:Longsword', 'attack:Glaive', 'action:dash'], ['action:study', 'spell:fireball', 'summon:find-familiar', 'move:swap', 'move:jump', 'move:throw', 'move:misty-step', 'unarmed:grapple']]
+    const placed = [['attack:Longsword', 'attack:Glaive', 'action:dash'], ['action:study', 'spell:fireball', 'summon:find-familiar', 'move:swap', 'move:jump', 'move:throw', 'move:misty-step', 'unarmed:grapple', 'move:mount']]
     const api = barsApi({ bars: placed, quick: ['action:dash', 'attack:Glaive'], stowed: rest(placed, ['attack:Longbow']), arranged: true })
     const { wrapper, s } = await open('player', api)
     const sent = () => s.sent.at(-1) as Record<string, unknown>
@@ -133,7 +133,7 @@ describe('action bars', () => {
     expect(sent()).toMatchObject({ kind: 'preview_area', effect: 'fireball' })
     await wrapper.get('[data-testid="swap-weapons"]').trigger('click')
     expect(sent()).toMatchObject({ kind: 'swap_weapons' })
-    for (const [tile, shown] of [['summon-find-familiar', 'summoning'], ['jump', 'jumping'], ['throw', 'throwing'], ['misty-step', 'teleporting']] as const) {
+    for (const [tile, shown] of [['summon-find-familiar', 'summoning'], ['jump', 'jumping'], ['ride', 'riding'], ['throw', 'throwing'], ['misty-step', 'teleporting']] as const) {
       await wrapper.get(`[data-testid="${tile}"]`).trigger('click')
       expect(wrapper.find(`[data-testid="${shown}"]`).exists()).toBe(true)
     }

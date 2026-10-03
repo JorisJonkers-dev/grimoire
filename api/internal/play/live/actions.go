@@ -23,11 +23,17 @@ const dodging = "dodging"
 // actor finds the token a member takes an action with, and its Combatant when a fight is on; in a
 // fight it must be the token's turn with its action unspent, and it must be able to act at all.
 func (r *runtime) actor(m domain.Member, tokenID string, fightOnly bool) (domain.Token, *domain.Combatant, string) {
+	return r.taker(m, tokenID, fightOnly, owns)
+}
+
+// taker is actor for whoever may is satisfied by: its Controller or the DM, or for the actions a
+// controlled mount takes, its rider's Player too.
+func (r *runtime) taker(m domain.Member, tokenID string, fightOnly bool, may func(domain.Member, domain.Token) bool) (domain.Token, *domain.Combatant, string) {
 	t, ok := r.st.tokenByID(tokenID)
 	switch {
 	case !ok || t.Stats == nil:
 		return t, nil, "No such creature."
-	case !m.DM && (t.Controller == nil || *t.Controller != m.ID):
+	case !may(m, t):
 		return t, nil, "That token is not yours to play."
 	case r.st.catalog.Incapacitated(r.st.actives(t.ID)):
 		return t, nil, t.Label + " can't act while Incapacitated."
@@ -57,9 +63,10 @@ func (r *runtime) planAction(m domain.Member, cmd Command) (Write, string) {
 		return Write{}, "Choose one of the actions."
 	}
 	inFight := info.Action == actions.Dash || info.Action == actions.Disengage || info.Action == actions.Dodge || info.Action == actions.Ready
-	t, x, reason := r.actor(m, cmd.TokenID, inFight)
-	if reason == "" && info.Action != actions.Dodge {
-		reason = r.st.uncommanded(t)
+	// A rider's Player may ask a controlled mount for an action; barred leaves it the three it takes.
+	t, x, reason := r.taker(m, cmd.TokenID, inFight, r.st.steers)
+	if reason == "" {
+		reason = r.st.barred(t, info.Action)
 	}
 	if reason != "" {
 		return Write{}, reason
@@ -174,6 +181,9 @@ func (r *runtime) planUnarmed(m domain.Member, cmd Command) (Write, string) {
 		return Write{}, "Grapple, or shove away or down."
 	}
 	a, x, reason := r.actor(m, cmd.TokenID, true)
+	if reason == "" {
+		reason = r.st.reined(a, "")
+	}
 	if reason != "" {
 		return Write{}, reason
 	}
@@ -227,6 +237,9 @@ func (r *runtime) actionRolled(p domain.PendingAction) {
 	switch {
 	case p.Action == tableRoll:
 		r.tableRolled(w, p, roll)
+		return
+	case p.Action == keepSeat:
+		r.seatRolled(w, p, roll)
 		return
 	case p.Action == stabilising:
 		if d, down := r.st.dying[*p.Target]; down && roll.Total >= p.DC && d.State.Rolls() {

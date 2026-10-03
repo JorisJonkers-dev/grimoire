@@ -1833,6 +1833,8 @@ type PlayToken struct {
 	Legend             []byte
 	CompanionID        pgtype.UUID
 	FactionID          pgtype.UUID
+	MountTokenID       pgtype.UUID
+	MountControlled    bool
 }
 
 type PlayTokenAttack struct {

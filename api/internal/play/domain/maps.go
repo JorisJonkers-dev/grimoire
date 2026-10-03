@@ -141,6 +141,12 @@ const (
 	// ActionJumped is a creature leaping; ActionThrown one throwing a creature or an object.
 	ActionJumped = "jumped"
 	ActionThrown = "thrown"
+	// ActionMounted is a rider getting on a mount and ActionDismounted getting off; ActionSeatChecked
+	// opens the save to stay on, and ActionUnseated is a rider falling off.
+	ActionMounted     = "mounted"
+	ActionDismounted  = "dismounted"
+	ActionSeatChecked = "seat_checked"
+	ActionUnseated    = "unseated"
 	// Sneaking action kinds.
 	ActionSneakStarted  = "sneak_started"
 	ActionSneakEnded    = "sneak_ended"
