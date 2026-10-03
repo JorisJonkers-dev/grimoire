@@ -250,6 +250,33 @@ describe('character sheet', () => {
     expect(patches).toEqual([{ damage: 4 }, { heal: 4 }, { tempHp: 4 }])
   })
 
+  it('shows where the Character stands on the Campaign\'s Tracks, and the party with it', async () => {
+    const OTHER = '0190c7a8-0000-7000-8000-0000000000aa'
+    const tracks = {
+      dm: false,
+      tracks: [
+        { id: '0190c7a8-0000-7000-8000-0000000000a1', name: 'Stress', scope: 'character', min: 0, max: 10, start: 1, standings: [{ characterId: OTHER, name: 'Brom', value: 9 }, { characterId: CH, name: 'Kara', value: 5 }] },
+        { id: '0190c7a8-0000-7000-8000-0000000000a2', name: 'Renown', scope: 'party', min: -5, max: 5, start: 0, standings: [{ name: '', value: -2 }] },
+        { id: '0190c7a8-0000-7000-8000-0000000000a3', name: 'Piety', scope: 'character', min: 0, max: 20, start: 0, standings: [{ characterId: OTHER, name: 'Brom', value: 3 }] },
+      ],
+    }
+    const { wrapper } = await mountApp(`/campaigns/${ID}/characters/${CH}`, {
+      [`/api/v1/campaigns/${ID}/characters/${CH}`]: () => sheet(),
+      [`/api/v1/campaigns/${ID}/tracks`]: () => tracks,
+    })
+    await flushPromises()
+    // Her own score on a Track kept for each Character, the party's on the party's, and nothing of a Track she has no score on.
+    expect(wrapper.findAll('[data-testid="sheet-tracks"] li').map((li) => li.text())).toEqual(['Stress: 5 (0 to 10)', 'Renown, the party\'s: -2 (-5 to 5)'])
+    await expectAccessible(wrapper.element as Element)
+    // A Campaign with no Tracks shows no such part of the sheet.
+    const none = await mountApp(`/campaigns/${ID}/characters/${CH}`, {
+      [`/api/v1/campaigns/${ID}/characters/${CH}`]: () => sheet(),
+      [`/api/v1/campaigns/${ID}/tracks`]: () => ({ dm: false, tracks: [] }),
+    })
+    await flushPromises()
+    expect(none.wrapper.find('[data-testid="sheet-tracks"]').exists()).toBe(false)
+  })
+
   it('switches between the Campaigns a Character plays in', async () => {
     const OTHER = '0190c7a8-0000-7000-8000-00000000000b'
     const OWNED = '0190c7a8-0000-7000-8000-00000000000c'

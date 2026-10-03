@@ -227,6 +227,7 @@ type Querier interface {
 	DeleteToken(ctx context.Context, arg DeleteTokenParams) error
 	DeleteTokenAttacks(ctx context.Context, tokenID uuid.UUID) error
 	DeleteTokenForm(ctx context.Context, tokenID uuid.UUID) error
+	DeleteTrack(ctx context.Context, arg DeleteTrackParams) (int64, error)
 	DeleteZone(ctx context.Context, arg DeleteZoneParams) error
 	DeletedNPCs(ctx context.Context, campaignID uuid.UUID) ([]DeletedNPCsRow, error)
 	DiceSet(ctx context.Context, id uuid.UUID) (SocialDiceSet, error)
@@ -420,6 +421,8 @@ type Querier interface {
 	InsertTokenAttack(ctx context.Context, arg InsertTokenAttackParams) error
 	InsertTokenEvent(ctx context.Context, arg InsertTokenEventParams) error
 	InsertTokenSave(ctx context.Context, arg InsertTokenSaveParams) error
+	InsertTrack(ctx context.Context, arg InsertTrackParams) error
+	InsertTrackThreshold(ctx context.Context, arg InsertTrackThresholdParams) error
 	InsertTravelLeg(ctx context.Context, arg InsertTravelLegParams) error
 	InsertTwoStepChallenge(ctx context.Context, arg InsertTwoStepChallengeParams) error
 	InsertUndo(ctx context.Context, arg InsertUndoParams) error
@@ -531,6 +534,9 @@ type Querier interface {
 	ListSurfaceDefinitions(ctx context.Context) ([]CompendiumSurfaceDefinition, error)
 	ListSurfaceReactions(ctx context.Context) ([]CompendiumSurfaceReaction, error)
 	ListTables(ctx context.Context, campaignID uuid.UUID) ([]ListTablesRow, error)
+	ListTrackThresholds(ctx context.Context, campaignID uuid.UUID) ([]ListTrackThresholdsRow, error)
+	ListTrackValues(ctx context.Context, campaignID uuid.UUID) ([]CampaignTrackValue, error)
+	ListTracks(ctx context.Context, campaignID uuid.UUID) ([]CampaignTrack, error)
 	ListUnusedInvites(ctx context.Context) ([]ListUnusedInvitesRow, error)
 	LockCampaign(ctx context.Context, id uuid.UUID) error
 	LockCampaignLog(ctx context.Context, lockKey string) error
@@ -705,6 +711,7 @@ type Querier interface {
 	SetCharacterArmor(ctx context.Context, arg SetCharacterArmorParams) error
 	SetCharacterPortrait(ctx context.Context, arg SetCharacterPortraitParams) error
 	SetCharacterToken(ctx context.Context, arg SetCharacterTokenParams) error
+	SetCharacterTrackValue(ctx context.Context, arg SetCharacterTrackValueParams) error
 	// Only a Companion of the Campaign the Session is played in changes hands there.
 	SetCompanionController(ctx context.Context, arg SetCompanionControllerParams) error
 	SetContainerCoins(ctx context.Context, arg SetContainerCoinsParams) error
@@ -727,6 +734,7 @@ type Querier interface {
 	SetMapParty(ctx context.Context, arg SetMapPartyParams) error
 	SetMemberRole(ctx context.Context, arg SetMemberRoleParams) error
 	SetNotificationPreference(ctx context.Context, arg SetNotificationPreferenceParams) error
+	SetPartyTrackValue(ctx context.Context, arg SetPartyTrackValueParams) error
 	// Only a Character of the Faction's own Campaign carries a Personal Standing with it.
 	SetPersonalStanding(ctx context.Context, arg SetPersonalStandingParams) error
 	SetResourceUsed(ctx context.Context, arg SetResourceUsedParams) error
@@ -786,6 +794,8 @@ type Querier interface {
 	TouchAccessToken(ctx context.Context, arg TouchAccessTokenParams) error
 	TouchAccountSession(ctx context.Context, arg TouchAccountSessionParams) error
 	TouchConversation(ctx context.Context, arg TouchConversationParams) error
+	// The Characters of a Campaign a Track can be kept for, with who owns each.
+	TrackCharacters(ctx context.Context, campaignID uuid.UUID) ([]TrackCharactersRow, error)
 	TryTwoStepChallenge(ctx context.Context, arg TryTwoStepChallengeParams) (uuid.UUID, error)
 	UnchooseDiceSet(ctx context.Context, accountID uuid.UUID) error
 	UnlinkLibraryEntry(ctx context.Context, arg UnlinkLibraryEntryParams) (int64, error)

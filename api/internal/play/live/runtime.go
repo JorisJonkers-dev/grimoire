@@ -696,6 +696,25 @@ func (h *Hub) RollResolved(campaign uuid.UUID, id domain.RollID) {
 	}
 }
 
+// TrackCrossed tells every Session under way in a Campaign that a Track's score crossed thresholds, so
+// that what they trigger lands on the Characters on its board.
+func (h *Hub) TrackCrossed(campaign uuid.UUID, by domain.Member, c caller.Caller, crossed []Crossing) {
+	h.mu.Lock()
+	var targets []*runtime
+	for _, rt := range h.runtimes {
+		if rt.campaign == campaign {
+			targets = append(targets, rt)
+		}
+	}
+	h.mu.Unlock()
+	for _, rt := range targets {
+		select {
+		case rt.cmds <- request{cmd: Command{Kind: cmdCrossed, crossed: &crossings{by: by, caller: c, list: crossed}}}:
+		case <-rt.done:
+		}
+	}
+}
+
 // Leave disconnects a subscriber.
 func (h *Hub) Leave(sub *Subscriber) {
 	select {
@@ -858,6 +877,9 @@ func (r *runtime) handle(req request) {
 		return
 	case req.from == nil && req.cmd.Kind == cmdRefresh:
 		r.refresh()
+		return
+	case req.from == nil && req.cmd.Kind == cmdCrossed:
+		r.crossed(*req.cmd.crossed)
 		return
 	case req.from == nil:
 		r.shareRoll(req.cmd.rollID)

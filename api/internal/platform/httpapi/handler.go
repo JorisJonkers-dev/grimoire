@@ -31,6 +31,7 @@ type Handler struct {
 	// RuleVariants keeps the Campaign's Rule Variants.
 	RuleVariants RuleVariantService
 	RuleHooks    RuleHookService
+	Tracks       TrackService
 	Rolls        RollService
 	Inventory    InventoryService
 	Sessions     SessionService

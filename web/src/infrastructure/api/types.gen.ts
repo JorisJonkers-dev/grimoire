@@ -4666,6 +4666,90 @@ export type RuleHooks = {
 };
 
 /**
+ * Whether a Track is kept for each Character or for the whole party.
+ */
+export type TrackScope = 'character' | 'party';
+
+/**
+ * A score of a Track at which something happens, on the way up when rising and on the way down otherwise: an Effect, a roll on a Roll Table, or only its label.
+ */
+export type TrackThreshold = {
+    at: number;
+    rising: boolean;
+    label: string;
+    /**
+     * The slug of the Effect it applies.
+     */
+    effect?: string;
+    rollTableId?: Id;
+};
+
+/**
+ * Where a Track stands for one Character, or for the party when no Character is named.
+ */
+export type TrackStanding = {
+    characterId?: Id;
+    /**
+     * The Character's name, empty for the party.
+     */
+    name: string;
+    value: number;
+};
+
+/**
+ * A Campaign-specific score such as sanity or renown, as the caller may see it. The thresholds are there for the DM alone.
+ */
+export type Track = {
+    id: Id;
+    name: string;
+    scope: TrackScope;
+    min: number;
+    max: number;
+    start: number;
+    thresholds?: Array<TrackThreshold>;
+    /**
+     * Where it stands: one score for the party, or one for each Character the caller may see.
+     */
+    standings: Array<TrackStanding>;
+};
+
+/**
+ * A new Track.
+ */
+export type TrackInput = {
+    name: string;
+    scope: TrackScope;
+    min: number;
+    max: number;
+    start: number;
+    thresholds?: Array<TrackThreshold>;
+};
+
+/**
+ * The Campaign's Tracks as the caller may see them.
+ */
+export type Tracks = {
+    dm: boolean;
+    tracks: Array<Track>;
+};
+
+/**
+ * A move of a Track's score: for one Character, or for the party when none is named.
+ */
+export type TrackAdjustment = {
+    characterId?: Id;
+    delta: number;
+};
+
+/**
+ * Where a score stands after a move, and the thresholds it crossed on the way, nearest first.
+ */
+export type TrackAdjusted = {
+    value: number;
+    crossed: Array<TrackThreshold>;
+};
+
+/**
  * A Faction of the Campaign as the caller may see it. Everyone gets its name, archetype and the tier of its Standing. The dm part is there for the DM alone.
  */
 export type Faction = {
@@ -8839,6 +8923,150 @@ export type DeleteRuleHookResponses = {
 };
 
 export type DeleteRuleHookResponse = DeleteRuleHookResponses[keyof DeleteRuleHookResponses];
+
+export type ListTracksData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/tracks';
+};
+
+export type ListTracksErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListTracksError = ListTracksErrors[keyof ListTracksErrors];
+
+export type ListTracksResponses = {
+    /**
+     * The Tracks, oldest first.
+     */
+    200: Tracks;
+};
+
+export type ListTracksResponse = ListTracksResponses[keyof ListTracksResponses];
+
+export type CreateTrackData = {
+    body: TrackInput;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/tracks';
+};
+
+export type CreateTrackErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type CreateTrackError = CreateTrackErrors[keyof CreateTrackErrors];
+
+export type CreateTrackResponses = {
+    /**
+     * The new Track.
+     */
+    201: Track;
+};
+
+export type CreateTrackResponse = CreateTrackResponses[keyof CreateTrackResponses];
+
+export type DeleteTrackData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Track id.
+         */
+        trackId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/tracks/{trackId}';
+};
+
+export type DeleteTrackErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type DeleteTrackError = DeleteTrackErrors[keyof DeleteTrackErrors];
+
+export type DeleteTrackResponses = {
+    /**
+     * The Track is removed.
+     */
+    204: void;
+};
+
+export type DeleteTrackResponse = DeleteTrackResponses[keyof DeleteTrackResponses];
+
+export type AdjustTrackData = {
+    body: TrackAdjustment;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Track id.
+         */
+        trackId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/tracks/{trackId}/adjustments';
+};
+
+export type AdjustTrackErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type AdjustTrackError = AdjustTrackErrors[keyof AdjustTrackErrors];
+
+export type AdjustTrackResponses = {
+    /**
+     * Where the score stands now, and the thresholds it crossed.
+     */
+    200: TrackAdjusted;
+};
+
+export type AdjustTrackResponse = AdjustTrackResponses[keyof AdjustTrackResponses];
 
 export type ListFactionsData = {
     body?: never;

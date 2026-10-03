@@ -10,6 +10,7 @@ import {
   declineRetrainMutation,
   listCharactersOptions,
   listRetrainsOptions,
+  listTracksOptions,
   passInspirationMutation,
   updateCharacterMutation,
 } from '@/infrastructure/api/@tanstack/vue-query.gen'
@@ -35,6 +36,14 @@ const owned = useQuery(
   })),
 )
 const campaigns = computed(() => owned.data.value?.campaigns ?? [])
+// Where this Character stands on the Campaign's Tracks: its own score, and the party's on a Track kept for the party.
+const campaignTracks = useQuery(computed(() => ({ ...listTracksOptions({ path: { campaignId: path.value.path.campaignId } }), retry: false })))
+const tracks = computed(() =>
+  (campaignTracks.data.value?.tracks ?? []).flatMap((t) => {
+    const mine = t.standings.find((st) => (t.scope === 'party' ? !st.characterId : st.characterId === path.value.path.characterId))
+    return mine ? [`${t.name}${t.scope === 'party' ? ", the party's" : ''}: ${String(mine.value)} (${String(t.min)} to ${String(t.max)})`] : []
+  }),
+)
 const update = useMutation(updateCharacterMutation())
 const pass = useMutation(passInspirationMutation())
 const party = useQuery(computed(() => ({ ...listCharactersOptions({ path: { campaignId: path.value.path.campaignId } }), enabled: Boolean(s.value?.heroicInspiration && s.value.mine) })))
@@ -235,6 +244,12 @@ const reach = (feet: number, range: number, long: number) => (range ? `${String(
             <ul v-else class="g-list">
               <li v-for="e in s.effects" :key="e.name">{{ e.name }}: {{ e.detail }}</li>
             </ul>
+            <template v-if="tracks.length > 0">
+              <h2>Tracks</h2>
+              <ul class="g-list" data-testid="sheet-tracks">
+                <li v-for="line in tracks" :key="line">{{ line }}</li>
+              </ul>
+            </template>
           </section>
         </div>
 

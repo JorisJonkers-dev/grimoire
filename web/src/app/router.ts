@@ -54,6 +54,7 @@ const MapsPage = () => import('@/features/live/MapsPage.vue')
 const FactionsPage = () => import('@/features/campaigns/FactionsPage.vue')
 const JournalPage = () => import('@/features/campaigns/JournalPage.vue')
 const RuleVariantsPage = () => import('@/features/campaigns/RuleVariantsPage.vue')
+const TracksPage = () => import('@/features/campaigns/TracksPage.vue')
 const MapCalibrationPage = () => import('@/features/live/MapCalibrationPage.vue')
 const SignInPage = () => import('@/features/account/SignInPage.vue')
 const AccountInvitePage = () => import('@/features/account/AccountInvitePage.vue')
@@ -116,6 +117,7 @@ export function createAppRouter(history: RouterHistory = createWebHistory()) {
       { path: '/campaigns/:id/factions', name: 'factions', component: FactionsPage },
       { path: '/campaigns/:id/journal', name: 'journal', component: JournalPage },
       { path: '/campaigns/:id/rules', name: 'rule-variants', component: RuleVariantsPage },
+      { path: '/campaigns/:id/tracks', name: 'tracks', component: TracksPage },
       { path: '/campaigns/:id/maps/:mapId', name: 'map', component: MapCalibrationPage },
       { path: '/join', name: 'join', component: JoinPage },
       { path: '/about/attribution', name: 'attribution', component: AttributionPage },
