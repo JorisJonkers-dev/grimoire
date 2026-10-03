@@ -27,6 +27,8 @@ type TableDisplay struct {
 	Body     string
 	MapID    *MapID
 	Blackout bool
+	// Caption is a line the DM puts on the Table Display.
+	Caption string
 }
 
 // DefaultTable follows the turn on the local map at normal zoom.

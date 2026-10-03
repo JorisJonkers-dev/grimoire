@@ -233,22 +233,19 @@ func TestDamageTestsConcentration(t *testing.T) {
 		t.Fatalf("damage opens Aria's concentration save = %+v", save)
 	}
 	tb.fill(uuid.UUID(save.ID).String(), w.player, 12, 1)
-	drain(tb.dm)
-	drain(tb.player)
+	barrier(t, w, tb)
 	u := live.Update{View: look(t, w, tb.dm)}
 	if effect(token(u.View, "Aria"), "Bless") == nil || lastRoll(t, w, "Constitution save").Status != domain.StatusResolved {
 		t.Fatalf("a 12 keeps Bless = %+v", token(u.View, "Aria").Effects)
 	}
 	tb.dmSays(live.Command{Kind: live.CmdAdjustHP, TokenID: ids["Aria"], HPDelta: -2})
-	drain(tb.dm)
-	drain(tb.player)
+	barrier(t, w, tb)
 	second := lastRoll(t, w, "Constitution save to keep concentrating on")
 	if second.ID == save.ID || second.Status == domain.StatusResolved {
 		t.Fatalf("lost hit points open a second save = %+v", second)
 	}
 	tb.fill(uuid.UUID(second.ID).String(), w.player, 2, 1)
-	drain(tb.dm)
-	drain(tb.player)
+	barrier(t, w, tb)
 	u = live.Update{View: look(t, w, tb.dm)}
 	if effect(token(u.View, "Aria"), "Bless") != nil {
 		t.Fatalf("a failed save ends her concentration = %+v", token(u.View, "Aria").Effects)

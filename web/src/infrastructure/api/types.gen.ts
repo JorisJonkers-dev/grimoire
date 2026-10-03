@@ -2391,7 +2391,8 @@ export type LiveSessionView = {
  */
 export type LiveCommand = {
     nonce: string;
-    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'ping' | 'set_world' | 'add_node' | 'add_route' | 'remove_node' | 'remove_route' | 'place_party' | 'travel' | 'add_zone' | 'remove_zone' | 'hold_zone' | 'spring_zone' | 'rest' | 'encounter_check' | 'schedule_check' | 'roll_loot' | 'move_item' | 'move_coins' | 'claim_loot' | 'settle_loot' | 'trade' | 'open_shop' | 'close_shop' | 'buy' | 'sell' | 'haggle' | 'spawn_encounter' | 'adjust_hp' | 'undo' | 'propose_rest' | 'agree_rest' | 'spend_hit_die' | 'finish_rest' | 'interrupt_rest' | 'take_action' | 'unarmed' | 'interact' | 'swap_weapons' | 'set_reaction' | 'stabilise' | 'revive' | 'teleport' | 'summon' | 'command' | 'set_visibility' | 'place_object' | 'remove_object' | 'use_object' | 'damage_object' | 'find_object' | 'unlock' | 'disarm' | 'jump' | 'throw' | 'sneak' | 'explore' | 'pass_turn' | 'legendary_action' | 'lair_action' | 'legendary_resistance';
+    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'table_caption' | 'ping' | 'set_world' | 'add_node' | 'add_route' | 'remove_node' | 'remove_route' | 'place_party' | 'travel' | 'add_zone' | 'remove_zone' | 'hold_zone' | 'spring_zone' | 'rest' | 'encounter_check' | 'schedule_check' | 'roll_loot' | 'move_item' | 'move_coins' | 'claim_loot' | 'settle_loot' | 'trade' | 'open_shop' | 'close_shop' | 'buy' | 'sell' | 'haggle' | 'spawn_encounter' | 'adjust_hp' | 'undo' | 'propose_rest' | 'agree_rest' | 'spend_hit_die' | 'finish_rest' | 'interrupt_rest' | 'take_action' | 'unarmed' | 'interact' | 'swap_weapons' | 'set_reaction' | 'stabilise' | 'revive' | 'teleport' | 'summon' | 'command' | 'set_visibility' | 'place_object' | 'remove_object' | 'use_object' | 'damage_object' | 'find_object' | 'unlock' | 'disarm' | 'jump' | 'throw' | 'sneak' | 'explore' | 'pass_turn' | 'legendary_action' | 'lair_action' | 'legendary_resistance';
+    caption?: string;
     tokenId?: Id;
     label?: string;
     tokenKind?: TokenKind;
@@ -3786,7 +3787,7 @@ export type TableCamera = 'follow_turn' | 'show_party' | 'free';
 export type TableScene = 'local' | 'world' | 'handout' | 'title';
 
 /**
- * What the Table Display shows. q, r and zoomPct steer the free camera; the world scene shows worldMap.
+ * What the Table Display shows. q, r and zoomPct steer the free camera; the world scene shows worldMap; the caption is a line the DM puts under the map.
  */
 export type LiveTable = {
     camera: TableCamera;
@@ -3798,6 +3799,7 @@ export type LiveTable = {
     body?: string;
     worldMap?: LiveMap;
     blackout: boolean;
+    caption?: string;
 };
 
 /**
@@ -4108,7 +4110,7 @@ export type LiveCombatant = {
  * A WebSocket frame from a live Session. Snapshots answer joins and resyncs; a view follows every change, and a view whose seq is not the next one means resync. A walk's view carries the views along the way as steps, to play back at walking pace; a path answers plan_walk to its sender only.
  */
 export type LiveUpdate = {
-    kind: 'snapshot' | 'view' | 'rejected' | 'ended' | 'path' | 'attack_preview' | 'area_preview' | 'ping';
+    kind: 'snapshot' | 'view' | 'rejected' | 'ended' | 'path' | 'attack_preview' | 'area_preview' | 'ping' | 'roll';
     seq: number;
     nonce?: string;
     actionSeq?: number;
@@ -4122,6 +4124,22 @@ export type LiveUpdate = {
     ping?: HexCoord;
     initiative?: LiveInitiativeReveal;
     turn?: LiveTurnStart;
+    roll?: LiveRollShown;
+};
+
+/**
+ * The last roll a player made, as every screen may show it. It arrives as a roll frame when it resolves and again with a snapshot. A DM's roll is never sent.
+ */
+export type LiveRollShown = {
+    roller: DisplayName;
+    purpose: string;
+    dice: Array<{
+        faces: number;
+        value: number;
+        kept: boolean;
+    }>;
+    modifier: number;
+    total: number;
 };
 
 /**

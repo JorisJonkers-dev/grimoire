@@ -1869,10 +1869,11 @@ func (q *Queries) SavePrompt(ctx context.Context, arg SavePromptParams) error {
 }
 
 const saveTable = `-- name: SaveTable :exec
-INSERT INTO play.table_displays (session_id, camera, q, r, zoom_pct, scene, title, body, map_id, blackout)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+INSERT INTO play.table_displays (session_id, camera, q, r, zoom_pct, scene, title, body, map_id, blackout, caption)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 ON CONFLICT (session_id) DO UPDATE SET camera = excluded.camera, q = excluded.q, r = excluded.r, zoom_pct = excluded.zoom_pct,
-    scene = excluded.scene, title = excluded.title, body = excluded.body, map_id = excluded.map_id, blackout = excluded.blackout
+    scene = excluded.scene, title = excluded.title, body = excluded.body, map_id = excluded.map_id, blackout = excluded.blackout,
+    caption = excluded.caption
 `
 
 type SaveTableParams struct {
@@ -1886,6 +1887,7 @@ type SaveTableParams struct {
 	Body      string
 	MapID     pgtype.UUID
 	Blackout  bool
+	Caption   string
 }
 
 func (q *Queries) SaveTable(ctx context.Context, arg SaveTableParams) error {
@@ -1900,6 +1902,7 @@ func (q *Queries) SaveTable(ctx context.Context, arg SaveTableParams) error {
 		arg.Body,
 		arg.MapID,
 		arg.Blackout,
+		arg.Caption,
 	)
 	return err
 }
@@ -2350,7 +2353,7 @@ func (q *Queries) SessionSurfaces(ctx context.Context, sessionID uuid.UUID) ([]S
 }
 
 const sessionTable = `-- name: SessionTable :one
-SELECT camera, q, r, zoom_pct, scene, title, body, map_id, blackout FROM play.table_displays WHERE session_id = $1
+SELECT camera, q, r, zoom_pct, scene, title, body, map_id, blackout, caption FROM play.table_displays WHERE session_id = $1
 `
 
 type SessionTableRow struct {
@@ -2363,6 +2366,7 @@ type SessionTableRow struct {
 	Body     string
 	MapID    pgtype.UUID
 	Blackout bool
+	Caption  string
 }
 
 func (q *Queries) SessionTable(ctx context.Context, sessionID uuid.UUID) (SessionTableRow, error) {
@@ -2378,6 +2382,7 @@ func (q *Queries) SessionTable(ctx context.Context, sessionID uuid.UUID) (Sessio
 		&i.Body,
 		&i.MapID,
 		&i.Blackout,
+		&i.Caption,
 	)
 	return i, err
 }

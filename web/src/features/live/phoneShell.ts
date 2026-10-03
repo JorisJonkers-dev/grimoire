@@ -1,14 +1,23 @@
 import { computed, ref } from 'vue'
 
+export type PageKey = 'map' | 'actions' | 'spells' | 'character' | 'party' | 'table' | 'tools'
+export type Page = { key: PageKey; label: string }
 /** The pages a player swipes between on a phone, in order; Map shows the map alone. */
-export const PAGES = [
+export const PLAYER_PAGES: readonly Page[] = [
   { key: 'map', label: 'Map' },
   { key: 'actions', label: 'Actions' },
   { key: 'spells', label: 'Spells' },
   { key: 'character', label: 'Character' },
   { key: 'party', label: 'Party' },
-] as const
-export type PageKey = (typeof PAGES)[number]['key']
+]
+/** The DM's remote: the creatures in hand, the Table Display, the map tools, and the party's things. */
+export const DM_PAGES: readonly Page[] = [
+  { key: 'map', label: 'Map' },
+  { key: 'actions', label: 'Creatures' },
+  { key: 'table', label: 'Table' },
+  { key: 'tools', label: 'Tools' },
+  { key: 'party', label: 'Party' },
+]
 
 /** How far a finger travels sideways before a swipe turns the page. */
 export const SWIPE_PX = 60
@@ -19,10 +28,10 @@ export const ZOOM_MAX = 3
 export const ZOOM_STEP = 0.5
 
 /** The page a swipe leads to: left for the next, right for the one before; a mostly vertical drag is a scroll. */
-export function pageAfterSwipe(page: PageKey, dx: number, dy: number): PageKey {
-  if (Math.abs(dx) < SWIPE_PX || Math.abs(dx) < 2 * Math.abs(dy)) return page
-  const at = PAGES.findIndex((p) => p.key === page)
-  return PAGES[Math.min(PAGES.length - 1, Math.max(0, at + (dx < 0 ? 1 : -1)))]?.key ?? page
+export function pageAfterSwipe(pages: readonly Page[], page: PageKey, dx: number, dy: number): PageKey {
+  const at = pages.findIndex((p) => p.key === page)
+  if (at < 0 || Math.abs(dx) < SWIPE_PX || Math.abs(dx) < 2 * Math.abs(dy)) return page
+  return pages[Math.min(pages.length - 1, Math.max(0, at + (dx < 0 ? 1 : -1)))]?.key ?? page
 }
 
 const clamp = (z: number) => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.round(z * 100) / 100))
@@ -36,7 +45,7 @@ type Point = { x: number; y: number }
 const point = (e: PointerEvent): Point => ({ x: e.clientX, y: e.clientY })
 
 /** The phone shell's state: the page shown, swipes that turn it, and the map's zoom by pinch or button. */
-export function usePhoneShell() {
+export function usePhoneShell(pages: () => readonly Page[]) {
   const page = ref<PageKey>('map')
   const zoom = ref(1)
   let swipe: { id: number; from: Point } | undefined
@@ -57,7 +66,7 @@ export function usePhoneShell() {
       const [dx, dy] = [e.clientX - swipe.from.x, e.clientY - swipe.from.y]
       const still = Math.abs(dx) < TAP_PX && Math.abs(dy) < TAP_PX
       const tapped = still && e.target instanceof Element ? e.target.closest('[data-page-key]')?.getAttribute('data-page-key') : undefined
-      page.value = PAGES.find((p) => p.key === tapped)?.key ?? pageAfterSwipe(page.value, dx, dy)
+      page.value = pages().find((p) => p.key === tapped)?.key ?? pageAfterSwipe(pages(), page.value, dx, dy)
     }
     swipe = undefined
   }

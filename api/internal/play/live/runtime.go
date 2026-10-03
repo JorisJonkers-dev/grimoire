@@ -370,7 +370,9 @@ type request struct {
 }
 
 type runtime struct {
-	store Store
+	// lastRoll is the last roll a player made, for screens that join later; it is not kept across restarts.
+	lastRoll *RollShown
+	store    Store
 	// campaign never changes, so the hub may read it from other goroutines.
 	campaign uuid.UUID
 	armed    uuid.UUID
@@ -683,6 +685,7 @@ func (r *runtime) snapshot(a Audience) Update {
 	return Update{
 		Kind: UpdSnapshot, Seq: s.Seq, View: &v,
 		Session: &SessionView{ID: uuid.UUID(s.ID).String(), Number: s.Number, GridRadius: s.GridRadius, Audience: a},
+		Roll:    r.lastRoll,
 	}
 }
 
@@ -696,6 +699,7 @@ func (r *runtime) handle(req request) {
 		r.timedOut(req.cmd.promptID)
 		return
 	case req.from == nil:
+		r.shareRoll(req.cmd.rollID)
 		r.rolled(req)
 		return
 	case req.cmd.Kind == CmdResync:

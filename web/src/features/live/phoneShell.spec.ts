@@ -4,7 +4,7 @@ import type { LiveToken } from '@/infrastructure/api/types.gen'
 import { expectAccessible } from '@/test/axe'
 import { FakeSocket } from '@/test/fakeSocket'
 import { mountApp } from '@/test/mountApp'
-import { PAGES, ZOOM_MAX, ZOOM_MIN, pageAfterSwipe, pinched } from './phoneShell'
+import { DM_PAGES, PLAYER_PAGES, ZOOM_MAX, ZOOM_MIN, pageAfterSwipe, pinched } from './phoneShell'
 
 const ID = '0190c7a8-0000-7000-8000-000000000001'
 const SID = '0190c7a8-0000-7000-8000-00000000000b'
@@ -19,7 +19,7 @@ const aria: LiveToken = {
   id: '0190c7a8-0000-7000-8000-00000000000e', label: 'Aria', kind: 'party', q: 0, r: 0, hidden: false, darkvisionFt: 0, controllerId: player.id,
   ac: 16, hp: 12, hpMax: 12, attacks: [sword],
 }
-const orc: LiveToken = { id: '0190c7a8-0000-7000-8000-00000000000a', label: 'Orc', kind: 'enemy', q: 1, r: 0, hidden: false, darkvisionFt: 0, health: 'unhurt' }
+const orc: LiveToken = { id: '0190c7a8-0000-7000-8000-00000000000a', label: 'Orc', kind: 'enemy', q: 1, r: 0, hidden: false, darkvisionFt: 0, ac: 13, hp: 15, hpMax: 15, attacks: [sword] }
 const fighter = (t: LiveToken, extra: Record<string, unknown> = {}) => ({
   id: `${t.id.slice(0, -3)}1${t.id.slice(-2)}`, tokenId: t.id, label: t.label, kind: t.kind, controllerId: t.controllerId,
   rollId: `${t.id.slice(0, -3)}2${t.id.slice(-2)}`, initiative: 10, rank: 1, acting: false, done: false, action: true, bonusAction: true,
@@ -48,13 +48,16 @@ beforeEach(() => {
 
 describe('phone shell', () => {
   it('knows which page a swipe leads to and how far a pinch zooms', () => {
-    expect(PAGES.map((p) => p.key)).toEqual(['map', 'actions', 'spells', 'character', 'party'])
-    expect(pageAfterSwipe('map', -80, 5)).toBe('actions')
-    expect(pageAfterSwipe('actions', 80, 5)).toBe('map')
-    expect(pageAfterSwipe('map', 80, 0)).toBe('map')
-    expect(pageAfterSwipe('party', -200, 0)).toBe('party')
-    expect(pageAfterSwipe('spells', -40, 0)).toBe('spells')
-    expect(pageAfterSwipe('spells', -90, 70)).toBe('spells')
+    expect(PLAYER_PAGES.map((p) => p.key)).toEqual(['map', 'actions', 'spells', 'character', 'party'])
+    expect(DM_PAGES.map((p) => p.key)).toEqual(['map', 'actions', 'table', 'tools', 'party'])
+    expect(pageAfterSwipe(PLAYER_PAGES, 'map', -80, 5)).toBe('actions')
+    expect(pageAfterSwipe(PLAYER_PAGES, 'actions', 80, 5)).toBe('map')
+    expect(pageAfterSwipe(PLAYER_PAGES, 'map', 80, 0)).toBe('map')
+    expect(pageAfterSwipe(PLAYER_PAGES, 'party', -200, 0)).toBe('party')
+    expect(pageAfterSwipe(PLAYER_PAGES, 'spells', -40, 0)).toBe('spells')
+    expect(pageAfterSwipe(PLAYER_PAGES, 'spells', -90, 70)).toBe('spells')
+    expect(pageAfterSwipe(DM_PAGES, 'actions', -90, 0)).toBe('table')
+    expect(pageAfterSwipe(DM_PAGES, 'spells', -90, 0)).toBe('spells')
     expect(pinched(1, 100, 150)).toBe(1.5)
     expect(pinched(2, 100, 400)).toBe(ZOOM_MAX)
     expect(pinched(1, 100, 10)).toBe(ZOOM_MIN)
@@ -67,6 +70,8 @@ describe('phone shell', () => {
     const tab = (key: string) => wrapper.get(`[data-testid="page-${key}"]`)
     expect(wrapper.findAll('[data-testid="phone-pages"] button').map((b) => b.text())).toEqual(['Map', 'Actions', 'Spells', 'Character', 'Party'])
     expect(tab('map').attributes('aria-current')).toBe('page')
+    // On a narrow screen the roster scrolls sideways, so the keyboard can reach it.
+    expect(wrapper.get('[data-testid="roster-strip"] ol').attributes()).toMatchObject({ tabindex: '0', 'aria-label': 'Creatures, in order' })
     expect(dock.classes()).toContain('dock--page-map')
     // What a page holds is marked on it: the hotbar is on Actions, the spell list on Spells.
     expect(wrapper.get('[data-testid="hotbar-Aria"]').attributes('data-page')).toBe('actions')
@@ -126,9 +131,40 @@ describe('phone shell', () => {
     expect(chips.text()).toContain('10 / 30 ft')
     await expectAccessible(wrapper.element as Element)
 
-    const asDM = await open('dm')
-    expect(asDM.wrapper.find('[data-testid="phone-pages"]').exists()).toBe(false)
-    expect(asDM.wrapper.get('[data-testid="dock"]').classes().some((c) => c.startsWith('dock--page-'))).toBe(false)
+  })
+
+  it('gives the DM a remote: creatures, the Table Display and the tools, each a page, with ping and camera a tap away', async () => {
+    const { wrapper, s } = await open('dm')
+    const dock = wrapper.get('[data-testid="dock"]')
+    const sent = () => s.sent.at(-1) as Record<string, unknown>
+    expect(wrapper.findAll('[data-testid="phone-pages"] button').map((b) => b.text())).toEqual(['Map', 'Creatures', 'Table', 'Tools', 'Party'])
+    expect(wrapper.find('[data-testid="spell-list"]').exists()).toBe(false)
+    expect(wrapper.get('[data-testid="dm-controls"]').attributes('data-page')).toBe('tools')
+    expect(wrapper.get('[data-testid="table-remote"]').element.closest('[data-page]')?.getAttribute('data-page')).toBe('table')
+    expect(wrapper.get('[data-testid="control-switcher"]').attributes('data-page')).toBe('actions')
+    for (const child of dock.element.children) expect(child.getAttribute('data-page'), child.outerHTML.slice(0, 80)).toBeTruthy()
+
+    await wrapper.get('[data-testid="page-table"]').trigger('click')
+    expect(dock.classes()).toContain('dock--page-table')
+    // Ping and the camera need the map: choosing either goes there, and the next tap on a hex does it.
+    await wrapper.get('[data-testid="remote-ping"]').trigger('click')
+    expect(dock.classes()).toContain('dock--page-map')
+    expect(wrapper.get('[data-testid="pointing"]').text()).toContain('Tap the map to ping it.')
+    await wrapper.get('[data-hex="1,-1"]').trigger('click')
+    expect(sent()).toMatchObject({ kind: 'ping', q: 1, r: -1 })
+    await wrapper.get('[data-testid="page-table"]').trigger('click')
+    await wrapper.get('[data-testid="remote-camera"]').trigger('click')
+    expect(wrapper.get('[data-testid="pointing"]').text()).toContain('Tap the map to point the Table Display there.')
+    await wrapper.get('[data-hex="-1,1"]').trigger('click')
+    expect(sent()).toMatchObject({ kind: 'table_camera', camera: 'free', q: -1, r: 1 })
+    await wrapper.get('[data-testid="stop-pointing"]').trigger('click')
+    expect(wrapper.find('[data-testid="pointing"]').exists()).toBe(false)
+    await wrapper.get('[data-testid="blackout-toggle"]').trigger('click')
+    expect(sent()).toMatchObject({ kind: 'table_blackout', on: true })
+    await touch(dock, 'pointerdown', 1, 300, 500)
+    await touch(dock, 'pointerup', 1, 100, 500)
+    expect(dock.classes()).toContain('dock--page-actions')
+    await expectAccessible(wrapper.element as Element)
   })
 
   it('zooms the map by pinching or with the zoom buttons', async () => {

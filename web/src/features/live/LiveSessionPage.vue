@@ -12,7 +12,7 @@ import NotifyToggle from '@/shared/pwa/NotifyToggle.vue'
 import { useWakeLock } from '@/shared/pwa/wakeLock'
 import { GButton } from '@/shared/ui'
 import { BANNER_MS } from './motion'
-import { PAGES, usePhoneShell } from './phoneShell'
+import { DM_PAGES, PLAYER_PAGES, usePhoneShell } from './phoneShell'
 import { board, describe, emanations, hexes, zoneHexes } from './board'
 import { runByDM, suggested, taken } from './console'
 import { cellsFor, key, layoutOf } from './geometry'
@@ -82,6 +82,12 @@ onBeforeUnmount(() => {
 })
 
 const tool = ref<Tool>('tokens')
+// From the phone's Table page the DM picks what the next tap on the map does, and goes to the map to do it.
+function point(what: 'ping' | 'camera') {
+  tool.value = what
+  shell.page.value = 'map'
+}
+const pointing = computed(() => ({ ping: 'Tap the map to ping it.', camera: 'Tap the map to point the Table Display there.' } as Partial<Record<Tool, string>>)[tool.value])
 const selected = ref<string | null>(null)
 const label = ref('')
 const kind = ref<TokenKind>('enemy')
@@ -118,8 +124,9 @@ const combat = computed(() => view.value?.combat ?? null)
 const roster = computed(() => view.value?.roster ?? [])
 const card = ref('')
 const cardEntry = computed(() => roster.value.find((e) => e.tokenId === card.value))
-// On a phone a player swipes between pages over the map and pinches to zoom it.
-const shell = usePhoneShell()
+// On a phone everyone swipes between pages over the map and pinches to zoom it; the DM's pages are a remote.
+const pages = computed(() => (isDM.value ? DM_PAGES : PLAYER_PAGES))
+const shell = usePhoneShell(() => pages.value)
 const chips = [
   { key: 'action', field: 'action', label: 'Action' },
   { key: 'bonus', field: 'bonusAction', label: 'Bonus' },
@@ -443,7 +450,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
 </script>
 
 <template>
-  <main :class="['live', { 'live--player': !isDM }]">
+  <main class="live live--phone">
     <p v-if="campaign.isError.value" role="alert" class="g-alert" data-testid="live-missing">This session is not available to you.</p>
     <template v-else-if="state">
       <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -- a pinch is the touch shortcut; the zoom buttons do the same -->
@@ -494,10 +501,10 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
       </div>
       <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -- a swipe is the touch shortcut; the page buttons do the same -->
       <div
-        :class="['dock', isDM ? '' : `dock--page-${shell.page.value}`]"
+        :class="['dock', `dock--page-${shell.page.value}`]"
         data-testid="dock"
-        @pointerdown="isDM || shell.swipeStart($event)"
-        @pointerup="isDM || shell.swipeEnd($event)"
+        @pointerdown="shell.swipeStart"
+        @pointerup="shell.swipeEnd"
       >
         <p v-if="!isDM && turns.length > 0" data-page="always" role="status" class="banner" data-testid="your-turn">Your turn</p>
         <div v-if="view && !combat && (isDM || view.exploration)" data-page="actions" class="row" data-testid="exploration">
@@ -529,6 +536,10 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
           <GButton v-if="isDM && toRoll.length > 1" data-testid="roll-all" @click="rollAll()">Roll every initiative for me</GButton>
           <LiveRoll v-for="c in toRoll" :key="c.rollId" :campaign-id="campaignId" :roll-id="c.rollId" />
         </section>
+        <p v-if="isDM && pointing" data-page="always" role="status" class="walk" data-testid="pointing">
+          {{ pointing }}
+          <GButton data-testid="stop-pointing" @click="tool = 'tokens'">Done</GButton>
+        </p>
         <ControlSwitcher
           v-if="isDM && creatures.length"
           data-page="actions"
@@ -650,7 +661,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
             </li>
           </ul>
         </section>
-        <section v-if="isDM" v-show="scope === 'local'" data-page="party" class="g-card controls" data-testid="dm-controls">
+        <section v-if="isDM" v-show="scope === 'local'" data-page="tools" class="g-card controls" data-testid="dm-controls">
           <div class="row">
             <label class="g-field grow">
               <span>Map</span>
@@ -787,13 +798,18 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
           </div>
           <StartCombat v-if="choosing && !combat" :tokens="view?.tokens ?? []" @start="startCombat" />
         </section>
-        <section v-if="isDM" data-page="party" class="g-card controls">
+        <section v-if="isDM" data-page="table" class="g-card controls">
+          <div class="row" role="group" aria-label="Point at the map">
+            <GButton data-testid="remote-ping" @click="point('ping')">Ping the map</GButton>
+            <GButton data-testid="remote-camera" @click="point('camera')">Point the Table Display</GButton>
+          </div>
           <TableRemote
             :table="view?.table"
             :maps="worldMaps"
             @camera="(camera, zoomPct) => live?.send({ kind: 'table_camera', camera, zoomPct, q: view?.table?.q ?? 0, r: view?.table?.r ?? 0 })"
             @scene="(s) => live?.send({ kind: 'table_scene', ...s })"
             @blackout="(on) => live?.send({ kind: 'table_blackout', on })"
+            @caption="(text) => live?.send({ kind: 'table_caption', caption: text })"
           />
           <GButton variant="danger" data-testid="end-session" @click="endSession()">End session</GButton>
         </section>
@@ -849,36 +865,34 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
           <li v-for="t in view?.tokens ?? []" :key="t.id">{{ describe(t) }} · {{ t.kind }}</li>
         </ul>
       </div>
-      <template v-if="!isDM">
-        <div v-if="turns.length" class="resources" role="group" aria-label="This turn" data-testid="resources">
-          <template v-for="c in turns" :key="c.id">
-            <span
-              v-for="r in chips"
-              :key="r.field"
-              :class="['chip', { 'chip--spent': !c[r.field] }]"
-              role="img"
-              :aria-label="`${r.label}: ${c[r.field] ? 'available' : 'spent'}`"
-              :data-testid="`chip-${r.key}`"
-            >{{ r.label }}</span>
-            <span class="chip chip--move">{{ c.movementFt }} / {{ c.speedFt }} ft</span>
-          </template>
-        </div>
-        <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -- a swipe is the touch shortcut; the buttons turn the pages too -->
-        <nav class="pagebar" aria-label="Live play pages" data-testid="phone-pages" @pointerdown="shell.swipeStart" @pointerup="shell.swipeEnd">
-          <button
-            v-for="p in PAGES"
-            :key="p.key"
-            type="button"
-            :class="['page', { 'page--on': shell.page.value === p.key }]"
-            :aria-current="shell.page.value === p.key ? 'page' : undefined"
-            :data-testid="`page-${p.key}`"
-            :data-page-key="p.key"
-            @click="shell.page.value = p.key"
-          >
-            {{ p.label }}
-          </button>
-        </nav>
-      </template>
+      <div v-if="!isDM && turns.length" class="resources" role="group" aria-label="This turn" data-testid="resources">
+        <template v-for="c in turns" :key="c.id">
+          <span
+            v-for="r in chips"
+            :key="r.field"
+            :class="['chip', { 'chip--spent': !c[r.field] }]"
+            role="img"
+            :aria-label="`${r.label}: ${c[r.field] ? 'available' : 'spent'}`"
+            :data-testid="`chip-${r.key}`"
+          >{{ r.label }}</span>
+          <span class="chip chip--move">{{ c.movementFt }} / {{ c.speedFt }} ft</span>
+        </template>
+      </div>
+      <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -- a swipe is the touch shortcut; the buttons turn the pages too -->
+      <nav class="pagebar" aria-label="Live play pages" data-testid="phone-pages" @pointerdown="shell.swipeStart" @pointerup="shell.swipeEnd">
+        <button
+          v-for="p in pages"
+          :key="p.key"
+          type="button"
+          :class="['page', { 'page--on': shell.page.value === p.key }]"
+          :aria-current="shell.page.value === p.key ? 'page' : undefined"
+          :data-testid="`page-${p.key}`"
+          :data-page-key="p.key"
+          @click="shell.page.value = p.key"
+        >
+          {{ p.label }}
+        </button>
+      </nav>
     </template>
     <p v-else>Opening the session…</p>
   </main>
@@ -946,15 +960,15 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
 /* A player's phone: the map fills the screen, the dock is a sheet attached to a bar that runs edge to
    edge, and the turn's resources float above the bar. */
 @media (max-width: 899px) {
-  .live--player {
+  .live--phone {
     padding-bottom: calc(104px + env(safe-area-inset-bottom));
   }
-  .live--player .stage {
+  .live--phone .stage {
     max-height: none;
     height: calc(100dvh - 250px);
     touch-action: pan-x pan-y;
   }
-  .live--player .dock {
+  .live--phone .dock {
     position: fixed;
     right: 0;
     bottom: calc(96px + env(safe-area-inset-bottom));
@@ -969,7 +983,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
     /* Sideways movement is ours, to turn the page; up and down still scrolls the sheet. */
     touch-action: pan-y;
   }
-  .live--player .dock--page-map {
+  .live--phone .dock--page-map {
     background: transparent;
     box-shadow: none;
   }
@@ -977,10 +991,12 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
   .dock--page-actions > :not([data-page~='actions'], [data-page~='always']),
   .dock--page-spells > :not([data-page~='spells'], [data-page~='always']),
   .dock--page-character > :not([data-page~='character'], [data-page~='always']),
-  .dock--page-party > :not([data-page~='party'], [data-page~='always']) {
+  .dock--page-party > :not([data-page~='party'], [data-page~='always']),
+  .dock--page-table > :not([data-page~='table'], [data-page~='always']),
+  .dock--page-tools > :not([data-page~='tools'], [data-page~='always']) {
     display: none;
   }
-  .live--player .resources {
+  .live--phone .resources {
     position: fixed;
     right: 0;
     bottom: calc(56px + env(safe-area-inset-bottom));
@@ -992,7 +1008,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
     padding: 6px 8px;
     background: var(--color-surface);
   }
-  .live--player .pagebar {
+  .live--phone .pagebar {
     position: fixed;
     right: 0;
     bottom: 0;

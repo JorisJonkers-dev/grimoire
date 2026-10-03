@@ -137,8 +137,7 @@ func TestAreaSpellsSavesAndSurfaces(t *testing.T) {
 		t.Fatalf("the cast survives a restart = %+v", a)
 	}
 	fill(saves[ids["Brom"]], 13)
-	drain(tb.dm)
-	drain(tb.player)
+	barrier(t, w, tb)
 	now := look(t, w, tb.dm)
 	look(t, w, tb.player) // the player's queue may still hold the resolution's updates
 	if now.Area != nil || *token(now, "Goblin").HP != 0 || *token(now, "Archer").HP != 1 || *token(now, "Brom").HP != 6 {

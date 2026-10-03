@@ -3039,6 +3039,21 @@ export const zLiveCombat = z.object({
 });
 
 /**
+ * The last roll a player made, as every screen may show it. It arrives as a roll frame when it resolves and again with a snapshot. A DM's roll is never sent.
+ */
+export const zLiveRollShown = z.object({
+    roller: zDisplayName,
+    purpose: z.string().max(120),
+    dice: z.array(z.object({
+        faces: z.int().gte(2).lte(1000),
+        value: z.int().gte(0).lte(1000),
+        kept: z.boolean()
+    })).max(100),
+    modifier: z.int().gte(-100000).lte(100000),
+    total: z.int().gte(-100000).lte(100000)
+});
+
+/**
  * One Combatant's place in the initiative reveal.
  */
 export const zLiveInitiativeRoll = z.object({
@@ -3152,7 +3167,7 @@ export const zLiveWorld = z.object({
 });
 
 /**
- * What the Table Display shows. q, r and zoomPct steer the free camera; the world scene shows worldMap.
+ * What the Table Display shows. q, r and zoomPct steer the free camera; the world scene shows worldMap; the caption is a line the DM puts under the map.
  */
 export const zLiveTable = z.object({
     camera: zTableCamera,
@@ -3163,7 +3178,8 @@ export const zLiveTable = z.object({
     title: z.string().max(80).optional(),
     body: z.string().max(1000).optional(),
     worldMap: zLiveMap.optional(),
-    blackout: z.boolean()
+    blackout: z.boolean(),
+    caption: z.string().max(200).optional()
 });
 
 /**
@@ -4060,6 +4076,7 @@ export const zLiveCommand = z.object({
         'table_camera',
         'table_scene',
         'table_blackout',
+        'table_caption',
         'ping',
         'set_world',
         'add_node',
@@ -4121,6 +4138,7 @@ export const zLiveCommand = z.object({
         'lair_action',
         'legendary_resistance'
     ]),
+    caption: z.string().max(400).optional(),
     tokenId: zId.optional(),
     label: z.string().max(40).optional(),
     tokenKind: zTokenKind.optional(),
@@ -4377,7 +4395,8 @@ export const zLiveUpdate = z.object({
         'path',
         'attack_preview',
         'area_preview',
-        'ping'
+        'ping',
+        'roll'
     ]),
     seq: z.int().gte(0).lte(2147483647),
     nonce: z.string().max(64).optional(),
@@ -4391,7 +4410,8 @@ export const zLiveUpdate = z.object({
     area: zLiveAreaPreview.optional(),
     ping: zHexCoord.optional(),
     initiative: zLiveInitiativeReveal.optional(),
-    turn: zLiveTurnStart.optional()
+    turn: zLiveTurnStart.optional(),
+    roll: zLiveRollShown.optional()
 });
 
 /**

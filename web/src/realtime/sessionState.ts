@@ -1,4 +1,4 @@
-import type { LiveAreaPreview, LiveAttackPreview, LiveInitiativeRoll, LivePath, LiveSessionView, LiveUpdate, LiveView } from '@/infrastructure/api/types.gen'
+import type { LiveAreaPreview, LiveAttackPreview, LiveInitiativeRoll, LivePath, LiveRollShown, LiveSessionView, LiveUpdate, LiveView } from '@/infrastructure/api/types.gen'
 import { zLiveUpdate } from '@/infrastructure/api/zod.gen'
 
 export type Outcome = 'applied' | 'resync' | 'ignored'
@@ -20,6 +20,8 @@ export class SessionState {
   /** The initiative order as the fight began, and the last turns that started, each counted like a ping. */
   reveal: { order: LiveInitiativeRoll[]; n: number } | null = null
   turn: { round: number; tokenIds: string[]; n: number } | null = null
+  /** The last roll a player made, for screens that show it. */
+  roll: LiveRollShown | null = null
 
   apply(frame: unknown): Outcome {
     const parsed = zLiveUpdate.safeParse(frame)
@@ -31,6 +33,10 @@ export class SessionState {
         this.seq = u.seq
         this.session = u.session ?? this.session
         this.view = u.view ?? this.view
+        this.roll = u.roll ?? this.roll
+        return 'applied'
+      case 'roll':
+        this.roll = u.roll ?? this.roll
         return 'applied'
       case 'rejected':
         this.rejection = u.reason ?? 'That was not allowed.'

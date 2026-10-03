@@ -1,5 +1,5 @@
 import { getCurrentInstance, onBeforeUnmount, reactive } from 'vue'
-import type { LiveAreaPreview, LiveAttackPreview, LiveCommand, LiveInitiativeRoll, LivePath, LiveSessionView, LiveView } from '@/infrastructure/api/types.gen'
+import type { LiveAreaPreview, LiveAttackPreview, LiveCommand, LiveInitiativeRoll, LivePath, LiveRollShown, LiveSessionView, LiveView } from '@/infrastructure/api/types.gen'
 import { SessionState } from './sessionState'
 
 export type Audience = 'dm' | 'party' | 'table'
@@ -30,6 +30,7 @@ export type LiveState = {
   ping: { q: number; r: number; n: number } | null
   reveal: { order: LiveInitiativeRoll[]; n: number } | null
   turn: { round: number; tokenIds: string[]; n: number } | null
+  roll: LiveRollShown | null
   rejection: string
 }
 
@@ -45,7 +46,7 @@ export function useLiveSession(
   delay: (attempt: number) => number = (n) => Math.min(10_000, 500 * 2 ** n),
 ) {
   const state = new SessionState()
-  const view = reactive<LiveState>({ connection: 'connecting', session: null, view: null, path: null, preview: null, areaPreview: null, ping: null, reveal: null, turn: null, rejection: '' })
+  const view = reactive<LiveState>({ connection: 'connecting', session: null, view: null, path: null, preview: null, areaPreview: null, ping: null, reveal: null, turn: null, roll: null, rejection: '' })
   let socket: Socket | null = null
   let attempt = 0
   let stopped = false
@@ -69,6 +70,7 @@ export function useLiveSession(
     view.ping = state.ping
     view.reveal = state.reveal
     view.turn = state.turn
+    view.roll = state.roll
     view.rejection = state.rejection
     if (state.ended) view.connection = 'ended'
   }

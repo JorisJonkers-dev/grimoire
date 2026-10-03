@@ -1599,6 +1599,7 @@ type PlayTableDisplay struct {
 	Body      string
 	MapID     pgtype.UUID
 	Blackout  bool
+	Caption   string
 }
 
 type PlayToken struct {
