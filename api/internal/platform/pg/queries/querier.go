@@ -78,6 +78,7 @@ type Querier interface {
 	CampaignClock(ctx context.Context, id uuid.UUID) (CampaignClockRow, error)
 	CampaignContainerCoins(ctx context.Context, campaignID uuid.UUID) ([]CampaignContainerCoin, error)
 	CampaignContainers(ctx context.Context, campaignID uuid.UUID) ([]CampaignContainersRow, error)
+	CampaignDowntime(ctx context.Context, id uuid.UUID) (CampaignDowntimeRow, error)
 	CampaignEntryMonsters(ctx context.Context, campaignID uuid.UUID) ([]PrepEntryMonster, error)
 	CampaignExhaustion(ctx context.Context, id uuid.UUID) (string, error)
 	CampaignHasLiveSession(ctx context.Context, campaignID uuid.UUID) (bool, error)
@@ -218,6 +219,7 @@ type Querier interface {
 	DeletePool(ctx context.Context, arg DeletePoolParams) (int64, error)
 	DeletePushSubscription(ctx context.Context, arg DeletePushSubscriptionParams) (int64, error)
 	DeleteQuest(ctx context.Context, arg DeleteQuestParams) (int64, error)
+	DeleteRecipe(ctx context.Context, arg DeleteRecipeParams) (int64, error)
 	DeleteRecoveryCodes(ctx context.Context, accountID uuid.UUID) error
 	DeleteRuleHook(ctx context.Context, arg DeleteRuleHookParams) (int64, error)
 	DeleteScheduledCheck(ctx context.Context, id uuid.UUID) error
@@ -240,6 +242,7 @@ type Querier interface {
 	DiceSetsSharedWith(ctx context.Context, me uuid.UUID) ([]SocialDiceSet, error)
 	// The one-to-one Conversation between two Accounts, if they have one.
 	DirectConversation(ctx context.Context, arg DirectConversationParams) (uuid.UUID, error)
+	DowntimeCharacters(ctx context.Context, campaignID uuid.UUID) ([]DowntimeCharactersRow, error)
 	// A Checkpoint keeps one Session's rows; once tokens change Sessions it can no longer be put back.
 	DropGroupCheckpoints(ctx context.Context, root uuid.UUID) error
 	// A rewind leaves no Checkpoint of the future it took back.
@@ -294,6 +297,9 @@ type Querier interface {
 	GetTableRevision(ctx context.Context, arg GetTableRevisionParams) (GetTableRevisionRow, error)
 	GetWeaponDetail(ctx context.Context, id int64) (GetWeaponDetailRow, error)
 	GiveUpInspiration(ctx context.Context, arg GiveUpInspirationParams) (int64, error)
+	// A downtime given to the whole party is a new one: every Character starts it having lived through none of it.
+	GrantDowntimeToAll(ctx context.Context, arg GrantDowntimeToAllParams) error
+	GrantDowntimeToOne(ctx context.Context, arg GrantDowntimeToOneParams) (int64, error)
 	HealCharacter(ctx context.Context, arg HealCharacterParams) error
 	IdentifyInstance(ctx context.Context, id uuid.UUID) error
 	InsertAccessToken(ctx context.Context, arg InsertAccessTokenParams) error
@@ -317,6 +323,7 @@ type Querier interface {
 	InsertContainer(ctx context.Context, arg InsertContainerParams) error
 	InsertConversation(ctx context.Context, arg InsertConversationParams) error
 	InsertDiceSet(ctx context.Context, arg InsertDiceSetParams) error
+	InsertDowntimeLog(ctx context.Context, arg InsertDowntimeLogParams) error
 	InsertEdge(ctx context.Context, arg InsertEdgeParams) error
 	InsertEffect(ctx context.Context, arg InsertEffectParams) error
 	InsertEffectArea(ctx context.Context, arg InsertEffectAreaParams) error
@@ -388,6 +395,8 @@ type Querier interface {
 	InsertProposalReview(ctx context.Context, arg InsertProposalReviewParams) error
 	InsertQuest(ctx context.Context, arg InsertQuestParams) error
 	InsertQuestStep(ctx context.Context, arg InsertQuestStepParams) error
+	InsertRecipe(ctx context.Context, arg InsertRecipeParams) error
+	InsertRecipeIngredient(ctx context.Context, arg InsertRecipeIngredientParams) error
 	InsertRecoveryCode(ctx context.Context, arg InsertRecoveryCodeParams) error
 	InsertReleaseNote(ctx context.Context, arg InsertReleaseNoteParams) error
 	InsertRetrain(ctx context.Context, arg InsertRetrainParams) error
@@ -466,6 +475,7 @@ type Querier interface {
 	ListChoices(ctx context.Context) ([]ListChoicesRow, error)
 	ListCompanions(ctx context.Context, campaignID uuid.UUID) ([]CampaignCompanion, error)
 	ListConversations(ctx context.Context, me uuid.UUID) ([]ListConversationsRow, error)
+	ListDowntimeLog(ctx context.Context, campaignID uuid.UUID) ([]ListDowntimeLogRow, error)
 	ListEffectAreas(ctx context.Context) ([]ListEffectAreasRow, error)
 	ListEffectBonusDice(ctx context.Context) ([]ListEffectBonusDiceRow, error)
 	ListEffectBranches(ctx context.Context) ([]ListEffectBranchesRow, error)
@@ -514,6 +524,8 @@ type Querier interface {
 	ListPrerequisites(ctx context.Context) ([]CompendiumPrerequisite, error)
 	ListQuestSteps(ctx context.Context, campaignID uuid.UUID) ([]CampaignQuestStep, error)
 	ListQuests(ctx context.Context, campaignID uuid.UUID) ([]CampaignQuest, error)
+	ListRecipeIngredients(ctx context.Context, campaignID uuid.UUID) ([]ListRecipeIngredientsRow, error)
+	ListRecipes(ctx context.Context, campaignID uuid.UUID) ([]CampaignRecipe, error)
 	ListReleaseNotes(ctx context.Context) ([]ListReleaseNotesRow, error)
 	ListResourceDice(ctx context.Context) ([]CompendiumResourceDice, error)
 	ListResourceMaxima(ctx context.Context) ([]CompendiumResourceMaxima, error)
@@ -541,6 +553,8 @@ type Querier interface {
 	ListTracks(ctx context.Context, campaignID uuid.UUID) ([]CampaignTrack, error)
 	ListUnusedInvites(ctx context.Context) ([]ListUnusedInvitesRow, error)
 	LockCampaign(ctx context.Context, id uuid.UUID) error
+	// Holds the Campaign's downtime for one change at a time: whoever comes second reads what the first left.
+	LockCampaignDowntime(ctx context.Context, id uuid.UUID) (uuid.UUID, error)
 	LockCampaignLog(ctx context.Context, lockKey string) error
 	LockEntity(ctx context.Context, lockKey string) error
 	LockRoll(ctx context.Context, arg LockRollParams) (string, error)
@@ -711,6 +725,7 @@ type Querier interface {
 	SetCanPrepare(ctx context.Context, arg SetCanPrepareParams) error
 	SetCharacterAbility(ctx context.Context, arg SetCharacterAbilityParams) error
 	SetCharacterArmor(ctx context.Context, arg SetCharacterArmorParams) error
+	SetCharacterDowntime(ctx context.Context, arg SetCharacterDowntimeParams) error
 	SetCharacterPortrait(ctx context.Context, arg SetCharacterPortraitParams) error
 	SetCharacterToken(ctx context.Context, arg SetCharacterTokenParams) error
 	SetCharacterTrackValue(ctx context.Context, arg SetCharacterTrackValueParams) error
@@ -722,6 +737,7 @@ type Querier interface {
 	SetDiceSetReview(ctx context.Context, arg SetDiceSetReviewParams) (int64, error)
 	// The review follows from the row as it is now, so a picture uploaded meanwhile is never missed.
 	SetDiceSetSharing(ctx context.Context, arg SetDiceSetSharingParams) error
+	SetDowntimeClock(ctx context.Context, arg SetDowntimeClockParams) error
 	SetElevation(ctx context.Context, arg SetElevationParams) error
 	SetFactionScore(ctx context.Context, arg SetFactionScoreParams) error
 	SetHeroicInspiration(ctx context.Context, arg SetHeroicInspirationParams) error
@@ -798,6 +814,8 @@ type Querier interface {
 	TouchConversation(ctx context.Context, arg TouchConversationParams) error
 	// The Characters of a Campaign a Track can be kept for, with who owns each.
 	TrackCharacters(ctx context.Context, campaignID uuid.UUID) ([]TrackCharactersRow, error)
+	// The days a Character has spent training in one thing.
+	TrainingDays(ctx context.Context, arg TrainingDaysParams) (int32, error)
 	TryTwoStepChallenge(ctx context.Context, arg TryTwoStepChallengeParams) (uuid.UUID, error)
 	UnchooseDiceSet(ctx context.Context, accountID uuid.UUID) error
 	UnlinkLibraryEntry(ctx context.Context, arg UnlinkLibraryEntryParams) (int64, error)

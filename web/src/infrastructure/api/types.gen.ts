@@ -4762,6 +4762,119 @@ export type TrackAdjusted = {
 };
 
 /**
+ * An Item a Recipe uses up, and how many.
+ */
+export type RecipeIngredient = {
+    /**
+     * The Item's slug.
+     */
+    item: string;
+    count: number;
+};
+
+/**
+ * A Recipe: what it makes, from what, with which tool, over how many days and at what cost.
+ */
+export type RecipeInput = {
+    name: string;
+    /**
+     * The slug of the Item it makes.
+     */
+    makes: string;
+    quantity: number;
+    /**
+     * The slug of the tool it needs at hand.
+     */
+    tool?: string;
+    days: number;
+    /**
+     * What it costs, in copper.
+     */
+    costCp?: number;
+    ingredients?: Array<RecipeIngredient>;
+};
+
+/**
+ * A Recipe of the Campaign.
+ */
+export type Recipe = {
+    id: Id;
+    name: string;
+    makes: string;
+    quantity: number;
+    tool?: string;
+    days: number;
+    costCp: number;
+    ingredients: Array<RecipeIngredient>;
+};
+
+/**
+ * How a Character spends downtime days.
+ */
+export type DowntimeKind = 'craft' | 'work' | 'train' | 'research';
+
+/**
+ * Downtime days to spend: crafting from a Recipe, which takes the days the Recipe says, or a number of days of work, or of training or research in a subject.
+ */
+export type DowntimeActivity = {
+    activity: DowntimeKind;
+    days?: number;
+    recipeId?: Id;
+    subject?: string;
+};
+
+/**
+ * Downtime days to give: to one Character, or to every Character when none is named.
+ */
+export type DowntimeGrant = {
+    days: number;
+    characterId?: Id;
+};
+
+/**
+ * A Character with the downtime days it has left.
+ */
+export type DowntimeCharacter = {
+    id: Id;
+    name: string;
+    days: number;
+    /**
+     * Whether the caller may spend its days.
+     */
+    mine: boolean;
+};
+
+/**
+ * Something a Character did with its downtime.
+ */
+export type DowntimeEntry = {
+    id: Id;
+    character: string;
+    activity: DowntimeKind;
+    /**
+     * The Recipe crafted, or the subject trained in or researched.
+     */
+    detail: string;
+    days: number;
+    at: string;
+};
+
+/**
+ * A Campaign's downtime.
+ */
+export type Downtime = {
+    dm: boolean;
+    gameDay: number;
+    gameMinute: number;
+    characters: Array<DowntimeCharacter>;
+    recipes: Array<Recipe>;
+    /**
+     * What was done, newest first.
+     */
+    log: Array<DowntimeEntry>;
+};
+
+/**
  * A Faction of the Campaign as the caller may see it. Everyone gets its name, archetype and the tier of its Standing. The dm part is there for the DM alone.
  */
 export type Faction = {
@@ -9079,6 +9192,184 @@ export type AdjustTrackResponses = {
 };
 
 export type AdjustTrackResponse = AdjustTrackResponses[keyof AdjustTrackResponses];
+
+export type GetDowntimeData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/downtime';
+};
+
+export type GetDowntimeErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetDowntimeError = GetDowntimeErrors[keyof GetDowntimeErrors];
+
+export type GetDowntimeResponses = {
+    /**
+     * The Campaign's downtime.
+     */
+    200: Downtime;
+};
+
+export type GetDowntimeResponse = GetDowntimeResponses[keyof GetDowntimeResponses];
+
+export type GrantDowntimeData = {
+    body: DowntimeGrant;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/downtime/grants';
+};
+
+export type GrantDowntimeErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GrantDowntimeError = GrantDowntimeErrors[keyof GrantDowntimeErrors];
+
+export type GrantDowntimeResponses = {
+    /**
+     * The Campaign's downtime after the grant.
+     */
+    200: Downtime;
+};
+
+export type GrantDowntimeResponse = GrantDowntimeResponses[keyof GrantDowntimeResponses];
+
+export type SpendDowntimeData = {
+    body: DowntimeActivity;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}/downtime';
+};
+
+export type SpendDowntimeErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SpendDowntimeError = SpendDowntimeErrors[keyof SpendDowntimeErrors];
+
+export type SpendDowntimeResponses = {
+    /**
+     * The Campaign's downtime after the days were spent.
+     */
+    200: Downtime;
+};
+
+export type SpendDowntimeResponse = SpendDowntimeResponses[keyof SpendDowntimeResponses];
+
+export type CreateRecipeData = {
+    body: RecipeInput;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/recipes';
+};
+
+export type CreateRecipeErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type CreateRecipeError = CreateRecipeErrors[keyof CreateRecipeErrors];
+
+export type CreateRecipeResponses = {
+    /**
+     * The new Recipe.
+     */
+    201: Recipe;
+};
+
+export type CreateRecipeResponse = CreateRecipeResponses[keyof CreateRecipeResponses];
+
+export type DeleteRecipeData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Recipe id.
+         */
+        recipeId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/recipes/{recipeId}';
+};
+
+export type DeleteRecipeErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type DeleteRecipeError = DeleteRecipeErrors[keyof DeleteRecipeErrors];
+
+export type DeleteRecipeResponses = {
+    /**
+     * The Recipe is removed.
+     */
+    204: void;
+};
+
+export type DeleteRecipeResponse = DeleteRecipeResponses[keyof DeleteRecipeResponses];
 
 export type ListFactionsData = {
     body?: never;

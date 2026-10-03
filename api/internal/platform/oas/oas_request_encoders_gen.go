@@ -374,6 +374,20 @@ func encodeCreateQuestRequest(
 	return nil
 }
 
+func encodeCreateRecipeRequest(
+	req *RecipeInput,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodeCreateRollRequest(
 	req *RollCreate,
 	r *http.Request,
@@ -530,6 +544,20 @@ func encodeEditReleaseNoteRequest(
 
 func encodeFinishOidcRequest(
 	req *OidcCallback,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeGrantDowntimeRequest(
+	req *DowntimeGrant,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"
@@ -1414,6 +1442,20 @@ func encodeShareLibraryEntryRequest(
 
 func encodeSignInRequest(
 	req *SignInRequest,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeSpendDowntimeRequest(
+	req *DowntimeActivity,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"

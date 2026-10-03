@@ -137,6 +137,10 @@ type CreateQuestRes interface {
 	createQuestRes()
 }
 
+type CreateRecipeRes interface {
+	createRecipeRes()
+}
+
 type CreateRollRes interface {
 	createRollRes()
 }
@@ -211,6 +215,10 @@ type DeletePushSubscriptionRes interface {
 
 type DeleteQuestRes interface {
 	deleteQuestRes()
+}
+
+type DeleteRecipeRes interface {
+	deleteRecipeRes()
 }
 
 type DeleteRuleHookRes interface {
@@ -319,6 +327,10 @@ type GetConditionBuildRes interface {
 
 type GetDiceSetImageRes interface {
 	getDiceSetImageRes()
+}
+
+type GetDowntimeRes interface {
+	getDowntimeRes()
 }
 
 type GetEntryRes interface {
@@ -447,6 +459,10 @@ type GetTokenIconRes interface {
 
 type GetUnseenReleaseNoteRes interface {
 	getUnseenReleaseNoteRes()
+}
+
+type GrantDowntimeRes interface {
+	grantDowntimeRes()
 }
 
 type ImportLibraryRes interface {
@@ -999,6 +1015,10 @@ type SignInRes interface {
 
 type SignOutRes interface {
 	signOutRes()
+}
+
+type SpendDowntimeRes interface {
+	spendDowntimeRes()
 }
 
 type StartConversationRes interface {

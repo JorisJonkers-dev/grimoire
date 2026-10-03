@@ -3046,6 +3046,165 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/downtime:
+    get:
+      operationId: getDowntime
+      x-ogen-operation-group: Read
+      summary: Read the Campaign's downtime
+      description: "The Game Clock, every Character's downtime days, the Campaign's Recipes and the last fifty things done with downtime. It marks the Characters the caller may spend days for."
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      responses:
+        "200":
+          description: The Campaign's downtime.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Downtime"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/downtime/grants:
+    post:
+      operationId: grantDowntime
+      x-ogen-operation-group: Play
+      summary: Give downtime days
+      description: "Gives downtime days to one Character, or to every Character of the Campaign. Given to everyone it starts a new downtime, which the Game Clock moves through as the days are spent. DM only."
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DowntimeGrant"
+      responses:
+        "200":
+          description: The Campaign's downtime after the grant.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Downtime"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/characters/{characterId}/downtime:
+    post:
+      operationId: spendDowntime
+      x-ogen-operation-group: Play
+      summary: Spend downtime days
+      description: "A Character spends downtime days between Sessions: crafting from a Recipe, which takes its ingredients and its cost from the Character's own Inventory and puts what it makes there, or working for a wage, training or researching at a cost for each day. The Game Clock moves on by the days nobody had yet lived through. The Character's Player or the DM; refused while a Session is live."
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - name: characterId
+          in: path
+          required: true
+          description: Character id.
+          schema: { $ref: "#/components/schemas/Id" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DowntimeActivity"
+      responses:
+        "200":
+          description: The Campaign's downtime after the days were spent.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Downtime"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/recipes:
+    post:
+      operationId: createRecipe
+      x-ogen-operation-group: Build
+      summary: Add a Recipe
+      description: "Adds a Recipe: the Item it makes, its ingredients, its tool, the days it takes and what it costs. DM only."
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecipeInput"
+      responses:
+        "201":
+          description: The new Recipe.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Recipe"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/recipes/{recipeId}:
+    delete:
+      operationId: deleteRecipe
+      x-ogen-operation-group: Build
+      summary: Remove a Recipe
+      description: "Removes a Recipe. DM only."
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - name: recipeId
+          in: path
+          required: true
+          description: Recipe id.
+          schema: { $ref: "#/components/schemas/Id" }
+      responses:
+        "204":
+          description: The Recipe is removed.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /api/v1/campaigns/{campaignId}/factions:
     get:
       operationId: listFactions
@@ -14194,6 +14353,113 @@ components:
           type: array
           maxItems: 20
           items: { $ref: "#/components/schemas/TrackThreshold" }
+    RecipeIngredient:
+      type: object
+      description: An Item a Recipe uses up, and how many.
+      additionalProperties: false
+      required: [item, count]
+      properties:
+        item: { type: string, minLength: 1, maxLength: 80, description: "The Item's slug." }
+        count: { type: integer, format: int32, minimum: 1, maximum: 100 }
+    RecipeInput:
+      type: object
+      description: "A Recipe: what it makes, from what, with which tool, over how many days and at what cost."
+      additionalProperties: false
+      required: [name, makes, quantity, days]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        makes: { type: string, minLength: 1, maxLength: 80, description: "The slug of the Item it makes." }
+        quantity: { type: integer, format: int32, minimum: 1, maximum: 100 }
+        tool: { type: string, maxLength: 80, description: "The slug of the tool it needs at hand." }
+        days: { type: integer, format: int32, minimum: 1, maximum: 365 }
+        costCp: { type: integer, format: int32, minimum: 0, maximum: 100000000, description: "What it costs, in copper." }
+        ingredients:
+          type: array
+          maxItems: 20
+          items: { $ref: "#/components/schemas/RecipeIngredient" }
+    Recipe:
+      type: object
+      description: A Recipe of the Campaign.
+      additionalProperties: false
+      required: [id, name, makes, quantity, days, costCp, ingredients]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        name: { type: string, maxLength: 80 }
+        makes: { type: string, maxLength: 80 }
+        quantity: { type: integer, format: int32, minimum: 1, maximum: 100 }
+        tool: { type: string, maxLength: 80 }
+        days: { type: integer, format: int32, minimum: 1, maximum: 365 }
+        costCp: { type: integer, format: int32, minimum: 0, maximum: 100000000 }
+        ingredients:
+          type: array
+          maxItems: 20
+          items: { $ref: "#/components/schemas/RecipeIngredient" }
+    DowntimeKind:
+      type: string
+      description: How a Character spends downtime days.
+      enum: [craft, work, train, research]
+    DowntimeActivity:
+      type: object
+      description: "Downtime days to spend: crafting from a Recipe, which takes the days the Recipe says, or a number of days of work, or of training or research in a subject."
+      additionalProperties: false
+      required: [activity]
+      properties:
+        activity: { $ref: "#/components/schemas/DowntimeKind" }
+        days: { type: integer, format: int32, minimum: 1, maximum: 3650 }
+        recipeId: { $ref: "#/components/schemas/Id" }
+        subject: { type: string, maxLength: 200 }
+    DowntimeGrant:
+      type: object
+      description: "Downtime days to give: to one Character, or to every Character when none is named."
+      additionalProperties: false
+      required: [days]
+      properties:
+        days: { type: integer, format: int32, minimum: 1, maximum: 3650 }
+        characterId: { $ref: "#/components/schemas/Id" }
+    DowntimeCharacter:
+      type: object
+      description: A Character with the downtime days it has left.
+      additionalProperties: false
+      required: [id, name, days, mine]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        name: { type: string, maxLength: 200 }
+        days: { type: integer, format: int32, minimum: 0, maximum: 100000 }
+        mine: { type: boolean, description: "Whether the caller may spend its days." }
+    DowntimeEntry:
+      type: object
+      description: Something a Character did with its downtime.
+      additionalProperties: false
+      required: [id, character, activity, detail, days, at]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        character: { type: string, maxLength: 200 }
+        activity: { $ref: "#/components/schemas/DowntimeKind" }
+        detail: { type: string, maxLength: 200, description: "The Recipe crafted, or the subject trained in or researched." }
+        days: { type: integer, format: int32, minimum: 1, maximum: 100000 }
+        at: { type: string, format: date-time, maxLength: 40 }
+    Downtime:
+      type: object
+      description: "A Campaign's downtime."
+      additionalProperties: false
+      required: [dm, gameDay, gameMinute, characters, recipes, log]
+      properties:
+        dm: { type: boolean }
+        gameDay: { type: integer, format: int32, minimum: 0, maximum: 1000000 }
+        gameMinute: { type: integer, format: int32, minimum: 0, maximum: 1439 }
+        characters:
+          type: array
+          maxItems: 2000
+          items: { $ref: "#/components/schemas/DowntimeCharacter" }
+        recipes:
+          type: array
+          maxItems: 200
+          items: { $ref: "#/components/schemas/Recipe" }
+        log:
+          type: array
+          maxItems: 50
+          description: What was done, newest first.
+          items: { $ref: "#/components/schemas/DowntimeEntry" }
     Faction:
       type: object
       description: A Faction of the Campaign as the caller may see it. Everyone gets its name, archetype and the tier of its Standing. The dm part is there for the DM alone.

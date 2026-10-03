@@ -51,6 +51,7 @@ type CampaignCampaign struct {
 	NoUndo            bool
 	ShowDcs           bool
 	ShortRests        int32
+	DowntimeAdvanced  int32
 }
 
 type CampaignCharacter struct {
@@ -82,6 +83,8 @@ type CampaignCharacter struct {
 	HeroicInspiration bool
 	WeaponSet         string
 	Xp                int32
+	DowntimeDays      int32
+	DowntimeSpent     int32
 }
 
 type CampaignCharacterAbility struct {
@@ -215,6 +218,16 @@ type CampaignContainerCoin struct {
 	ContainerID uuid.UUID
 	Coin        string
 	Amount      int32
+}
+
+type CampaignDowntimeLog struct {
+	ID          uuid.UUID
+	CampaignID  uuid.UUID
+	CharacterID uuid.UUID
+	Activity    string
+	Detail      string
+	Days        int32
+	CreatedAt   time.Time
 }
 
 type CampaignFaction struct {
@@ -439,6 +452,25 @@ type CampaignQuestStep struct {
 	Position int32
 	Body     string
 	Done     bool
+}
+
+type CampaignRecipe struct {
+	ID         uuid.UUID
+	CampaignID uuid.UUID
+	Name       string
+	ItemSlug   string
+	Quantity   int32
+	ToolSlug   pgtype.Text
+	Days       int32
+	CostCp     int32
+	CreatedAt  time.Time
+}
+
+type CampaignRecipeIngredient struct {
+	RecipeID uuid.UUID
+	Position int32
+	ItemSlug string
+	Count    int32
 }
 
 type CampaignRetrain struct {

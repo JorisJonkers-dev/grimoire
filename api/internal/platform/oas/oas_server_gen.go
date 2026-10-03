@@ -485,6 +485,13 @@ type BuildHandler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/quests
 	CreateQuest(ctx context.Context, req *QuestInput, params CreateQuestParams) (CreateQuestRes, error)
+	// CreateRecipe implements createRecipe operation.
+	//
+	// Adds a Recipe: the Item it makes, its ingredients, its tool, the days it takes and what it costs. DM
+	// only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/recipes
+	CreateRecipe(ctx context.Context, req *RecipeInput, params CreateRecipeParams) (CreateRecipeRes, error)
 	// CreateRuleHook implements createRuleHook operation.
 	//
 	// Adds a Rule Variant of the Campaign's own: at a hook point it applies an Effect to whoever it
@@ -574,6 +581,12 @@ type BuildHandler interface {
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/quests/{questId}
 	DeleteQuest(ctx context.Context, params DeleteQuestParams) (DeleteQuestRes, error)
+	// DeleteRecipe implements deleteRecipe operation.
+	//
+	// Removes a Recipe. DM only.
+	//
+	// DELETE /api/v1/campaigns/{campaignId}/recipes/{recipeId}
+	DeleteRecipe(ctx context.Context, params DeleteRecipeParams) (DeleteRecipeRes, error)
 	// DeleteRuleHook implements deleteRuleHook operation.
 	//
 	// Removes a Rule Variant the DM authored. DM only.
@@ -1059,6 +1072,13 @@ type PlayHandler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/sessions/{sessionId}/end
 	EndSession(ctx context.Context, params EndSessionParams) (EndSessionRes, error)
+	// GrantDowntime implements grantDowntime operation.
+	//
+	// Gives downtime days to one Character, or to every Character of the Campaign. Given to everyone it
+	// starts a new downtime, which the Game Clock moves through as the days are spent. DM only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/downtime/grants
+	GrantDowntime(ctx context.Context, req *DowntimeGrant, params GrantDowntimeParams) (GrantDowntimeRes, error)
 	// KeepRoll implements keepRoll operation.
 	//
 	// Keeps a roll its roller could reroll with Heroic Inspiration, and resolves it. The roller or a DM.
@@ -1114,6 +1134,15 @@ type PlayHandler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/rolls/{rollId}/dice/{dieNo}
 	SetDie(ctx context.Context, req *DieFill, params SetDieParams) (SetDieRes, error)
+	// SpendDowntime implements spendDowntime operation.
+	//
+	// A Character spends downtime days between Sessions: crafting from a Recipe, which takes its
+	// ingredients and its cost from the Character's own Inventory and puts what it makes there, or working
+	// for a wage, training or researching at a cost for each day. The Game Clock moves on by the days
+	// nobody had yet lived through. The Character's Player or the DM; refused while a Session is live.
+	//
+	// POST /api/v1/campaigns/{campaignId}/characters/{characterId}/downtime
+	SpendDowntime(ctx context.Context, req *DowntimeActivity, params SpendDowntimeParams) (SpendDowntimeRes, error)
 	// StartSession implements startSession operation.
 	//
 	// Opens the next live Session. DM only. Live play then runs over the WebSocket at
@@ -1252,6 +1281,13 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/dice-sets/{diceSetId}/image
 	GetDiceSetImage(ctx context.Context, params GetDiceSetImageParams) (GetDiceSetImageRes, error)
+	// GetDowntime implements getDowntime operation.
+	//
+	// The Game Clock, every Character's downtime days, the Campaign's Recipes and the last fifty things
+	// done with downtime. It marks the Characters the caller may spend days for.
+	//
+	// GET /api/v1/campaigns/{campaignId}/downtime
+	GetDowntime(ctx context.Context, params GetDowntimeParams) (GetDowntimeRes, error)
 	// GetEntry implements getEntry operation.
 	//
 	// One entry rendered for reading, with the conditions its text mentions.

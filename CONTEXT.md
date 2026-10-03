@@ -352,6 +352,14 @@ _Avoid_: House rule (as the model term), setting, option
 A Library table of dice ranges whose results can apply Effects or give Items, used for fumbles, injuries, surges, madness, trinkets, weather and rumours.
 _Avoid_: Random table, d100 table
 
+**Downtime Day**:
+A day between adventures that a Character holds as a Resource and spends on a downtime activity: crafting, working, training or researching.
+_Avoid_: Rest day, free day
+
+**Recipe**:
+What crafting makes an Item from: its ingredients, the tool it needs at hand, the Downtime Days it takes and its cost.
+_Avoid_: Blueprint, formula, schematic
+
 **Track**:
 A Campaign-specific score such as sanity, stress, honour or renown, with thresholds that trigger Effects or Roll Tables.
 _Avoid_: Meter, counter, stat

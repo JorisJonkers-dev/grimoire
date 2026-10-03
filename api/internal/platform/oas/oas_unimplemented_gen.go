@@ -333,6 +333,16 @@ func (UnimplementedHandler) CreateQuest(ctx context.Context, req *QuestInput, pa
 	return r, ht.ErrNotImplemented
 }
 
+// CreateRecipe implements createRecipe operation.
+//
+// Adds a Recipe: the Item it makes, its ingredients, its tool, the days it takes and what it costs. DM
+// only.
+//
+// POST /api/v1/campaigns/{campaignId}/recipes
+func (UnimplementedHandler) CreateRecipe(ctx context.Context, req *RecipeInput, params CreateRecipeParams) (r CreateRecipeRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // CreateRoll implements createRoll operation.
 //
 // Opens a Roll Request for the caller, or, from a DM, for another Member.
@@ -508,6 +518,15 @@ func (UnimplementedHandler) DeletePushSubscription(ctx context.Context, params D
 //
 // DELETE /api/v1/campaigns/{campaignId}/quests/{questId}
 func (UnimplementedHandler) DeleteQuest(ctx context.Context, params DeleteQuestParams) (r DeleteQuestRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// DeleteRecipe implements deleteRecipe operation.
+//
+// Removes a Recipe. DM only.
+//
+// DELETE /api/v1/campaigns/{campaignId}/recipes/{recipeId}
+func (UnimplementedHandler) DeleteRecipe(ctx context.Context, params DeleteRecipeParams) (r DeleteRecipeRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -761,6 +780,16 @@ func (UnimplementedHandler) GetConditionBuild(ctx context.Context, params GetCon
 //
 // GET /api/v1/dice-sets/{diceSetId}/image
 func (UnimplementedHandler) GetDiceSetImage(ctx context.Context, params GetDiceSetImageParams) (r GetDiceSetImageRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetDowntime implements getDowntime operation.
+//
+// The Game Clock, every Character's downtime days, the Campaign's Recipes and the last fifty things
+// done with downtime. It marks the Characters the caller may spend days for.
+//
+// GET /api/v1/campaigns/{campaignId}/downtime
+func (UnimplementedHandler) GetDowntime(ctx context.Context, params GetDowntimeParams) (r GetDowntimeRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -1058,6 +1087,16 @@ func (UnimplementedHandler) GetTokenIcon(ctx context.Context, params GetTokenIco
 //
 // GET /api/v1/release-notes/unseen
 func (UnimplementedHandler) GetUnseenReleaseNote(ctx context.Context) (r GetUnseenReleaseNoteRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GrantDowntime implements grantDowntime operation.
+//
+// Gives downtime days to one Character, or to every Character of the Campaign. Given to everyone it
+// starts a new downtime, which the Game Clock moves through as the days are spent. DM only.
+//
+// POST /api/v1/campaigns/{campaignId}/downtime/grants
+func (UnimplementedHandler) GrantDowntime(ctx context.Context, req *DowntimeGrant, params GrantDowntimeParams) (r GrantDowntimeRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -2368,6 +2407,18 @@ func (UnimplementedHandler) SignIn(ctx context.Context, req *SignInRequest) (r S
 //
 // POST /api/v1/sign-out
 func (UnimplementedHandler) SignOut(ctx context.Context, params SignOutParams) (r SignOutRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// SpendDowntime implements spendDowntime operation.
+//
+// A Character spends downtime days between Sessions: crafting from a Recipe, which takes its
+// ingredients and its cost from the Character's own Inventory and puts what it makes there, or working
+// for a wage, training or researching at a cost for each day. The Game Clock moves on by the days
+// nobody had yet lived through. The Character's Player or the DM; refused while a Session is live.
+//
+// POST /api/v1/campaigns/{campaignId}/characters/{characterId}/downtime
+func (UnimplementedHandler) SpendDowntime(ctx context.Context, req *DowntimeActivity, params SpendDowntimeParams) (r SpendDowntimeRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
