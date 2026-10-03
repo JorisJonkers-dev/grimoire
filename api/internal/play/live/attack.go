@@ -368,12 +368,8 @@ var everything = knowledge{hex: func(hex.Coord) bool { return true }, token: fun
 // heights, and the standing creatures that give cover but for the ones looking. An unknown hex is open
 // ground and an unknown creature is not there.
 func (s *state) coverGrid(k knowledge, but ...domain.TokenID) hex.Grid {
-	g := hex.Grid{Cells: map[hex.Coord]hex.Cell{}, Occupants: map[hex.Coord]hex.Occupant{}}
-	for _, c := range s.ground() {
-		if k.hex(c) {
-			g.Cells[c] = s.cell(c)
-		}
-	}
+	g := s.sightGridOf(k)
+	g.Occupants = map[hex.Coord]hex.Occupant{}
 	for _, t := range s.tokens {
 		if !slices.Contains(but, t.ID) && standing(t) && k.token(t) {
 			g.Occupants[hex.Coord{Q: t.Q, R: t.R}] = hex.Enemy
@@ -397,9 +393,16 @@ func (s *state) witnesses(t domain.Token) []domain.TokenID {
 
 // sightGrid is the board with its walls, for creatures looking at each other.
 func (s *state) sightGrid() hex.Grid {
+	return s.sightGridOf(everything)
+}
+
+// sightGridOf is the board with its walls as far as it is known; an unknown hex is open ground.
+func (s *state) sightGridOf(k knowledge) hex.Grid {
 	g := hex.Grid{Cells: map[hex.Coord]hex.Cell{}, Occupants: nil}
 	for _, c := range s.ground() {
-		g.Cells[c] = s.cell(c)
+		if k.hex(c) {
+			g.Cells[c] = s.cell(c)
+		}
 	}
 	return g
 }

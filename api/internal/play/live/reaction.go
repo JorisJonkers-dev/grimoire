@@ -116,7 +116,7 @@ type provoked struct {
 // opportunity finds the first step of a path that leaves the reach of a standing enemy Combatant that
 // sees the mover and still has its reaction.
 func (s *state) opportunity(mover domain.Token, path []hex.Coord, first int) (int, domain.Token, int, bool) {
-	all := s.opportunities(mover, path, first)
+	all := s.opportunities(mover, path, first, everything)
 	if len(all) == 0 {
 		return 0, domain.Token{}, 0, false
 	}
@@ -124,19 +124,20 @@ func (s *state) opportunity(mover domain.Token, path []hex.Coord, first int) (in
 }
 
 // opportunities are the opportunity attacks a walk would draw from a step on: one a step, as the walk
-// waits at each for the answer and goes on from the next, and none from the same creature twice.
-func (s *state) opportunities(mover domain.Token, path []hex.Coord, first int) []provoked {
+// waits at each for the answer and goes on from the next, and none from the same creature twice. It
+// counts only the creatures and the ground known; the engine itself knows everything.
+func (s *state) opportunities(mover domain.Token, path []hex.Coord, first int, known knowledge) []provoked {
 	if !s.provokes(mover) {
 		return nil
 	}
-	g := s.sightGrid()
+	g := s.sightGridOf(known)
 	var out []provoked
 	spent := map[domain.TokenID]bool{}
 	for k := first; k+1 < len(path); k++ {
 		for _, h := range s.ordered() {
 			x, fighting := s.fighter(h.ID)
 			no := slices.IndexFunc(attacksOf(h), func(a domain.Attack) bool { return a.ReachFt > 0 })
-			if spent[h.ID] || !fighting || no < 0 || !s.canReactTo(h, x, mover) {
+			if spent[h.ID] || !known.token(h) || !fighting || no < 0 || !s.canReactTo(h, x, mover) {
 				continue
 			}
 			at := hex.Coord{Q: h.Q, R: h.R}

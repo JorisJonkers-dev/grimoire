@@ -12,13 +12,16 @@ import (
 // MaxWalkFt caps one walk, so a path and the views along it stay small.
 const MaxWalkFt = 300
 
-// route finds the path a member may walk a token along. A Player's route only crosses hexes the party
-// knows and only avoids creatures the party sees, so neither the path nor its refusal reveals the fog.
-func (r *runtime) route(m domain.Member, cmd Command) (domain.Token, []hex.Coord, int, string) {
+// route finds the path a member may walk a token along. Whose tokens they may move goes by who they
+// are; what the route may cross goes by their screen. Off the DM's own screen a route only crosses
+// hexes the party knows and only avoids creatures the party sees, so neither the path nor its refusal
+// reveals the fog.
+func (r *runtime) route(m domain.Member, a Audience, cmd Command) (domain.Token, []hex.Coord, int, string) {
 	id, err := uuid.Parse(cmd.TokenID)
 	t, ok := r.st.tokens[domain.TokenID(id)]
 	seen := r.st.vision()
-	if err != nil || !ok || (!m.DM && !r.st.shows(t, seen)) {
+	whole := a == AudienceDM
+	if err != nil || !ok || (!whole && !r.st.shows(t, seen)) {
 		return domain.Token{}, nil, 0, "No such token."
 	}
 	if !m.DM && (t.Controller == nil || *t.Controller != m.ID) {
@@ -31,7 +34,7 @@ func (r *runtime) route(m domain.Member, cmd Command) (domain.Token, []hex.Coord
 	if r.st.catalog.Immobile(r.st.actives(t.ID)) {
 		return domain.Token{}, nil, 0, t.Label + " can't move."
 	}
-	reach := hex.Reachable(r.st.walkGrid(m.DM, t, seen), start, hex.MoveOptions{SpeedFt: MaxWalkFt, ClimbSpeed: false})
+	reach := hex.Reachable(r.st.walkGrid(whole, t, seen), start, hex.MoveOptions{SpeedFt: MaxWalkFt, ClimbSpeed: false})
 	path, ok := reach.Path(to)
 	if !ok {
 		return domain.Token{}, nil, 0, "There is no way there."
@@ -44,7 +47,7 @@ func (r *runtime) route(m domain.Member, cmd Command) (domain.Token, []hex.Coord
 }
 
 func (r *runtime) previewWalk(req request) {
-	t, path, cost, reason := r.route(req.from.Member, req.cmd)
+	t, path, cost, reason := r.route(req.from.Member, req.from.Audience, req.cmd)
 	if reason != "" {
 		r.reject(req, reason)
 		return
@@ -73,14 +76,13 @@ func (s *state) knownTo(a Audience) knowledge {
 	}
 }
 
-// threats are the opportunity attacks a walk would draw from creatures the asker knows of, each at the
-// step the reactions engine would offer it.
+// threats are the opportunity attacks a walk would draw as far as its asker knows: the reactions
+// engine's own walk over only the creatures and ground the asker may know, so one they cannot see
+// neither shows nor changes what is said of the others.
 func (s *state) threats(mover domain.Token, path []hex.Coord, k knowledge) []PathThreat {
 	out := []PathThreat{}
-	for _, o := range s.opportunities(mover, path, 0) {
-		if k.token(o.reactor) {
-			out = append(out, PathThreat{TokenID: uuid.UUID(o.reactor.ID).String(), Label: o.reactor.Label, Q: path[o.step].Q, R: path[o.step].R})
-		}
+	for _, o := range s.opportunities(mover, path, 0, k) {
+		out = append(out, PathThreat{TokenID: uuid.UUID(o.reactor.ID).String(), Label: o.reactor.Label, Q: path[o.step].Q, R: path[o.step].R})
 	}
 	return out
 }
