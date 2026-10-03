@@ -34,7 +34,7 @@ func (r *runtime) companionStats(ctx context.Context, campaign uuid.UUID, cmd *C
 	if err != nil {
 		return "", domain.Stats{}, "No such Companion."
 	}
-	cmd.TokenKind, cmd.ControllerID = domain.TokenParty, ""
+	cmd.companion, cmd.TokenKind, cmd.ControllerID = &id, domain.TokenParty, ""
 	if ref.Controller != nil {
 		cmd.ControllerID = ref.Controller.String()
 	}

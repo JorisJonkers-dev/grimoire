@@ -148,6 +148,26 @@ func TestCompanionsStandWithTheParty(t *testing.T) {
 	refuse(tb.dm, "No such Companion.", live.Command{Kind: live.CmdPlace, CompanionID: uuid.NewString(), Q: 2})
 	refuse(tb.dm, "No such Companion.", live.Command{Kind: live.CmdPlace, CompanionID: "nope", Q: 2})
 
+	// A Companion comes as itself, and only one of this Campaign: named beside a Character it is refused,
+	// and beside anything else it is still looked up, so no token is ever tied to one nobody checked.
+	foreign := uuid.New()
+	if _, err := w.pool.Exec(ctx, `WITH other AS (INSERT INTO campaign.campaigns (name, ruleset_pref, created_by, created_at, updated_at)
+			VALUES ('Elsewhere', 'srd-2024', 'someone', now(), now()) RETURNING id)
+		INSERT INTO campaign.companions (id, campaign_id, name, kind, monster_slug, created_at, updated_at)
+		SELECT $1, other.id, 'Stranger', 'companion', 'wolf', now(), now() FROM other`, foreign); err != nil {
+		t.Fatal(err)
+	}
+	for name, cmd := range map[string]live.Command{
+		"with a Character":         {Kind: live.CmdPlace, CharacterID: ids["Aria's sheet"], CompanionID: foreign.String(), Q: 2},
+		"with a monster":           {Kind: live.CmdPlace, MonsterSlug: "goblin", TokenKind: domain.TokenEnemy, CompanionID: foreign.String(), Q: 2},
+		"by a name alone":          {Kind: live.CmdPlace, Label: "Shade", TokenKind: domain.TokenParty, CompanionID: foreign.String(), Q: 2},
+		"another Campaign's alone": {Kind: live.CmdPlace, CompanionID: foreign.String(), Q: 2},
+	} {
+		w.hub.Submit(tb.dm, cmd)
+		if u := next(t, tb.dm); u.Kind != live.UpdRejected {
+			t.Fatalf("a Companion placed %s = %+v", name, u)
+		}
+	}
 	// The DM hands Bors to the player, and takes Fang over.
 	refuse(tb.player, "Only the DM can change the table.", live.Command{Kind: live.CmdAssignControl, TokenID: ids["Bors"], ControllerID: w.player.ID.String()})
 	refuse(tb.dm, "No such token.", live.Command{Kind: live.CmdAssignControl, TokenID: uuid.NewString()})

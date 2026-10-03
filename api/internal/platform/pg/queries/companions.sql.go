@@ -131,7 +131,9 @@ func (q *Queries) InsertXPAward(ctx context.Context, arg InsertXPAwardParams) er
 
 const keepCompanionHP = `-- name: KeepCompanionHP :exec
 UPDATE campaign.companions c SET hp_current = t.hp
-FROM play.tokens t WHERE t.session_id = $1 AND t.id = $2 AND t.companion_id = c.id AND t.hp IS NOT NULL
+FROM play.tokens t, play.sessions s
+WHERE t.session_id = $1 AND t.id = $2 AND t.companion_id = c.id AND t.hp IS NOT NULL
+  AND s.id = t.session_id AND c.campaign_id = s.campaign_id
 `
 
 type KeepCompanionHPParams struct {
@@ -139,7 +141,7 @@ type KeepCompanionHPParams struct {
 	TokenID   uuid.UUID
 }
 
-// A Companion keeps the hit points its token had when it left the map.
+// A Companion keeps the hit points its token had when it left the map: one of the Session's own Campaign only.
 func (q *Queries) KeepCompanionHP(ctx context.Context, arg KeepCompanionHPParams) error {
 	_, err := q.db.Exec(ctx, keepCompanionHP, arg.SessionID, arg.TokenID)
 	return err
@@ -147,7 +149,9 @@ func (q *Queries) KeepCompanionHP(ctx context.Context, arg KeepCompanionHPParams
 
 const keepCompanionsHP = `-- name: KeepCompanionsHP :exec
 UPDATE campaign.companions c SET hp_current = t.hp
-FROM play.tokens t WHERE t.session_id = $1 AND t.companion_id = c.id AND t.hp IS NOT NULL
+FROM play.tokens t, play.sessions s
+WHERE t.session_id = $1 AND t.companion_id = c.id AND t.hp IS NOT NULL
+  AND s.id = t.session_id AND c.campaign_id = s.campaign_id
 `
 
 // And those of every token still on the map when the Session ends.

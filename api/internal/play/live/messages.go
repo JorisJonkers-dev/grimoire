@@ -275,6 +275,8 @@ type Command struct {
 	CheckpointID string `json:"checkpointId,omitempty"`
 	// CompanionID is the Companion place_token puts on the map.
 	CompanionID string `json:"companionId,omitempty"`
+	// companion is that Companion once the Campaign is known to have it: the only one a token is tied to.
+	companion *uuid.UUID
 	// TokenIDs are the party tokens split_party sends off, to the map MapID around Q and R. SessionID is
 	// the group rejoin_party brings back, or table_follow has the Table Display follow.
 	TokenIDs  []string `json:"tokenIds,omitempty"`

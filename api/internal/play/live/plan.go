@@ -172,11 +172,11 @@ func (r *runtime) planPlace(c caller.Caller, cmd Command) (Write, string) {
 	}
 	t := domain.Token{ID: domain.TokenID(uuid.New()), Label: label, Kind: cmd.TokenKind, Q: cmd.Q, R: cmd.R, Hidden: cmd.Hidden, DarkvisionFt: cmd.DarkvisionFt, Stats: stats, Tactics: tactics.FromIntelligence}
 	t.CanShield = cmd.Shield || (stats != nil && stats.Shield)
-	if id, err := uuid.Parse(cmd.CompanionID); err == nil {
-		if r.st.companionToken(id) != nil {
+	if cmd.companion != nil {
+		if r.st.companionToken(*cmd.companion) != nil {
 			return Write{}, "That Companion is on the map already."
 		}
-		t.Companion = &id
+		t.Companion = cmd.companion
 	}
 	if cmd.ControllerID != "" {
 		id, err := uuid.Parse(cmd.ControllerID)
@@ -198,6 +198,8 @@ func (r *runtime) statblock(c caller.Caller, cmd *Command) (*domain.Stats, strin
 	name := ""
 	var stats domain.Stats
 	switch {
+	case cmd.CompanionID != "" && cmd.CharacterID != "":
+		return nil, "A Companion comes onto the map as itself."
 	case cmd.CharacterID != "":
 		id, err := uuid.Parse(cmd.CharacterID)
 		var owner uuid.UUID

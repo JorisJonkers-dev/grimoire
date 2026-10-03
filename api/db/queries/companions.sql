@@ -26,14 +26,18 @@ UPDATE campaign.companions c SET controller_member_id = sqlc.narg(controller_mem
 FROM play.sessions s WHERE c.id = @id AND s.id = @session_id AND c.campaign_id = s.campaign_id;
 
 -- name: KeepCompanionHP :exec
--- A Companion keeps the hit points its token had when it left the map.
+-- A Companion keeps the hit points its token had when it left the map: one of the Session's own Campaign only.
 UPDATE campaign.companions c SET hp_current = t.hp
-FROM play.tokens t WHERE t.session_id = @session_id AND t.id = @token_id AND t.companion_id = c.id AND t.hp IS NOT NULL;
+FROM play.tokens t, play.sessions s
+WHERE t.session_id = @session_id AND t.id = @token_id AND t.companion_id = c.id AND t.hp IS NOT NULL
+  AND s.id = t.session_id AND c.campaign_id = s.campaign_id;
 
 -- name: KeepCompanionsHP :exec
 -- And those of every token still on the map when the Session ends.
 UPDATE campaign.companions c SET hp_current = t.hp
-FROM play.tokens t WHERE t.session_id = @session_id AND t.companion_id = c.id AND t.hp IS NOT NULL;
+FROM play.tokens t, play.sessions s
+WHERE t.session_id = @session_id AND t.companion_id = c.id AND t.hp IS NOT NULL
+  AND s.id = t.session_id AND c.campaign_id = s.campaign_id;
 
 -- name: SharingCompanions :one
 -- How many of these Companions take a share of the XP.

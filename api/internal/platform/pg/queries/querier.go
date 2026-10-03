@@ -408,7 +408,7 @@ type Querier interface {
 	IsConversationMember(ctx context.Context, arg IsConversationMemberParams) (bool, error)
 	ItemPrices(ctx context.Context, arg ItemPricesParams) ([]ItemPricesRow, error)
 	ItemsBySlug(ctx context.Context, arg ItemsBySlugParams) ([]ItemsBySlugRow, error)
-	// A Companion keeps the hit points its token had when it left the map.
+	// A Companion keeps the hit points its token had when it left the map: one of the Session's own Campaign only.
 	KeepCompanionHP(ctx context.Context, arg KeepCompanionHPParams) error
 	// And those of every token still on the map when the Session ends.
 	KeepCompanionsHP(ctx context.Context, sessionID uuid.UUID) error

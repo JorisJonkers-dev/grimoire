@@ -116,6 +116,36 @@ func TestCompanionsAsTheStoreKeepsThem(t *testing.T) {
 		t.Fatalf("tokens = %+v, %v", loaded, err)
 	}
 
+	// A token tied to a Companion of another Campaign, however it came to be, writes nothing there: not
+	// when it leaves the map, not when it changes hands, not when the Session ends.
+	stranger := uuid.New()
+	if _, err := tb.pool.Exec(ctx, `WITH other AS (INSERT INTO campaign.campaigns (name, ruleset_pref, created_by, created_at, updated_at)
+			VALUES ('Elsewhere', 'srd-2024', 'someone', now(), now()) RETURNING id)
+		INSERT INTO campaign.companions (id, campaign_id, name, kind, monster_slug, created_at, updated_at)
+		SELECT $1, other.id, 'Stranger', 'companion', 'goblin', now(), now() FROM other`, stranger); err != nil {
+		t.Fatal(err)
+	}
+	leaving, lingering := token("Shade", stranger, 2), token("Wraith", stranger, 1)
+	for _, tok := range []domain.Token{leaving, lingering} {
+		if err := commit(store, live.Write{Kind: domain.ActionTokenPlaced, Token: tok}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	leaving.Controller = &tb.playerID
+	for _, w := range []live.Write{{Kind: domain.ActionControlAssigned, Token: leaving}, {Kind: domain.ActionTokenRemoved, Token: leaving}} {
+		if err := commit(store, w); err != nil {
+			t.Fatal(err)
+		}
+	}
+	untouched := func(when string) {
+		t.Helper()
+		var hp, who *string
+		if err := tb.pool.QueryRow(ctx, "SELECT hp_current::text, controller_member_id::text FROM campaign.companions WHERE id = $1", stranger).Scan(&hp, &who); err != nil || hp != nil || who != nil {
+			t.Fatalf("another Campaign's Companion %s: hit points %v, hand %v, %v", when, hp, who, err)
+		}
+	}
+	untouched("after its token left the map and changed hands")
+	defer untouched("after the Session ended")
 	// Every statement of handing over, awarding and leaving reports a database fault.
 	handed := onMap
 	handed.Controller = nil
