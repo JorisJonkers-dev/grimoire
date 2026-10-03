@@ -49,6 +49,7 @@ type Handler struct {
 	ItemBuilder   ItemBuilder
 	Subclasses    SubclassBuilder
 	Classes       ClassBuilder
+	SpeciesBuilds SpeciesBuilder
 	// LiveTimeout bounds how long a REST call waits for a live Session; zero means ten seconds.
 	LiveTimeout time.Duration
 	Log         *slog.Logger

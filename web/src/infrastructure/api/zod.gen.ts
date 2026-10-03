@@ -1555,7 +1555,8 @@ export const zLibraryKind = z.enum([
     'spell',
     'table',
     'subclass',
-    'class'
+    'class',
+    'species'
 ]);
 
 /**
@@ -2087,6 +2088,74 @@ export const zClassBuild = z.object({
     design: zClassDesign,
     slug: z.string().max(40).optional(),
     lines: z.array(z.string().max(1200)).max(200)
+});
+
+/**
+ * A speed beside walking, or a special sense, and how far it reaches.
+ */
+export const zSpeciesMeasure = z.object({
+    kind: z.string().max(40),
+    feet: z.int().gte(-100000).lte(100000)
+});
+
+/**
+ * A named trait every member of the species has.
+ */
+export const zSpeciesTrait = z.object({
+    name: z.string().max(200),
+    text: z.string().max(8000)
+});
+
+/**
+ * An innate spell gained at a character level, cast at will or once per long rest.
+ */
+export const zSpeciesSpell = z.object({
+    level: z.int().gte(-100000).lte(100000),
+    spell: z.string().max(120),
+    name: z.string().max(200),
+    uses: z.string().max(40)
+});
+
+/**
+ * One branch of the species, picked at creation, with its own trait and spells.
+ */
+export const zSpeciesLineage = z.object({
+    name: z.string().max(200),
+    text: z.string().max(8000),
+    spells: z.array(zSpeciesSpell).max(40)
+});
+
+/**
+ * A homebrew species as the species builder makes it, from its sizes, creature type, speeds, senses, resistances, traits, innate spells and lineages.
+ */
+export const zSpeciesDesign = z.object({
+    sizes: z.array(z.string().max(40)).max(10),
+    creatureType: z.string().max(40),
+    speedFt: z.int().gte(-100000).lte(100000),
+    speeds: z.array(zSpeciesMeasure).max(20),
+    senses: z.array(zSpeciesMeasure).max(20),
+    resistances: z.array(z.string().max(40)).max(20),
+    traits: z.array(zSpeciesTrait).max(40),
+    spells: z.array(zSpeciesSpell).max(40),
+    lineages: z.array(zSpeciesLineage).max(20)
+});
+
+/**
+ * A design to preview, with the species's name.
+ */
+export const zSpeciesPreviewInput = z.object({
+    name: z.string().min(1).max(80),
+    design: zSpeciesDesign
+});
+
+/**
+ * A homebrew species in its builder, the slug it is known by, and how it reads back.
+ */
+export const zSpeciesBuild = z.object({
+    entry: zLibraryEntry.optional(),
+    design: zSpeciesDesign,
+    slug: z.string().max(40).optional(),
+    lines: z.array(z.string().max(2400)).max(400)
 });
 
 /**
@@ -6017,6 +6086,33 @@ export const zSaveClassBuildPath = z.object({
  * The class.
  */
 export const zSaveClassBuildResponse = zClassBuild;
+
+export const zPreviewSpeciesBody = zSpeciesPreviewInput;
+
+/**
+ * The preview.
+ */
+export const zPreviewSpeciesResponse = zSpeciesBuild;
+
+export const zGetSpeciesBuildPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The species.
+ */
+export const zGetSpeciesBuildResponse = zSpeciesBuild;
+
+export const zSaveSpeciesBuildBody = zSpeciesDesign;
+
+export const zSaveSpeciesBuildPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The species.
+ */
+export const zSaveSpeciesBuildResponse = zSpeciesBuild;
 
 /**
  * The signed-in account.

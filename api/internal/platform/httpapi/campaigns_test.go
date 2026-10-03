@@ -46,6 +46,7 @@ func campaignServer(t *testing.T, c httpapi.Campaigns, extra ...any) http.Handle
 	var ib httpapi.ItemBuilder
 	var scb httpapi.SubclassBuilder
 	var cb httpapi.ClassBuilder
+	var speciesb httpapi.SpeciesBuilder
 	for _, e := range extra {
 		switch v := e.(type) {
 		case httpapi.LibraryService:
@@ -54,6 +55,7 @@ func campaignServer(t *testing.T, c httpapi.Campaigns, extra ...any) http.Handle
 			ib, _ = v.(httpapi.ItemBuilder)
 			scb, _ = v.(httpapi.SubclassBuilder)
 			cb, _ = v.(httpapi.ClassBuilder)
+			speciesb, _ = v.(httpapi.SpeciesBuilder)
 		case httpapi.InventoryService:
 			is = v
 		case httpapi.PrepService:
@@ -75,7 +77,7 @@ func campaignServer(t *testing.T, c httpapi.Campaigns, extra ...any) http.Handle
 		}
 	}
 	h, err := httpapi.New(httpapi.Options{
-		Handler:   &httpapi.Handler{Version: "1", Store: fakeStore{}, Compendium: &fakeCompendium{}, Campaigns: c, Characters: cs, NPCs: ns, Rolls: rs, Sessions: ss, Hub: hub, LiveMembers: lm, Maps: ms, Prep: ps, Inventory: is, Library: ls, Spells: sb, ItemBuilder: ib, Subclasses: scb, Classes: cb, Log: quiet},
+		Handler:   &httpapi.Handler{Version: "1", Store: fakeStore{}, Compendium: &fakeCompendium{}, Campaigns: c, Characters: cs, NPCs: ns, Rolls: rs, Sessions: ss, Hub: hub, LiveMembers: lm, Maps: ms, Prep: ps, Inventory: is, Library: ls, Spells: sb, ItemBuilder: ib, Subclasses: scb, Classes: cb, SpeciesBuilds: speciesb, Log: quiet},
 		RateLimit: 1000, Now: time.Now,
 	})
 	if err != nil {

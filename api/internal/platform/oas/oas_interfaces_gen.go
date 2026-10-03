@@ -301,6 +301,10 @@ type GetSignInMethodsRes interface {
 	getSignInMethodsRes()
 }
 
+type GetSpeciesBuildRes interface {
+	getSpeciesBuildRes()
+}
+
 type GetSpellBuildRes interface {
 	getSpellBuildRes()
 }
@@ -585,6 +589,10 @@ type PreviewSightRes interface {
 	previewSightRes()
 }
 
+type PreviewSpeciesRes interface {
+	previewSpeciesRes()
+}
+
 type PreviewSpellRes interface {
 	previewSpellRes()
 }
@@ -695,6 +703,10 @@ type SaveClassBuildRes interface {
 
 type SaveItemBuildRes interface {
 	saveItemBuildRes()
+}
+
+type SaveSpeciesBuildRes interface {
+	saveSpeciesBuildRes()
 }
 
 type SaveSpellBuildRes interface {

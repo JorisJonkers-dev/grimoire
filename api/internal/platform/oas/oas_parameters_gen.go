@@ -6382,6 +6382,79 @@ func decodeGetSessionViewParams(args [2]string, argsEscaped bool, r *http.Reques
 	return params, nil
 }
 
+// GetSpeciesBuildParams is parameters of getSpeciesBuild operation.
+type GetSpeciesBuildParams struct {
+	// Library entry id.
+	EntryId ID
+}
+
+func unpackGetSpeciesBuildParams(packed middleware.Parameters) (params GetSpeciesBuildParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "entryId",
+			In:   "path",
+		}
+		params.EntryId = packed[key].(ID)
+	}
+	return params
+}
+
+func decodeGetSpeciesBuildParams(args [1]string, argsEscaped bool, r *http.Request) (params GetSpeciesBuildParams, _ error) {
+	// Decode path: entryId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "entryId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				var paramsDotEntryIdVal uuid.UUID
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUUID(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotEntryIdVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.EntryId = ID(paramsDotEntryIdVal)
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "entryId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
 // GetSpellParams is parameters of getSpell operation.
 type GetSpellParams struct {
 	// ETag from an earlier response; the server answers 304 when nothing changed.
@@ -15468,6 +15541,79 @@ func unpackSaveItemBuildParams(packed middleware.Parameters) (params SaveItemBui
 }
 
 func decodeSaveItemBuildParams(args [1]string, argsEscaped bool, r *http.Request) (params SaveItemBuildParams, _ error) {
+	// Decode path: entryId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "entryId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				var paramsDotEntryIdVal uuid.UUID
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUUID(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotEntryIdVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.EntryId = ID(paramsDotEntryIdVal)
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "entryId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// SaveSpeciesBuildParams is parameters of saveSpeciesBuild operation.
+type SaveSpeciesBuildParams struct {
+	// Library entry id.
+	EntryId ID
+}
+
+func unpackSaveSpeciesBuildParams(packed middleware.Parameters) (params SaveSpeciesBuildParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "entryId",
+			In:   "path",
+		}
+		params.EntryId = packed[key].(ID)
+	}
+	return params
+}
+
+func decodeSaveSpeciesBuildParams(args [1]string, argsEscaped bool, r *http.Request) (params SaveSpeciesBuildParams, _ error) {
 	// Decode path: entryId.
 	if err := func() error {
 		param := args[0]

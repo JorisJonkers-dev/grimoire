@@ -4896,6 +4896,96 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/builders/species/preview:
+    post:
+      operationId: previewSpecies
+      x-ogen-operation-group: Read
+      summary: Preview a homebrew species
+      description: "Checks a design without saving it and reads it back. A design the rules refuse comes back with the reason."
+      tags: [Library]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SpeciesPreviewInput"
+      responses:
+        "200":
+          description: The preview.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpeciesBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/builders/species/{entryId}:
+    get:
+      operationId: getSpeciesBuild
+      x-ogen-operation-group: Read
+      summary: Open a species in the species builder
+      description: "A homebrew species's design, read back: one of the caller's, or a Shared Library copy."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/LibraryEntryId"
+      responses:
+        "200":
+          description: The species.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpeciesBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    put:
+      operationId: saveSpeciesBuild
+      x-ogen-operation-group: Build
+      summary: Save a species design
+      description: "Saves the design of one of the caller's species entries as its next Revision; Campaigns that see it offer it, and each of its lineages, in character creation."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/LibraryEntryId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SpeciesDesign"
+      responses:
+        "200":
+          description: The species.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpeciesBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /api/v1/me:
     get:
       operationId: getMe
@@ -9802,7 +9892,7 @@ components:
     LibraryKind:
       type: string
       description: What a Library entry is.
-      enum: [creature, npc, location, shop, item, spell, table, subclass, class]
+      enum: [creature, npc, location, shop, item, spell, table, subclass, class, species]
     LibraryField:
       type: object
       description: One named value of a Library entry.
@@ -10409,6 +10499,101 @@ components:
           type: array
           maxItems: 200
           items: { type: string, maxLength: 1200 }
+    SpeciesPreviewInput:
+      type: object
+      description: A design to preview, with the species's name.
+      additionalProperties: false
+      required: [name, design]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        design: { $ref: "#/components/schemas/SpeciesDesign" }
+    SpeciesBuild:
+      type: object
+      description: A homebrew species in its builder, the slug it is known by, and how it reads back.
+      additionalProperties: false
+      required: [design, lines]
+      properties:
+        entry: { $ref: "#/components/schemas/LibraryEntry" }
+        design: { $ref: "#/components/schemas/SpeciesDesign" }
+        slug: { type: string, maxLength: 40 }
+        lines:
+          type: array
+          maxItems: 400
+          items: { type: string, maxLength: 2400 }
+    SpeciesDesign:
+      type: object
+      description: A homebrew species as the species builder makes it, from its sizes, creature type, speeds, senses, resistances, traits, innate spells and lineages.
+      additionalProperties: false
+      required: [sizes, creatureType, speedFt, speeds, senses, resistances, traits, spells, lineages]
+      properties:
+        sizes:
+          type: array
+          maxItems: 10
+          items: { type: string, maxLength: 40 }
+        creatureType: { type: string, maxLength: 40 }
+        speedFt: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        speeds:
+          type: array
+          maxItems: 20
+          items: { $ref: "#/components/schemas/SpeciesMeasure" }
+        senses:
+          type: array
+          maxItems: 20
+          items: { $ref: "#/components/schemas/SpeciesMeasure" }
+        resistances:
+          type: array
+          maxItems: 20
+          items: { type: string, maxLength: 40 }
+        traits:
+          type: array
+          maxItems: 40
+          items: { $ref: "#/components/schemas/SpeciesTrait" }
+        spells:
+          type: array
+          maxItems: 40
+          items: { $ref: "#/components/schemas/SpeciesSpell" }
+        lineages:
+          type: array
+          maxItems: 20
+          items: { $ref: "#/components/schemas/SpeciesLineage" }
+    SpeciesMeasure:
+      type: object
+      description: A speed beside walking, or a special sense, and how far it reaches.
+      additionalProperties: false
+      required: [kind, feet]
+      properties:
+        kind: { type: string, maxLength: 40 }
+        feet: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+    SpeciesTrait:
+      type: object
+      description: A named trait every member of the species has.
+      additionalProperties: false
+      required: [name, text]
+      properties:
+        name: { type: string, maxLength: 200 }
+        text: { type: string, maxLength: 8000 }
+    SpeciesSpell:
+      type: object
+      description: An innate spell gained at a character level, cast at will or once per long rest.
+      additionalProperties: false
+      required: [level, spell, name, uses]
+      properties:
+        level: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        spell: { type: string, maxLength: 120 }
+        name: { type: string, maxLength: 200 }
+        uses: { type: string, maxLength: 40 }
+    SpeciesLineage:
+      type: object
+      description: One branch of the species, picked at creation, with its own trait and spells.
+      additionalProperties: false
+      required: [name, text, spells]
+      properties:
+        name: { type: string, maxLength: 200 }
+        text: { type: string, maxLength: 8000 }
+        spells:
+          type: array
+          maxItems: 40
+          items: { $ref: "#/components/schemas/SpeciesSpell" }
     SubclassDesign:
       type: object
       description: A homebrew subclass as the subclass builder makes it, from level-gated Features, the Resources they spend and the choices they ask for.

@@ -7,6 +7,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/classbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/features"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/speciesbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/subclassbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
@@ -17,6 +18,7 @@ type homebrew struct {
 	Compendium
 	classes []classbuild.Class
 	subs    []subclassbuild.Subclass
+	species []speciesbuild.Option
 }
 
 // class is a homebrew class by slug.
@@ -37,8 +39,12 @@ func (s *Characters) within(ctx context.Context, id domain.CampaignID) (*Charact
 	if err != nil {
 		return nil, err
 	}
+	species, err := s.Repo.HomebrewSpecies(ctx, id)
+	if err != nil {
+		return nil, err
+	}
 	in := *s
-	in.Compendium = homebrew{Compendium: s.Compendium, classes: classes, subs: subs}
+	in.Compendium = homebrew{Compendium: s.Compendium, classes: classes, subs: subs, species: species}
 	return &in, nil
 }
 
@@ -81,6 +87,9 @@ func (h homebrew) BuilderOptions(ctx context.Context, ruleset string) (compendiu
 	}
 	for _, c := range h.classes {
 		o.Classes = append(o.Classes, compendium.ClassOption{Slug: c.Slug, Name: c.Name, HitDie: c.HitDie, Saves: c.Saves, Rules: c.Profile})
+	}
+	for _, sp := range h.species {
+		o.Species = append(o.Species, compendium.SpeciesOption{Slug: sp.Slug, Name: sp.Name, SpeedFeet: sp.SpeedFeet})
 	}
 	return o, nil
 }
@@ -130,6 +139,15 @@ func (h homebrew) Traits(ctx context.Context, ruleset, species string, classes [
 	out, err := h.Compendium.Traits(ctx, ruleset, species, classes, feats)
 	if err != nil {
 		return nil, err
+	}
+	if sp, ok := find(h.species, func(o speciesbuild.Option) bool { return o.Slug == species }); ok {
+		level := 0
+		for _, c := range classes {
+			level += c.Level
+		}
+		out = append(out, gained(level, sp.Traits, func(t speciesbuild.Gained) compendium.Trait {
+			return compendium.Trait{Name: t.Name, Source: "species", Level: t.Level, Description: t.Text}
+		})...)
 	}
 	for _, c := range classes {
 		if hb, ok := h.class(c.Class); ok {

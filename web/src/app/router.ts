@@ -32,6 +32,7 @@ const SpellBuilderPage = () => import('@/features/library/SpellBuilderPage.vue')
 const ItemBuilderPage = () => import('@/features/library/ItemBuilderPage.vue')
 const SubclassBuilderPage = () => import('@/features/library/SubclassBuilderPage.vue')
 const ClassBuilderPage = () => import('@/features/library/ClassBuilderPage.vue')
+const SpeciesBuilderPage = () => import('@/features/library/SpeciesBuilderPage.vue')
 const SharedReviewPage = () => import('@/features/library/SharedReviewPage.vue')
 const ProposalPage = () => import('@/features/library/ProposalPage.vue')
 const NpcPage = () => import('@/features/npcs/NpcPage.vue')
@@ -87,6 +88,7 @@ export function createAppRouter(history: RouterHistory = createWebHistory()) {
       { path: '/library/:entryId/item', name: 'item-builder', component: ItemBuilderPage },
       { path: '/library/:entryId/subclass', name: 'subclass-builder', component: SubclassBuilderPage },
       { path: '/library/:entryId/class', name: 'class-builder', component: ClassBuilderPage },
+      { path: '/library/:entryId/species', name: 'species-builder', component: SpeciesBuilderPage },
       { path: '/campaigns/:id/npcs/:npcId', name: 'npc', component: NpcPage },
       { path: '/campaigns/:id/encounters', name: 'encounters', component: EncountersPage },
       { path: '/campaigns/:id/loot', name: 'loot', component: LootPage },

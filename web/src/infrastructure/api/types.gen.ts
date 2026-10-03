@@ -2526,7 +2526,7 @@ export type SessionAction = {
 /**
  * What a Library entry is.
  */
-export type LibraryKind = 'creature' | 'npc' | 'location' | 'shop' | 'item' | 'spell' | 'table' | 'subclass' | 'class';
+export type LibraryKind = 'creature' | 'npc' | 'location' | 'shop' | 'item' | 'spell' | 'table' | 'subclass' | 'class' | 'species';
 
 /**
  * One named value of a Library entry.
@@ -3024,6 +3024,74 @@ export type ClassBuild = {
     design: ClassDesign;
     slug?: string;
     lines: Array<string>;
+};
+
+/**
+ * A design to preview, with the species's name.
+ */
+export type SpeciesPreviewInput = {
+    name: string;
+    design: SpeciesDesign;
+};
+
+/**
+ * A homebrew species in its builder, the slug it is known by, and how it reads back.
+ */
+export type SpeciesBuild = {
+    entry?: LibraryEntry;
+    design: SpeciesDesign;
+    slug?: string;
+    lines: Array<string>;
+};
+
+/**
+ * A homebrew species as the species builder makes it, from its sizes, creature type, speeds, senses, resistances, traits, innate spells and lineages.
+ */
+export type SpeciesDesign = {
+    sizes: Array<string>;
+    creatureType: string;
+    speedFt: number;
+    speeds: Array<SpeciesMeasure>;
+    senses: Array<SpeciesMeasure>;
+    resistances: Array<string>;
+    traits: Array<SpeciesTrait>;
+    spells: Array<SpeciesSpell>;
+    lineages: Array<SpeciesLineage>;
+};
+
+/**
+ * A speed beside walking, or a special sense, and how far it reaches.
+ */
+export type SpeciesMeasure = {
+    kind: string;
+    feet: number;
+};
+
+/**
+ * A named trait every member of the species has.
+ */
+export type SpeciesTrait = {
+    name: string;
+    text: string;
+};
+
+/**
+ * An innate spell gained at a character level, cast at will or once per long rest.
+ */
+export type SpeciesSpell = {
+    level: number;
+    spell: string;
+    name: string;
+    uses: string;
+};
+
+/**
+ * One branch of the species, picked at creation, with its own trait and spells.
+ */
+export type SpeciesLineage = {
+    name: string;
+    text: string;
+    spells: Array<SpeciesSpell>;
 };
 
 /**
@@ -9762,6 +9830,103 @@ export type SaveClassBuildResponses = {
 };
 
 export type SaveClassBuildResponse = SaveClassBuildResponses[keyof SaveClassBuildResponses];
+
+export type PreviewSpeciesData = {
+    body: SpeciesPreviewInput;
+    path?: never;
+    query?: never;
+    url: '/api/v1/builders/species/preview';
+};
+
+export type PreviewSpeciesErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type PreviewSpeciesError = PreviewSpeciesErrors[keyof PreviewSpeciesErrors];
+
+export type PreviewSpeciesResponses = {
+    /**
+     * The preview.
+     */
+    200: SpeciesBuild;
+};
+
+export type PreviewSpeciesResponse = PreviewSpeciesResponses[keyof PreviewSpeciesResponses];
+
+export type GetSpeciesBuildData = {
+    body?: never;
+    path: {
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/builders/species/{entryId}';
+};
+
+export type GetSpeciesBuildErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetSpeciesBuildError = GetSpeciesBuildErrors[keyof GetSpeciesBuildErrors];
+
+export type GetSpeciesBuildResponses = {
+    /**
+     * The species.
+     */
+    200: SpeciesBuild;
+};
+
+export type GetSpeciesBuildResponse = GetSpeciesBuildResponses[keyof GetSpeciesBuildResponses];
+
+export type SaveSpeciesBuildData = {
+    body: SpeciesDesign;
+    path: {
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/builders/species/{entryId}';
+};
+
+export type SaveSpeciesBuildErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SaveSpeciesBuildError = SaveSpeciesBuildErrors[keyof SaveSpeciesBuildErrors];
+
+export type SaveSpeciesBuildResponses = {
+    /**
+     * The species.
+     */
+    200: SpeciesBuild;
+};
+
+export type SaveSpeciesBuildResponse = SaveSpeciesBuildResponses[keyof SaveSpeciesBuildResponses];
 
 export type GetMeData = {
     body?: never;

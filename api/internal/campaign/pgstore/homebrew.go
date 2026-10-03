@@ -3,12 +3,14 @@ package pgstore
 import (
 	"context"
 	"encoding/json"
+	"slices"
 
 	"github.com/google/uuid"
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/campaign/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg/queries"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/classbuild"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/speciesbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/spellbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/subclassbuild"
 )
@@ -29,6 +31,12 @@ func homebrew[D, B any](ctx context.Context, s *Store, id domain.CampaignID, kin
 // HomebrewSubclasses builds the subclasses a Campaign's Library adds.
 func (s *Store) HomebrewSubclasses(ctx context.Context, id domain.CampaignID) ([]subclassbuild.Subclass, error) {
 	return homebrew(ctx, s, id, "subclass", subclassbuild.Compile)
+}
+
+// HomebrewSpecies builds the species a Campaign's Library adds, one for each lineage.
+func (s *Store) HomebrewSpecies(ctx context.Context, id domain.CampaignID) ([]speciesbuild.Option, error) {
+	built, err := homebrew(ctx, s, id, "species", speciesbuild.Compile)
+	return slices.Concat(built...), err
 }
 
 // HomebrewClasses builds the classes a Campaign's Library adds.

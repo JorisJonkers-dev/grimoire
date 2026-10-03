@@ -12,6 +12,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/library/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/classbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/itembuild"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/speciesbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/spellbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/subclassbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
@@ -151,6 +152,11 @@ func (s *Service) checkDesign(ctx context.Context, x domain.Exported) string {
 		var d classbuild.Design
 		if err = json.Unmarshal(x.Design, &d); err == nil {
 			err = checkClass(d)
+		}
+	case "species":
+		var d speciesbuild.Design
+		if err = json.Unmarshal(x.Design, &d); err == nil {
+			err = checkSpecies(d)
 		}
 	default:
 		var d spellbuild.Design

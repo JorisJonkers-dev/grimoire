@@ -625,6 +625,13 @@ type BuildHandler interface {
 	//
 	// PUT /api/v1/builders/items/{entryId}
 	SaveItemBuild(ctx context.Context, req *ItemDesign, params SaveItemBuildParams) (SaveItemBuildRes, error)
+	// SaveSpeciesBuild implements saveSpeciesBuild operation.
+	//
+	// Saves the design of one of the caller's species entries as its next Revision; Campaigns that see it
+	// offer it, and each of its lineages, in character creation.
+	//
+	// PUT /api/v1/builders/species/{entryId}
+	SaveSpeciesBuild(ctx context.Context, req *SpeciesDesign, params SaveSpeciesBuildParams) (SaveSpeciesBuildRes, error)
 	// SaveSpellBuild implements saveSpellBuild operation.
 	//
 	// Saves the design of one of the caller's spells as its next Revision; in a live Session it runs as an
@@ -1084,6 +1091,12 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/sign-in-methods
 	GetSignInMethods(ctx context.Context) (GetSignInMethodsRes, error)
+	// GetSpeciesBuild implements getSpeciesBuild operation.
+	//
+	// A homebrew species's design, read back: one of the caller's, or a Shared Library copy.
+	//
+	// GET /api/v1/builders/species/{entryId}
+	GetSpeciesBuild(ctx context.Context, params GetSpeciesBuildParams) (GetSpeciesBuildRes, error)
 	// GetSpell implements getSpell operation.
 	//
 	// One spell with its rules text and the conditions it mentions.
@@ -1424,6 +1437,13 @@ type ReadHandler interface {
 	//
 	// POST /api/v1/builders/items/preview
 	PreviewItem(ctx context.Context, req *ItemPreviewInput) (PreviewItemRes, error)
+	// PreviewSpecies implements previewSpecies operation.
+	//
+	// Checks a design without saving it and reads it back. A design the rules refuse comes back with the
+	// reason.
+	//
+	// POST /api/v1/builders/species/preview
+	PreviewSpecies(ctx context.Context, req *SpeciesPreviewInput) (PreviewSpeciesRes, error)
 	// PreviewSpell implements previewSpell operation.
 	//
 	// Builds a design without saving it: its rules text and its area drawn as hexes. A design the rules

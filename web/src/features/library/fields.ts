@@ -14,7 +14,7 @@ export function cleanFields(rows: LibraryField[]): LibraryField[] {
 export const copyFields = (fields: LibraryField[]): LibraryField[] => fields.map((f) => ({ ...f }))
 
 export const kindNames: Record<string, string> = {
-  creature: 'Creature', npc: 'NPC', location: 'Location', shop: 'Shop', item: 'Item', spell: 'Spell', table: 'Table', subclass: 'Subclass', class: 'Class',
+  creature: 'Creature', npc: 'NPC', location: 'Location', shop: 'Shop', item: 'Item', spell: 'Spell', table: 'Table', subclass: 'Subclass', class: 'Class', species: 'Species',
 }
 
 export const statusNames: Record<string, string> = {

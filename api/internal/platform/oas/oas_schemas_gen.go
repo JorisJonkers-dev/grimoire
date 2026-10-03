@@ -14357,6 +14357,7 @@ const (
 	LibraryKindTable    LibraryKind = "table"
 	LibraryKindSubclass LibraryKind = "subclass"
 	LibraryKindClass    LibraryKind = "class"
+	LibraryKindSpecies  LibraryKind = "species"
 )
 
 // AllValues returns all LibraryKind values.
@@ -14371,6 +14372,7 @@ func (LibraryKind) AllValues() []LibraryKind {
 		LibraryKindTable,
 		LibraryKindSubclass,
 		LibraryKindClass,
+		LibraryKindSpecies,
 	}
 }
 
@@ -14394,6 +14396,8 @@ func (s LibraryKind) MarshalText() ([]byte, error) {
 	case LibraryKindSubclass:
 		return []byte(s), nil
 	case LibraryKindClass:
+		return []byte(s), nil
+	case LibraryKindSpecies:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -14429,6 +14433,9 @@ func (s *LibraryKind) UnmarshalText(data []byte) error {
 		return nil
 	case LibraryKindClass:
 		*s = LibraryKindClass
+		return nil
+	case LibraryKindSpecies:
+		*s = LibraryKindSpecies
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -31701,6 +31708,7 @@ func (*ProblemStatusCodeWithHeaders) getSessionLogRes()                 {}
 func (*ProblemStatusCodeWithHeaders) getSessionRes()                    {}
 func (*ProblemStatusCodeWithHeaders) getSessionViewRes()                {}
 func (*ProblemStatusCodeWithHeaders) getSignInMethodsRes()              {}
+func (*ProblemStatusCodeWithHeaders) getSpeciesBuildRes()               {}
 func (*ProblemStatusCodeWithHeaders) getSpellBuildRes()                 {}
 func (*ProblemStatusCodeWithHeaders) getSpellRes()                      {}
 func (*ProblemStatusCodeWithHeaders) getSpellcastingRes()               {}
@@ -31772,6 +31780,7 @@ func (*ProblemStatusCodeWithHeaders) previewInviteRes()                 {}
 func (*ProblemStatusCodeWithHeaders) previewItemRes()                   {}
 func (*ProblemStatusCodeWithHeaders) previewReachRes()                  {}
 func (*ProblemStatusCodeWithHeaders) previewSightRes()                  {}
+func (*ProblemStatusCodeWithHeaders) previewSpeciesRes()                {}
 func (*ProblemStatusCodeWithHeaders) previewSpellRes()                  {}
 func (*ProblemStatusCodeWithHeaders) previewSubclassRes()               {}
 func (*ProblemStatusCodeWithHeaders) publishReleaseNoteRes()            {}
@@ -31800,6 +31809,7 @@ func (*ProblemStatusCodeWithHeaders) rollRestRes()                      {}
 func (*ProblemStatusCodeWithHeaders) saveCharacterDraftRes()            {}
 func (*ProblemStatusCodeWithHeaders) saveClassBuildRes()                {}
 func (*ProblemStatusCodeWithHeaders) saveItemBuildRes()                 {}
+func (*ProblemStatusCodeWithHeaders) saveSpeciesBuildRes()              {}
 func (*ProblemStatusCodeWithHeaders) saveSpellBuildRes()                {}
 func (*ProblemStatusCodeWithHeaders) saveSubclassBuildRes()             {}
 func (*ProblemStatusCodeWithHeaders) seeReleaseNoteRes()                {}
@@ -36938,6 +36948,107 @@ func (s *SpawnMonster) SetCount(val int32) {
 	s.Count = val
 }
 
+// A homebrew species in its builder, the slug it is known by, and how it reads back.
+// Ref: #/components/schemas/SpeciesBuild
+type SpeciesBuild struct {
+	Entry  OptLibraryEntry `json:"entry"`
+	Design SpeciesDesign   `json:"design"`
+	Slug   OptString       `json:"slug"`
+	Lines  []string        `json:"lines"`
+}
+
+// GetEntry returns the value of Entry.
+func (s *SpeciesBuild) GetEntry() OptLibraryEntry {
+	return s.Entry
+}
+
+// GetDesign returns the value of Design.
+func (s *SpeciesBuild) GetDesign() SpeciesDesign {
+	return s.Design
+}
+
+// GetSlug returns the value of Slug.
+func (s *SpeciesBuild) GetSlug() OptString {
+	return s.Slug
+}
+
+// GetLines returns the value of Lines.
+func (s *SpeciesBuild) GetLines() []string {
+	return s.Lines
+}
+
+// SetEntry sets the value of Entry.
+func (s *SpeciesBuild) SetEntry(val OptLibraryEntry) {
+	s.Entry = val
+}
+
+// SetDesign sets the value of Design.
+func (s *SpeciesBuild) SetDesign(val SpeciesDesign) {
+	s.Design = val
+}
+
+// SetSlug sets the value of Slug.
+func (s *SpeciesBuild) SetSlug(val OptString) {
+	s.Slug = val
+}
+
+// SetLines sets the value of Lines.
+func (s *SpeciesBuild) SetLines(val []string) {
+	s.Lines = val
+}
+
+// SpeciesBuildHeaders wraps SpeciesBuild with response headers.
+type SpeciesBuildHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           SpeciesBuild
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *SpeciesBuildHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *SpeciesBuildHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *SpeciesBuildHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *SpeciesBuildHeaders) GetResponse() SpeciesBuild {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *SpeciesBuildHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *SpeciesBuildHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *SpeciesBuildHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *SpeciesBuildHeaders) SetResponse(val SpeciesBuild) {
+	s.Response = val
+}
+
+func (*SpeciesBuildHeaders) getSpeciesBuildRes()  {}
+func (*SpeciesBuildHeaders) previewSpeciesRes()   {}
+func (*SpeciesBuildHeaders) saveSpeciesBuildRes() {}
+
 // A playable species.
 // Ref: #/components/schemas/SpeciesChoice
 type SpeciesChoice struct {
@@ -36974,6 +37085,279 @@ func (s *SpeciesChoice) SetName(val string) {
 // SetSpeedFeet sets the value of SpeedFeet.
 func (s *SpeciesChoice) SetSpeedFeet(val int32) {
 	s.SpeedFeet = val
+}
+
+// A homebrew species as the species builder makes it, from its sizes, creature type, speeds, senses,
+// resistances, traits, innate spells and lineages.
+// Ref: #/components/schemas/SpeciesDesign
+type SpeciesDesign struct {
+	Sizes        []string         `json:"sizes"`
+	CreatureType string           `json:"creatureType"`
+	SpeedFt      int32            `json:"speedFt"`
+	Speeds       []SpeciesMeasure `json:"speeds"`
+	Senses       []SpeciesMeasure `json:"senses"`
+	Resistances  []string         `json:"resistances"`
+	Traits       []SpeciesTrait   `json:"traits"`
+	Spells       []SpeciesSpell   `json:"spells"`
+	Lineages     []SpeciesLineage `json:"lineages"`
+}
+
+// GetSizes returns the value of Sizes.
+func (s *SpeciesDesign) GetSizes() []string {
+	return s.Sizes
+}
+
+// GetCreatureType returns the value of CreatureType.
+func (s *SpeciesDesign) GetCreatureType() string {
+	return s.CreatureType
+}
+
+// GetSpeedFt returns the value of SpeedFt.
+func (s *SpeciesDesign) GetSpeedFt() int32 {
+	return s.SpeedFt
+}
+
+// GetSpeeds returns the value of Speeds.
+func (s *SpeciesDesign) GetSpeeds() []SpeciesMeasure {
+	return s.Speeds
+}
+
+// GetSenses returns the value of Senses.
+func (s *SpeciesDesign) GetSenses() []SpeciesMeasure {
+	return s.Senses
+}
+
+// GetResistances returns the value of Resistances.
+func (s *SpeciesDesign) GetResistances() []string {
+	return s.Resistances
+}
+
+// GetTraits returns the value of Traits.
+func (s *SpeciesDesign) GetTraits() []SpeciesTrait {
+	return s.Traits
+}
+
+// GetSpells returns the value of Spells.
+func (s *SpeciesDesign) GetSpells() []SpeciesSpell {
+	return s.Spells
+}
+
+// GetLineages returns the value of Lineages.
+func (s *SpeciesDesign) GetLineages() []SpeciesLineage {
+	return s.Lineages
+}
+
+// SetSizes sets the value of Sizes.
+func (s *SpeciesDesign) SetSizes(val []string) {
+	s.Sizes = val
+}
+
+// SetCreatureType sets the value of CreatureType.
+func (s *SpeciesDesign) SetCreatureType(val string) {
+	s.CreatureType = val
+}
+
+// SetSpeedFt sets the value of SpeedFt.
+func (s *SpeciesDesign) SetSpeedFt(val int32) {
+	s.SpeedFt = val
+}
+
+// SetSpeeds sets the value of Speeds.
+func (s *SpeciesDesign) SetSpeeds(val []SpeciesMeasure) {
+	s.Speeds = val
+}
+
+// SetSenses sets the value of Senses.
+func (s *SpeciesDesign) SetSenses(val []SpeciesMeasure) {
+	s.Senses = val
+}
+
+// SetResistances sets the value of Resistances.
+func (s *SpeciesDesign) SetResistances(val []string) {
+	s.Resistances = val
+}
+
+// SetTraits sets the value of Traits.
+func (s *SpeciesDesign) SetTraits(val []SpeciesTrait) {
+	s.Traits = val
+}
+
+// SetSpells sets the value of Spells.
+func (s *SpeciesDesign) SetSpells(val []SpeciesSpell) {
+	s.Spells = val
+}
+
+// SetLineages sets the value of Lineages.
+func (s *SpeciesDesign) SetLineages(val []SpeciesLineage) {
+	s.Lineages = val
+}
+
+// One branch of the species, picked at creation, with its own trait and spells.
+// Ref: #/components/schemas/SpeciesLineage
+type SpeciesLineage struct {
+	Name   string         `json:"name"`
+	Text   string         `json:"text"`
+	Spells []SpeciesSpell `json:"spells"`
+}
+
+// GetName returns the value of Name.
+func (s *SpeciesLineage) GetName() string {
+	return s.Name
+}
+
+// GetText returns the value of Text.
+func (s *SpeciesLineage) GetText() string {
+	return s.Text
+}
+
+// GetSpells returns the value of Spells.
+func (s *SpeciesLineage) GetSpells() []SpeciesSpell {
+	return s.Spells
+}
+
+// SetName sets the value of Name.
+func (s *SpeciesLineage) SetName(val string) {
+	s.Name = val
+}
+
+// SetText sets the value of Text.
+func (s *SpeciesLineage) SetText(val string) {
+	s.Text = val
+}
+
+// SetSpells sets the value of Spells.
+func (s *SpeciesLineage) SetSpells(val []SpeciesSpell) {
+	s.Spells = val
+}
+
+// A speed beside walking, or a special sense, and how far it reaches.
+// Ref: #/components/schemas/SpeciesMeasure
+type SpeciesMeasure struct {
+	Kind string `json:"kind"`
+	Feet int32  `json:"feet"`
+}
+
+// GetKind returns the value of Kind.
+func (s *SpeciesMeasure) GetKind() string {
+	return s.Kind
+}
+
+// GetFeet returns the value of Feet.
+func (s *SpeciesMeasure) GetFeet() int32 {
+	return s.Feet
+}
+
+// SetKind sets the value of Kind.
+func (s *SpeciesMeasure) SetKind(val string) {
+	s.Kind = val
+}
+
+// SetFeet sets the value of Feet.
+func (s *SpeciesMeasure) SetFeet(val int32) {
+	s.Feet = val
+}
+
+// A design to preview, with the species's name.
+// Ref: #/components/schemas/SpeciesPreviewInput
+type SpeciesPreviewInput struct {
+	Name   string        `json:"name"`
+	Design SpeciesDesign `json:"design"`
+}
+
+// GetName returns the value of Name.
+func (s *SpeciesPreviewInput) GetName() string {
+	return s.Name
+}
+
+// GetDesign returns the value of Design.
+func (s *SpeciesPreviewInput) GetDesign() SpeciesDesign {
+	return s.Design
+}
+
+// SetName sets the value of Name.
+func (s *SpeciesPreviewInput) SetName(val string) {
+	s.Name = val
+}
+
+// SetDesign sets the value of Design.
+func (s *SpeciesPreviewInput) SetDesign(val SpeciesDesign) {
+	s.Design = val
+}
+
+// An innate spell gained at a character level, cast at will or once per long rest.
+// Ref: #/components/schemas/SpeciesSpell
+type SpeciesSpell struct {
+	Level int32  `json:"level"`
+	Spell string `json:"spell"`
+	Name  string `json:"name"`
+	Uses  string `json:"uses"`
+}
+
+// GetLevel returns the value of Level.
+func (s *SpeciesSpell) GetLevel() int32 {
+	return s.Level
+}
+
+// GetSpell returns the value of Spell.
+func (s *SpeciesSpell) GetSpell() string {
+	return s.Spell
+}
+
+// GetName returns the value of Name.
+func (s *SpeciesSpell) GetName() string {
+	return s.Name
+}
+
+// GetUses returns the value of Uses.
+func (s *SpeciesSpell) GetUses() string {
+	return s.Uses
+}
+
+// SetLevel sets the value of Level.
+func (s *SpeciesSpell) SetLevel(val int32) {
+	s.Level = val
+}
+
+// SetSpell sets the value of Spell.
+func (s *SpeciesSpell) SetSpell(val string) {
+	s.Spell = val
+}
+
+// SetName sets the value of Name.
+func (s *SpeciesSpell) SetName(val string) {
+	s.Name = val
+}
+
+// SetUses sets the value of Uses.
+func (s *SpeciesSpell) SetUses(val string) {
+	s.Uses = val
+}
+
+// A named trait every member of the species has.
+// Ref: #/components/schemas/SpeciesTrait
+type SpeciesTrait struct {
+	Name string `json:"name"`
+	Text string `json:"text"`
+}
+
+// GetName returns the value of Name.
+func (s *SpeciesTrait) GetName() string {
+	return s.Name
+}
+
+// GetText returns the value of Text.
+func (s *SpeciesTrait) GetText() string {
+	return s.Text
+}
+
+// SetName sets the value of Name.
+func (s *SpeciesTrait) SetName(val string) {
+	s.Name = val
+}
+
+// SetText sets the value of Text.
+func (s *SpeciesTrait) SetText(val string) {
+	s.Text = val
 }
 
 // A spell with its full rules text.

@@ -704,6 +704,15 @@ func (UnimplementedHandler) GetSignInMethods(ctx context.Context) (r GetSignInMe
 	return r, ht.ErrNotImplemented
 }
 
+// GetSpeciesBuild implements getSpeciesBuild operation.
+//
+// A homebrew species's design, read back: one of the caller's, or a Shared Library copy.
+//
+// GET /api/v1/builders/species/{entryId}
+func (UnimplementedHandler) GetSpeciesBuild(ctx context.Context, params GetSpeciesBuildParams) (r GetSpeciesBuildRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetSpell implements getSpell operation.
 //
 // One spell with its rules text and the conditions it mentions.
@@ -1361,6 +1370,16 @@ func (UnimplementedHandler) PreviewSight(ctx context.Context, req *SightRequest)
 	return r, ht.ErrNotImplemented
 }
 
+// PreviewSpecies implements previewSpecies operation.
+//
+// Checks a design without saving it and reads it back. A design the rules refuse comes back with the
+// reason.
+//
+// POST /api/v1/builders/species/preview
+func (UnimplementedHandler) PreviewSpecies(ctx context.Context, req *SpeciesPreviewInput) (r PreviewSpeciesRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // PreviewSpell implements previewSpell operation.
 //
 // Builds a design without saving it: its rules text and its area drawn as hexes. A design the rules
@@ -1628,6 +1647,16 @@ func (UnimplementedHandler) SaveClassBuild(ctx context.Context, req *ClassDesign
 //
 // PUT /api/v1/builders/items/{entryId}
 func (UnimplementedHandler) SaveItemBuild(ctx context.Context, req *ItemDesign, params SaveItemBuildParams) (r SaveItemBuildRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// SaveSpeciesBuild implements saveSpeciesBuild operation.
+//
+// Saves the design of one of the caller's species entries as its next Revision; Campaigns that see it
+// offer it, and each of its lineages, in character creation.
+//
+// PUT /api/v1/builders/species/{entryId}
+func (UnimplementedHandler) SaveSpeciesBuild(ctx context.Context, req *SpeciesDesign, params SaveSpeciesBuildParams) (r SaveSpeciesBuildRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
