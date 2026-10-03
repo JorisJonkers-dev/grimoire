@@ -152,6 +152,7 @@ ol {
   transition: transform 600ms ease;
 }
 .rolled {
+  max-height: 32px;
   font-family: var(--font-display);
   font-size: 28px;
   font-weight: 700;
@@ -161,9 +162,11 @@ ol {
 .roster--settle .rolled {
   animation: roll-fade 1600ms ease forwards;
 }
+/* The number shrinks away rather than fading: half-faded text would be too faint to read. */
 @keyframes roll-fade {
   to {
-    opacity: 0;
+    max-height: 0;
+    transform: scale(0);
   }
 }
 @media (prefers-reduced-motion: reduce) {

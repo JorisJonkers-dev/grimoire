@@ -792,19 +792,17 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
   font-size: clamp(28px, 6vw, 56px);
   color: var(--color-gold-high);
 }
+/* The banner grows in and shrinks out rather than fading: half-faded text would be too faint to read. */
 @keyframes banner {
   0% {
-    opacity: 0;
-    transform: translate(-50%, -40%);
+    transform: translate(-50%, -50%) scale(0);
   }
   12%,
-  75% {
-    opacity: 1;
-    transform: translate(-50%, -50%);
+  80% {
+    transform: translate(-50%, -50%) scale(1);
   }
   100% {
-    opacity: 0;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%) scale(0);
   }
 }
 @media (prefers-reduced-motion: reduce) {
