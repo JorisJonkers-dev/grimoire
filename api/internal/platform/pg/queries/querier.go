@@ -640,7 +640,8 @@ type Querier interface {
 	SetTokenArmorClass(ctx context.Context, arg SetTokenArmorClassParams) error
 	SetTokenDisguise(ctx context.Context, arg SetTokenDisguiseParams) error
 	SetTokenHP(ctx context.Context, arg SetTokenHPParams) error
-	// A legendary creature's Legend as play leaves it, and its hit point maximum after a mythic phase.
+	// A legendary creature's Legend as play leaves it. A mythic phase brings a new hit point maximum and
+	// fills it, in one statement: the check on hit points holds at every step.
 	SetTokenLegend(ctx context.Context, arg SetTokenLegendParams) error
 	SetTokenReaction(ctx context.Context, arg SetTokenReactionParams) error
 	SetTokenTactics(ctx context.Context, arg SetTokenTacticsParams) error

@@ -194,6 +194,7 @@ func (s *Store) Commit(ctx context.Context, sess domain.Session, board *domain.M
 			return err
 		}
 		steps := []func() error{
+			func() error { return tx.saveLegends(ctx, sid, w.Legends) }, // a mythic phase raises the maximum before the hit points
 			func() error { return tx.write(ctx, sid, board, w, now) },
 			func() error { return tx.dismiss(ctx, sid, w.Dismissed) },
 			func() error { return tx.saveForms(ctx, sid, w) },
@@ -206,7 +207,6 @@ func (s *Store) Commit(ctx context.Context, sess domain.Session, board *domain.M
 			func() error { return tx.saveCheck(ctx, sess, w, actor, c, now) },
 			func() error { return tx.saveInventory(ctx, sess, w, now) },
 			func() error { return tx.saveSwap(ctx, sid, w) },
-			func() error { return tx.saveLegends(ctx, sid, w.Legends) },
 			func() error { return tx.saveShop(ctx, sess, w, actor, c, now) },
 			func() error { return tx.saveRest(ctx, sess, w, actor, c, now) },
 			func() error { return tx.saveActions(ctx, sess, w, actor, c, now) },
@@ -577,7 +577,7 @@ func (s *Store) writeHP(ctx context.Context, sid uuid.UUID, w live.Write) error 
 		return err
 	}
 	for _, o := range w.Observers {
-		if err := s.q.ObserveDamage(ctx, queries.ObserveDamageParams{Observer: uuid.UUID(o), Attacker: uuid.UUID(w.Token.ID), Amount: int32(w.HP.Before - w.HP.After)}); err != nil {
+		if err := s.q.ObserveDamage(ctx, queries.ObserveDamageParams{Observer: uuid.UUID(o), Attacker: uuid.UUID(w.Token.ID), Amount: int32(w.HP.Lost())}); err != nil {
 			return err
 		}
 	}

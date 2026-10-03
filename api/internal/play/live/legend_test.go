@@ -28,7 +28,7 @@ func (l lairs) Monster(ctx context.Context, campaign uuid.UUID, slug string) (st
 		Source: "monster:hb-bog", AC: 10, HP: 8, HPMax: 8, Intelligence: 8, SpeedFt: 30, Saves: map[string]int{}, Attacks: []domain.Attack{},
 		Legend: &domain.Legend{
 			Uses: 2, Left: 2, Resistance: 1, ResistLeft: 1, Threshold: 5,
-			Actions: []domain.LegendAction{{Name: "Tail Sweep", Cost: 1, Text: "One Claw attack."}, {Name: "Sink", Cost: 2, Text: "It sinks and moves 30 feet."}},
+			Actions: []domain.LegendAction{{Name: "Tail Sweep", Cost: 1, Text: "One Claw attack."}, {Name: "Sink", Cost: 2, Text: "It sinks and moves 30 feet."}, {Name: "Engulf", Cost: 3, Text: "It engulfs a creature."}},
 			Lair:    []domain.LegendAction{{Name: "Rising Water", Text: "The water rises a foot."}},
 			Phases:  []domain.Phase{{Name: "Drowned King", HP: 15, Text: "It rises from the water."}},
 		},
@@ -57,7 +57,7 @@ func TestLegendaryWindowsLairsAndPhases(t *testing.T) {
 		ids[tv.Label] = tv.ID
 		setup = append(setup, live.CombatantSetup{TokenID: tv.ID, SpeedFt: 30})
 	}
-	if l := token(d.View, "Bog King").Legend; l == nil || l.Left != 2 || len(l.Actions) != 2 || l.Phases != 1 {
+	if l := token(d.View, "Bog King").Legend; l == nil || l.Left != 2 || len(l.Actions) != 3 || l.Phases != 1 {
 		t.Fatalf("the DM's view of the Bog King = %+v", l)
 	}
 	d, p := tb.dmSays(live.Command{Kind: live.CmdStartCombat, Combatants: setup})
@@ -102,6 +102,7 @@ func TestLegendaryWindowsLairsAndPhases(t *testing.T) {
 	barrier(t, w, tb)
 	tb.playerSays(live.Command{Kind: live.CmdEndTurn, CombatantID: combatant(look(t, w, tb.player), "Aria").ID})
 
+	refused(live.Command{Kind: live.CmdLegendary, TokenID: king, Legend: "Engulf"}, "2 legendary actions left this round")
 	d, _ = tb.dmSays(sweep)
 	if l := token(d.View, "Bog King").Legend; l.Left != 1 || l.Ready || !l.LairReady {
 		t.Fatalf("after a Tail Sweep = %+v", l)
@@ -126,18 +127,23 @@ func TestLegendaryWindowsLairsAndPhases(t *testing.T) {
 	tb.dmSays(live.Command{Kind: live.CmdResist, TokenID: king})
 	refused(live.Command{Kind: live.CmdResist, TokenID: king}, "no Legendary Resistance left")
 	barrier(t, w, tb)
-	tb.dmSays(live.Command{Kind: live.CmdEndTurn, CombatantID: combatant(look(t, w, tb.dm), "Bog King").ID})
-
-	d, _ = tb.dmSays(live.Command{Kind: live.CmdLegendary, TokenID: king, Legend: "Sink"})
-	if l := token(d.View, "Bog King").Legend; l.Left != 0 || l.LairReady {
-		t.Fatalf("after Sink in round 2 = %+v", l)
+	d, _ = tb.dmSays(live.Command{Kind: live.CmdEndTurn, CombatantID: combatant(look(t, w, tb.dm), "Bog King").ID})
+	if l := token(d.View, "Bog King").Legend; l.Left != 2 || l.Ready || l.LairReady {
+		t.Fatalf("on initiative count 20 of round 2, after its own turn = %+v", l)
 	}
+	sink := live.Command{Kind: live.CmdLegendary, TokenID: king, Legend: "Sink"}
+	refused(sink, "only right after another creature's turn")
+	refused(water, "initiative count 20")
 	barrier(t, w, tb)
 	tb.playerSays(live.Command{Kind: live.CmdEndTurn, CombatantID: combatant(look(t, w, tb.player), "Aria").ID})
-	refused(sweep, "0 legendary actions left this round")
+	d, _ = tb.dmSays(sink)
+	if l := token(d.View, "Bog King").Legend; l.Left != 0 || !l.LairReady {
+		t.Fatalf("after Sink in round 2 = %+v", l)
+	}
 
 	w.hub.Close(w.session.ID)
 	tb.dm = join(t, w, w.dm, dmCaller, live.AudienceDM)
+	tb.player = join(t, w, w.player, playerCaller, live.AudienceParty)
 	if l := token(look(t, w, tb.dm), "Bog King").Legend; l == nil || l.Phase != 1 || l.ResistLeft != 0 || l.Left != 0 {
 		t.Fatalf("the Bog King's Legend after a restart = %+v", l)
 	}

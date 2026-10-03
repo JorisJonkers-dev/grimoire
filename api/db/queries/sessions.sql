@@ -88,8 +88,10 @@ ON CONFLICT (id) DO UPDATE SET initiative = excluded.initiative, done = excluded
 UPDATE play.tokens SET hp = @hp WHERE session_id = @session_id AND id = @id;
 
 -- name: SetTokenLegend :exec
--- A legendary creature's Legend as play leaves it, and its hit point maximum after a mythic phase.
-UPDATE play.tokens SET legend = @legend, hp_max = coalesce(sqlc.narg(hp_max)::integer, hp_max) WHERE session_id = @session_id AND id = @id;
+-- A legendary creature's Legend as play leaves it. A mythic phase brings a new hit point maximum and
+-- fills it, in one statement: the check on hit points holds at every step.
+UPDATE play.tokens SET legend = @legend, hp_max = coalesce(sqlc.narg(hp_max)::integer, hp_max), hp = coalesce(sqlc.narg(hp_max)::integer, hp)
+WHERE session_id = @session_id AND id = @id;
 
 -- name: SessionTokenAttacks :many
 SELECT a.token_id, a.ordering, a.name, a.to_hit, a.reach_ft, a.range_ft, a.long_range_ft, a.damage_dice, a.damage_bonus, a.damage_type,

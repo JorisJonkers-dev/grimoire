@@ -2823,7 +2823,8 @@ func (q *Queries) SetTokenHP(ctx context.Context, arg SetTokenHPParams) error {
 }
 
 const setTokenLegend = `-- name: SetTokenLegend :exec
-UPDATE play.tokens SET legend = $1, hp_max = coalesce($2::integer, hp_max) WHERE session_id = $3 AND id = $4
+UPDATE play.tokens SET legend = $1, hp_max = coalesce($2::integer, hp_max), hp = coalesce($2::integer, hp)
+WHERE session_id = $3 AND id = $4
 `
 
 type SetTokenLegendParams struct {
@@ -2833,7 +2834,8 @@ type SetTokenLegendParams struct {
 	ID        uuid.UUID
 }
 
-// A legendary creature's Legend as play leaves it, and its hit point maximum after a mythic phase.
+// A legendary creature's Legend as play leaves it. A mythic phase brings a new hit point maximum and
+// fills it, in one statement: the check on hit points holds at every step.
 func (q *Queries) SetTokenLegend(ctx context.Context, arg SetTokenLegendParams) error {
 	_, err := q.db.Exec(ctx, setTokenLegend,
 		arg.Legend,
