@@ -22,10 +22,10 @@ type contract struct {
 
 // samples covers every command and update kind; the web client parses each with its generated schemas.
 func samples() contract {
-	token := live.TokenView{ID: "0190c7a8-0000-7000-8000-00000000000a", Label: "Goblin", Kind: "enemy", Q: 2, R: -1, Hidden: false, DarkvisionFt: 0, ControllerID: "0190c7a8-0000-7000-8000-00000000000f"}
+	token := live.TokenView{ID: "0190c7a8-0000-7000-8000-00000000000a", Label: "Goblin", Kind: "enemy", Q: 2, R: -1, Hidden: false, DarkvisionFt: 0, CompanionID: "0190c7a8-0000-7000-8000-00000000000d", ControllerID: "0190c7a8-0000-7000-8000-00000000000f"}
 	id := "0190c7a8-0000-7000-8000-00000000000c"
 	view := &live.View{
-		Roster: []live.RosterEntry{{TokenID: token.ID, Label: token.Label, Kind: token.Kind, HP: nil, HPMax: nil, TempHP: 0, Health: "hurt", Hidden: false, Acting: true, Effects: []live.EffectView{}}},
+		Roster: []live.RosterEntry{{TokenID: token.ID, Label: token.Label, Kind: token.Kind, HP: nil, HPMax: nil, TempHP: 0, Health: "hurt", Hidden: false, Acting: true, Effects: []live.EffectView{}, Companion: true}},
 		Tokens: []live.TokenView{token}, Fog: true, Visible: []live.Hex{{Q: 0, R: 0}}, Remembered: []live.Hex{{Q: 1, R: 0}},
 		Checkpoints: []live.CheckpointView{
 			{ID: id, Name: "Before the ambush", Kind: "named", Round: 0, ActionSeq: 41, At: time.Date(2026, 10, 3, 20, 0, 0, 0, time.UTC)},
@@ -214,6 +214,9 @@ func samples() contract {
 			{Nonce: "n93", Kind: live.CmdRejoinParty, SessionID: token.ID, Q: 2},
 			{Nonce: "n94", Kind: live.CmdTableFollow, SessionID: token.ID},
 			{Nonce: "n95", Kind: live.CmdTableFollow},
+			{Nonce: "n96", Kind: live.CmdPlace, CompanionID: token.ID, Q: 1},
+			{Nonce: "n97", Kind: live.CmdAssignControl, TokenID: token.ID, ControllerID: token.ID},
+			{Nonce: "n98", Kind: live.CmdAssignControl, TokenID: token.ID},
 			{Nonce: "n73b", Kind: live.CmdSwapWeapons, TokenID: token.ID},
 			{Nonce: "n74", Kind: live.CmdAttack, TokenID: token.ID, AttackNo: 0, TargetID: token.ID, Cleave: true},
 			{Nonce: "n76", Kind: live.CmdStabilise, TokenID: token.ID, TargetID: token.ID, Option: "medicine"},

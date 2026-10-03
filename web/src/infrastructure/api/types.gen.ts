@@ -1314,6 +1314,10 @@ export type CharacterSheet = {
      */
     levelUpReady?: boolean;
     heroicInspiration?: boolean;
+    /**
+     * XP earned in this Campaign.
+     */
+    xp?: number;
     increase?: AbilityIncrease;
     classes?: Array<ClassLine>;
     spells?: Array<LearnedSpellLine>;
@@ -2390,6 +2394,7 @@ export type LiveToken = {
     label: string;
     kind: TokenKind;
     darkvisionFt: number;
+    companionId?: Id;
     q: number;
     r: number;
     hidden: boolean;
@@ -2511,7 +2516,7 @@ export type LiveSessionView = {
  */
 export type LiveCommand = {
     nonce: string;
-    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'table_caption' | 'ping' | 'set_world' | 'add_node' | 'add_route' | 'remove_node' | 'remove_route' | 'place_party' | 'travel' | 'add_zone' | 'remove_zone' | 'hold_zone' | 'spring_zone' | 'rest' | 'encounter_check' | 'schedule_check' | 'roll_loot' | 'move_item' | 'move_coins' | 'claim_loot' | 'settle_loot' | 'trade' | 'open_shop' | 'close_shop' | 'buy' | 'sell' | 'haggle' | 'spawn_encounter' | 'adjust_hp' | 'undo' | 'propose_rest' | 'agree_rest' | 'spend_hit_die' | 'finish_rest' | 'interrupt_rest' | 'take_action' | 'unarmed' | 'interact' | 'swap_weapons' | 'set_reaction' | 'stabilise' | 'revive' | 'teleport' | 'summon' | 'command' | 'set_visibility' | 'place_object' | 'remove_object' | 'use_object' | 'damage_object' | 'find_object' | 'unlock' | 'disarm' | 'jump' | 'throw' | 'sneak' | 'explore' | 'pass_turn' | 'legendary_action' | 'lair_action' | 'legendary_resistance' | 'checkpoint' | 'rewind' | 'split_party' | 'rejoin_party' | 'table_follow';
+    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'table_caption' | 'ping' | 'set_world' | 'add_node' | 'add_route' | 'remove_node' | 'remove_route' | 'place_party' | 'travel' | 'add_zone' | 'remove_zone' | 'hold_zone' | 'spring_zone' | 'rest' | 'encounter_check' | 'schedule_check' | 'roll_loot' | 'move_item' | 'move_coins' | 'claim_loot' | 'settle_loot' | 'trade' | 'open_shop' | 'close_shop' | 'buy' | 'sell' | 'haggle' | 'spawn_encounter' | 'adjust_hp' | 'undo' | 'propose_rest' | 'agree_rest' | 'spend_hit_die' | 'finish_rest' | 'interrupt_rest' | 'take_action' | 'unarmed' | 'interact' | 'swap_weapons' | 'set_reaction' | 'stabilise' | 'revive' | 'teleport' | 'summon' | 'command' | 'set_visibility' | 'place_object' | 'remove_object' | 'use_object' | 'damage_object' | 'find_object' | 'unlock' | 'disarm' | 'jump' | 'throw' | 'sneak' | 'explore' | 'pass_turn' | 'legendary_action' | 'lair_action' | 'legendary_resistance' | 'checkpoint' | 'rewind' | 'split_party' | 'rejoin_party' | 'table_follow' | 'assign_control';
     caption?: string;
     tokenId?: Id;
     label?: string;
@@ -2665,6 +2670,10 @@ export type LiveCommand = {
      * With rewind, the Checkpoint to go back to.
      */
     checkpointId?: string;
+    /**
+     * With place_token, the Companion to put on the map. It stands with the party under its own name, run by whoever it is given to, with the hit points it kept. With assign_control, controllerId is the Member who runs the token from now on; left out, the DM does.
+     */
+    companionId?: string;
     /**
      * With split_party, the party tokens that go off as a group, to the map mapId around q and r.
      */
@@ -4119,6 +4128,10 @@ export type LiveRosterEntry = {
     health?: 'unhurt' | 'hurt' | 'bloodied' | 'down';
     hidden?: boolean;
     acting: boolean;
+    /**
+     * An ally who travels with the party.
+     */
+    companion?: boolean;
     effects: Array<LiveEffect>;
 };
 
@@ -4279,6 +4292,42 @@ export type LiveRollShown = {
     modifier: number;
     total: number;
     look?: LiveDiceLook;
+};
+
+/**
+ * An ally who travels with the party. A creature with a name of its own, run by a Player or by the DM.
+ */
+export type Companion = {
+    id: Id;
+    name: string;
+    kind: 'companion' | 'hireling';
+    monsterSlug: string;
+    controllerId?: Id;
+    /**
+     * It takes a share of every XP Award, which nobody else gets.
+     */
+    sharesXp: boolean;
+    /**
+     * The hit points it had when it last left the map. Left out while it has never been on one.
+     */
+    hp?: number;
+    /**
+     * The DM's notes. Empty for anyone else.
+     */
+    notes: string;
+    updatedAt: string;
+};
+
+/**
+ * The editable part of a Companion. Without a controllerId the DM runs it.
+ */
+export type CompanionInput = {
+    name: string;
+    kind: 'companion' | 'hireling';
+    monsterSlug: string;
+    controllerId?: Id;
+    sharesXp: boolean;
+    notes?: string;
 };
 
 /**
@@ -7779,6 +7828,150 @@ export type ListEncounterChecksResponses = {
 };
 
 export type ListEncounterChecksResponse = ListEncounterChecksResponses[keyof ListEncounterChecksResponses];
+
+export type ListCompanionsData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/companions';
+};
+
+export type ListCompanionsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListCompanionsError = ListCompanionsErrors[keyof ListCompanionsErrors];
+
+export type ListCompanionsResponses = {
+    /**
+     * The Companions, by name.
+     */
+    200: Array<Companion>;
+};
+
+export type ListCompanionsResponse = ListCompanionsResponses[keyof ListCompanionsResponses];
+
+export type CreateCompanionData = {
+    body: CompanionInput;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/companions';
+};
+
+export type CreateCompanionErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type CreateCompanionError = CreateCompanionErrors[keyof CreateCompanionErrors];
+
+export type CreateCompanionResponses = {
+    /**
+     * The new Companion.
+     */
+    201: Companion;
+};
+
+export type CreateCompanionResponse = CreateCompanionResponses[keyof CreateCompanionResponses];
+
+export type DeleteCompanionData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Companion id.
+         */
+        companionId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/companions/{companionId}';
+};
+
+export type DeleteCompanionErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type DeleteCompanionError = DeleteCompanionErrors[keyof DeleteCompanionErrors];
+
+export type DeleteCompanionResponses = {
+    /**
+     * The Companion is gone.
+     */
+    204: void;
+};
+
+export type DeleteCompanionResponse = DeleteCompanionResponses[keyof DeleteCompanionResponses];
+
+export type UpdateCompanionData = {
+    body: CompanionInput;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Companion id.
+         */
+        companionId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/companions/{companionId}';
+};
+
+export type UpdateCompanionErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type UpdateCompanionError = UpdateCompanionErrors[keyof UpdateCompanionErrors];
+
+export type UpdateCompanionResponses = {
+    /**
+     * The Companion as it is now.
+     */
+    200: Companion;
+};
+
+export type UpdateCompanionResponse = UpdateCompanionResponses[keyof UpdateCompanionResponses];
 
 export type ListNpcsData = {
     body?: never;

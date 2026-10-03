@@ -111,6 +111,7 @@ const (
 	CmdThrow          = "throw"
 	CmdCheckpoint     = "checkpoint"
 	CmdRewind         = "rewind"
+	CmdAssignControl  = "assign_control"
 	CmdSplitParty     = "split_party"
 	CmdRejoinParty    = "rejoin_party"
 	CmdTableFollow    = "table_follow"
@@ -272,6 +273,8 @@ type Command struct {
 	// rewind goes back to.
 	Name         string `json:"name,omitempty"`
 	CheckpointID string `json:"checkpointId,omitempty"`
+	// CompanionID is the Companion place_token puts on the map.
+	CompanionID string `json:"companionId,omitempty"`
 	// TokenIDs are the party tokens split_party sends off, to the map MapID around Q and R. SessionID is
 	// the group rejoin_party brings back, or table_follow has the Table Display follow.
 	TokenIDs  []string `json:"tokenIds,omitempty"`
@@ -315,6 +318,8 @@ type TokenView struct {
 	ControllerID string `json:"controllerId,omitempty"`
 	// CharacterID is the Campaign Character a party token was placed from.
 	CharacterID string `json:"characterId,omitempty"`
+	// CompanionID is the Companion the token is on the map as: an ally who travels with the party.
+	CompanionID string `json:"companionId,omitempty"`
 	// AC, HP and attacks go to the DM, and to everyone for party tokens; others only show their health.
 	AC     *int   `json:"ac,omitempty"`
 	HP     *int   `json:"hp,omitempty"`
@@ -370,16 +375,17 @@ type EffectView struct {
 // RosterEntry is one creature on the roster strip: hit points for the DM and the party's own, a rough
 // health for anyone else, its Effects, and whether it acts now. Hidden is set for the DM only.
 type RosterEntry struct {
-	TokenID string       `json:"tokenId"`
-	Label   string       `json:"label"`
-	Kind    string       `json:"kind"`
-	HP      *int         `json:"hp,omitempty"`
-	HPMax   *int         `json:"hpMax,omitempty"`
-	TempHP  int          `json:"tempHp,omitempty"`
-	Health  string       `json:"health,omitempty"`
-	Hidden  bool         `json:"hidden,omitempty"`
-	Acting  bool         `json:"acting"`
-	Effects []EffectView `json:"effects"`
+	TokenID   string       `json:"tokenId"`
+	Label     string       `json:"label"`
+	Kind      string       `json:"kind"`
+	HP        *int         `json:"hp,omitempty"`
+	HPMax     *int         `json:"hpMax,omitempty"`
+	TempHP    int          `json:"tempHp,omitempty"`
+	Health    string       `json:"health,omitempty"`
+	Hidden    bool         `json:"hidden,omitempty"`
+	Acting    bool         `json:"acting"`
+	Companion bool         `json:"companion,omitempty"`
+	Effects   []EffectView `json:"effects"`
 }
 
 // LegendView is a legendary creature's actions and what it has left: legendary actions once another
@@ -992,6 +998,9 @@ func tokenView(t domain.Token, a Audience) TokenView {
 	}
 	if id, ok := characterOf(t); ok && t.Kind == domain.TokenParty {
 		v.CharacterID = id.String()
+	}
+	if t.Companion != nil {
+		v.CompanionID = t.Companion.String()
 	}
 	if a == AudienceDM {
 		v.Disguise = t.Disguise

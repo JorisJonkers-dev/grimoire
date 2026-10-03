@@ -146,6 +146,7 @@ func extrasOut(out *oas.CharacterSheet, s app.Sheet) {
 	}
 	out.LevelUpReady = oas.NewOptBool(s.LevelUpReady && s.Level < 20)
 	out.HeroicInspiration = oas.NewOptBool(s.HeroicInspiration)
+	out.Xp = oas.NewOptInt32(int32(s.XP)) //nolint:gosec // bounded by the fights of a Campaign
 	out.Increase = oas.NewOptAbilityIncrease(increaseOut(s.Increase))
 	for _, x := range s.Classes {
 		line := oas.ClassLine{Slug: oas.Slug(x.Class), Name: s.ClassNames[x.Class], Level: int32(x.Level)}

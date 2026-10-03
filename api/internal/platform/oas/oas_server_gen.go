@@ -394,6 +394,13 @@ type BuildHandler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/characters
 	CreateCharacter(ctx context.Context, req *CharacterBuild, params CreateCharacterParams) (CreateCharacterRes, error)
+	// CreateCompanion implements createCompanion operation.
+	//
+	// Adds an ally who travels with the party. A creature of the Campaign, with a name of its own. DM
+	// only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/companions
+	CreateCompanion(ctx context.Context, req *CompanionInput, params CreateCompanionParams) (CreateCompanionRes, error)
 	// CreateEncounterPool implements createEncounterPool operation.
 	//
 	// Adds an Encounter Pool and records its first Revision. DM only.
@@ -466,6 +473,13 @@ type BuildHandler interface {
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/characters/{characterId}
 	DeleteCharacter(ctx context.Context, params DeleteCharacterParams) (DeleteCharacterRes, error)
+	// DeleteCompanion implements deleteCompanion operation.
+	//
+	// Removes a Companion from the Campaign. Its token, when it is on a map, stays as a creature of no
+	// one. DM only.
+	//
+	// DELETE /api/v1/campaigns/{campaignId}/companions/{companionId}
+	DeleteCompanion(ctx context.Context, params DeleteCompanionParams) (DeleteCompanionRes, error)
 	// DeleteEncounterPool implements deleteEncounterPool operation.
 	//
 	// Removes the Encounter Pool; its Revisions keep it restorable. DM only.
@@ -802,6 +816,13 @@ type BuildHandler interface {
 	//
 	// PATCH /api/v1/campaigns/{campaignId}/characters/{characterId}
 	UpdateCharacter(ctx context.Context, req *CharacterEdit, params UpdateCharacterParams) (UpdateCharacterRes, error)
+	// UpdateCompanion implements updateCompanion operation.
+	//
+	// Changes a Companion. Who runs it, whether it takes a share of the XP, its name and its creature. A
+	// new creature starts at full hit points. DM only.
+	//
+	// PUT /api/v1/campaigns/{campaignId}/companions/{companionId}
+	UpdateCompanion(ctx context.Context, req *CompanionInput, params UpdateCompanionParams) (UpdateCompanionRes, error)
 	// UpdateEncounterPool implements updateEncounterPool operation.
 	//
 	// Replaces the Encounter Pool and records a Revision. DM only.
@@ -1317,6 +1338,12 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/characters
 	ListCharacters(ctx context.Context, params ListCharactersParams) (ListCharactersRes, error)
+	// ListCompanions implements listCompanions operation.
+	//
+	// The allies who travel with the party. Every Member sees them; the notes on each are the DM's alone.
+	//
+	// GET /api/v1/campaigns/{campaignId}/companions
+	ListCompanions(ctx context.Context, params ListCompanionsParams) (ListCompanionsRes, error)
 	// ListConversations implements listConversations operation.
 	//
 	// The signed-in Account's Conversations, newest first, with how many messages each has unread.

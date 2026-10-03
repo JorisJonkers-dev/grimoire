@@ -137,20 +137,33 @@ func (s *Store) EndSession(ctx context.Context, campaign uuid.UUID, id domain.Se
 		if _, err := tx.sessionAction(ctx, campaign, id, domain.ActionSessionEnded, actor, c, now); err != nil {
 			return err
 		}
-		// The groups of a split party end with the Session the party split from.
-		ended, err := tx.q.EndGroupSessions(ctx, queries.EndGroupSessionsParams{Now: pgtypeTime(now), Root: pgtype.UUID{Bytes: id, Valid: true}})
-		if err != nil {
+		// Companions keep the hit points they end the Session with.
+		if err := tx.q.KeepCompanionsHP(ctx, uuid.UUID(id)); err != nil {
 			return err
 		}
-		for _, g := range ended {
-			if _, err := tx.sessionAction(ctx, campaign, domain.SessionID(g), domain.ActionSessionEnded, actor, c, now); err != nil {
-				return err
-			}
-			groups = append(groups, domain.SessionID(g))
-		}
-		return nil
+		groups, err = tx.endGroups(ctx, campaign, id, actor, c, now)
+		return err
 	})
 	return groups, err
+}
+
+// endGroups ends the groups of a split party with the Session the party split from.
+func (s *Store) endGroups(ctx context.Context, campaign uuid.UUID, root domain.SessionID, actor domain.Member, c caller.Caller, now time.Time) ([]domain.SessionID, error) {
+	ended, err := s.q.EndGroupSessions(ctx, queries.EndGroupSessionsParams{Now: pgtypeTime(now), Root: pgtype.UUID{Bytes: root, Valid: true}})
+	if err != nil {
+		return nil, err
+	}
+	var groups []domain.SessionID
+	for _, g := range ended {
+		if _, err := s.sessionAction(ctx, campaign, domain.SessionID(g), domain.ActionSessionEnded, actor, c, now); err != nil {
+			return nil, err
+		}
+		if err := s.q.KeepCompanionsHP(ctx, g); err != nil {
+			return nil, err
+		}
+		groups = append(groups, domain.SessionID(g))
+	}
+	return groups, nil
 }
 
 // Load reads a Session, its Tokens and its active Map for the live runtime.
@@ -274,6 +287,9 @@ func (s *Store) logged(ctx context.Context, actionID uuid.UUID, sess domain.Sess
 	if err := s.logItems(ctx, actionID, w); err != nil {
 		return err
 	}
+	if err := s.awardXP(ctx, actionID, sess.CampaignID, w.XP); err != nil {
+		return err
+	}
 	return s.logWrite(ctx, actionID, w)
 }
 
@@ -284,7 +300,13 @@ func (s *Store) write(ctx context.Context, sid uuid.UUID, board *domain.MapState
 	case domain.ActionTokenPlaced:
 		return s.insertToken(ctx, sid, t)
 	case domain.ActionTokenRemoved:
+		// A Companion keeps the hit points it leaves the map with.
+		if err := s.q.KeepCompanionHP(ctx, queries.KeepCompanionHPParams{SessionID: sid, TokenID: uuid.UUID(t.ID)}); err != nil {
+			return err
+		}
 		return s.q.DeleteToken(ctx, queries.DeleteTokenParams{SessionID: sid, ID: uuid.UUID(t.ID)})
+	case domain.ActionControlAssigned:
+		return s.assignControl(ctx, sid, t)
 	case domain.ActionTokenMoved, domain.ActionTokenWalked, domain.ActionTokenHidden, domain.ActionTokenRevealed, domain.ActionTeleported, domain.ActionJumped:
 		return s.q.UpdateToken(ctx, queries.UpdateTokenParams{SessionID: sid, ID: uuid.UUID(t.ID), Q: int32(t.Q), R: int32(t.R), Hidden: t.Hidden})
 	case domain.ActionEffectApplied:
@@ -348,6 +370,9 @@ func (s *Store) insertToken(ctx context.Context, sid uuid.UUID, t domain.Token) 
 	}
 	if t.Controller != nil {
 		p.ControllerMemberID = pgtype.UUID{Bytes: *t.Controller, Valid: true}
+	}
+	if t.Companion != nil {
+		p.CompanionID = pgtype.UUID{Bytes: *t.Companion, Valid: true}
 	}
 	if t.Summon != nil {
 		p.SummonEffectID = pgtype.UUID{Bytes: *t.Summon, Valid: true}
@@ -1133,6 +1158,10 @@ func tokenFrom(t queries.SessionTokensRow) domain.Token {
 	if t.SummonEffectID.Valid {
 		e := domain.EffectID(t.SummonEffectID.Bytes)
 		tok.Summon = &e
+	}
+	if t.CompanionID.Valid {
+		c := uuid.UUID(t.CompanionID.Bytes)
+		tok.Companion = &c
 	}
 	if t.StatSource.Valid {
 		tok.Stats = &domain.Stats{

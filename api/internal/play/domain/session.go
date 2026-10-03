@@ -110,6 +110,8 @@ type Token struct {
 	Reactions map[string]reactions.Setting
 	// Summon is the Effect that keeps a summoned creature here; it leaves when the Effect ends.
 	Summon *EffectID
+	// Companion is the Companion this token is on the map as.
+	Companion *uuid.UUID
 	// Form is the creature the token has taken the shape of, if any; Stats are then the form's.
 	Form *Form
 	// Qualities are the token's Visibility Qualities, each marked when the party has seen through it
@@ -256,3 +258,24 @@ type Checkpoint struct {
 	ActionSeq int64
 	CreatedAt time.Time
 }
+
+// CompanionRef is what a Companion brings to the map: its name, its creature, who runs it (nil for the
+// DM) and the hit points it kept from the last time.
+type CompanionRef struct {
+	Name       string
+	Slug       string
+	Controller *uuid.UUID
+	HP         *int
+}
+
+// XPAward is the XP one Campaign Character gets from a fight.
+type XPAward struct {
+	Character uuid.UUID
+	Amount    int
+}
+
+// Companion and XP action kinds in the Action Log.
+const (
+	ActionControlAssigned = "control_assigned"
+	ActionXPAwarded       = "xp_awarded"
+)

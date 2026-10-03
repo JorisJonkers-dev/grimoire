@@ -109,6 +109,8 @@ func (r *runtime) plan(req request) (Write, string) {
 		return r.planPlace(req.from.Caller, cmd)
 	case CmdMove, CmdSetHidden, CmdRemove:
 		return r.planToken(cmd)
+	case CmdAssignControl:
+		return r.planAssign(cmd)
 	case CmdSetMap:
 		return r.planMap(cmd)
 	case CmdRevealHexes, CmdSetWalls:
@@ -170,6 +172,12 @@ func (r *runtime) planPlace(c caller.Caller, cmd Command) (Write, string) {
 	}
 	t := domain.Token{ID: domain.TokenID(uuid.New()), Label: label, Kind: cmd.TokenKind, Q: cmd.Q, R: cmd.R, Hidden: cmd.Hidden, DarkvisionFt: cmd.DarkvisionFt, Stats: stats, Tactics: tactics.FromIntelligence}
 	t.CanShield = cmd.Shield || (stats != nil && stats.Shield)
+	if id, err := uuid.Parse(cmd.CompanionID); err == nil {
+		if r.st.companionToken(id) != nil {
+			return Write{}, "That Companion is on the map already."
+		}
+		t.Companion = &id
+	}
 	if cmd.ControllerID != "" {
 		id, err := uuid.Parse(cmd.ControllerID)
 		if err != nil {
@@ -200,6 +208,12 @@ func (r *runtime) statblock(c caller.Caller, cmd *Command) (*domain.Stats, strin
 			return nil, "No such character."
 		}
 		cmd.TokenKind, cmd.ControllerID = domain.TokenParty, owner.String()
+	case cmd.CompanionID != "":
+		var reason string
+		if name, stats, reason = r.companionStats(ctx, campaign, cmd); reason != "" {
+			return nil, reason
+		}
+		cmd.Label = ""
 	case cmd.MonsterSlug != "":
 		var err error
 		if name, stats, err = r.stats.Monster(ctx, campaign, cmd.MonsterSlug); err != nil {

@@ -2500,6 +2500,133 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/companions:
+    get:
+      operationId: listCompanions
+      x-ogen-operation-group: Read
+      summary: List Companions
+      description: The allies who travel with the party. Every Member sees them; the notes on each are the DM's alone.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      responses:
+        "200":
+          description: The Companions, by name.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 200
+                items:
+                  $ref: "#/components/schemas/Companion"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    post:
+      operationId: createCompanion
+      x-ogen-operation-group: Build
+      summary: Add a Companion
+      description: Adds an ally who travels with the party. A creature of the Campaign, with a name of its own. DM only.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompanionInput"
+      responses:
+        "201":
+          description: The new Companion.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Companion"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/companions/{companionId}:
+    put:
+      operationId: updateCompanion
+      x-ogen-operation-group: Build
+      summary: Change a Companion
+      description: Changes a Companion. Who runs it, whether it takes a share of the XP, its name and its creature. A new creature starts at full hit points. DM only.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - name: companionId
+          in: path
+          required: true
+          description: Companion id.
+          schema: { $ref: "#/components/schemas/Id" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompanionInput"
+      responses:
+        "200":
+          description: The Companion as it is now.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Companion"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    delete:
+      operationId: deleteCompanion
+      x-ogen-operation-group: Build
+      summary: Let a Companion go
+      description: Removes a Companion from the Campaign. Its token, when it is on a map, stays as a creature of no one. DM only.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - name: companionId
+          in: path
+          required: true
+          description: Companion id.
+          schema: { $ref: "#/components/schemas/Id" }
+      responses:
+        "204":
+          description: The Companion is gone.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /api/v1/campaigns/{campaignId}/npcs:
     get:
       operationId: listNpcs
@@ -9432,6 +9559,7 @@ components:
         proficiencies: { $ref: "#/components/schemas/Proficiencies" }
         levelUpReady: { type: boolean, description: "The next level is unlocked." }
         heroicInspiration: { type: boolean }
+        xp: { type: integer, format: int32, minimum: 0, maximum: 100000000, description: "XP earned in this Campaign." }
         increase: { $ref: "#/components/schemas/AbilityIncrease" }
         classes:
           type: array
@@ -10616,6 +10744,7 @@ components:
         label: { type: string, minLength: 1, maxLength: 40 }
         kind: { $ref: "#/components/schemas/TokenKind" }
         darkvisionFt: { type: integer, format: int32, minimum: 0, maximum: 300 }
+        companionId: { $ref: "#/components/schemas/Id" }
         q: { type: integer, format: int32, minimum: -500, maximum: 500 }
         r: { type: integer, format: int32, minimum: -500, maximum: 500 }
         hidden: { type: boolean }
@@ -10735,7 +10864,7 @@ components:
       required: [nonce, kind, q, r, hidden]
       properties:
         nonce: { type: string, minLength: 1, maxLength: 64 }
-        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual, preview_area, cast_area, paint_surface, set_elevation, table_camera, table_scene, table_blackout, table_caption, ping, set_world, add_node, add_route, remove_node, remove_route, place_party, travel, add_zone, remove_zone, hold_zone, spring_zone, rest, encounter_check, schedule_check, roll_loot, move_item, move_coins, claim_loot, settle_loot, trade, open_shop, close_shop, buy, sell, haggle, spawn_encounter, adjust_hp, undo, propose_rest, agree_rest, spend_hit_die, finish_rest, interrupt_rest, take_action, unarmed, interact, swap_weapons, set_reaction, stabilise, revive, teleport, summon, command, set_visibility, place_object, remove_object, use_object, damage_object, find_object, unlock, disarm, jump, throw, sneak, explore, pass_turn, legendary_action, lair_action, legendary_resistance, checkpoint, rewind, split_party, rejoin_party, table_follow] }
+        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual, preview_area, cast_area, paint_surface, set_elevation, table_camera, table_scene, table_blackout, table_caption, ping, set_world, add_node, add_route, remove_node, remove_route, place_party, travel, add_zone, remove_zone, hold_zone, spring_zone, rest, encounter_check, schedule_check, roll_loot, move_item, move_coins, claim_loot, settle_loot, trade, open_shop, close_shop, buy, sell, haggle, spawn_encounter, adjust_hp, undo, propose_rest, agree_rest, spend_hit_die, finish_rest, interrupt_rest, take_action, unarmed, interact, swap_weapons, set_reaction, stabilise, revive, teleport, summon, command, set_visibility, place_object, remove_object, use_object, damage_object, find_object, unlock, disarm, jump, throw, sneak, explore, pass_turn, legendary_action, lair_action, legendary_resistance, checkpoint, rewind, split_party, rejoin_party, table_follow, assign_control] }
         caption: { type: string, maxLength: 400 }
         tokenId: { $ref: "#/components/schemas/Id" }
         label: { type: string, maxLength: 40 }
@@ -10852,6 +10981,7 @@ components:
         seq: { type: integer, format: int32, minimum: 1, maximum: 2147483647, description: "With undo, the Action Log sequence of the Action to undo." }
         name: { type: string, maxLength: 120, description: "With checkpoint, what to call the Checkpoint, in up to 60 characters." }
         checkpointId: { type: string, maxLength: 64, description: "With rewind, the Checkpoint to go back to." }
+        companionId: { type: string, maxLength: 64, description: "With place_token, the Companion to put on the map. It stands with the party under its own name, run by whoever it is given to, with the hit points it kept. With assign_control, controllerId is the Member who runs the token from now on; left out, the DM does." }
         tokenIds:
           type: array
           maxItems: 40
@@ -12589,6 +12719,7 @@ components:
         health: { type: string, enum: [unhurt, hurt, bloodied, down] }
         hidden: { type: boolean }
         acting: { type: boolean }
+        companion: { type: boolean, description: "An ally who travels with the party." }
         effects: { type: array, maxItems: 100, items: { $ref: "#/components/schemas/LiveEffect" } }
     LiveManual:
       type: object
@@ -12736,6 +12867,33 @@ components:
         modifier: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
         total: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
         look: { $ref: "#/components/schemas/LiveDiceLook" }
+    Companion:
+      type: object
+      description: An ally who travels with the party. A creature with a name of its own, run by a Player or by the DM.
+      additionalProperties: false
+      required: [id, name, kind, monsterSlug, sharesXp, notes, updatedAt]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        name: { type: string, minLength: 1, maxLength: 40 }
+        kind: { type: string, enum: [companion, hireling] }
+        monsterSlug: { type: string, minLength: 1, maxLength: 120 }
+        controllerId: { $ref: "#/components/schemas/Id" }
+        sharesXp: { type: boolean, description: "It takes a share of every XP Award, which nobody else gets." }
+        hp: { type: integer, format: int32, minimum: 0, maximum: 100000, description: "The hit points it had when it last left the map. Left out while it has never been on one." }
+        notes: { type: string, maxLength: 2000, description: "The DM's notes. Empty for anyone else." }
+        updatedAt: { type: string, format: date-time, maxLength: 40 }
+    CompanionInput:
+      type: object
+      description: The editable part of a Companion. Without a controllerId the DM runs it.
+      additionalProperties: false
+      required: [name, kind, monsterSlug, sharesXp]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 120 }
+        kind: { type: string, enum: [companion, hireling] }
+        monsterSlug: { type: string, minLength: 1, maxLength: 120 }
+        controllerId: { $ref: "#/components/schemas/Id" }
+        sharesXp: { type: boolean }
+        notes: { type: string, maxLength: 2000 }
     LiveGroup:
       type: object
       description: One of the Sessions a split party plays in, each with its own map, fog and fight. In a regroup frame it names the Session a screen belongs in instead, and is the last frame the screen is sent.

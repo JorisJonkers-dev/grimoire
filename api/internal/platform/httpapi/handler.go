@@ -25,6 +25,7 @@ type Handler struct {
 	Campaigns  Campaigns
 	Characters CharacterService
 	NPCs       NPCService
+	Companions CompanionService
 	Rolls      RollService
 	Inventory  InventoryService
 	Sessions   SessionService

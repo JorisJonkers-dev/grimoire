@@ -172,6 +172,16 @@ func (UnimplementedHandler) CreateCharacter(ctx context.Context, req *CharacterB
 	return r, ht.ErrNotImplemented
 }
 
+// CreateCompanion implements createCompanion operation.
+//
+// Adds an ally who travels with the party. A creature of the Campaign, with a name of its own. DM
+// only.
+//
+// POST /api/v1/campaigns/{campaignId}/companions
+func (UnimplementedHandler) CreateCompanion(ctx context.Context, req *CompanionInput, params CreateCompanionParams) (r CreateCompanionRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // CreateDiceSet implements createDiceSet operation.
 //
 // A private Dice Set with a look for each die type it dresses, from a preset pattern and two colours.
@@ -323,6 +333,16 @@ func (UnimplementedHandler) DeclineRetrain(ctx context.Context, params DeclineRe
 //
 // DELETE /api/v1/campaigns/{campaignId}/characters/{characterId}
 func (UnimplementedHandler) DeleteCharacter(ctx context.Context, params DeleteCharacterParams) (r DeleteCharacterRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// DeleteCompanion implements deleteCompanion operation.
+//
+// Removes a Companion from the Campaign. Its token, when it is on a map, stays as a creature of no
+// one. DM only.
+//
+// DELETE /api/v1/campaigns/{campaignId}/companions/{companionId}
+func (UnimplementedHandler) DeleteCompanion(ctx context.Context, params DeleteCompanionParams) (r DeleteCompanionRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -1011,6 +1031,15 @@ func (UnimplementedHandler) ListCharacterRevisions(ctx context.Context, params L
 //
 // GET /api/v1/campaigns/{campaignId}/characters
 func (UnimplementedHandler) ListCharacters(ctx context.Context, params ListCharactersParams) (r ListCharactersRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListCompanions implements listCompanions operation.
+//
+// The allies who travel with the party. Every Member sees them; the notes on each are the DM's alone.
+//
+// GET /api/v1/campaigns/{campaignId}/companions
+func (UnimplementedHandler) ListCompanions(ctx context.Context, params ListCompanionsParams) (r ListCompanionsRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -2239,6 +2268,16 @@ func (UnimplementedHandler) UpdateCampaign(ctx context.Context, req *CampaignUpd
 //
 // PATCH /api/v1/campaigns/{campaignId}/characters/{characterId}
 func (UnimplementedHandler) UpdateCharacter(ctx context.Context, req *CharacterEdit, params UpdateCharacterParams) (r UpdateCharacterRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// UpdateCompanion implements updateCompanion operation.
+//
+// Changes a Companion. Who runs it, whether it takes a share of the XP, its name and its creature. A
+// new creature starts at full hit points. DM only.
+//
+// PUT /api/v1/campaigns/{campaignId}/companions/{companionId}
+func (UnimplementedHandler) UpdateCompanion(ctx context.Context, req *CompanionInput, params UpdateCompanionParams) (r UpdateCompanionRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

@@ -16,6 +16,7 @@ import {
 } from '@/infrastructure/api/@tanstack/vue-query.gen'
 import type { Member, Role } from '@/infrastructure/api/types.gen'
 import { GButton, TokenBadge } from '@/shared/ui'
+import CompanionsSection from './CompanionsSection.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -207,6 +208,8 @@ const expires = (iso: string) => new Date(iso).toLocaleDateString(undefined, { d
         </ul>
         <RouterLink :to="{ name: 'character-new', params: { id } }" class="build" data-testid="build-character">Build a character</RouterLink>
       </section>
+
+      <CompanionsSection :campaign-id="id" :dm="isDM" :members="campaign.data.value.members" />
 
       <section class="g-card">
         <h2>Members</h2>

@@ -2999,6 +2999,7 @@ export const zLiveToken = z.object({
     label: z.string().min(1).max(40),
     kind: zTokenKind,
     darkvisionFt: z.int().gte(0).lte(300),
+    companionId: zId.optional(),
     q: z.int().gte(-500).lte(500),
     r: z.int().gte(-500).lte(500),
     hidden: z.boolean(),
@@ -3043,6 +3044,7 @@ export const zLiveRosterEntry = z.object({
     ]).optional(),
     hidden: z.boolean().optional(),
     acting: z.boolean(),
+    companion: z.boolean().optional(),
     effects: z.array(zLiveEffect).max(100)
 });
 
@@ -3150,6 +3152,33 @@ export const zLiveCombat = z.object({
     combatants: z.array(zLiveCombatant).max(50),
     attack: zLivePendingAttack.optional(),
     prompt: zLivePrompt.optional()
+});
+
+/**
+ * An ally who travels with the party. A creature with a name of its own, run by a Player or by the DM.
+ */
+export const zCompanion = z.object({
+    id: zId,
+    name: z.string().min(1).max(40),
+    kind: z.enum(['companion', 'hireling']),
+    monsterSlug: z.string().min(1).max(120),
+    controllerId: zId.optional(),
+    sharesXp: z.boolean(),
+    hp: z.int().gte(0).lte(100000).optional(),
+    notes: z.string().max(2000),
+    updatedAt: z.iso.datetime().max(40)
+});
+
+/**
+ * The editable part of a Companion. Without a controllerId the DM runs it.
+ */
+export const zCompanionInput = z.object({
+    name: z.string().min(1).max(120),
+    kind: z.enum(['companion', 'hireling']),
+    monsterSlug: z.string().min(1).max(120),
+    controllerId: zId.optional(),
+    sharesXp: z.boolean(),
+    notes: z.string().max(2000).optional()
 });
 
 /**
@@ -4290,7 +4319,8 @@ export const zLiveCommand = z.object({
         'rewind',
         'split_party',
         'rejoin_party',
-        'table_follow'
+        'table_follow',
+        'assign_control'
     ]),
     caption: z.string().max(400).optional(),
     tokenId: zId.optional(),
@@ -4433,6 +4463,7 @@ export const zLiveCommand = z.object({
     seq: z.int().gte(1).lte(2147483647).optional(),
     name: z.string().max(120).optional(),
     checkpointId: z.string().max(64).optional(),
+    companionId: z.string().max(64).optional(),
     tokenIds: z.array(zId).max(40).optional(),
     sessionId: z.string().max(64).optional()
 });
@@ -4683,6 +4714,7 @@ export const zCharacterSheet = z.object({
     proficiencies: zProficiencies.optional(),
     levelUpReady: z.boolean().optional(),
     heroicInspiration: z.boolean().optional(),
+    xp: z.int().gte(0).lte(100000000).optional(),
     increase: zAbilityIncrease.optional(),
     classes: z.array(zClassLine).max(12).optional(),
     spells: z.array(zLearnedSpellLine).max(100).optional()
@@ -5880,6 +5912,48 @@ export const zListEncounterChecksPath = z.object({
  * The checks.
  */
 export const zListEncounterChecksResponse = z.array(zEncounterCheck).max(1000);
+
+export const zListCompanionsPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The Companions, by name.
+ */
+export const zListCompanionsResponse = z.array(zCompanion).max(200);
+
+export const zCreateCompanionBody = zCompanionInput;
+
+export const zCreateCompanionPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The new Companion.
+ */
+export const zCreateCompanionResponse = zCompanion;
+
+export const zDeleteCompanionPath = z.object({
+    campaignId: zId,
+    companionId: zId
+});
+
+/**
+ * The Companion is gone.
+ */
+export const zDeleteCompanionResponse = z.void();
+
+export const zUpdateCompanionBody = zCompanionInput;
+
+export const zUpdateCompanionPath = z.object({
+    campaignId: zId,
+    companionId: zId
+});
+
+/**
+ * The Companion as it is now.
+ */
+export const zUpdateCompanionResponse = zCompanion;
 
 export const zListNpcsPath = z.object({
     campaignId: zId

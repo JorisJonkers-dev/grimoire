@@ -244,7 +244,7 @@ func rosterEntry(t TokenView, acting bool) RosterEntry {
 	}
 	return RosterEntry{
 		TokenID: t.ID, Label: t.Label, Kind: t.Kind, HP: t.HP, HPMax: t.HPMax, TempHP: t.TempHP, Health: t.Health, Hidden: t.Hidden,
-		Acting: acting, Effects: effects,
+		Acting: acting, Effects: effects, Companion: t.CompanionID != "",
 	}
 }
 

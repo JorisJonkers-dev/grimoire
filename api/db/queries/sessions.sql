@@ -24,14 +24,14 @@ UPDATE play.sessions SET seq = seq + 1 WHERE id = $1 RETURNING seq;
 
 -- name: SessionTokens :many
 SELECT id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class, hp, hp_max, intelligence, tactics, can_shield, spell_dc,
-    stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action, temp_hp, summon_effect_id, disguise, strength, creature_type, legend FROM play.tokens WHERE session_id = $1 ORDER BY label, id;
+    stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action, temp_hp, summon_effect_id, disguise, strength, creature_type, legend, companion_id FROM play.tokens WHERE session_id = $1 ORDER BY label, id;
 
 -- name: InsertToken :exec
 INSERT INTO play.tokens (id, session_id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class,
-    hp, hp_max, intelligence, can_shield, spell_dc, stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action, summon_effect_id, strength, creature_type, legend)
+    hp, hp_max, intelligence, can_shield, spell_dc, stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action, summon_effect_id, strength, creature_type, legend, companion_id)
 VALUES (@id, @session_id, @label, @kind, @q, @r, @hidden, @darkvision_ft, @controller_member_id, sqlc.narg(stat_source),
     sqlc.narg(armor_class), sqlc.narg(hp), sqlc.narg(hp_max), sqlc.narg(intelligence), @can_shield, sqlc.narg(spell_dc), @stealth,
-    @perception, @initiative, @speed_ft, @unarmed_dc, @attacks_per_action, sqlc.narg(summon_effect_id), @strength, @creature_type, sqlc.narg(legend));
+    @perception, @initiative, @speed_ft, @unarmed_dc, @attacks_per_action, sqlc.narg(summon_effect_id), @strength, @creature_type, sqlc.narg(legend), sqlc.narg(companion_id));
 
 -- name: UpdateToken :exec
 UPDATE play.tokens SET q = @q, r = @r, hidden = @hidden WHERE session_id = @session_id AND id = @id;

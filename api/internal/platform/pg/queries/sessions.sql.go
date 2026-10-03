@@ -1057,10 +1057,10 @@ func (q *Queries) InsertSurface(ctx context.Context, arg InsertSurfaceParams) er
 
 const insertToken = `-- name: InsertToken :exec
 INSERT INTO play.tokens (id, session_id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class,
-    hp, hp_max, intelligence, can_shield, spell_dc, stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action, summon_effect_id, strength, creature_type, legend)
+    hp, hp_max, intelligence, can_shield, spell_dc, stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action, summon_effect_id, strength, creature_type, legend, companion_id)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
     $11, $12, $13, $14, $15, $16, $17,
-    $18, $19, $20, $21, $22, $23, $24, $25, $26)
+    $18, $19, $20, $21, $22, $23, $24, $25, $26, $27)
 `
 
 type InsertTokenParams struct {
@@ -1090,6 +1090,7 @@ type InsertTokenParams struct {
 	Strength           int32
 	CreatureType       string
 	Legend             []byte
+	CompanionID        pgtype.UUID
 }
 
 func (q *Queries) InsertToken(ctx context.Context, arg InsertTokenParams) error {
@@ -1120,6 +1121,7 @@ func (q *Queries) InsertToken(ctx context.Context, arg InsertTokenParams) error 
 		arg.Strength,
 		arg.CreatureType,
 		arg.Legend,
+		arg.CompanionID,
 	)
 	return err
 }
@@ -2882,7 +2884,7 @@ func (q *Queries) SessionTokenSenses(ctx context.Context, sessionID uuid.UUID) (
 
 const sessionTokens = `-- name: SessionTokens :many
 SELECT id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class, hp, hp_max, intelligence, tactics, can_shield, spell_dc,
-    stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action, temp_hp, summon_effect_id, disguise, strength, creature_type, legend FROM play.tokens WHERE session_id = $1 ORDER BY label, id
+    stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action, temp_hp, summon_effect_id, disguise, strength, creature_type, legend, companion_id FROM play.tokens WHERE session_id = $1 ORDER BY label, id
 `
 
 type SessionTokensRow struct {
@@ -2914,6 +2916,7 @@ type SessionTokensRow struct {
 	Strength           int32
 	CreatureType       string
 	Legend             []byte
+	CompanionID        pgtype.UUID
 }
 
 func (q *Queries) SessionTokens(ctx context.Context, sessionID uuid.UUID) ([]SessionTokensRow, error) {
@@ -2954,6 +2957,7 @@ func (q *Queries) SessionTokens(ctx context.Context, sessionID uuid.UUID) ([]Ses
 			&i.Strength,
 			&i.CreatureType,
 			&i.Legend,
+			&i.CompanionID,
 		); err != nil {
 			return nil, err
 		}

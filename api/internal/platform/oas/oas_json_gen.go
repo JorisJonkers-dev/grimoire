@@ -10204,6 +10204,12 @@ func (s *CharacterSheet) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.Xp.Set {
+			e.FieldStart("xp")
+			s.Xp.Encode(e)
+		}
+	}
+	{
 		if s.Increase.Set {
 			e.FieldStart("increase")
 			s.Increase.Encode(e)
@@ -10231,7 +10237,7 @@ func (s *CharacterSheet) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfCharacterSheet = [42]string{
+var jsonFieldsNameOfCharacterSheet = [43]string{
 	0:  "id",
 	1:  "name",
 	2:  "ruleset",
@@ -10271,9 +10277,10 @@ var jsonFieldsNameOfCharacterSheet = [42]string{
 	36: "proficiencies",
 	37: "levelUpReady",
 	38: "heroicInspiration",
-	39: "increase",
-	40: "classes",
-	41: "spells",
+	39: "xp",
+	40: "increase",
+	41: "classes",
+	42: "spells",
 }
 
 // Decode decodes CharacterSheet from json.
@@ -10776,6 +10783,16 @@ func (s *CharacterSheet) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"heroicInspiration\"")
+			}
+		case "xp":
+			if err := func() error {
+				s.Xp.Reset()
+				if err := s.Xp.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"xp\"")
 			}
 		case "increase":
 			if err := func() error {
@@ -13162,6 +13179,494 @@ func (s Coin) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *Coin) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
+func (s *Companion) Encode(e *jx.Encoder) {
+	e.ObjStart()
+	s.encodeFields(e)
+	e.ObjEnd()
+}
+
+// encodeFields encodes fields.
+func (s *Companion) encodeFields(e *jx.Encoder) {
+	{
+		e.FieldStart("id")
+		s.ID.Encode(e)
+	}
+	{
+		e.FieldStart("name")
+		e.Str(s.Name)
+	}
+	{
+		e.FieldStart("kind")
+		s.Kind.Encode(e)
+	}
+	{
+		e.FieldStart("monsterSlug")
+		e.Str(s.MonsterSlug)
+	}
+	{
+		if s.ControllerId.Set {
+			e.FieldStart("controllerId")
+			s.ControllerId.Encode(e)
+		}
+	}
+	{
+		e.FieldStart("sharesXp")
+		e.Bool(s.SharesXp)
+	}
+	{
+		if s.Hp.Set {
+			e.FieldStart("hp")
+			s.Hp.Encode(e)
+		}
+	}
+	{
+		e.FieldStart("notes")
+		e.Str(s.Notes)
+	}
+	{
+		e.FieldStart("updatedAt")
+		json.EncodeDateTime(e, s.UpdatedAt)
+	}
+}
+
+var jsonFieldsNameOfCompanion = [9]string{
+	0: "id",
+	1: "name",
+	2: "kind",
+	3: "monsterSlug",
+	4: "controllerId",
+	5: "sharesXp",
+	6: "hp",
+	7: "notes",
+	8: "updatedAt",
+}
+
+// Decode decodes Companion from json.
+func (s *Companion) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode Companion to nil")
+	}
+	var requiredBitSet [2]uint8
+
+	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
+		switch string(k) {
+		case "id":
+			requiredBitSet[0] |= 1 << 0
+			if err := func() error {
+				if err := s.ID.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"id\"")
+			}
+		case "name":
+			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				v, err := d.Str()
+				s.Name = string(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"name\"")
+			}
+		case "kind":
+			requiredBitSet[0] |= 1 << 2
+			if err := func() error {
+				if err := s.Kind.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"kind\"")
+			}
+		case "monsterSlug":
+			requiredBitSet[0] |= 1 << 3
+			if err := func() error {
+				v, err := d.Str()
+				s.MonsterSlug = string(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"monsterSlug\"")
+			}
+		case "controllerId":
+			if err := func() error {
+				s.ControllerId.Reset()
+				if err := s.ControllerId.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"controllerId\"")
+			}
+		case "sharesXp":
+			requiredBitSet[0] |= 1 << 5
+			if err := func() error {
+				v, err := d.Bool()
+				s.SharesXp = bool(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"sharesXp\"")
+			}
+		case "hp":
+			if err := func() error {
+				s.Hp.Reset()
+				if err := s.Hp.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"hp\"")
+			}
+		case "notes":
+			requiredBitSet[0] |= 1 << 7
+			if err := func() error {
+				v, err := d.Str()
+				s.Notes = string(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"notes\"")
+			}
+		case "updatedAt":
+			requiredBitSet[1] |= 1 << 0
+			if err := func() error {
+				v, err := json.DecodeDateTime(d)
+				s.UpdatedAt = v
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"updatedAt\"")
+			}
+		default:
+			return errors.Errorf("unexpected field %q", k)
+		}
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "decode Companion")
+	}
+	// Validate required fields.
+	var failures []validate.FieldError
+	for i, mask := range [2]uint8{
+		0b10101111,
+		0b00000001,
+	} {
+		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
+			// Mask only required fields and check equality to mask using XOR.
+			//
+			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
+			// Bits of fields which would be set are actually bits of missed fields.
+			missed := bits.OnesCount8(result)
+			for bitN := 0; bitN < missed; bitN++ {
+				bitIdx := bits.TrailingZeros8(result)
+				fieldIdx := i*8 + bitIdx
+				var name string
+				if fieldIdx < len(jsonFieldsNameOfCompanion) {
+					name = jsonFieldsNameOfCompanion[fieldIdx]
+				} else {
+					name = strconv.Itoa(fieldIdx)
+				}
+				failures = append(failures, validate.FieldError{
+					Name:  name,
+					Error: validate.ErrFieldRequired,
+				})
+				// Reset bit.
+				result &^= 1 << bitIdx
+			}
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *Companion) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *Companion) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
+func (s *CompanionInput) Encode(e *jx.Encoder) {
+	e.ObjStart()
+	s.encodeFields(e)
+	e.ObjEnd()
+}
+
+// encodeFields encodes fields.
+func (s *CompanionInput) encodeFields(e *jx.Encoder) {
+	{
+		e.FieldStart("name")
+		e.Str(s.Name)
+	}
+	{
+		e.FieldStart("kind")
+		s.Kind.Encode(e)
+	}
+	{
+		e.FieldStart("monsterSlug")
+		e.Str(s.MonsterSlug)
+	}
+	{
+		if s.ControllerId.Set {
+			e.FieldStart("controllerId")
+			s.ControllerId.Encode(e)
+		}
+	}
+	{
+		e.FieldStart("sharesXp")
+		e.Bool(s.SharesXp)
+	}
+	{
+		if s.Notes.Set {
+			e.FieldStart("notes")
+			s.Notes.Encode(e)
+		}
+	}
+}
+
+var jsonFieldsNameOfCompanionInput = [6]string{
+	0: "name",
+	1: "kind",
+	2: "monsterSlug",
+	3: "controllerId",
+	4: "sharesXp",
+	5: "notes",
+}
+
+// Decode decodes CompanionInput from json.
+func (s *CompanionInput) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode CompanionInput to nil")
+	}
+	var requiredBitSet [1]uint8
+
+	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
+		switch string(k) {
+		case "name":
+			requiredBitSet[0] |= 1 << 0
+			if err := func() error {
+				v, err := d.Str()
+				s.Name = string(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"name\"")
+			}
+		case "kind":
+			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				if err := s.Kind.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"kind\"")
+			}
+		case "monsterSlug":
+			requiredBitSet[0] |= 1 << 2
+			if err := func() error {
+				v, err := d.Str()
+				s.MonsterSlug = string(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"monsterSlug\"")
+			}
+		case "controllerId":
+			if err := func() error {
+				s.ControllerId.Reset()
+				if err := s.ControllerId.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"controllerId\"")
+			}
+		case "sharesXp":
+			requiredBitSet[0] |= 1 << 4
+			if err := func() error {
+				v, err := d.Bool()
+				s.SharesXp = bool(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"sharesXp\"")
+			}
+		case "notes":
+			if err := func() error {
+				s.Notes.Reset()
+				if err := s.Notes.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"notes\"")
+			}
+		default:
+			return errors.Errorf("unexpected field %q", k)
+		}
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "decode CompanionInput")
+	}
+	// Validate required fields.
+	var failures []validate.FieldError
+	for i, mask := range [1]uint8{
+		0b00010111,
+	} {
+		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
+			// Mask only required fields and check equality to mask using XOR.
+			//
+			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
+			// Bits of fields which would be set are actually bits of missed fields.
+			missed := bits.OnesCount8(result)
+			for bitN := 0; bitN < missed; bitN++ {
+				bitIdx := bits.TrailingZeros8(result)
+				fieldIdx := i*8 + bitIdx
+				var name string
+				if fieldIdx < len(jsonFieldsNameOfCompanionInput) {
+					name = jsonFieldsNameOfCompanionInput[fieldIdx]
+				} else {
+					name = strconv.Itoa(fieldIdx)
+				}
+				failures = append(failures, validate.FieldError{
+					Name:  name,
+					Error: validate.ErrFieldRequired,
+				})
+				// Reset bit.
+				result &^= 1 << bitIdx
+			}
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *CompanionInput) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *CompanionInput) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes CompanionInputKind as json.
+func (s CompanionInputKind) Encode(e *jx.Encoder) {
+	e.Str(string(s))
+}
+
+// Decode decodes CompanionInputKind from json.
+func (s *CompanionInputKind) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode CompanionInputKind to nil")
+	}
+	v, err := d.StrBytes()
+	if err != nil {
+		return err
+	}
+	// Try to use constant string.
+	switch CompanionInputKind(v) {
+	case CompanionInputKindCompanion:
+		*s = CompanionInputKindCompanion
+	case CompanionInputKindHireling:
+		*s = CompanionInputKindHireling
+	default:
+		*s = CompanionInputKind(v)
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s CompanionInputKind) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *CompanionInputKind) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes CompanionKind as json.
+func (s CompanionKind) Encode(e *jx.Encoder) {
+	e.Str(string(s))
+}
+
+// Decode decodes CompanionKind from json.
+func (s *CompanionKind) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode CompanionKind to nil")
+	}
+	v, err := d.StrBytes()
+	if err != nil {
+		return err
+	}
+	// Try to use constant string.
+	switch CompanionKind(v) {
+	case CompanionKindCompanion:
+		*s = CompanionKindCompanion
+	case CompanionKindHireling:
+		*s = CompanionKindHireling
+	default:
+		*s = CompanionKind(v)
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s CompanionKind) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *CompanionKind) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -34043,6 +34548,12 @@ func (s *LiveCommand) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.CompanionId.Set {
+			e.FieldStart("companionId")
+			s.CompanionId.Encode(e)
+		}
+	}
+	{
 		if s.TokenIds != nil {
 			e.FieldStart("tokenIds")
 			e.ArrStart()
@@ -34060,7 +34571,7 @@ func (s *LiveCommand) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfLiveCommand = [103]string{
+var jsonFieldsNameOfLiveCommand = [104]string{
 	0:   "nonce",
 	1:   "kind",
 	2:   "caption",
@@ -34162,8 +34673,9 @@ var jsonFieldsNameOfLiveCommand = [103]string{
 	98:  "seq",
 	99:  "name",
 	100: "checkpointId",
-	101: "tokenIds",
-	102: "sessionId",
+	101: "companionId",
+	102: "tokenIds",
+	103: "sessionId",
 }
 
 // Decode decodes LiveCommand from json.
@@ -35249,6 +35761,16 @@ func (s *LiveCommand) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"checkpointId\"")
 			}
+		case "companionId":
+			if err := func() error {
+				s.CompanionId.Reset()
+				if err := s.CompanionId.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"companionId\"")
+			}
 		case "tokenIds":
 			if err := func() error {
 				s.TokenIds = make([]ID, 0)
@@ -35694,6 +36216,8 @@ func (s *LiveCommandKind) Decode(d *jx.Decoder) error {
 		*s = LiveCommandKindRejoinParty
 	case LiveCommandKindTableFollow:
 		*s = LiveCommandKindTableFollow
+	case LiveCommandKindAssignControl:
+		*s = LiveCommandKindAssignControl
 	default:
 		*s = LiveCommandKind(v)
 	}
@@ -42067,6 +42591,12 @@ func (s *LiveRosterEntry) encodeFields(e *jx.Encoder) {
 		e.Bool(s.Acting)
 	}
 	{
+		if s.Companion.Set {
+			e.FieldStart("companion")
+			s.Companion.Encode(e)
+		}
+	}
+	{
 		e.FieldStart("effects")
 		e.ArrStart()
 		for _, elem := range s.Effects {
@@ -42076,17 +42606,18 @@ func (s *LiveRosterEntry) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfLiveRosterEntry = [10]string{
-	0: "tokenId",
-	1: "label",
-	2: "kind",
-	3: "hp",
-	4: "hpMax",
-	5: "tempHp",
-	6: "health",
-	7: "hidden",
-	8: "acting",
-	9: "effects",
+var jsonFieldsNameOfLiveRosterEntry = [11]string{
+	0:  "tokenId",
+	1:  "label",
+	2:  "kind",
+	3:  "hp",
+	4:  "hpMax",
+	5:  "tempHp",
+	6:  "health",
+	7:  "hidden",
+	8:  "acting",
+	9:  "companion",
+	10: "effects",
 }
 
 // Decode decodes LiveRosterEntry from json.
@@ -42194,8 +42725,18 @@ func (s *LiveRosterEntry) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"acting\"")
 			}
+		case "companion":
+			if err := func() error {
+				s.Companion.Reset()
+				if err := s.Companion.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"companion\"")
+			}
 		case "effects":
-			requiredBitSet[1] |= 1 << 1
+			requiredBitSet[1] |= 1 << 2
 			if err := func() error {
 				s.Effects = make([]LiveEffect, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
@@ -42223,7 +42764,7 @@ func (s *LiveRosterEntry) Decode(d *jx.Decoder) error {
 	var failures []validate.FieldError
 	for i, mask := range [2]uint8{
 		0b00000111,
-		0b00000011,
+		0b00000101,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -43593,6 +44134,12 @@ func (s *LiveToken) encodeFields(e *jx.Encoder) {
 		e.Int32(s.DarkvisionFt)
 	}
 	{
+		if s.CompanionId.Set {
+			e.FieldStart("companionId")
+			s.CompanionId.Encode(e)
+		}
+	}
+	{
 		e.FieldStart("q")
 		e.Int32(s.Q)
 	}
@@ -43718,30 +44265,31 @@ func (s *LiveToken) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfLiveToken = [23]string{
+var jsonFieldsNameOfLiveToken = [24]string{
 	0:  "id",
 	1:  "label",
 	2:  "kind",
 	3:  "darkvisionFt",
-	4:  "q",
-	5:  "r",
-	6:  "hidden",
-	7:  "controllerId",
-	8:  "characterId",
-	9:  "ac",
-	10: "hp",
-	11: "hpMax",
-	12: "tempHp",
-	13: "form",
-	14: "qualities",
-	15: "disguise",
-	16: "health",
-	17: "attacks",
-	18: "shield",
-	19: "effects",
-	20: "reactions",
-	21: "dying",
-	22: "legend",
+	4:  "companionId",
+	5:  "q",
+	6:  "r",
+	7:  "hidden",
+	8:  "controllerId",
+	9:  "characterId",
+	10: "ac",
+	11: "hp",
+	12: "hpMax",
+	13: "tempHp",
+	14: "form",
+	15: "qualities",
+	16: "disguise",
+	17: "health",
+	18: "attacks",
+	19: "shield",
+	20: "effects",
+	21: "reactions",
+	22: "dying",
+	23: "legend",
 }
 
 // Decode decodes LiveToken from json.
@@ -43797,8 +44345,18 @@ func (s *LiveToken) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"darkvisionFt\"")
 			}
+		case "companionId":
+			if err := func() error {
+				s.CompanionId.Reset()
+				if err := s.CompanionId.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"companionId\"")
+			}
 		case "q":
-			requiredBitSet[0] |= 1 << 4
+			requiredBitSet[0] |= 1 << 5
 			if err := func() error {
 				v, err := d.Int32()
 				s.Q = int32(v)
@@ -43810,7 +44368,7 @@ func (s *LiveToken) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"q\"")
 			}
 		case "r":
-			requiredBitSet[0] |= 1 << 5
+			requiredBitSet[0] |= 1 << 6
 			if err := func() error {
 				v, err := d.Int32()
 				s.R = int32(v)
@@ -43822,7 +44380,7 @@ func (s *LiveToken) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"r\"")
 			}
 		case "hidden":
-			requiredBitSet[0] |= 1 << 6
+			requiredBitSet[0] |= 1 << 7
 			if err := func() error {
 				v, err := d.Bool()
 				s.Hidden = bool(v)
@@ -44031,7 +44589,7 @@ func (s *LiveToken) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [3]uint8{
-		0b01111111,
+		0b11101111,
 		0b00000000,
 		0b00000000,
 	} {

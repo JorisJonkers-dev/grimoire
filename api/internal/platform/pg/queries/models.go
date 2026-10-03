@@ -79,6 +79,7 @@ type CampaignCharacter struct {
 	CanPrepare        bool
 	HeroicInspiration bool
 	WeaponSet         string
+	Xp                int32
 }
 
 type CampaignCharacterAbility struct {
@@ -173,6 +174,20 @@ type CampaignCharacterWeapon struct {
 	CharacterID uuid.UUID
 	WeaponSlug  string
 	Ordering    int32
+}
+
+type CampaignCompanion struct {
+	ID                 uuid.UUID
+	CampaignID         uuid.UUID
+	Name               string
+	Kind               string
+	MonsterSlug        string
+	ControllerMemberID pgtype.UUID
+	SharesXp           bool
+	HpCurrent          pgtype.Int4
+	Notes              string
+	CreatedAt          time.Time
+	UpdatedAt          time.Time
 }
 
 type CampaignContainer struct {
@@ -1653,6 +1668,7 @@ type PlayToken struct {
 	Strength           int32
 	CreatureType       string
 	Legend             []byte
+	CompanionID        pgtype.UUID
 }
 
 type PlayTokenAttack struct {
@@ -1713,6 +1729,12 @@ type PlayTravelLeg struct {
 	DistanceMi int32
 	Minutes    int32
 	Days       int32
+}
+
+type PlayXpAward struct {
+	ActionID    uuid.UUID
+	CharacterID uuid.UUID
+	Amount      int32
 }
 
 type PlayZoneCheck struct {

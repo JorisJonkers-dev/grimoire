@@ -2,7 +2,7 @@
 import { useMutation, useQuery } from '@tanstack/vue-query'
 import { computed, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { endSessionMutation, getCampaignOptions, getSessionLogOptions, listCharactersOptions, listEncounterTablesOptions, listLootTablesOptions, listMapsOptions, listShopsOptions } from '@/infrastructure/api/@tanstack/vue-query.gen'
+import { endSessionMutation, getCampaignOptions, getSessionLogOptions, listCharactersOptions, listCompanionsOptions, listEncounterTablesOptions, listLootTablesOptions, listMapsOptions, listShopsOptions } from '@/infrastructure/api/@tanstack/vue-query.gen'
 import { rollRest } from '@/infrastructure/api/sdk.gen'
 import type { AmbientLight, LiveCombatant, LiveCombatantSetup, LiveSuggestion, LiveToken, MapObjectKind, TokenKind } from '@/infrastructure/api/types.gen'
 import { useLiveSession } from '@/realtime/liveSession'
@@ -114,6 +114,10 @@ const surfaceKind = ref('')
 const surfaceRounds = ref(0)
 const elevationFt = ref(10)
 const character = ref('')
+// The Companions of the Campaign that are not on the map yet, for the DM to put there.
+const companions = useQuery(computed(() => ({ ...listCompanionsOptions({ path: { campaignId } }), enabled: isDM.value, retry: false })))
+const companion = ref('')
+const offMap = computed(() => (companions.data.value ?? []).filter((c) => !view.value?.tokens.some((t) => t.companionId === c.id)))
 const players = computed(() => campaign.data.value?.members.filter((m) => m.role === 'player') ?? [])
 const walkPath = computed(() => state.value?.path?.hexes ?? [])
 const walkDanger = computed(() => state.value?.path?.threats.map((t) => ({ q: t.q, r: t.r })) ?? [])
@@ -340,6 +344,9 @@ function tokenTool(c: Coord) {
     selected.value = there.id === selected.value ? null : there.id
   } else if (chosen.value) {
     walkTo(c)
+  } else if (companion.value) {
+    live.value?.send({ kind: 'place_token', companionId: companion.value, q: c.q, r: c.r, hidden: hidden.value })
+    companion.value = ''
   } else if (label.value.trim() || monster.value.trim() || character.value) {
     live.value?.send({
       kind: 'place_token', label: label.value.trim(), tokenKind: kind.value, q: c.q, r: c.r, hidden: hidden.value, darkvisionFt: darkvision.value,
@@ -775,6 +782,13 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
                 <option v-for="ch in characters.data.value ?? []" :key="ch.id" :value="ch.id">{{ ch.name }}</option>
               </select>
             </label>
+            <label v-if="isDM" class="g-field">
+              <span>Companion</span>
+              <select v-model="companion" data-testid="token-companion">
+                <option value="">None</option>
+                <option v-for="c in offMap" :key="c.id" :value="c.id">{{ c.name }}</option>
+              </select>
+            </label>
             <label class="g-field"><span>Darkvision (ft)</span><input v-model.number="darkvision" type="number" min="0" max="300" data-testid="token-darkvision" /></label>
             <label class="check"><input v-model="hidden" type="checkbox" data-testid="token-hidden" /><span>Hidden</span></label>
             <label class="check"><input v-model="knowsShield" type="checkbox" data-testid="token-shield" /><span>Knows Shield</span></label>
@@ -797,6 +811,17 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
           />
           <div v-if="chosen" class="row" data-testid="selected-token">
             <span>{{ chosen.label }}{{ chosen.hidden ? ' (hidden)' : '' }}</span>
+            <label v-if="isDM && chosen.companionId" class="g-field">
+              <span>Run by</span>
+              <select
+                :value="chosen.controllerId ?? ''"
+                data-testid="token-hand"
+                @change="live?.send({ kind: 'assign_control', tokenId: chosen.id, ...(($event.target as HTMLSelectElement).value ? { controllerId: ($event.target as HTMLSelectElement).value } : {}) })"
+              >
+                <option value="">The DM</option>
+                <option v-for="m in campaign.data.value?.members ?? []" :key="m.id" :value="m.id">{{ m.displayName }}</option>
+              </select>
+            </label>
             <GButton data-testid="toggle-hidden" @click="toggleHidden()">{{ chosen.hidden ? 'Reveal' : 'Hide' }}</GButton>
             <GButton variant="danger" data-testid="remove-token" @click="remove()">Remove</GButton>
           </div>
