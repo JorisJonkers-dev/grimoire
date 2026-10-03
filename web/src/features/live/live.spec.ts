@@ -96,11 +96,11 @@ describe('live session page', () => {
     expect(wrapper.get('[data-testid="selected-token"]').text()).toContain('Goblin Boss')
     await wrapper.get('[data-hex="2,0"]').trigger('click')
     expect(s.sent.at(-1)).toMatchObject({ kind: 'plan_walk', tokenId: goblin.id, q: 2, r: 0 })
-    s.receive({ kind: 'path', seq: 1, path: { tokenId: goblin.id, hexes: [{ q: 1, r: 0 }, { q: 2, r: 0 }], costFt: 5 } })
+    s.receive({ kind: 'path', seq: 1, path: { tokenId: goblin.id, hexes: [{ q: 1, r: 0 }, { q: 2, r: 0 }], costFt: 5, threats: [], sight: [] } })
     await flushPromises()
     expect(wrapper.get('[data-testid="walk-preview"]').text()).toContain('Walk 5 ft')
     expect(wrapper.get('[data-hex="2,0"]').attributes('aria-label')).toContain('on the path')
-    await wrapper.get('[data-hex="2,0"]').trigger('click')
+    await wrapper.get('[data-testid="confirm-walk"]').trigger('click')
     expect(s.sent.at(-1)).toMatchObject({ kind: 'walk', tokenId: goblin.id, q: 2, r: 0 })
     await wrapper.get('[data-testid="toggle-hidden"]').trigger('click')
     expect(s.sent.at(-1)).toMatchObject({ kind: 'set_token_hidden', tokenId: goblin.id, hidden: true })
@@ -234,17 +234,45 @@ describe('exploration', () => {
     expect(wrapper.get('[data-testid="walker"]').text()).toContain('Brom')
     await wrapper.get('[data-hex="1,0"]').trigger('click')
     expect(s.sent.at(-1)).toMatchObject({ kind: 'plan_walk', tokenId: brom.id, q: 1, r: 0 })
-    s.receive({ kind: 'path', seq: 1, path: { tokenId: brom.id, hexes: [{ q: 0, r: 1 }, { q: 1, r: 0 }], costFt: 5 } })
+    s.receive({ kind: 'path', seq: 1, path: { tokenId: brom.id, hexes: [{ q: 0, r: 1 }, { q: 1, r: 0 }], costFt: 5, threats: [], sight: [] } })
     await flushPromises()
+    expect(wrapper.get('[data-testid="walk-preview"]').text()).toContain('No opportunity attacks.')
+    // Tapping the same hex again only plans again: nothing moves without Confirm.
+    await wrapper.get('[data-hex="1,0"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'plan_walk', q: 1, r: 0 })
+    await wrapper.get('[data-testid="cancel-walk"]').trigger('click')
+    expect(wrapper.find('[data-testid="walk-preview"]').exists()).toBe(false)
+    expect(wrapper.get('[data-hex="1,0"]').attributes('aria-label')).not.toContain('on the path')
+    expect(s.sent.every((c) => (c as { kind: string }).kind !== 'walk')).toBe(true)
     await wrapper.get('[data-hex="2,-1"]').trigger('click')
     expect(s.sent.at(-1)).toMatchObject({ kind: 'plan_walk', q: 2, r: -1 })
     s.receive({ kind: 'rejected', seq: 1, reason: 'There is no way there.' })
     await flushPromises()
     expect(wrapper.find('[data-testid="walk-preview"]').exists()).toBe(false)
     expect(wrapper.get('[data-testid="rejection"]').text()).toBe('There is no way there.')
-    s.receive({ kind: 'path', seq: 1, path: { tokenId: brom.id, hexes: [{ q: 0, r: 1 }, { q: 1, r: 1 }, { q: 2, r: 0 }], costFt: 10 } })
+    s.receive({
+      kind: 'path', seq: 1,
+      path: {
+        tokenId: brom.id, hexes: [{ q: 0, r: 1 }, { q: 1, r: 1 }, { q: 2, r: 0 }], costFt: 10,
+        threats: [{ tokenId: goblin.id, label: 'Goblin Boss', q: 0, r: 1 }],
+        sight: [
+          { tokenId: goblin.id, label: 'Goblin Boss', visible: true, cover: 'half' },
+          { tokenId: lurker.id, label: 'Archer', visible: false, cover: 'total' },
+          { tokenId: '0190c7a8-0000-7000-8000-0000000000aa', label: 'Wolf', visible: true, cover: 'none' },
+          { tokenId: '0190c7a8-0000-7000-8000-0000000000ab', label: 'Ogre', visible: true, cover: 'three_quarters' },
+        ],
+      },
+    })
     await flushPromises()
-    await wrapper.get('[data-hex="2,0"]').trigger('click')
+    const plan = wrapper.get('[data-testid="walk-preview"]')
+    expect(plan.text()).toContain('Walk 10 ft')
+    expect(plan.get('[data-testid="walk-threats"]').text()).toBe('Leaving Goblin Boss\'s reach draws an opportunity attack.')
+    expect(plan.findAll('[data-testid="walk-sight"] li').map((li) => li.text())).toEqual([
+      'Goblin Boss sees Brom there, behind half cover.', 'Archer has no line to Brom there.', 'Wolf sees Brom there.', 'Ogre sees Brom there, behind three-quarters cover.',
+    ])
+    expect(wrapper.get('[data-hex="0,1"]').attributes('aria-label')).toContain('opportunity attack')
+    await expectAccessible(wrapper.element as Element)
+    await wrapper.get('[data-testid="confirm-walk"]').trigger('click')
     expect(s.sent.at(-1)).toMatchObject({ kind: 'walk', tokenId: brom.id, q: 2, r: 0 })
     const at = (q: number, r: number) => ({ tokens: [aria, { ...brom, q, r }], fog: false, visible: [], remembered: [] })
     fakeClock()

@@ -105,6 +105,11 @@ export function useLiveSession(
       timer = setTimeout(connect, delay(attempt++))
     }
   }
+  /** Drops a planned walk the player chose not to make. */
+  function dropPath() {
+    state.path = null
+    view.path = null
+  }
   function close() {
     stopped = true
     clearTimeout(timer)
@@ -114,5 +119,5 @@ export function useLiveSession(
   connect()
   // Only a component's setup can tie the socket to its lifetime; anyone else must call close.
   if (getCurrentInstance()) onBeforeUnmount(close)
-  return { view, send, close }
+  return { view, send, dropPath, close }
 }

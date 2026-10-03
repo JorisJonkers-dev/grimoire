@@ -44,15 +44,50 @@ func (r *runtime) route(m domain.Member, cmd Command) (domain.Token, []hex.Coord
 }
 
 func (r *runtime) previewWalk(req request) {
-	_, path, cost, reason := r.route(req.from.Member, req.cmd)
+	t, path, cost, reason := r.route(req.from.Member, req.cmd)
 	if reason != "" {
 		r.reject(req, reason)
 		return
 	}
+	seen := r.st.vision()
+	known := func(o domain.Token) bool { return req.from.Member.DM || r.st.shows(o, seen) }
 	r.send(req.from, Update{
 		Kind: UpdPath, Seq: r.st.session.Seq, Nonce: req.cmd.Nonce,
-		Path: &PathView{TokenID: req.cmd.TokenID, Hexes: wireHexes(path), CostFt: cost},
+		Path: &PathView{
+			TokenID: req.cmd.TokenID, Hexes: wireHexes(path), CostFt: cost,
+			Threats: r.st.threats(t, path, known), Sight: r.st.sightAt(t, path[len(path)-1], known),
+		},
 	})
+}
+
+// threats are the opportunity attacks a walk would draw from creatures the asker knows of, each at the
+// step the reactions engine would offer it.
+func (s *state) threats(mover domain.Token, path []hex.Coord, known func(domain.Token) bool) []PathThreat {
+	out := []PathThreat{}
+	for _, o := range s.opportunities(mover, path, 0) {
+		if known(o.reactor) {
+			out = append(out, PathThreat{TokenID: uuid.UUID(o.reactor.ID).String(), Label: o.reactor.Label, Q: path[o.step].Q, R: path[o.step].R})
+		}
+	}
+	return out
+}
+
+// sightAt is how each standing creature of the other side that the asker knows of would see the mover at a hex.
+func (s *state) sightAt(mover domain.Token, at hex.Coord, known func(domain.Token) bool) []PathSight {
+	out := []PathSight{}
+	for _, o := range s.ordered() {
+		if o.Stats == nil || !standing(o) || (o.Kind == domain.TokenParty) == (mover.Kind == domain.TokenParty) || !known(o) {
+			continue
+		}
+		sight := hex.LineOfSight(s.coverGrid(known, mover.ID, o.ID), hex.Coord{Q: o.Q, R: o.R}, at)
+		out = append(out, PathSight{TokenID: uuid.UUID(o.ID).String(), Label: o.Label, Visible: sight.Visible, Cover: coverName(sight.Cover)})
+	}
+	return out
+}
+
+// coverName is a level of cover as the wire names it.
+func coverName(c hex.Cover) string {
+	return [...]string{hex.NoCover: "none", hex.HalfCover: "half", hex.ThreeQuartersCover: "three_quarters", hex.TotalCover: "total"}[c]
 }
 
 // moveLeft refuses a walk a Combatant cannot make now: out of turn, or longer than its movement left.

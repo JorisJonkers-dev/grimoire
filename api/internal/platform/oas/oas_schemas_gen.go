@@ -22550,12 +22550,16 @@ func (s *LiveOffer) SetJunk(val OptBool) {
 	s.Junk = val
 }
 
-// The route a walk would take, start first, and the movement it costs.
+// The route a walk would take, start first, the movement it costs, the opportunity attacks it would
+// draw in order, and how each creature of the other side would see the mover where it ends. It names
+// only creatures the asker may see.
 // Ref: #/components/schemas/LivePath
 type LivePath struct {
-	TokenId ID         `json:"tokenId"`
-	Hexes   []HexCoord `json:"hexes"`
-	CostFt  int32      `json:"costFt"`
+	TokenId ID               `json:"tokenId"`
+	Hexes   []HexCoord       `json:"hexes"`
+	CostFt  int32            `json:"costFt"`
+	Threats []LivePathThreat `json:"threats"`
+	Sight   []LivePathSight  `json:"sight"`
 }
 
 // GetTokenId returns the value of TokenId.
@@ -22573,6 +22577,16 @@ func (s *LivePath) GetCostFt() int32 {
 	return s.CostFt
 }
 
+// GetThreats returns the value of Threats.
+func (s *LivePath) GetThreats() []LivePathThreat {
+	return s.Threats
+}
+
+// GetSight returns the value of Sight.
+func (s *LivePath) GetSight() []LivePathSight {
+	return s.Sight
+}
+
 // SetTokenId sets the value of TokenId.
 func (s *LivePath) SetTokenId(val ID) {
 	s.TokenId = val
@@ -22586,6 +22600,170 @@ func (s *LivePath) SetHexes(val []HexCoord) {
 // SetCostFt sets the value of CostFt.
 func (s *LivePath) SetCostFt(val int32) {
 	s.CostFt = val
+}
+
+// SetThreats sets the value of Threats.
+func (s *LivePath) SetThreats(val []LivePathThreat) {
+	s.Threats = val
+}
+
+// SetSight sets the value of Sight.
+func (s *LivePath) SetSight(val []LivePathSight) {
+	s.Sight = val
+}
+
+// Whether a creature has a line to the end of a planned walk, and the cover the mover has from it
+// there.
+// Ref: #/components/schemas/LivePathSight
+type LivePathSight struct {
+	TokenId ID                 `json:"tokenId"`
+	Label   string             `json:"label"`
+	Visible bool               `json:"visible"`
+	Cover   LivePathSightCover `json:"cover"`
+}
+
+// GetTokenId returns the value of TokenId.
+func (s *LivePathSight) GetTokenId() ID {
+	return s.TokenId
+}
+
+// GetLabel returns the value of Label.
+func (s *LivePathSight) GetLabel() string {
+	return s.Label
+}
+
+// GetVisible returns the value of Visible.
+func (s *LivePathSight) GetVisible() bool {
+	return s.Visible
+}
+
+// GetCover returns the value of Cover.
+func (s *LivePathSight) GetCover() LivePathSightCover {
+	return s.Cover
+}
+
+// SetTokenId sets the value of TokenId.
+func (s *LivePathSight) SetTokenId(val ID) {
+	s.TokenId = val
+}
+
+// SetLabel sets the value of Label.
+func (s *LivePathSight) SetLabel(val string) {
+	s.Label = val
+}
+
+// SetVisible sets the value of Visible.
+func (s *LivePathSight) SetVisible(val bool) {
+	s.Visible = val
+}
+
+// SetCover sets the value of Cover.
+func (s *LivePathSight) SetCover(val LivePathSightCover) {
+	s.Cover = val
+}
+
+type LivePathSightCover string
+
+const (
+	LivePathSightCoverNone          LivePathSightCover = "none"
+	LivePathSightCoverHalf          LivePathSightCover = "half"
+	LivePathSightCoverThreeQuarters LivePathSightCover = "three_quarters"
+	LivePathSightCoverTotal         LivePathSightCover = "total"
+)
+
+// AllValues returns all LivePathSightCover values.
+func (LivePathSightCover) AllValues() []LivePathSightCover {
+	return []LivePathSightCover{
+		LivePathSightCoverNone,
+		LivePathSightCoverHalf,
+		LivePathSightCoverThreeQuarters,
+		LivePathSightCoverTotal,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LivePathSightCover) MarshalText() ([]byte, error) {
+	switch s {
+	case LivePathSightCoverNone:
+		return []byte(s), nil
+	case LivePathSightCoverHalf:
+		return []byte(s), nil
+	case LivePathSightCoverThreeQuarters:
+		return []byte(s), nil
+	case LivePathSightCoverTotal:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LivePathSightCover) UnmarshalText(data []byte) error {
+	switch LivePathSightCover(data) {
+	case LivePathSightCoverNone:
+		*s = LivePathSightCoverNone
+		return nil
+	case LivePathSightCoverHalf:
+		*s = LivePathSightCoverHalf
+		return nil
+	case LivePathSightCoverThreeQuarters:
+		*s = LivePathSightCoverThreeQuarters
+		return nil
+	case LivePathSightCoverTotal:
+		*s = LivePathSightCoverTotal
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// A creature whose reach a planned walk leaves, and the hex the mover leaves it from.
+// Ref: #/components/schemas/LivePathThreat
+type LivePathThreat struct {
+	TokenId ID     `json:"tokenId"`
+	Label   string `json:"label"`
+	Q       int32  `json:"q"`
+	R       int32  `json:"r"`
+}
+
+// GetTokenId returns the value of TokenId.
+func (s *LivePathThreat) GetTokenId() ID {
+	return s.TokenId
+}
+
+// GetLabel returns the value of Label.
+func (s *LivePathThreat) GetLabel() string {
+	return s.Label
+}
+
+// GetQ returns the value of Q.
+func (s *LivePathThreat) GetQ() int32 {
+	return s.Q
+}
+
+// GetR returns the value of R.
+func (s *LivePathThreat) GetR() int32 {
+	return s.R
+}
+
+// SetTokenId sets the value of TokenId.
+func (s *LivePathThreat) SetTokenId(val ID) {
+	s.TokenId = val
+}
+
+// SetLabel sets the value of Label.
+func (s *LivePathThreat) SetLabel(val string) {
+	s.Label = val
+}
+
+// SetQ sets the value of Q.
+func (s *LivePathThreat) SetQ(val int32) {
+	s.Q = val
+}
+
+// SetR sets the value of R.
+func (s *LivePathThreat) SetR(val int32) {
+	s.R = val
 }
 
 // An attack waiting on its attack or damage Roll Card.

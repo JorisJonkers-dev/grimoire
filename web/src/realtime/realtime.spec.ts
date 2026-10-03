@@ -43,7 +43,7 @@ describe('SessionState', () => {
     expect(s.apply({ kind: 'snapshot', seq: 8 })).toBe('applied')
     expect(s.session?.number).toBe(2)
     expect(s.view?.tokens).toHaveLength(0)
-    const path = { tokenId: token.id, hexes: [{ q: 1, r: 0 }, { q: 2, r: 0 }], costFt: 5 }
+    const path = { tokenId: token.id, hexes: [{ q: 1, r: 0 }, { q: 2, r: 0 }], costFt: 5, threats: [], sight: [] }
     expect(s.apply({ kind: 'path', seq: 8, path })).toBe('applied')
     expect(s.path).toEqual(path)
     expect(s.apply({ kind: 'path', seq: 8 })).toBe('applied')

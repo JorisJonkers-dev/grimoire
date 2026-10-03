@@ -3038,12 +3038,39 @@ export const zLiveTurnStart = z.object({
 });
 
 /**
- * The route a walk would take, start first, and the movement it costs.
+ * A creature whose reach a planned walk leaves, and the hex the mover leaves it from.
+ */
+export const zLivePathThreat = z.object({
+    tokenId: zId,
+    label: z.string().max(80),
+    q: z.int().gte(-1000).lte(1000),
+    r: z.int().gte(-1000).lte(1000)
+});
+
+/**
+ * Whether a creature has a line to the end of a planned walk, and the cover the mover has from it there.
+ */
+export const zLivePathSight = z.object({
+    tokenId: zId,
+    label: z.string().max(80),
+    visible: z.boolean(),
+    cover: z.enum([
+        'none',
+        'half',
+        'three_quarters',
+        'total'
+    ])
+});
+
+/**
+ * The route a walk would take, start first, the movement it costs, the opportunity attacks it would draw in order, and how each creature of the other side would see the mover where it ends. It names only creatures the asker may see.
  */
 export const zLivePath = z.object({
     tokenId: zId,
     hexes: z.array(zHexCoord).max(61),
-    costFt: z.int().gte(0).lte(1000)
+    costFt: z.int().gte(0).lte(1000),
+    threats: z.array(zLivePathThreat).max(60),
+    sight: z.array(zLivePathSight).max(200)
 });
 
 /**

@@ -177,16 +177,7 @@ func (s *state) shape(p aim) (aim, string) {
 		return aim{}, "The target is out of range."
 	}
 	p.ranged = band != attack.InReach
-	g := hex.Grid{Cells: map[hex.Coord]hex.Cell{}, Occupants: map[hex.Coord]hex.Occupant{}}
-	for _, c := range s.ground() {
-		g.Cells[c] = s.cell(c)
-	}
-	for _, t := range s.tokens {
-		if t.ID != p.attacker.ID && t.ID != p.target.ID && standing(t) {
-			g.Occupants[hex.Coord{Q: t.Q, R: t.R}] = hex.Enemy
-		}
-	}
-	sight := hex.LineOfSight(g, from, to)
+	sight := hex.LineOfSight(s.coverGrid(func(domain.Token) bool { return true }, p.attacker.ID, p.target.ID), from, to)
 	if !sight.Visible {
 		return aim{}, "There is no clear line to the target."
 	}
@@ -362,6 +353,21 @@ func (r *runtime) hurt(t domain.Token, amount int, w Write) Write {
 		w.Observers = r.st.witnesses(w.Token)
 	}
 	return w
+}
+
+// coverGrid is the board with its walls and the standing creatures that give cover: those that count,
+// but for the ones looking at each other.
+func (s *state) coverGrid(counts func(domain.Token) bool, but ...domain.TokenID) hex.Grid {
+	g := hex.Grid{Cells: map[hex.Coord]hex.Cell{}, Occupants: map[hex.Coord]hex.Occupant{}}
+	for _, c := range s.ground() {
+		g.Cells[c] = s.cell(c)
+	}
+	for _, t := range s.tokens {
+		if !slices.Contains(but, t.ID) && standing(t) && counts(t) {
+			g.Occupants[hex.Coord{Q: t.Q, R: t.R}] = hex.Enemy
+		}
+	}
+	return g
 }
 
 // witnesses are the standing creatures on the other side from a token that have a clear line to it.

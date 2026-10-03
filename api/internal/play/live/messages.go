@@ -439,6 +439,27 @@ type PathView struct {
 	TokenID string `json:"tokenId"`
 	Hexes   []Hex  `json:"hexes"`
 	CostFt  int    `json:"costFt"`
+	// Threats are the opportunity attacks the walk would draw, in the order it draws them; Sight is how
+	// each creature of the other side would see the mover where the walk ends. Both name only creatures
+	// the asker may see.
+	Threats []PathThreat `json:"threats"`
+	Sight   []PathSight  `json:"sight"`
+}
+
+// PathThreat is a creature whose reach a planned walk leaves, and the hex it leaves it from.
+type PathThreat struct {
+	TokenID string `json:"tokenId"`
+	Label   string `json:"label"`
+	Q       int    `json:"q"`
+	R       int    `json:"r"`
+}
+
+// PathSight is whether a creature has a line to the end of a planned walk, and the cover the mover has from it.
+type PathSight struct {
+	TokenID string `json:"tokenId"`
+	Label   string `json:"label"`
+	Visible bool   `json:"visible"`
+	Cover   string `json:"cover"`
 }
 
 // MapView is the active Map's geometry and picture.

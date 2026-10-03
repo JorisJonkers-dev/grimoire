@@ -14,6 +14,7 @@ import { GButton } from '@/shared/ui'
 import { BANNER_MS } from './motion'
 import { board, describe, emanations, hexes, zoneHexes } from './board'
 import { cellsFor, key, layoutOf } from './geometry'
+import WalkPlan from './WalkPlan.vue'
 import AreaPreviewCard from './AreaPreviewCard.vue'
 import AttackPreview from './AttackPreview.vue'
 import EffectsPanel from './EffectsPanel.vue'
@@ -93,8 +94,10 @@ const elevationFt = ref(10)
 const character = ref('')
 const players = computed(() => campaign.data.value?.members.filter((m) => m.role === 'player') ?? [])
 const walkPath = computed(() => state.value?.path?.hexes ?? [])
+const walkDanger = computed(() => state.value?.path?.threats.map((t) => ({ q: t.q, r: t.r })) ?? [])
 const cells = computed(() =>
   board(state.value?.session?.gridRadius ?? 0, view.value?.tokens ?? [], selected.value, walkPath.value, {
+    danger: walkDanger.value,
     surfaces: view.value?.surfaces,
     area: areaHexes.value,
     zone: zoneCells.value,
@@ -250,14 +253,15 @@ const attackRoll = computed(() => {
 })
 const tokenAt = (c: Coord) => view.value?.tokens.find((t) => t.q === c.q && t.r === c.r)
 
-// The first tap on a hex previews the walk there; a second tap on the same hex walks it.
+// A tap on a hex only plans the walk there; nothing moves until the plan is confirmed.
 function walkTo(c: Coord) {
   const t = walker.value
-  if (!t) return
+  if (t) live.value?.send({ kind: 'plan_walk', tokenId: t.id, q: c.q, r: c.r })
+}
+function confirmWalk() {
   const p = state.value?.path
   const end = p?.hexes.at(-1)
-  const confirmed = p?.tokenId === t.id && end?.q === c.q && end.r === c.r
-  live.value?.send({ kind: confirmed ? 'walk' : 'plan_walk', tokenId: t.id, q: c.q, r: c.r })
+  if (p && end) live.value?.send({ kind: 'walk', tokenId: p.tokenId, q: end.q, r: end.r })
 }
 function tokenTool(c: Coord) {
   const there = tokenAt(c)
@@ -399,11 +403,9 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
     <template v-else-if="state">
       <div class="stage" data-testid="stage">
         <WorldPanel v-if="scope === 'world'" :world="view?.world" :dm="isDM" :maps="worldMaps" @send="(cmd) => live?.send(cmd)" />
-        <MapBoard v-else-if="view?.map" :map="view.map" :view="view" :dm="isDM" :selected="selected" :path="walkPath" :area="areaHexes" :zone="zoneCells" :reach="view.sneak?.reach ?? []" :title="view.map.name" @select="pick" />
+        <MapBoard v-else-if="view?.map" :map="view.map" :view="view" :dm="isDM" :selected="selected" :path="walkPath" :danger="walkDanger" :area="areaHexes" :zone="zoneCells" :reach="view.sneak?.reach ?? []" :title="view.map.name" @select="pick" />
         <HexGrid v-else :cells="cells" :title="`Session ${String(state.session?.number ?? '')} map`" @select="pick" />
-        <p v-if="state.path" role="status" class="walk" data-testid="walk-preview">
-          Walk {{ state.path.costFt }} ft. Tap the same hex again to go.
-        </p>
+        <WalkPlan v-if="state.path" :path="state.path" :mover="tokenById(state.path.tokenId)?.label ?? 'it'" @confirm="confirmWalk" @cancel="live?.dropPath()" />
         <p v-else-if="!isDM && walker" class="walk" data-testid="walker">Tap a hex to walk {{ walker.label }} there.</p>
       </div>
       <header class="head">

@@ -12106,9 +12106,9 @@ components:
           items: { $ref: "#/components/schemas/Id" }
     LivePath:
       type: object
-      description: The route a walk would take, start first, and the movement it costs.
+      description: The route a walk would take, start first, the movement it costs, the opportunity attacks it would draw in order, and how each creature of the other side would see the mover where it ends. It names only creatures the asker may see.
       additionalProperties: false
-      required: [tokenId, hexes, costFt]
+      required: [tokenId, hexes, costFt, threats, sight]
       properties:
         tokenId: { $ref: "#/components/schemas/Id" }
         hexes:
@@ -12116,6 +12116,34 @@ components:
           maxItems: 61
           items: { $ref: "#/components/schemas/HexCoord" }
         costFt: { type: integer, format: int32, minimum: 0, maximum: 1000 }
+        threats:
+          type: array
+          maxItems: 60
+          items: { $ref: "#/components/schemas/LivePathThreat" }
+        sight:
+          type: array
+          maxItems: 200
+          items: { $ref: "#/components/schemas/LivePathSight" }
+    LivePathThreat:
+      type: object
+      description: A creature whose reach a planned walk leaves, and the hex the mover leaves it from.
+      additionalProperties: false
+      required: [tokenId, label, q, r]
+      properties:
+        tokenId: { $ref: "#/components/schemas/Id" }
+        label: { type: string, maxLength: 80 }
+        q: { type: integer, format: int32, minimum: -1000, maximum: 1000 }
+        r: { type: integer, format: int32, minimum: -1000, maximum: 1000 }
+    LivePathSight:
+      type: object
+      description: Whether a creature has a line to the end of a planned walk, and the cover the mover has from it there.
+      additionalProperties: false
+      required: [tokenId, label, visible, cover]
+      properties:
+        tokenId: { $ref: "#/components/schemas/Id" }
+        label: { type: string, maxLength: 80 }
+        visible: { type: boolean }
+        cover: { type: string, enum: [none, half, three_quarters, total] }
     MapKind:
       type: string
       description: A local tactical map, or a world map of locations and routes.

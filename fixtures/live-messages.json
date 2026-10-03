@@ -1046,6 +1046,16 @@
             }
           ]
         },
+        "roster": [
+          {
+            "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+            "label": "Goblin",
+            "kind": "enemy",
+            "health": "hurt",
+            "acting": true,
+            "effects": []
+          }
+        ],
         "perception": [
           {
             "rollId": "0190c7a8-0000-7000-8000-000000000026",
@@ -1516,6 +1526,16 @@
             ]
           }
         ],
+        "roster": [
+          {
+            "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+            "label": "Goblin",
+            "kind": "enemy",
+            "health": "hurt",
+            "acting": true,
+            "effects": []
+          }
+        ],
         "perception": [
           {
             "rollId": "0190c7a8-0000-7000-8000-000000000026",
@@ -1675,6 +1695,7 @@
         "fog": false,
         "visible": [],
         "remembered": [],
+        "roster": [],
         "gameDay": 0
       }
     },
@@ -1704,7 +1725,62 @@
             "r": 0
           }
         ],
-        "costFt": 10
+        "costFt": 10,
+        "threats": [
+          {
+            "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+            "label": "Goblin",
+            "q": 2,
+            "r": -1
+          }
+        ],
+        "sight": [
+          {
+            "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+            "label": "Goblin",
+            "visible": true,
+            "cover": "half"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "view",
+      "seq": 7,
+      "view": {
+        "tokens": [
+          {
+            "id": "0190c7a8-0000-7000-8000-00000000000a",
+            "label": "Goblin",
+            "kind": "enemy",
+            "q": 2,
+            "r": -1,
+            "hidden": false,
+            "darkvisionFt": 0,
+            "controllerId": "0190c7a8-0000-7000-8000-00000000000f"
+          }
+        ],
+        "fog": false,
+        "visible": [],
+        "remembered": [],
+        "roster": [],
+        "gameDay": 0
+      },
+      "initiative": {
+        "order": [
+          {
+            "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+            "label": "Goblin",
+            "kind": "enemy",
+            "initiative": 17
+          }
+        ]
+      },
+      "turn": {
+        "round": 1,
+        "tokenIds": [
+          "0190c7a8-0000-7000-8000-00000000000a"
+        ]
       }
     },
     {
@@ -1992,6 +2068,16 @@
             }
           ]
         },
+        "roster": [
+          {
+            "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+            "label": "Goblin",
+            "kind": "enemy",
+            "health": "hurt",
+            "acting": true,
+            "effects": []
+          }
+        ],
         "perception": [
           {
             "rollId": "0190c7a8-0000-7000-8000-000000000026",
@@ -2413,6 +2499,16 @@
               }
             ]
           },
+          "roster": [
+            {
+              "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+              "label": "Goblin",
+              "kind": "enemy",
+              "health": "hurt",
+              "acting": true,
+              "effects": []
+            }
+          ],
           "perception": [
             {
               "rollId": "0190c7a8-0000-7000-8000-000000000026",

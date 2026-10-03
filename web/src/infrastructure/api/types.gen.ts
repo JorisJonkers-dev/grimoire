@@ -4118,12 +4118,34 @@ export type LiveTurnStart = {
 };
 
 /**
- * The route a walk would take, start first, and the movement it costs.
+ * The route a walk would take, start first, the movement it costs, the opportunity attacks it would draw in order, and how each creature of the other side would see the mover where it ends. It names only creatures the asker may see.
  */
 export type LivePath = {
     tokenId: Id;
     hexes: Array<HexCoord>;
     costFt: number;
+    threats: Array<LivePathThreat>;
+    sight: Array<LivePathSight>;
+};
+
+/**
+ * A creature whose reach a planned walk leaves, and the hex the mover leaves it from.
+ */
+export type LivePathThreat = {
+    tokenId: Id;
+    label: string;
+    q: number;
+    r: number;
+};
+
+/**
+ * Whether a creature has a line to the end of a planned walk, and the cover the mover has from it there.
+ */
+export type LivePathSight = {
+    tokenId: Id;
+    label: string;
+    visible: boolean;
+    cover: 'none' | 'half' | 'three_quarters' | 'total';
 };
 
 /**

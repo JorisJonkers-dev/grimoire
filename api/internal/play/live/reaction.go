@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -105,35 +106,61 @@ func pathCosts(g hex.Grid, path []hex.Coord) []int {
 	return costs
 }
 
+// provoked is one opportunity attack a walk draws: who makes it, with which attack, as the mover leaves which step.
+type provoked struct {
+	step    int
+	reactor domain.Token
+	attack  int
+}
+
 // opportunity finds the first step of a path that leaves the reach of a standing enemy Combatant that
 // sees the mover and still has its reaction.
 func (s *state) opportunity(mover domain.Token, path []hex.Coord, first int) (int, domain.Token, int, bool) {
-	if !s.provokes(mover) {
+	all := s.opportunities(mover, path, first)
+	if len(all) == 0 {
 		return 0, domain.Token{}, 0, false
 	}
-	ids := make([]string, 0, len(s.tokens))
-	for id := range s.tokens {
-		ids = append(ids, uuid.UUID(id).String())
+	return all[0].step, all[0].reactor, all[0].attack, true
+}
+
+// opportunities are the opportunity attacks a walk would draw from a step on: one a step, as the walk
+// waits at each for the answer and goes on from the next, and none from the same creature twice.
+func (s *state) opportunities(mover domain.Token, path []hex.Coord, first int) []provoked {
+	if !s.provokes(mover) {
+		return nil
 	}
-	slices.Sort(ids)
 	g := s.sightGrid()
+	var out []provoked
+	spent := map[domain.TokenID]bool{}
 	for k := first; k+1 < len(path); k++ {
-		for _, id := range ids {
-			h := s.tokens[domain.TokenID(uuid.MustParse(id))]
+		for _, h := range s.ordered() {
 			x, fighting := s.fighter(h.ID)
 			no := slices.IndexFunc(attacksOf(h), func(a domain.Attack) bool { return a.ReachFt > 0 })
-			if !fighting || no < 0 || !s.canReactTo(h, x, mover) {
+			if spent[h.ID] || !fighting || no < 0 || !s.canReactTo(h, x, mover) {
 				continue
 			}
 			at := hex.Coord{Q: h.Q, R: h.R}
 			reach := h.Stats.Attacks[no].ReachFt
 			if hex.Distance(at, path[k])*hex.FeetPerHex <= reach && hex.Distance(at, path[k+1])*hex.FeetPerHex > reach &&
 				hex.LineOfSight(g, at, path[k]).Visible {
-				return k, h, no, true
+				out, spent[h.ID] = append(out, provoked{step: k, reactor: h, attack: no}), true
+				break
 			}
 		}
 	}
-	return 0, domain.Token{}, 0, false
+	return out
+}
+
+// ordered are the tokens in a fixed order, so the same state always answers the same.
+func (s *state) ordered() []domain.Token {
+	out := make([]domain.Token, 0, len(s.tokens))
+	for _, t := range s.tokens {
+		out = append(out, t)
+	}
+	slices.SortFunc(out, func(a, b domain.Token) int {
+		return strings.Compare(uuid.UUID(a.ID).String(), uuid.UUID(b.ID).String())
+	})
+	return out
 }
 
 // provokes reports whether moving can draw opportunity attacks: in an active fight, unless Disengaged.

@@ -90,7 +90,7 @@ test('the party sees only what light and darkvision show, and walking pushes the
     await player.locator(`[data-hex="${hex}"]`).click()
     await expect(player.getByTestId('walk-preview')).toContainText(`Walk ${cost} ft`)
     await expect(player.locator(`[data-hex="${hex}"]`)).toHaveAttribute('aria-label', /on the path/)
-    await player.locator(`[data-hex="${hex}"]`).click()
+    await player.getByTestId('confirm-walk').click()
     for (const p of [player, page]) await expect(p.locator(`[data-hex="${hex}"]`)).toHaveAttribute('aria-label', /Aria/)
   }
   await walk('2,0', '10')

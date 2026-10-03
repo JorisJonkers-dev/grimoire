@@ -102,6 +102,9 @@ const box = computed(() => gridBox(props.cells, props.size))
 .hex--path polygon {
   fill: var(--color-gold);
 }
+.hex--danger polygon {
+  fill: var(--color-enemy);
+}
 .hex--start polygon {
   fill: var(--color-party);
 }
