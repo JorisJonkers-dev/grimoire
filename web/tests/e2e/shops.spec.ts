@@ -68,7 +68,7 @@ test('the DM opens a shop stocked from a loot table, and a player haggles, buys 
   const mira = player.getByTestId('container-Mira')
   await page.getByTestId('roll-loot-table').selectOption({ label: 'Purse' })
   await page.getByTestId('roll-loot').click()
-  await player.getByTestId('container-Loot: Purse').getByRole('listitem').dragTo(mira)
+  await player.getByTestId('container-Loot: Purse').getByRole('listitem').dragTo(mira, { sourcePosition: { x: 8, y: 8 } })
   await expect(mira).toContainText('50 gp')
   await expect(player.getByTestId('shop-panel')).toHaveCount(0)
 
