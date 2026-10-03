@@ -204,7 +204,7 @@ func TestTheJournalKeepsQuestsAndUnlocksLore(t *testing.T) {
 	_, bad["a quest of no status"] = s.CreateQuest(ctx, dmCaller, d.ID, app.QuestInput{Name: "A", Status: "paused"})
 	_, bad["a quest with an empty step"] = s.CreateQuest(ctx, dmCaller, d.ID, app.QuestInput{Name: "A", Status: domain.QuestActive, Steps: []domain.QuestStep{{Text: " "}}})
 	_, bad["a quest with a long step"] = s.CreateQuest(ctx, dmCaller, d.ID, app.QuestInput{Name: "A", Status: domain.QuestActive, Steps: []domain.QuestStep{{Text: strings.Repeat("a", 401)}}})
-	_, bad["a quest with too many steps"] = s.CreateQuest(ctx, dmCaller, d.ID, app.QuestInput{Name: "A", Status: domain.QuestActive, Steps: make([]domain.QuestStep, 51)})
+	_, bad["a quest with too many steps"] = s.CreateQuest(ctx, dmCaller, d.ID, app.QuestInput{Name: "A", Status: domain.QuestActive, Steps: slices.Repeat([]domain.QuestStep{{Text: "Again"}}, 51)})
 	_, bad["lore with no title"] = s.CreateLore(ctx, dmCaller, d.ID, app.LoreInput{Title: " "})
 	_, bad["lore with a long title"] = s.CreateLore(ctx, dmCaller, d.ID, app.LoreInput{Title: strings.Repeat("a", 121)})
 	_, bad["lore with a long body"] = s.CreateLore(ctx, dmCaller, d.ID, app.LoreInput{Title: "A", Body: strings.Repeat("a", 8001)})
