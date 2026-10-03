@@ -1,5 +1,5 @@
 import { getCurrentInstance, onBeforeUnmount, reactive } from 'vue'
-import type { LiveAreaPreview, LiveAttackPreview, LiveCommand, LiveInitiativeRoll, LivePath, LiveRollShown, LiveSessionView, LiveView } from '@/infrastructure/api/types.gen'
+import type { LiveAreaPreview, LiveAttackPreview, LiveCommand, LiveInitiativeRoll, LiveMeasure, LivePath, LiveRollShown, LiveSessionView, LiveView } from '@/infrastructure/api/types.gen'
 import { SessionState } from './sessionState'
 
 export type Audience = 'dm' | 'party' | 'table'
@@ -26,6 +26,7 @@ export type LiveState = {
   view: LiveView | null
   path: LivePath | null
   preview: LiveAttackPreview | null
+  measure: LiveMeasure | null
   areaPreview: LiveAreaPreview | null
   ping: { q: number; r: number; n: number } | null
   reveal: { order: LiveInitiativeRoll[]; n: number } | null
@@ -49,7 +50,7 @@ export function useLiveSession(
   delay: (attempt: number) => number = (n) => Math.min(10_000, 500 * 2 ** n),
 ) {
   const state = new SessionState()
-  const view = reactive<LiveState>({ connection: 'connecting', session: null, view: null, path: null, preview: null, areaPreview: null, ping: null, reveal: null, turn: null, roll: null, rolls: 0, regroup: null, rejection: '' })
+  const view = reactive<LiveState>({ connection: 'connecting', session: null, view: null, path: null, preview: null, measure: null, areaPreview: null, ping: null, reveal: null, turn: null, roll: null, rolls: 0, regroup: null, rejection: '' })
   let socket: Socket | null = null
   let attempt = 0
   let stopped = false
@@ -69,6 +70,7 @@ export function useLiveSession(
     play([...state.steps, ...(state.view ? [state.view] : [])])
     view.path = state.path
     view.preview = state.preview
+    view.measure = state.measure
     view.areaPreview = state.areaPreview
     view.ping = state.ping
     view.reveal = state.reveal

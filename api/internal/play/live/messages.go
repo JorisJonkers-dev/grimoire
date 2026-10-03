@@ -54,6 +54,7 @@ const (
 	CmdEndEffect      = "end_effect"
 	CmdResolveManual  = "resolve_manual"
 	CmdPreviewArea    = "preview_area"
+	CmdMeasureRoute   = "measure_route"
 	CmdCastArea       = "cast_area"
 	CmdPaintSurface   = "paint_surface"
 	CmdSetElevation   = "set_elevation"
@@ -293,6 +294,7 @@ const (
 	UpdPath          = "path"
 	UpdAttackPreview = "attack_preview"
 	UpdAreaPreview   = "area_preview"
+	UpdMeasured      = "route_measured"
 	UpdPing          = "ping"
 	UpdRoll          = "roll"
 	UpdEnded         = "ended"
@@ -758,6 +760,20 @@ type PlanView struct {
 	Days    int    `json:"days"`
 }
 
+// MaxWaypoints is how many waypoints a measured route may have, and MaxMeasuredMiles how long it may be.
+const (
+	MaxWaypoints     = 50
+	MaxMeasuredMiles = 1_000_000
+)
+
+// MeasureView answers measure_route: the route's length in hexes and in miles by the world Map's scale,
+// and how long it takes at each pace.
+type MeasureView struct {
+	Hexes int        `json:"hexes"`
+	Miles float64    `json:"miles"`
+	Plans []PlanView `json:"plans"`
+}
+
 // LegView is one Travel Leg the party made this Session.
 type LegView struct {
 	From       string `json:"from"`
@@ -858,6 +874,7 @@ type Update struct {
 	Path    *PathView      `json:"path,omitempty"`
 	Preview *AttackPreview `json:"preview,omitempty"`
 	Area    *AreaPreview   `json:"area,omitempty"`
+	Measure *MeasureView   `json:"measure,omitempty"`
 	Ping    *Hex           `json:"ping,omitempty"`
 	// Initiative comes with the view that settles initiative, Turn with each view that starts a turn;
 	// both leave out what the audience may not see.

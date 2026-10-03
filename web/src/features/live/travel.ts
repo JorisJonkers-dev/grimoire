@@ -1,4 +1,4 @@
-import type { LiveTravelLeg } from '@/infrastructure/api/types.gen'
+import type { LiveMeasure, LiveTravelLeg, TravelPace } from '@/infrastructure/api/types.gen'
 
 // How long a journey takes, as the table says it: hours on the road, and days when it spans several.
 export function duration(minutes: number, days: number): string {
@@ -14,4 +14,16 @@ export function journey(legs: LiveTravelLeg[]): string {
   const minutes = legs.reduce((n, l) => n + l.minutes, 0)
   const days = legs.reduce((n, l) => n + l.days, 0)
   return `${String(miles)} mi · ${duration(minutes, days)}`
+}
+
+/** A route may be measured through this many points. */
+export const MAX_WAYPOINTS = 50
+
+const count = (n: number, one: string) => `${String(n)} ${one}${n === 1 ? '' : one === 'hex' ? 'es' : 's'}`
+
+// A measured route as the table says it: hexes, miles, and the time on the road at one pace.
+export function measured(m: LiveMeasure, pace: TravelPace): string {
+  const length = `${count(m.hexes, 'hex')} · ${count(Number(m.miles.toFixed(1)), 'mile')}`
+  const plan = m.plans.find((p) => p.pace === pace)
+  return plan ? `${length} · ${duration(plan.minutes, plan.days)} at a ${pace} pace` : length
 }

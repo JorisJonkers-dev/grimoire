@@ -277,6 +277,27 @@
     },
     {
       "nonce": "n31",
+      "kind": "measure_route",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "hexes": [
+        {
+          "q": 0,
+          "r": 0
+        },
+        {
+          "q": 3,
+          "r": 0
+        },
+        {
+          "q": 3,
+          "r": 2
+        }
+      ]
+    },
+    {
+      "nonce": "n31",
       "kind": "cast_area",
       "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
       "q": 3,
@@ -3024,6 +3045,32 @@
           }
         ],
         "allies": 1
+      }
+    },
+    {
+      "kind": "route_measured",
+      "seq": 7,
+      "nonce": "n31",
+      "measure": {
+        "hexes": 5,
+        "miles": 12.5,
+        "plans": [
+          {
+            "pace": "slow",
+            "minutes": 375,
+            "days": 1
+          },
+          {
+            "pace": "normal",
+            "minutes": 250,
+            "days": 1
+          },
+          {
+            "pace": "fast",
+            "minutes": 188,
+            "days": 1
+          }
+        ]
       }
     },
     {

@@ -1,4 +1,4 @@
-import type { LiveAreaPreview, LiveAttackPreview, LiveInitiativeRoll, LivePath, LiveRollShown, LiveSessionView, LiveUpdate, LiveView } from '@/infrastructure/api/types.gen'
+import type { LiveAreaPreview, LiveAttackPreview, LiveInitiativeRoll, LiveMeasure, LivePath, LiveRollShown, LiveSessionView, LiveUpdate, LiveView } from '@/infrastructure/api/types.gen'
 import { zLiveUpdate } from '@/infrastructure/api/zod.gen'
 
 export type Outcome = 'applied' | 'resync' | 'ignored'
@@ -17,6 +17,8 @@ export class SessionState {
   path: LivePath | null = null
   preview: LiveAttackPreview | null = null
   areaPreview: LiveAreaPreview | null = null
+  /** The last route this screen measured on the world map. */
+  measure: LiveMeasure | null = null
   /** The last pinged hex, with a count so the same hex can be pinged twice. */
   ping: { q: number; r: number; n: number } | null = null
   /** The initiative order as the fight began, and the last turns that started, each counted like a ping. */
@@ -54,6 +56,9 @@ export class SessionState {
         return 'applied'
       case 'area_preview':
         this.areaPreview = u.area ?? null
+        return 'applied'
+      case 'route_measured':
+        this.measure = u.measure ?? null
         return 'applied'
       case 'attack_preview':
         this.preview = u.preview ?? null

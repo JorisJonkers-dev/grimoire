@@ -107,7 +107,7 @@ const worldBoard = computed(() => ({ tokens: [], fog: world.value !== null, visi
     <div v-else-if="table?.scene === 'world' && table.worldMap" class="stage" data-testid="scene-world">
       <MapBoard :map="world?.map ?? table.worldMap" :view="worldBoard" :title="table.worldMap.name">
         <template v-if="world" #default="{ layout }">
-          <WorldOverlay :world="world" :layout="layout" :from="null" />
+          <WorldOverlay :world="world" :layout="layout" :from="null" :measured="[]" />
         </template>
       </MapBoard>
     </div>

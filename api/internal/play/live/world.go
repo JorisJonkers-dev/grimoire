@@ -243,3 +243,40 @@ func mapView(m domain.Map, version int) MapView {
 		ImageVersion: version, ImageURL: "/api/v1/campaigns/" + m.CampaignID.String() + "/maps/" + uuid.UUID(m.ID).String() + "/image?v=" + strconv.Itoa(version),
 	}
 }
+
+// measure answers whoever asked with the length of a route over the world map. It reads the map and
+// changes nothing, so anyone at the table may ask.
+func (r *runtime) measure(req request) {
+	w, hexes := r.st.world, req.cmd.Hexes
+	switch {
+	case w == nil:
+		r.reject(req, "There is no world map to measure on.")
+		return
+	case len(hexes) < 2:
+		r.reject(req, "Pick at least two points to measure between.")
+		return
+	case len(hexes) > MaxWaypoints:
+		r.reject(req, "A route has at most "+strconv.Itoa(MaxWaypoints)+" points.")
+		return
+	}
+	waypoints := make([]hex.Coord, 0, len(hexes))
+	for _, h := range hexes {
+		at := hex.Coord{Q: h.Q, R: h.R}
+		if !r.st.worldCells[at] {
+			r.reject(req, "That point is off the map.")
+			return
+		}
+		waypoints = append(waypoints, at)
+	}
+	m := travel.Measure(waypoints, w.Map.ScaleMiles)
+	if m.Miles > MaxMeasuredMiles {
+		r.reject(req, "That route is too long to measure.")
+		return
+	}
+	out := &MeasureView{Hexes: m.Hexes, Miles: m.Miles}
+	for _, p := range []travel.Pace{travel.Slow, travel.Normal, travel.Fast} {
+		minutes, days := travel.Time(m.Miles, p)
+		out.Plans = append(out.Plans, PlanView{Pace: p.String(), Minutes: minutes, Days: days})
+	}
+	r.send(req.from, Update{Kind: UpdMeasured, Seq: r.st.session.Seq, Nonce: req.cmd.Nonce, Measure: out})
+}

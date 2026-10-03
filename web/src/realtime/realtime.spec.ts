@@ -73,7 +73,16 @@ describe('SessionState', () => {
     s.apply({ kind: 'area_preview', seq: 10, area })
     s.apply({ kind: 'view', seq: 11, view: view() })
     expect(s.areaPreview).toBeNull()
-    expect(s.apply({ kind: 'ping', seq: 11, ping: { q: 1, r: 2 } })).toBe('applied')
+    // A measured route stays until another is measured: it is the asker's own, whatever else changes.
+    const measure = { hexes: 5, miles: 12.5, plans: [{ pace: 'normal', minutes: 250, days: 1 }] }
+    expect(s.apply({ kind: 'route_measured', seq: 11, measure })).toBe('applied')
+    expect(s.measure).toEqual(measure)
+    s.apply({ kind: 'view', seq: 12, view: view() })
+    s.apply({ kind: 'rejected', seq: 12, reason: 'No.' })
+    expect(s.measure).toEqual(measure)
+    s.apply({ kind: 'route_measured', seq: 12 })
+    expect(s.measure).toBeNull()
+    expect(s.apply({ kind: 'ping', seq: 12, ping: { q: 1, r: 2 } })).toBe('applied')
     expect(s.ping).toEqual({ q: 1, r: 2, n: 1 })
     s.apply({ kind: 'ping', seq: 11, ping: { q: 1, r: 2 } })
     expect(s.ping?.n).toBe(2)

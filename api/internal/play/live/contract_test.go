@@ -158,6 +158,7 @@ func samples() contract {
 			{Nonce: "n28", Kind: live.CmdEndEffect, EffectID: "0190c7a8-0000-7000-8000-000000000017"},
 			{Nonce: "n29", Kind: live.CmdResolveManual, ManualID: "0190c7a8-0000-7000-8000-000000000018"},
 			{Nonce: "n30", Kind: live.CmdPreviewArea, TokenID: token.ID, Effect: "fireball", Q: 3, R: 0},
+			{Nonce: "n31", Kind: live.CmdMeasureRoute, Hexes: []live.Hex{{Q: 0, R: 0}, {Q: 3, R: 0}, {Q: 3, R: 2}}},
 			{Nonce: "n31", Kind: live.CmdCastArea, TokenID: token.ID, Effect: "fireball", Q: 3, R: 0},
 			{Nonce: "n32", Kind: live.CmdPaintSurface, Hexes: []live.Hex{{Q: 1, R: 1}}, Surface: "grease", Rounds: 10},
 			{Nonce: "n33", Kind: live.CmdSetElevation, Hexes: []live.Hex{{Q: 1, R: 1}}, ElevationFt: 10},
@@ -256,6 +257,9 @@ func samples() contract {
 			{Kind: live.UpdAreaPreview, Seq: 7, Nonce: "n30", Area: &live.AreaPreview{
 				TokenID: token.ID, Effect: "fireball", Name: "Fireball", DC: 13, Hexes: []live.Hex{{Q: 3, R: 0}},
 				Targets: []live.AreaTarget{{TokenID: token.ID, Ally: true}}, Allies: 1,
+			}},
+			{Kind: live.UpdMeasured, Seq: 7, Nonce: "n31", Measure: &live.MeasureView{
+				Hexes: 5, Miles: 12.5, Plans: []live.PlanView{{Pace: "slow", Minutes: 375, Days: 1}, {Pace: "normal", Minutes: 250, Days: 1}, {Pace: "fast", Minutes: 188, Days: 1}},
 			}},
 			{Kind: live.UpdPing, Seq: 7, Ping: &live.Hex{Q: 1, R: 0}},
 			{Kind: live.UpdRegroup, Seq: 7, Group: &live.GroupView{SessionID: token.ID, Tokens: []string{}}},

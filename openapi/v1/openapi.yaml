@@ -10925,7 +10925,7 @@ components:
       required: [nonce, kind, q, r, hidden]
       properties:
         nonce: { type: string, minLength: 1, maxLength: 64 }
-        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual, preview_area, cast_area, paint_surface, set_elevation, table_camera, table_scene, table_blackout, table_caption, ping, set_world, add_node, add_route, remove_node, remove_route, place_party, travel, add_zone, remove_zone, hold_zone, spring_zone, rest, encounter_check, schedule_check, roll_loot, move_item, move_coins, claim_loot, settle_loot, trade, open_shop, close_shop, buy, sell, haggle, spawn_encounter, adjust_hp, undo, propose_rest, agree_rest, spend_hit_die, finish_rest, interrupt_rest, take_action, unarmed, interact, swap_weapons, set_reaction, stabilise, revive, teleport, summon, command, set_visibility, place_object, remove_object, use_object, damage_object, find_object, unlock, disarm, jump, throw, sneak, explore, pass_turn, legendary_action, lair_action, legendary_resistance, checkpoint, rewind, split_party, rejoin_party, table_follow, assign_control] }
+        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual, preview_area, cast_area, paint_surface, set_elevation, table_camera, table_scene, table_blackout, table_caption, ping, set_world, add_node, add_route, remove_node, remove_route, place_party, travel, add_zone, remove_zone, hold_zone, spring_zone, rest, encounter_check, schedule_check, roll_loot, move_item, move_coins, claim_loot, settle_loot, trade, open_shop, close_shop, buy, sell, haggle, spawn_encounter, adjust_hp, undo, propose_rest, agree_rest, spend_hit_die, finish_rest, interrupt_rest, take_action, unarmed, interact, swap_weapons, set_reaction, stabilise, revive, teleport, summon, command, set_visibility, place_object, remove_object, use_object, damage_object, find_object, unlock, disarm, jump, throw, sneak, explore, pass_turn, legendary_action, lair_action, legendary_resistance, checkpoint, rewind, split_party, rejoin_party, table_follow, assign_control, measure_route] }
         caption: { type: string, maxLength: 400 }
         tokenId: { $ref: "#/components/schemas/Id" }
         label: { type: string, maxLength: 40 }
@@ -12565,6 +12565,27 @@ components:
         pace: { $ref: "#/components/schemas/TravelPace" }
         minutes: { type: integer, format: int32, minimum: 0, maximum: 100000 }
         days: { type: integer, format: int32, minimum: 0, maximum: 1000 }
+    LiveMeasure:
+      type: object
+      description: The length of a measured route over the world map, in hexes and in miles by the Map's scale, and how long it takes at each pace. A route of more than a million miles is refused.
+      additionalProperties: false
+      required: [hexes, miles, plans]
+      properties:
+        hexes: { type: integer, format: int32, minimum: 0, maximum: 1000000 }
+        miles: { type: number, format: double, minimum: 0, maximum: 1000000 }
+        plans:
+          type: array
+          maxItems: 3
+          items: { $ref: "#/components/schemas/LiveMeasurePlan" }
+    LiveMeasurePlan:
+      type: object
+      description: How long a measured route takes at one pace, in minutes on the road and the travel days they span.
+      additionalProperties: false
+      required: [pace, minutes, days]
+      properties:
+        pace: { $ref: "#/components/schemas/TravelPace" }
+        minutes: { type: integer, format: int32, minimum: 0, maximum: 30000000 }
+        days: { type: integer, format: int32, minimum: 0, maximum: 62500 }
     LiveTravelLeg:
       type: object
       description: One Travel Leg the party made this Session.
@@ -12882,11 +12903,11 @@ components:
         suggestion: { $ref: "#/components/schemas/LiveSuggestion" }
     LiveUpdate:
       type: object
-      description: A WebSocket frame from a live Session. Snapshots answer joins and resyncs; a regroup sends the screen to the Session of its own group of a split party; a view follows every change, and a view whose seq is not the next one means resync. A walk's view carries the views along the way as steps, to play back at walking pace; a path answers plan_walk to its sender only.
+      description: A WebSocket frame from a live Session. Snapshots answer joins and resyncs; a regroup sends the screen to the Session of its own group of a split party; a view follows every change, and a view whose seq is not the next one means resync. A walk's view carries the views along the way as steps, to play back at walking pace; a path answers plan_walk to its sender only, and route_measured answers measure_route, whose hexes are the waypoints of a route over the world map.
       additionalProperties: false
       required: [kind, seq]
       properties:
-        kind: { type: string, enum: [snapshot, view, rejected, ended, path, attack_preview, area_preview, ping, roll, regroup] }
+        kind: { type: string, enum: [snapshot, view, rejected, ended, path, attack_preview, area_preview, ping, roll, regroup, route_measured] }
         seq: { type: integer, format: int32, minimum: 0, maximum: 2147483647 }
         nonce: { type: string, maxLength: 64 }
         actionSeq: { type: integer, format: int32, minimum: 1, maximum: 2147483647 }
@@ -12901,6 +12922,7 @@ components:
         path: { $ref: "#/components/schemas/LivePath" }
         preview: { $ref: "#/components/schemas/LiveAttackPreview" }
         area: { $ref: "#/components/schemas/LiveAreaPreview" }
+        measure: { $ref: "#/components/schemas/LiveMeasure" }
         ping: { $ref: "#/components/schemas/HexCoord" }
         initiative: { $ref: "#/components/schemas/LiveInitiativeReveal" }
         turn: { $ref: "#/components/schemas/LiveTurnStart" }
