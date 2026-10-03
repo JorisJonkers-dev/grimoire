@@ -40,6 +40,17 @@ func (UnimplementedHandler) AcceptInvite(ctx context.Context, req *InviteAccept)
 	return r, ht.ErrNotImplemented
 }
 
+// AdjustTrack implements adjustTrack operation.
+//
+// Moves a Track's score for one Character, or for the party when the Track is the party's, within the
+// Track's bounds. The answer names the thresholds it crossed; a Session under way lands what they
+// trigger on the Characters on its board. DM only.
+//
+// POST /api/v1/campaigns/{campaignId}/tracks/{trackId}/adjustments
+func (UnimplementedHandler) AdjustTrack(ctx context.Context, req *TrackAdjustment, params AdjustTrackParams) (r AdjustTrackRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // ApproveRetrain implements approveRetrain operation.
 //
 // Checks the build again, keeps the old one as a Revision and rebuilds the Character. DM only.
@@ -360,6 +371,17 @@ func (UnimplementedHandler) CreateShop(ctx context.Context, req *ShopInput, para
 	return r, ht.ErrNotImplemented
 }
 
+// CreateTrack implements createTrack operation.
+//
+// Adds a Track kept for each Character or for the party, with its bounds, where it starts and its
+// thresholds. A threshold may apply an Effect or roll on a Roll Table the Campaign sees, never both.
+// DM only.
+//
+// POST /api/v1/campaigns/{campaignId}/tracks
+func (UnimplementedHandler) CreateTrack(ctx context.Context, req *TrackInput, params CreateTrackParams) (r CreateTrackRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // DecideStandingChange implements decideStandingChange operation.
 //
 // The DM's word on a pending Standing Change, confirmed as suggested or edited, or dismissed.
@@ -513,6 +535,15 @@ func (UnimplementedHandler) DeleteSettlement(ctx context.Context, params DeleteS
 //
 // DELETE /api/v1/campaigns/{campaignId}/shops/{shopId}
 func (UnimplementedHandler) DeleteShop(ctx context.Context, params DeleteShopParams) (r DeleteShopRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// DeleteTrack implements deleteTrack operation.
+//
+// Removes a Track with its thresholds and every score kept on it. DM only.
+//
+// DELETE /api/v1/campaigns/{campaignId}/tracks/{trackId}
+func (UnimplementedHandler) DeleteTrack(ctx context.Context, params DeleteTrackParams) (r DeleteTrackRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -1576,6 +1607,16 @@ func (UnimplementedHandler) ListSources(ctx context.Context) (r ListSourcesRes, 
 //
 // GET /api/v1/compendium/spells
 func (UnimplementedHandler) ListSpells(ctx context.Context, params ListSpellsParams) (r ListSpellsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListTracks implements listTracks operation.
+//
+// The Campaign's Tracks with where each stands. The DM gets every Character's score and the
+// thresholds. A Player gets the party's scores and their own Characters', and no threshold.
+//
+// GET /api/v1/campaigns/{campaignId}/tracks
+func (UnimplementedHandler) ListTracks(ctx context.Context, params ListTracksParams) (r ListTracksRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

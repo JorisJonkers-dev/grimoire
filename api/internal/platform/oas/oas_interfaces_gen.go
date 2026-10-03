@@ -13,6 +13,10 @@ type AcceptInviteRes interface {
 	acceptInviteRes()
 }
 
+type AdjustTrackRes interface {
+	adjustTrackRes()
+}
+
 type ApproveRetrainRes interface {
 	approveRetrainRes()
 }
@@ -149,6 +153,10 @@ type CreateShopRes interface {
 	createShopRes()
 }
 
+type CreateTrackRes interface {
+	createTrackRes()
+}
+
 type DecideStandingChangeRes interface {
 	decideStandingChangeRes()
 }
@@ -215,6 +223,10 @@ type DeleteSettlementRes interface {
 
 type DeleteShopRes interface {
 	deleteShopRes()
+}
+
+type DeleteTrackRes interface {
+	deleteTrackRes()
 }
 
 type DiffNpcRevisionsRes interface {
@@ -671,6 +683,10 @@ type ListSourcesRes interface {
 
 type ListSpellsRes interface {
 	listSpellsRes()
+}
+
+type ListTracksRes interface {
+	listTracksRes()
 }
 
 type MoveItemRes interface {

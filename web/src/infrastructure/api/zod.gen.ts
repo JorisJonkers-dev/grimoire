@@ -3445,6 +3445,81 @@ export const zRuleHooks = z.object({
 });
 
 /**
+ * Whether a Track is kept for each Character or for the whole party.
+ */
+export const zTrackScope = z.enum(['character', 'party']);
+
+/**
+ * A score of a Track at which something happens, on the way up when rising and on the way down otherwise: an Effect, a roll on a Roll Table, or only its label.
+ */
+export const zTrackThreshold = z.object({
+    at: z.int().gte(-1000).lte(1000),
+    rising: z.boolean(),
+    label: z.string().min(1).max(80),
+    effect: z.string().max(80).optional(),
+    rollTableId: zId.optional()
+});
+
+/**
+ * Where a Track stands for one Character, or for the party when no Character is named.
+ */
+export const zTrackStanding = z.object({
+    characterId: zId.optional(),
+    name: z.string().max(200),
+    value: z.int().gte(-1000).lte(1000)
+});
+
+/**
+ * A Campaign-specific score such as sanity or renown, as the caller may see it. The thresholds are there for the DM alone.
+ */
+export const zTrack = z.object({
+    id: zId,
+    name: z.string().max(80),
+    scope: zTrackScope,
+    min: z.int().gte(-1000).lte(1000),
+    max: z.int().gte(-1000).lte(1000),
+    start: z.int().gte(-1000).lte(1000),
+    thresholds: z.array(zTrackThreshold).max(20).optional(),
+    standings: z.array(zTrackStanding).max(2000)
+});
+
+/**
+ * A new Track.
+ */
+export const zTrackInput = z.object({
+    name: z.string().min(1).max(80),
+    scope: zTrackScope,
+    min: z.int().gte(-1000).lte(1000),
+    max: z.int().gte(-1000).lte(1000),
+    start: z.int().gte(-1000).lte(1000),
+    thresholds: z.array(zTrackThreshold).max(20).optional()
+});
+
+/**
+ * The Campaign's Tracks as the caller may see them.
+ */
+export const zTracks = z.object({
+    dm: z.boolean(),
+    tracks: z.array(zTrack).max(20)
+});
+
+/**
+ * A move of a Track's score: for one Character, or for the party when none is named.
+ */
+export const zTrackAdjustment = z.object({
+    characterId: zId.optional(),
+    delta: z.int().gte(-2000).lte(2000)
+});
+
+/**
+ * Where a score stands after a move, and the thresholds it crossed on the way, nearest first.
+ */
+export const zTrackAdjusted = z.object({
+    value: z.int().gte(-1000).lte(1000),
+    crossed: z.array(zTrackThreshold).max(20)
+});
+
+/**
  * What only the DM knows of a Faction.
  */
 export const zFactionSecrets = z.object({
@@ -6508,6 +6583,48 @@ export const zDeleteRuleHookPath = z.object({
  * The Rule Variant is removed.
  */
 export const zDeleteRuleHookResponse = z.void();
+
+export const zListTracksPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The Tracks, oldest first.
+ */
+export const zListTracksResponse = zTracks;
+
+export const zCreateTrackBody = zTrackInput;
+
+export const zCreateTrackPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The new Track.
+ */
+export const zCreateTrackResponse = zTrack;
+
+export const zDeleteTrackPath = z.object({
+    campaignId: zId,
+    trackId: zId
+});
+
+/**
+ * The Track is removed.
+ */
+export const zDeleteTrackResponse = z.void();
+
+export const zAdjustTrackBody = zTrackAdjustment;
+
+export const zAdjustTrackPath = z.object({
+    campaignId: zId,
+    trackId: zId
+});
+
+/**
+ * Where the score stands now, and the thresholds it crossed.
+ */
+export const zAdjustTrackResponse = zTrackAdjusted;
 
 export const zListFactionsPath = z.object({
     campaignId: zId

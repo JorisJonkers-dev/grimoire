@@ -505,6 +505,14 @@ type BuildHandler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/shops
 	CreateShop(ctx context.Context, req *ShopInput, params CreateShopParams) (CreateShopRes, error)
+	// CreateTrack implements createTrack operation.
+	//
+	// Adds a Track kept for each Character or for the party, with its bounds, where it starts and its
+	// thresholds. A threshold may apply an Effect or roll on a Roll Table the Campaign sees, never both.
+	// DM only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/tracks
+	CreateTrack(ctx context.Context, req *TrackInput, params CreateTrackParams) (CreateTrackRes, error)
 	// DeclineRetrain implements declineRetrain operation.
 	//
 	// Declines a pending retrain. DM only.
@@ -584,6 +592,12 @@ type BuildHandler interface {
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/shops/{shopId}
 	DeleteShop(ctx context.Context, params DeleteShopParams) (DeleteShopRes, error)
+	// DeleteTrack implements deleteTrack operation.
+	//
+	// Removes a Track with its thresholds and every score kept on it. DM only.
+	//
+	// DELETE /api/v1/campaigns/{campaignId}/tracks/{trackId}
+	DeleteTrack(ctx context.Context, params DeleteTrackParams) (DeleteTrackRes, error)
 	// DiscardCharacterDraft implements discardCharacterDraft operation.
 	//
 	// Starts the wizard over.
@@ -1018,6 +1032,14 @@ type BuildHandler interface {
 //
 // x-ogen-operation-group: Play
 type PlayHandler interface {
+	// AdjustTrack implements adjustTrack operation.
+	//
+	// Moves a Track's score for one Character, or for the party when the Track is the party's, within the
+	// Track's bounds. The answer names the thresholds it crossed; a Session under way lands what they
+	// trigger on the Characters on its board. DM only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/tracks/{trackId}/adjustments
+	AdjustTrack(ctx context.Context, req *TrackAdjustment, params AdjustTrackParams) (AdjustTrackRes, error)
 	// CastRitual implements castRitual operation.
 	//
 	// Casts a prepared ritual spell out of combat without a slot, adding its casting time and 10 minutes
@@ -1763,6 +1785,13 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/compendium/spells
 	ListSpells(ctx context.Context, params ListSpellsParams) (ListSpellsRes, error)
+	// ListTracks implements listTracks operation.
+	//
+	// The Campaign's Tracks with where each stands. The DM gets every Character's score and the
+	// thresholds. A Player gets the party's scores and their own Characters', and no threshold.
+	//
+	// GET /api/v1/campaigns/{campaignId}/tracks
+	ListTracks(ctx context.Context, params ListTracksParams) (ListTracksRes, error)
 	// PlanLevelUp implements planLevelUp operation.
 	//
 	// The classes the next level can go to and, for one of them, its hit points, choices and spells. The

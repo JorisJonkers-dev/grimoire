@@ -131,6 +131,8 @@ const (
 	cmdRollResolved = "roll_resolved"
 	// cmdRegroup comes from another group of the same party: who belongs where has changed.
 	cmdRegroup = "regroup"
+	// cmdCrossed comes from the Campaign's Tracks, never from a client: a score crossed thresholds.
+	cmdCrossed = "track_crossed"
 	// cmdRefresh comes from another group too: what the Campaign's Containers hold has changed.
 	cmdRefresh = "refresh"
 )
@@ -294,6 +296,7 @@ type Command struct {
 	SessionID string   `json:"sessionId,omitempty"`
 	promptID  uuid.UUID
 	rollID    domain.RollID
+	crossed   *crossings
 }
 
 // Update kinds. A snapshot answers a join or resync; a view follows every change.

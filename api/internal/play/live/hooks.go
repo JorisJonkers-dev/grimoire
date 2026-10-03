@@ -93,24 +93,76 @@ func (r *runtime) hooked(point string, id domain.TokenID, actor domain.Member, c
 		return
 	}
 	for _, h := range hooks {
-		t := r.st.tokens[id]
-		w := Write{Kind: domain.ActionHookFired, Token: t, Note: h.Name}
-		if h.Table == nil {
-			def, known := r.st.catalog.Lookup(h.Effect)
-			if !known {
-				continue
-			}
-			w.effect = &domain.Effect{ID: domain.EffectID(uuid.New()), Target: t.ID, Slug: h.Effect, Name: def.Name, Level: 1}
-		} else {
-			i := slices.IndexFunc(tables, func(x Table) bool { return x.ID == *h.Table })
-			if i < 0 {
-				continue
-			}
-			roll := r.request(r.rollerFor(actor), t, h.Name+": "+tables[i].Name, tables[i].Design.Notation())
-			// The roll is the creature's own: it is its target as well as its actor.
-			w.Rolls, w.Pending = []domain.Roll{roll}, &domain.PendingAction{RollID: roll.ID, Actor: t.ID, Target: &t.ID, Action: tableRoll, Table: h.Table, Hook: h.Name}
+		r.outcome(h, tables, id, actor, c)
+	}
+}
+
+// outcome does what a Rule Variant of the Campaign's own, or a Track's threshold, triggers for one
+// creature: its Effect lands at once, or the creature gets a roll on its Roll Table. A table the
+// Campaign does not see and an Effect the rules do not know do nothing.
+func (r *runtime) outcome(h Hook, tables []Table, id domain.TokenID, actor domain.Member, c caller.Caller) {
+	t := r.st.tokens[id]
+	w := Write{Kind: domain.ActionHookFired, Token: t, Note: h.Name}
+	if h.Table == nil {
+		def, known := r.st.catalog.Lookup(h.Effect)
+		if !known {
+			return
 		}
-		r.commit(request{}, w, actor, c)
+		w.effect = &domain.Effect{ID: domain.EffectID(uuid.New()), Target: t.ID, Slug: h.Effect, Name: def.Name, Level: 1}
+	} else {
+		i := slices.IndexFunc(tables, func(x Table) bool { return x.ID == *h.Table })
+		if i < 0 {
+			return
+		}
+		roll := r.request(r.rollerFor(actor), t, purposeOf(h.Name, tables[i].Name), tables[i].Design.Notation())
+		// The roll is the creature's own: it is its target as well as its actor.
+		w.Rolls, w.Pending = []domain.Roll{roll}, &domain.PendingAction{RollID: roll.ID, Actor: t.ID, Target: &t.ID, Action: tableRoll, Table: h.Table, Hook: h.Name}
+	}
+	r.commit(request{}, w, actor, c)
+}
+
+// maxPurpose is how long what a Roll Request is for may be.
+const maxPurpose = 120
+
+// purposeOf names a roll on a Roll Table after what asked for it and the table, cut to what a Roll
+// Request's purpose may hold.
+func purposeOf(asked, table string) string {
+	out := []rune(asked + ": " + table)
+	return string(out[:min(len(out), maxPurpose)])
+}
+
+// Crossing is a threshold a Track's score crossed, for one Character or for the party when Character
+// is nil: the Effect it applies or the Roll Table it rolls on.
+type Crossing struct {
+	Name      string
+	Character *uuid.UUID
+	Effect    string
+	Table     *uuid.UUID
+}
+
+// crossings are thresholds crossed, with who moved the score.
+type crossings struct {
+	by     domain.Member
+	caller caller.Caller
+	list   []Crossing
+}
+
+// crossed lands what the thresholds a Track's score crossed trigger: on the Character's token when the
+// Track is kept for each Character, on every Character on the board when it is the party's. A
+// Character who is not on this board is passed over.
+func (r *runtime) crossed(x crossings) {
+	tables, err := r.store.RollTables(context.Background(), r.campaign)
+	if err != nil {
+		r.log.Error("live: roll tables", "error", err)
+	}
+	for _, cr := range x.list {
+		for _, t := range r.st.ordered() {
+			character, is := characterOf(t)
+			if !is || (cr.Character != nil && *cr.Character != character) {
+				continue
+			}
+			r.outcome(Hook{Name: cr.Name, Point: "", Table: cr.Table, Effect: cr.Effect}, tables, t.ID, x.by, x.caller)
+		}
 	}
 }
 

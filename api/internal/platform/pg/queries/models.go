@@ -492,6 +492,33 @@ type CampaignStandingChange struct {
 	DecidedAt   pgtype.Timestamptz
 }
 
+type CampaignTrack struct {
+	ID         uuid.UUID
+	CampaignID uuid.UUID
+	Name       string
+	Scope      string
+	Lowest     int32
+	Highest    int32
+	Start      int32
+	CreatedAt  time.Time
+}
+
+type CampaignTrackThreshold struct {
+	TrackID   uuid.UUID
+	Position  int32
+	At        int32
+	Rising    bool
+	Label     string
+	Effect    pgtype.Text
+	RollTable pgtype.UUID
+}
+
+type CampaignTrackValue struct {
+	TrackID     uuid.UUID
+	CharacterID pgtype.UUID
+	Value       int32
+}
+
 type CompendiumAbilityScore struct {
 	ID   int64
 	Slug string

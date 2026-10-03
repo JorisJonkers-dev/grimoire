@@ -2921,6 +2921,131 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/tracks:
+    get:
+      operationId: listTracks
+      x-ogen-operation-group: Read
+      summary: List Tracks
+      description: "The Campaign's Tracks with where each stands. The DM gets every Character's score and the thresholds. A Player gets the party's scores and their own Characters', and no threshold."
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      responses:
+        "200":
+          description: The Tracks, oldest first.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tracks"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    post:
+      operationId: createTrack
+      x-ogen-operation-group: Build
+      summary: Add a Track
+      description: "Adds a Track kept for each Character or for the party, with its bounds, where it starts and its thresholds. A threshold may apply an Effect or roll on a Roll Table the Campaign sees, never both. DM only."
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TrackInput"
+      responses:
+        "201":
+          description: The new Track.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Track"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/tracks/{trackId}:
+    delete:
+      operationId: deleteTrack
+      x-ogen-operation-group: Build
+      summary: Remove a Track
+      description: "Removes a Track with its thresholds and every score kept on it. DM only."
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - name: trackId
+          in: path
+          required: true
+          description: Track id.
+          schema: { $ref: "#/components/schemas/Id" }
+      responses:
+        "204":
+          description: The Track is removed.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/tracks/{trackId}/adjustments:
+    post:
+      operationId: adjustTrack
+      x-ogen-operation-group: Play
+      summary: Move a Track's score
+      description: "Moves a Track's score for one Character, or for the party when the Track is the party's, within the Track's bounds. The answer names the thresholds it crossed; a Session under way lands what they trigger on the Characters on its board. DM only."
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - name: trackId
+          in: path
+          required: true
+          description: Track id.
+          schema: { $ref: "#/components/schemas/Id" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TrackAdjustment"
+      responses:
+        "200":
+          description: Where the score stands now, and the thresholds it crossed.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TrackAdjusted"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /api/v1/campaigns/{campaignId}/factions:
     get:
       operationId: listFactions
@@ -13976,6 +14101,96 @@ components:
             properties:
               id: { $ref: "#/components/schemas/Id" }
               name: { type: string, maxLength: 80 }
+    TrackScope:
+      type: string
+      description: Whether a Track is kept for each Character or for the whole party.
+      enum: [character, party]
+    TrackThreshold:
+      type: object
+      description: "A score of a Track at which something happens, on the way up when rising and on the way down otherwise: an Effect, a roll on a Roll Table, or only its label."
+      additionalProperties: false
+      required: [at, rising, label]
+      properties:
+        at: { type: integer, format: int32, minimum: -1000, maximum: 1000 }
+        rising: { type: boolean }
+        label: { type: string, minLength: 1, maxLength: 80 }
+        effect: { type: string, maxLength: 80, description: "The slug of the Effect it applies." }
+        rollTableId: { $ref: "#/components/schemas/Id" }
+    TrackStanding:
+      type: object
+      description: Where a Track stands for one Character, or for the party when no Character is named.
+      additionalProperties: false
+      required: [name, value]
+      properties:
+        characterId: { $ref: "#/components/schemas/Id" }
+        name: { type: string, maxLength: 200, description: "The Character's name, empty for the party." }
+        value: { type: integer, format: int32, minimum: -1000, maximum: 1000 }
+    Track:
+      type: object
+      description: A Campaign-specific score such as sanity or renown, as the caller may see it. The thresholds are there for the DM alone.
+      additionalProperties: false
+      required: [id, name, scope, min, max, start, standings]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        name: { type: string, maxLength: 80 }
+        scope: { $ref: "#/components/schemas/TrackScope" }
+        min: { type: integer, format: int32, minimum: -1000, maximum: 1000 }
+        max: { type: integer, format: int32, minimum: -1000, maximum: 1000 }
+        start: { type: integer, format: int32, minimum: -1000, maximum: 1000 }
+        thresholds:
+          type: array
+          maxItems: 20
+          items: { $ref: "#/components/schemas/TrackThreshold" }
+        standings:
+          type: array
+          maxItems: 2000
+          description: "Where it stands: one score for the party, or one for each Character the caller may see."
+          items: { $ref: "#/components/schemas/TrackStanding" }
+    TrackInput:
+      type: object
+      description: A new Track.
+      additionalProperties: false
+      required: [name, scope, min, max, start]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        scope: { $ref: "#/components/schemas/TrackScope" }
+        min: { type: integer, format: int32, minimum: -1000, maximum: 1000 }
+        max: { type: integer, format: int32, minimum: -1000, maximum: 1000 }
+        start: { type: integer, format: int32, minimum: -1000, maximum: 1000 }
+        thresholds:
+          type: array
+          maxItems: 20
+          items: { $ref: "#/components/schemas/TrackThreshold" }
+    Tracks:
+      type: object
+      description: "The Campaign's Tracks as the caller may see them."
+      additionalProperties: false
+      required: [dm, tracks]
+      properties:
+        dm: { type: boolean }
+        tracks:
+          type: array
+          maxItems: 20
+          items: { $ref: "#/components/schemas/Track" }
+    TrackAdjustment:
+      type: object
+      description: "A move of a Track's score: for one Character, or for the party when none is named."
+      additionalProperties: false
+      required: [delta]
+      properties:
+        characterId: { $ref: "#/components/schemas/Id" }
+        delta: { type: integer, format: int32, minimum: -2000, maximum: 2000 }
+    TrackAdjusted:
+      type: object
+      description: Where a score stands after a move, and the thresholds it crossed on the way, nearest first.
+      additionalProperties: false
+      required: [value, crossed]
+      properties:
+        value: { type: integer, format: int32, minimum: -1000, maximum: 1000 }
+        crossed:
+          type: array
+          maxItems: 20
+          items: { $ref: "#/components/schemas/TrackThreshold" }
     Faction:
       type: object
       description: A Faction of the Campaign as the caller may see it. Everyone gets its name, archetype and the tier of its Standing. The dm part is there for the DM alone.

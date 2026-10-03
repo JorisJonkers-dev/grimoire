@@ -8783,6 +8783,45 @@ func (s *DeleteShopNoContent) SetRateLimitReset(val OptInt32) {
 
 func (*DeleteShopNoContent) deleteShopRes() {}
 
+// DeleteTrackNoContent is response for DeleteTrack operation.
+type DeleteTrackNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *DeleteTrackNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *DeleteTrackNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *DeleteTrackNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *DeleteTrackNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *DeleteTrackNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *DeleteTrackNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*DeleteTrackNoContent) deleteTrackRes() {}
+
 // An NPC that only its Revisions remember.
 // Ref: #/components/schemas/DeletedNpc
 type DeletedNpc struct {
@@ -39159,6 +39198,7 @@ func (s *ProblemStatusCodeWithHeaders) SetResponse(val Problem) {
 func (*ProblemStatusCodeWithHeaders) acceptAccountInviteRes()           {}
 func (*ProblemStatusCodeWithHeaders) acceptFriendRequestRes()           {}
 func (*ProblemStatusCodeWithHeaders) acceptInviteRes()                  {}
+func (*ProblemStatusCodeWithHeaders) adjustTrackRes()                   {}
 func (*ProblemStatusCodeWithHeaders) approveRetrainRes()                {}
 func (*ProblemStatusCodeWithHeaders) beginTwoStepRes()                  {}
 func (*ProblemStatusCodeWithHeaders) calibrateMapRes()                  {}
@@ -39193,6 +39233,7 @@ func (*ProblemStatusCodeWithHeaders) createRollRes()                    {}
 func (*ProblemStatusCodeWithHeaders) createRuleHookRes()                {}
 func (*ProblemStatusCodeWithHeaders) createSettlementRes()              {}
 func (*ProblemStatusCodeWithHeaders) createShopRes()                    {}
+func (*ProblemStatusCodeWithHeaders) createTrackRes()                   {}
 func (*ProblemStatusCodeWithHeaders) decideStandingChangeRes()          {}
 func (*ProblemStatusCodeWithHeaders) declineFriendRequestRes()          {}
 func (*ProblemStatusCodeWithHeaders) declineRetrainRes()                {}
@@ -39210,6 +39251,7 @@ func (*ProblemStatusCodeWithHeaders) deleteQuestRes()                   {}
 func (*ProblemStatusCodeWithHeaders) deleteRuleHookRes()                {}
 func (*ProblemStatusCodeWithHeaders) deleteSettlementRes()              {}
 func (*ProblemStatusCodeWithHeaders) deleteShopRes()                    {}
+func (*ProblemStatusCodeWithHeaders) deleteTrackRes()                   {}
 func (*ProblemStatusCodeWithHeaders) diffNpcRevisionsRes()              {}
 func (*ProblemStatusCodeWithHeaders) disableTwoStepRes()                {}
 func (*ProblemStatusCodeWithHeaders) discardCharacterDraftRes()         {}
@@ -39324,6 +39366,7 @@ func (*ProblemStatusCodeWithHeaders) listShopRevisionsRes()             {}
 func (*ProblemStatusCodeWithHeaders) listShopsRes()                     {}
 func (*ProblemStatusCodeWithHeaders) listSourcesRes()                   {}
 func (*ProblemStatusCodeWithHeaders) listSpellsRes()                    {}
+func (*ProblemStatusCodeWithHeaders) listTracksRes()                    {}
 func (*ProblemStatusCodeWithHeaders) moveItemRes()                      {}
 func (*ProblemStatusCodeWithHeaders) passInspirationRes()               {}
 func (*ProblemStatusCodeWithHeaders) passTwoStepRes()                   {}
@@ -49048,6 +49091,547 @@ func (s *TokenKind) UnmarshalText(data []byte) error {
 		return errors.Errorf("invalid value: %q", data)
 	}
 }
+
+// A Campaign-specific score such as sanity or renown, as the caller may see it. The thresholds are
+// there for the DM alone.
+// Ref: #/components/schemas/Track
+type Track struct {
+	ID         ID               `json:"id"`
+	Name       string           `json:"name"`
+	Scope      TrackScope       `json:"scope"`
+	Min        int32            `json:"min"`
+	Max        int32            `json:"max"`
+	Start      int32            `json:"start"`
+	Thresholds []TrackThreshold `json:"thresholds"`
+	// Where it stands: one score for the party, or one for each Character the caller may see.
+	Standings []TrackStanding `json:"standings"`
+}
+
+// GetID returns the value of ID.
+func (s *Track) GetID() ID {
+	return s.ID
+}
+
+// GetName returns the value of Name.
+func (s *Track) GetName() string {
+	return s.Name
+}
+
+// GetScope returns the value of Scope.
+func (s *Track) GetScope() TrackScope {
+	return s.Scope
+}
+
+// GetMin returns the value of Min.
+func (s *Track) GetMin() int32 {
+	return s.Min
+}
+
+// GetMax returns the value of Max.
+func (s *Track) GetMax() int32 {
+	return s.Max
+}
+
+// GetStart returns the value of Start.
+func (s *Track) GetStart() int32 {
+	return s.Start
+}
+
+// GetThresholds returns the value of Thresholds.
+func (s *Track) GetThresholds() []TrackThreshold {
+	return s.Thresholds
+}
+
+// GetStandings returns the value of Standings.
+func (s *Track) GetStandings() []TrackStanding {
+	return s.Standings
+}
+
+// SetID sets the value of ID.
+func (s *Track) SetID(val ID) {
+	s.ID = val
+}
+
+// SetName sets the value of Name.
+func (s *Track) SetName(val string) {
+	s.Name = val
+}
+
+// SetScope sets the value of Scope.
+func (s *Track) SetScope(val TrackScope) {
+	s.Scope = val
+}
+
+// SetMin sets the value of Min.
+func (s *Track) SetMin(val int32) {
+	s.Min = val
+}
+
+// SetMax sets the value of Max.
+func (s *Track) SetMax(val int32) {
+	s.Max = val
+}
+
+// SetStart sets the value of Start.
+func (s *Track) SetStart(val int32) {
+	s.Start = val
+}
+
+// SetThresholds sets the value of Thresholds.
+func (s *Track) SetThresholds(val []TrackThreshold) {
+	s.Thresholds = val
+}
+
+// SetStandings sets the value of Standings.
+func (s *Track) SetStandings(val []TrackStanding) {
+	s.Standings = val
+}
+
+// Where a score stands after a move, and the thresholds it crossed on the way, nearest first.
+// Ref: #/components/schemas/TrackAdjusted
+type TrackAdjusted struct {
+	Value   int32            `json:"value"`
+	Crossed []TrackThreshold `json:"crossed"`
+}
+
+// GetValue returns the value of Value.
+func (s *TrackAdjusted) GetValue() int32 {
+	return s.Value
+}
+
+// GetCrossed returns the value of Crossed.
+func (s *TrackAdjusted) GetCrossed() []TrackThreshold {
+	return s.Crossed
+}
+
+// SetValue sets the value of Value.
+func (s *TrackAdjusted) SetValue(val int32) {
+	s.Value = val
+}
+
+// SetCrossed sets the value of Crossed.
+func (s *TrackAdjusted) SetCrossed(val []TrackThreshold) {
+	s.Crossed = val
+}
+
+// TrackAdjustedHeaders wraps TrackAdjusted with response headers.
+type TrackAdjustedHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           TrackAdjusted
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *TrackAdjustedHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *TrackAdjustedHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *TrackAdjustedHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *TrackAdjustedHeaders) GetResponse() TrackAdjusted {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *TrackAdjustedHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *TrackAdjustedHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *TrackAdjustedHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *TrackAdjustedHeaders) SetResponse(val TrackAdjusted) {
+	s.Response = val
+}
+
+func (*TrackAdjustedHeaders) adjustTrackRes() {}
+
+// A move of a Track's score: for one Character, or for the party when none is named.
+// Ref: #/components/schemas/TrackAdjustment
+type TrackAdjustment struct {
+	CharacterId OptID `json:"characterId"`
+	Delta       int32 `json:"delta"`
+}
+
+// GetCharacterId returns the value of CharacterId.
+func (s *TrackAdjustment) GetCharacterId() OptID {
+	return s.CharacterId
+}
+
+// GetDelta returns the value of Delta.
+func (s *TrackAdjustment) GetDelta() int32 {
+	return s.Delta
+}
+
+// SetCharacterId sets the value of CharacterId.
+func (s *TrackAdjustment) SetCharacterId(val OptID) {
+	s.CharacterId = val
+}
+
+// SetDelta sets the value of Delta.
+func (s *TrackAdjustment) SetDelta(val int32) {
+	s.Delta = val
+}
+
+// TrackHeaders wraps Track with response headers.
+type TrackHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           Track
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *TrackHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *TrackHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *TrackHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *TrackHeaders) GetResponse() Track {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *TrackHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *TrackHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *TrackHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *TrackHeaders) SetResponse(val Track) {
+	s.Response = val
+}
+
+func (*TrackHeaders) createTrackRes() {}
+
+// A new Track.
+// Ref: #/components/schemas/TrackInput
+type TrackInput struct {
+	Name       string           `json:"name"`
+	Scope      TrackScope       `json:"scope"`
+	Min        int32            `json:"min"`
+	Max        int32            `json:"max"`
+	Start      int32            `json:"start"`
+	Thresholds []TrackThreshold `json:"thresholds"`
+}
+
+// GetName returns the value of Name.
+func (s *TrackInput) GetName() string {
+	return s.Name
+}
+
+// GetScope returns the value of Scope.
+func (s *TrackInput) GetScope() TrackScope {
+	return s.Scope
+}
+
+// GetMin returns the value of Min.
+func (s *TrackInput) GetMin() int32 {
+	return s.Min
+}
+
+// GetMax returns the value of Max.
+func (s *TrackInput) GetMax() int32 {
+	return s.Max
+}
+
+// GetStart returns the value of Start.
+func (s *TrackInput) GetStart() int32 {
+	return s.Start
+}
+
+// GetThresholds returns the value of Thresholds.
+func (s *TrackInput) GetThresholds() []TrackThreshold {
+	return s.Thresholds
+}
+
+// SetName sets the value of Name.
+func (s *TrackInput) SetName(val string) {
+	s.Name = val
+}
+
+// SetScope sets the value of Scope.
+func (s *TrackInput) SetScope(val TrackScope) {
+	s.Scope = val
+}
+
+// SetMin sets the value of Min.
+func (s *TrackInput) SetMin(val int32) {
+	s.Min = val
+}
+
+// SetMax sets the value of Max.
+func (s *TrackInput) SetMax(val int32) {
+	s.Max = val
+}
+
+// SetStart sets the value of Start.
+func (s *TrackInput) SetStart(val int32) {
+	s.Start = val
+}
+
+// SetThresholds sets the value of Thresholds.
+func (s *TrackInput) SetThresholds(val []TrackThreshold) {
+	s.Thresholds = val
+}
+
+// Whether a Track is kept for each Character or for the whole party.
+// Ref: #/components/schemas/TrackScope
+type TrackScope string
+
+const (
+	TrackScopeCharacter TrackScope = "character"
+	TrackScopeParty     TrackScope = "party"
+)
+
+// AllValues returns all TrackScope values.
+func (TrackScope) AllValues() []TrackScope {
+	return []TrackScope{
+		TrackScopeCharacter,
+		TrackScopeParty,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s TrackScope) MarshalText() ([]byte, error) {
+	switch s {
+	case TrackScopeCharacter:
+		return []byte(s), nil
+	case TrackScopeParty:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *TrackScope) UnmarshalText(data []byte) error {
+	switch TrackScope(data) {
+	case TrackScopeCharacter:
+		*s = TrackScopeCharacter
+		return nil
+	case TrackScopeParty:
+		*s = TrackScopeParty
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// Where a Track stands for one Character, or for the party when no Character is named.
+// Ref: #/components/schemas/TrackStanding
+type TrackStanding struct {
+	CharacterId OptID `json:"characterId"`
+	// The Character's name, empty for the party.
+	Name  string `json:"name"`
+	Value int32  `json:"value"`
+}
+
+// GetCharacterId returns the value of CharacterId.
+func (s *TrackStanding) GetCharacterId() OptID {
+	return s.CharacterId
+}
+
+// GetName returns the value of Name.
+func (s *TrackStanding) GetName() string {
+	return s.Name
+}
+
+// GetValue returns the value of Value.
+func (s *TrackStanding) GetValue() int32 {
+	return s.Value
+}
+
+// SetCharacterId sets the value of CharacterId.
+func (s *TrackStanding) SetCharacterId(val OptID) {
+	s.CharacterId = val
+}
+
+// SetName sets the value of Name.
+func (s *TrackStanding) SetName(val string) {
+	s.Name = val
+}
+
+// SetValue sets the value of Value.
+func (s *TrackStanding) SetValue(val int32) {
+	s.Value = val
+}
+
+// A score of a Track at which something happens, on the way up when rising and on the way down
+// otherwise: an Effect, a roll on a Roll Table, or only its label.
+// Ref: #/components/schemas/TrackThreshold
+type TrackThreshold struct {
+	At     int32  `json:"at"`
+	Rising bool   `json:"rising"`
+	Label  string `json:"label"`
+	// The slug of the Effect it applies.
+	Effect      OptString `json:"effect"`
+	RollTableId OptID     `json:"rollTableId"`
+}
+
+// GetAt returns the value of At.
+func (s *TrackThreshold) GetAt() int32 {
+	return s.At
+}
+
+// GetRising returns the value of Rising.
+func (s *TrackThreshold) GetRising() bool {
+	return s.Rising
+}
+
+// GetLabel returns the value of Label.
+func (s *TrackThreshold) GetLabel() string {
+	return s.Label
+}
+
+// GetEffect returns the value of Effect.
+func (s *TrackThreshold) GetEffect() OptString {
+	return s.Effect
+}
+
+// GetRollTableId returns the value of RollTableId.
+func (s *TrackThreshold) GetRollTableId() OptID {
+	return s.RollTableId
+}
+
+// SetAt sets the value of At.
+func (s *TrackThreshold) SetAt(val int32) {
+	s.At = val
+}
+
+// SetRising sets the value of Rising.
+func (s *TrackThreshold) SetRising(val bool) {
+	s.Rising = val
+}
+
+// SetLabel sets the value of Label.
+func (s *TrackThreshold) SetLabel(val string) {
+	s.Label = val
+}
+
+// SetEffect sets the value of Effect.
+func (s *TrackThreshold) SetEffect(val OptString) {
+	s.Effect = val
+}
+
+// SetRollTableId sets the value of RollTableId.
+func (s *TrackThreshold) SetRollTableId(val OptID) {
+	s.RollTableId = val
+}
+
+// The Campaign's Tracks as the caller may see them.
+// Ref: #/components/schemas/Tracks
+type Tracks struct {
+	Dm     bool    `json:"dm"`
+	Tracks []Track `json:"tracks"`
+}
+
+// GetDm returns the value of Dm.
+func (s *Tracks) GetDm() bool {
+	return s.Dm
+}
+
+// GetTracks returns the value of Tracks.
+func (s *Tracks) GetTracks() []Track {
+	return s.Tracks
+}
+
+// SetDm sets the value of Dm.
+func (s *Tracks) SetDm(val bool) {
+	s.Dm = val
+}
+
+// SetTracks sets the value of Tracks.
+func (s *Tracks) SetTracks(val []Track) {
+	s.Tracks = val
+}
+
+// TracksHeaders wraps Tracks with response headers.
+type TracksHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           Tracks
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *TracksHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *TracksHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *TracksHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *TracksHeaders) GetResponse() Tracks {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *TracksHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *TracksHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *TracksHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *TracksHeaders) SetResponse(val Tracks) {
+	s.Response = val
+}
+
+func (*TracksHeaders) listTracksRes() {}
 
 // A class feature or species trait the Character has.
 // Ref: #/components/schemas/TraitLine

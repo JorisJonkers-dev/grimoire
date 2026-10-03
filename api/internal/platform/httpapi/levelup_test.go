@@ -61,7 +61,8 @@ func srdStack(t *testing.T) (http.Handler, *pgxpool.Pool) {
 		Roll: func(count, _ int) int { return count },
 	}
 	journal := &app.Journal{Repo: repo, Now: time.Now}
-	return campaignServer(t, app.NewService(repo), chars, httpapi.InventoryService(inv), httpapi.JournalService(journal)), store.Pool()
+	tracks := &app.Tracks{Repo: repo, Events: noSession{}, Now: time.Now}
+	return campaignServer(t, app.NewService(repo), chars, httpapi.InventoryService(inv), httpapi.JournalService(journal), httpapi.TrackService(tracks)), store.Pool()
 }
 
 const srdFighter = `{"name":"Kara","species":"human","class":"fighter","background":"soldier","method":"point-buy",

@@ -286,6 +286,7 @@ func serve(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 			Journal:      &campaignapp.Journal{Repo: campaignpg.New(store.Pool()), Now: time.Now},
 			RuleVariants: &campaignapp.RuleVariants{Repo: campaignpg.New(store.Pool()), Now: time.Now},
 			RuleHooks:    &campaignapp.RuleHooks{Repo: campaignpg.New(store.Pool()), Now: time.Now},
+			Tracks:       &campaignapp.Tracks{Repo: campaignpg.New(store.Pool()), Events: playpg.TrackEvents{Hub: hub}, Now: time.Now},
 			Companions: &campaignapp.Companions{
 				Repo: campaignpg.New(store.Pool()), Creatures: playpg.Statblocks{Store: playpg.New(store.Pool()), Characters: characters}, Now: time.Now,
 			},
