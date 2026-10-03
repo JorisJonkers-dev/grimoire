@@ -65,3 +65,20 @@ SELECT no_undo FROM campaign.campaigns WHERE id = $1;
 -- A Session keeps the start of its latest rounds only.
 DELETE FROM play.checkpoints c WHERE c.session_id = @session_id AND c.kind = 'round' AND c.id NOT IN (
     SELECT k.id FROM play.checkpoints k WHERE k.session_id = @session_id AND k.kind = 'round' ORDER BY k.action_seq DESC, k.created_at DESC LIMIT @keep);
+
+-- name: CampaignShowDCs :one
+SELECT show_dcs FROM campaign.campaigns WHERE id = $1;
+
+-- name: SessionAttitudes :many
+-- The attitudes of the creatures on a Session's map towards the Campaign's Characters.
+SELECT a.token_id, a.character_id, a.attitude
+FROM play.token_attitudes a JOIN play.tokens t ON t.id = a.token_id
+WHERE t.session_id = $1 ORDER BY a.token_id, a.character_id;
+
+-- name: SetAttitude :exec
+-- Only a creature of the Session takes an attitude, and only towards a Character of the Session's Campaign.
+INSERT INTO play.token_attitudes (token_id, character_id, attitude)
+SELECT t.id, c.id, @attitude
+FROM play.tokens t JOIN play.sessions s ON s.id = t.session_id JOIN campaign.characters c ON c.campaign_id = s.campaign_id
+WHERE t.session_id = @session_id AND t.id = @token_id AND c.id = @character_id
+ON CONFLICT (token_id, character_id) DO UPDATE SET attitude = excluded.attitude;

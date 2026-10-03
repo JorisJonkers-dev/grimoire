@@ -126,6 +126,17 @@ func (q *Queries) CampaignNoUndo(ctx context.Context, id uuid.UUID) (bool, error
 	return no_undo, err
 }
 
+const campaignShowDCs = `-- name: CampaignShowDCs :one
+SELECT show_dcs FROM campaign.campaigns WHERE id = $1
+`
+
+func (q *Queries) CampaignShowDCs(ctx context.Context, id uuid.UUID) (bool, error) {
+	row := q.db.QueryRow(ctx, campaignShowDCs, id)
+	var show_dcs bool
+	err := row.Scan(&show_dcs)
+	return show_dcs, err
+}
+
 const dropLaterCheckpoints = `-- name: DropLaterCheckpoints :exec
 DELETE FROM play.checkpoints WHERE session_id = $1 AND action_seq > $2
 `
@@ -290,6 +301,33 @@ func (q *Queries) SessionActionBySeq(ctx context.Context, arg SessionActionBySeq
 	return i, err
 }
 
+const sessionAttitudes = `-- name: SessionAttitudes :many
+SELECT a.token_id, a.character_id, a.attitude
+FROM play.token_attitudes a JOIN play.tokens t ON t.id = a.token_id
+WHERE t.session_id = $1 ORDER BY a.token_id, a.character_id
+`
+
+// The attitudes of the creatures on a Session's map towards the Campaign's Characters.
+func (q *Queries) SessionAttitudes(ctx context.Context, sessionID uuid.UUID) ([]PlayTokenAttitude, error) {
+	rows, err := q.db.Query(ctx, sessionAttitudes, sessionID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []PlayTokenAttitude{}
+	for rows.Next() {
+		var i PlayTokenAttitude
+		if err := rows.Scan(&i.TokenID, &i.CharacterID, &i.Attitude); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const sessionLog = `-- name: SessionLog :many
 SELECT a.seq, a.kind, a.actor_name, a.origin, a.client, a.created_at,
     -- The one token the Action touched; the nil UUID when it touched none.
@@ -352,4 +390,30 @@ func (q *Queries) SessionLog(ctx context.Context, arg SessionLogParams) ([]Sessi
 		return nil, err
 	}
 	return items, nil
+}
+
+const setAttitude = `-- name: SetAttitude :exec
+INSERT INTO play.token_attitudes (token_id, character_id, attitude)
+SELECT t.id, c.id, $1
+FROM play.tokens t JOIN play.sessions s ON s.id = t.session_id JOIN campaign.characters c ON c.campaign_id = s.campaign_id
+WHERE t.session_id = $2 AND t.id = $3 AND c.id = $4
+ON CONFLICT (token_id, character_id) DO UPDATE SET attitude = excluded.attitude
+`
+
+type SetAttitudeParams struct {
+	Attitude    string
+	SessionID   uuid.UUID
+	TokenID     uuid.UUID
+	CharacterID uuid.UUID
+}
+
+// Only a creature of the Session takes an attitude, and only towards a Character of the Session's Campaign.
+func (q *Queries) SetAttitude(ctx context.Context, arg SetAttitudeParams) error {
+	_, err := q.db.Exec(ctx, setAttitude,
+		arg.Attitude,
+		arg.SessionID,
+		arg.TokenID,
+		arg.CharacterID,
+	)
+	return err
 }

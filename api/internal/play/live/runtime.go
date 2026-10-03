@@ -146,11 +146,13 @@ type Write struct {
 	// Pending is a Hide, Grapple or Shove waiting on its roll; Settled the roll of one that resolved.
 	// Pushed is a shoved creature where it lands; Dragged a grappled creature pulled along a walk.
 	Pending *domain.PendingAction
-	Settled domain.RollID
-	Pushed  *domain.Token
-	Dragged *domain.Token
-	taken   *takenAction
-	cleave  *domain.TokenID
+	// Attitude is how a creature takes to a Character after an Influence check.
+	Attitude *domain.Attitude
+	Settled  domain.RollID
+	Pushed   *domain.Token
+	Dragged  *domain.Token
+	taken    *takenAction
+	cleave   *domain.TokenID
 	// Dying is a Character's death saves after the change; Undying the one that woke or was revived.
 	Dying   *domain.Dying
 	Undying *domain.TokenID
@@ -184,14 +186,15 @@ type Write struct {
 
 // loaded is what the rules keep between a Session's runtimes besides tokens, Combat and Effects.
 type loaded struct {
-	catalog  effects.Catalog
-	surfaces surface.Catalog
-	looks    map[string]look
-	rest     *domain.Rest
-	pending  []domain.PendingAction
-	dying    map[domain.TokenID]domain.Dying
-	sneak    *domain.Sneak
-	explore  *domain.Exploration
+	catalog   effects.Catalog
+	surfaces  surface.Catalog
+	looks     map[string]look
+	rest      *domain.Rest
+	pending   []domain.PendingAction
+	attitudes []domain.Attitude
+	dying     map[domain.TokenID]domain.Dying
+	sneak     *domain.Sneak
+	explore   *domain.Exploration
 }
 
 // loadRules reads the Effect catalogue, the rest the Session has under way, the Hides, Grapples and
@@ -215,6 +218,9 @@ func loadRules(ctx context.Context, store Store, s domain.Session) (loaded, erro
 		return out, err
 	}
 	if out.pending, err = store.LoadPendingActions(ctx, s.ID); err != nil {
+		return out, err
+	}
+	if out.attitudes, err = store.LoadAttitudes(ctx, s.ID); err != nil {
 		return out, err
 	}
 	if out.dying, err = store.LoadDying(ctx, s.ID); err != nil {
@@ -286,6 +292,10 @@ type Store interface {
 	LoadRest(ctx context.Context, campaign uuid.UUID, id domain.SessionID) (*domain.Rest, error)
 	// LoadPendingActions reads the Hides, Grapples and Shoves waiting on rolls.
 	LoadPendingActions(ctx context.Context, id domain.SessionID) ([]domain.PendingAction, error)
+	// LoadAttitudes reads how the Session's creatures take to the Campaign's Characters, and ShowDCs
+	// whether the Campaign shows the DC of a check on its Roll Card now.
+	LoadAttitudes(ctx context.Context, id domain.SessionID) ([]domain.Attitude, error)
+	ShowDCs(ctx context.Context, campaign uuid.UUID) (bool, error)
 	// LoadDying reads the Characters at 0 hit points.
 	LoadDying(ctx context.Context, id domain.SessionID) (map[domain.TokenID]domain.Dying, error)
 	// RestInfo reads what a rest needs of each Character; RestSupplies whether a Long Rest costs Rations.
@@ -578,7 +588,7 @@ func (h *Hub) load(ctx context.Context, store Store, id domain.SessionID) (*stat
 		return nil, err
 	}
 	st := &state{
-		session: s, tokens: map[domain.TokenID]domain.Token{}, combat: fight, observed: seen, now: h.Now, fx: fx, catalog: kept.catalog, looks: kept.looks, terrainKinds: kept.surfaces, sneak: kept.sneak, explore: kept.explore, rest: kept.rest, pending: kept.pending, dying: kept.dying, surfaces: ground, cast: cast, table: table,
+		session: s, tokens: map[domain.TokenID]domain.Token{}, combat: fight, observed: seen, now: h.Now, fx: fx, catalog: kept.catalog, looks: kept.looks, terrainKinds: kept.surfaces, sneak: kept.sneak, explore: kept.explore, rest: kept.rest, pending: kept.pending, attitudes: kept.attitudes, dying: kept.dying, surfaces: ground, cast: cast, table: table,
 		tableMap: tableMap, zones: zones, checks: checks, inventory: trade.inventory, shop: trade.shop, day: trade.clock.Day, minute: trade.clock.Minute, march: trade.march,
 	}
 	for _, t := range tokens {

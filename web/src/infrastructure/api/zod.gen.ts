@@ -2804,6 +2804,18 @@ export const zLiveWorldRoute = z.object({
 });
 
 /**
+ * A creature's attitude towards one Character.
+ */
+export const zLiveAttitude = z.object({
+    characterId: zId,
+    attitude: z.enum([
+        'hostile',
+        'indifferent',
+        'friendly'
+    ])
+});
+
+/**
  * A Character in the Marching Order. Its place counts from 1 at the front; a Character nobody has placed has none and marches behind the rest.
  */
 export const zLiveMarcher = z.object({
@@ -3037,6 +3049,7 @@ export const zLiveToken = z.object({
         'indifferent',
         'friendly'
     ]).optional(),
+    attitudes: z.array(zLiveAttitude).max(200).optional(),
     q: z.int().gte(-500).lte(500),
     r: z.int().gte(-500).lte(500),
     hidden: z.boolean(),
@@ -4849,6 +4862,7 @@ export const zCampaignSummary = z.object({
     startingLevel: z.int().gte(1).lte(20).optional(),
     holdLevelUps: z.boolean().optional(),
     noUndo: z.boolean().optional(),
+    showDcs: z.boolean().optional(),
     exhaustion: z.string().max(40).optional(),
     shareInitiative: z.boolean().optional()
 });
@@ -4879,6 +4893,7 @@ export const zCampaign = z.object({
     startingLevel: z.int().gte(1).lte(20).optional(),
     holdLevelUps: z.boolean().optional(),
     noUndo: z.boolean().optional(),
+    showDcs: z.boolean().optional(),
     exhaustion: z.string().max(40).optional(),
     shareInitiative: z.boolean().optional(),
     me: zMember,
@@ -4981,6 +4996,7 @@ export const zCampaignUpdate = z.object({
     startingLevel: z.int().gte(1).lte(20).optional(),
     holdLevelUps: z.boolean().optional(),
     noUndo: z.boolean().optional(),
+    showDcs: z.boolean().optional(),
     exhaustion: z.string().max(40).optional(),
     shareInitiative: z.boolean().optional()
 });

@@ -230,6 +230,8 @@ type UpdateInput struct {
 	HoldLevelUps *bool
 	// NoUndo plays the Campaign without undo, Checkpoints or rewind.
 	NoUndo *bool
+	// ShowDCs puts the DC of a check on its Roll Card.
+	ShowDCs *bool
 	// ExhaustionVariant picks the Campaign's exhaustion: srd-2024, gentle, grim or off.
 	ExhaustionVariant *string
 }
@@ -263,7 +265,7 @@ func (s *Service) Update(ctx context.Context, c caller.Caller, id domain.Campaig
 	}
 	change := domain.SettingsChange{
 		Name: in.Name, Ruleset: in.Ruleset, ReactionTimeoutS: in.ReactionTimeoutS, HighGround: in.HighGround, RestSupplies: in.RestSupplies,
-		InitiativeMode: in.InitiativeMode, ShareInitiative: in.ShareInitiative, CreationMethods: in.CreationMethods, StartingLevel: in.StartingLevel, HoldLevelUps: in.HoldLevelUps, NoUndo: in.NoUndo,
+		InitiativeMode: in.InitiativeMode, ShareInitiative: in.ShareInitiative, CreationMethods: in.CreationMethods, StartingLevel: in.StartingLevel, HoldLevelUps: in.HoldLevelUps, NoUndo: in.NoUndo, ShowDCs: in.ShowDCs,
 		ExhaustionVariant: in.ExhaustionVariant,
 	}
 	return s.Repo.UpdateCampaign(ctx, id, change, s.Now())

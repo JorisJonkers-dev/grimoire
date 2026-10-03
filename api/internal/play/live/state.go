@@ -61,6 +61,8 @@ type state struct {
 	// rest is the rest proposed or under way; pending the Hides, Grapples and Shoves waiting on rolls.
 	rest    *domain.Rest
 	pending []domain.PendingAction
+	// attitudes are how creatures take to Characters, as Influence checks left them.
+	attitudes []domain.Attitude
 	// dying are the Characters at 0 hit points.
 	dying map[domain.TokenID]domain.Dying
 	// checkpoints are the points the DM can rewind to, oldest first; a change replaces the list, never
@@ -91,6 +93,7 @@ func (s *state) clone() *state {
 	}
 	next.checks = slices.Clone(s.checks)
 	next.rest, next.pending, next.dying = s.rest.Clone(), slices.Clone(s.pending), maps.Clone(s.dying)
+	next.attitudes = slices.Clone(s.attitudes)
 	next.inventory, next.day, next.minute, next.march, next.standings = cloneInventory(s.inventory), s.day, s.minute, slices.Clone(s.march), s.standings
 	if s.sneak != nil {
 		next.sneak = &domain.Sneak{Rolls: slices.Clone(s.sneak.Rolls)}
@@ -200,6 +203,7 @@ func (s *state) project(a Audience) View {
 	}
 	sort.Slice(v.Tokens, func(i, j int) bool { return v.Tokens[i].ID < v.Tokens[j].ID })
 	s.firstReactions(v.Tokens, a)
+	s.attitudeViews(v.Tokens)
 	s.projectCombat(&v, a, seen)
 	s.terrainViews(&v, a, seen)
 	s.projectPending(&v, a, seen)

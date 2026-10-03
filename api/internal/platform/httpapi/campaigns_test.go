@@ -178,8 +178,8 @@ func TestCampaignLifecycleOverHTTP(t *testing.T) {
 	if player["isMe"] != true {
 		t.Fatalf("player row = %v", player)
 	}
-	rec = call(h, http.MethodPatch, "/api/v1/campaigns/"+id, "dm", `{"name":"Greyfen","ruleset":"srd-2024","reactionTimeoutS":5,"highGround":true,"noUndo":true,"restSupplies":true,"initiativeMode":"side","shareInitiative":true}`)
-	if body := decode(t, rec); rec.Code != 200 || body["ruleset"] != "srd-2024" || body["reactionTimeoutS"] != float64(5) || body["highGround"] != true || body["noUndo"] != true || body["restSupplies"] != true ||
+	rec = call(h, http.MethodPatch, "/api/v1/campaigns/"+id, "dm", `{"name":"Greyfen","ruleset":"srd-2024","reactionTimeoutS":5,"highGround":true,"noUndo":true,"showDcs":true,"restSupplies":true,"initiativeMode":"side","shareInitiative":true}`)
+	if body := decode(t, rec); rec.Code != 200 || body["ruleset"] != "srd-2024" || body["reactionTimeoutS"] != float64(5) || body["highGround"] != true || body["noUndo"] != true || body["showDcs"] != true || body["restSupplies"] != true ||
 		body["initiativeMode"] != "side" || body["shareInitiative"] != true {
 		t.Fatalf("update: %d %s", rec.Code, rec.Body.String())
 	}

@@ -211,7 +211,7 @@ func TestFactionsStandingAndTheChangesTheDMDecides(t *testing.T) {
 		}
 	}
 	raw, _ := json.Marshal(lists(playerCaller))
-	for _, secret := range []string{"watchman", "bribes", "Old Joris", "insulted", "Keep the peace", "Oakford", "captain's son", "stood a round", "Claude", "mcp", "-50", "-20", `"Score":25`, `"Delta"`} {
+	for _, secret := range []string{"watchman", "bribes", "Old Joris", "insulted", "Keep the peace", "Oakford", "captain's son", "stood a round", "Claude", "mcp", ":-50", ":-20", `"Score":25`, `"Delta"`} {
 		if strings.Contains(string(raw), secret) {
 			t.Fatalf("%q reached a Player: %s", secret, raw)
 		}

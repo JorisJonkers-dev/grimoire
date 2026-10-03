@@ -49,6 +49,7 @@ type CampaignCampaign struct {
 	GameMinute        int32
 	ExhaustionVariant string
 	NoUndo            bool
+	ShowDcs           bool
 }
 
 type CampaignCharacter struct {
@@ -1732,6 +1733,12 @@ type PlayTokenAttack struct {
 	Light       bool
 	DamageMod   int32
 	Mastery     pgtype.Text
+}
+
+type PlayTokenAttitude struct {
+	TokenID     uuid.UUID
+	CharacterID uuid.UUID
+	Attitude    string
 }
 
 type PlayTokenForm struct {

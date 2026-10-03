@@ -8533,6 +8533,7 @@ components:
         startingLevel: { type: integer, format: int32, minimum: 1, maximum: 20, description: "The level new Characters start at." }
         holdLevelUps: { type: boolean, description: "Long rests stop unlocking the next level; the DM grants levels instead." }
         noUndo: { type: boolean, description: "The Campaign is played without undo: nothing is taken back, no Checkpoint is kept and there is no rewind." }
+        showDcs: { type: boolean, description: "The DC of a check is shown on its Roll Card; without it the DC is the DM's to know." }
         exhaustion: { type: string, maxLength: 40, description: "The exhaustion the Campaign plays with: srd-2024, gentle, grim or off." }
         shareInitiative: { type: boolean, description: "Identical monsters share one initiative roll." }
     CampaignPage:
@@ -8586,6 +8587,7 @@ components:
         startingLevel: { type: integer, format: int32, minimum: 1, maximum: 20, description: "The level new Characters start at." }
         holdLevelUps: { type: boolean, description: "Long rests stop unlocking the next level; the DM grants levels instead." }
         noUndo: { type: boolean, description: "The Campaign is played without undo: nothing is taken back, no Checkpoint is kept and there is no rewind." }
+        showDcs: { type: boolean, description: "The DC of a check is shown on its Roll Card; without it the DC is the DM's to know." }
         exhaustion: { type: string, maxLength: 40, description: "The exhaustion the Campaign plays with: srd-2024, gentle, grim or off." }
         shareInitiative: { type: boolean, description: "Identical monsters share one initiative roll." }
         me: { $ref: "#/components/schemas/Member" }
@@ -8623,6 +8625,7 @@ components:
         startingLevel: { type: integer, format: int32, minimum: 1, maximum: 20, description: "The level new Characters start at." }
         holdLevelUps: { type: boolean, description: "Long rests stop unlocking the next level; the DM grants levels instead." }
         noUndo: { type: boolean, description: "The Campaign is played without undo: nothing is taken back, no Checkpoint is kept and there is no rewind." }
+        showDcs: { type: boolean, description: "The DC of a check is shown on its Roll Card; without it the DC is the DM's to know." }
         exhaustion: { type: string, maxLength: 40, description: "The exhaustion the Campaign plays with: srd-2024, gentle, grim or off." }
         shareInitiative: { type: boolean, description: "Identical monsters share one initiative roll." }
     Account:
@@ -11034,6 +11037,11 @@ components:
         companionId: { $ref: "#/components/schemas/Id" }
         factionId: { $ref: "#/components/schemas/Id" }
         firstReaction: { type: string, enum: [hostile, indifferent, friendly], description: "How a creature of a Faction first takes to the party, by the Faction's Standing. For the DM alone; factionId itself goes to every screen that sees the creature." }
+        attitudes:
+          type: array
+          maxItems: 200
+          description: How the creature takes to each Character an Influence check has moved it towards. A check that meets the DC moves it a step towards friendly, one that misses by five or more a step towards hostile; a friendly creature gives Advantage on the next check and a hostile one Disadvantage.
+          items: { $ref: "#/components/schemas/LiveAttitude" }
         q: { type: integer, format: int32, minimum: -500, maximum: 500 }
         r: { type: integer, format: int32, minimum: -500, maximum: 500 }
         hidden: { type: boolean }
@@ -12815,6 +12823,14 @@ components:
         pace: { $ref: "#/components/schemas/TravelPace" }
         minutes: { type: integer, format: int32, minimum: 0, maximum: 100000 }
         days: { type: integer, format: int32, minimum: 0, maximum: 1000 }
+    LiveAttitude:
+      type: object
+      description: A creature's attitude towards one Character.
+      additionalProperties: false
+      required: [characterId, attitude]
+      properties:
+        characterId: { $ref: "#/components/schemas/Id" }
+        attitude: { type: string, enum: [hostile, indifferent, friendly] }
     LiveMarcher:
       type: object
       description: A Character in the Marching Order. Its place counts from 1 at the front; a Character nobody has placed has none and marches behind the rest.

@@ -75,6 +75,8 @@ type Campaign struct {
 	HoldLevelUps bool
 	// NoUndo plays the Campaign without undo: nothing is taken back, no Checkpoint is kept, no rewind.
 	NoUndo bool
+	// ShowDCs puts the DC of a check on its Roll Card; without it the DC is the DM's to know.
+	ShowDCs bool
 	// ExhaustionVariant is the exhaustion the Campaign plays with: srd-2024, gentle, grim or off.
 	ExhaustionVariant string
 }
@@ -92,6 +94,7 @@ type SettingsChange struct {
 	StartingLevel    *int
 	HoldLevelUps     *bool
 	NoUndo           *bool
+	ShowDCs          *bool
 	// ExhaustionVariant picks the Campaign's exhaustion.
 	ExhaustionVariant *string
 }

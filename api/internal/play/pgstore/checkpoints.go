@@ -56,6 +56,7 @@ func keptTables() []kept {
 		{"play.token_reactions", "token_id " + ofTokens},
 		{"play.token_saves", "token_id " + ofTokens},
 		{"play.token_senses", "token_id " + ofTokens},
+		{"play.token_attitudes", "token_id " + ofTokens},
 		{"play.observed_damage", "observer_token_id " + ofTokens},
 		{"play.combats", inSession},
 		{"play.combatants", ofCombats},

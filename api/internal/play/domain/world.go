@@ -130,3 +130,10 @@ type Standing struct {
 	Score    int
 	Personal map[uuid.UUID]int
 }
+
+// Attitude is how one creature on the map takes to one Character: hostile, indifferent or friendly.
+type Attitude struct {
+	Token     TokenID
+	Character uuid.UUID
+	Value     string
+}

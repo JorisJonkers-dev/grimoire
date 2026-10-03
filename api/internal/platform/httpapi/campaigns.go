@@ -125,6 +125,7 @@ func summaryOut(s domain.Summary) oas.CampaignSummary {
 		StartingLevel:    oas.NewOptInt32(int32(s.StartingLevel)), //nolint:gosec // 1 to 20
 		HoldLevelUps:     oas.NewOptBool(s.HoldLevelUps),
 		NoUndo:           oas.NewOptBool(s.NoUndo),
+		ShowDcs:          oas.NewOptBool(s.ShowDCs),
 		Exhaustion:       oas.NewOptString(s.ExhaustionVariant),
 	}
 }
@@ -142,6 +143,7 @@ func detailOut(d domain.Detail) oas.Campaign {
 		StartingLevel:    oas.NewOptInt32(int32(d.StartingLevel)), //nolint:gosec // 1 to 20
 		HoldLevelUps:     oas.NewOptBool(d.HoldLevelUps),
 		NoUndo:           oas.NewOptBool(d.NoUndo),
+		ShowDcs:          oas.NewOptBool(d.ShowDCs),
 		Exhaustion:       oas.NewOptString(d.ExhaustionVariant),
 		Members:          make([]oas.Member, 0, len(d.Members)),
 	}
@@ -278,6 +280,9 @@ func characterSettings(req *oas.CampaignUpdate, in *app.UpdateInput) {
 	}
 	if v, set := req.NoUndo.Get(); set {
 		in.NoUndo = &v
+	}
+	if v, set := req.ShowDcs.Get(); set {
+		in.ShowDCs = &v
 	}
 	if v, set := req.Exhaustion.Get(); set {
 		in.ExhaustionVariant = &v

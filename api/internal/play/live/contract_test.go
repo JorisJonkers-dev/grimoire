@@ -22,7 +22,7 @@ type contract struct {
 
 // samples covers every command and update kind; the web client parses each with its generated schemas.
 func samples() contract {
-	token := live.TokenView{ID: "0190c7a8-0000-7000-8000-00000000000a", Label: "Goblin", Kind: "enemy", Q: 2, R: -1, Hidden: false, DarkvisionFt: 0, CompanionID: "0190c7a8-0000-7000-8000-00000000000d", FactionID: "0190c7a8-0000-7000-8000-0000000000f1", FirstReaction: "indifferent", ControllerID: "0190c7a8-0000-7000-8000-00000000000f"}
+	token := live.TokenView{ID: "0190c7a8-0000-7000-8000-00000000000a", Label: "Goblin", Kind: "enemy", Q: 2, R: -1, Hidden: false, DarkvisionFt: 0, CompanionID: "0190c7a8-0000-7000-8000-00000000000d", FactionID: "0190c7a8-0000-7000-8000-0000000000f1", FirstReaction: "indifferent", Attitudes: []live.AttitudeView{{CharacterID: "0190c7a8-0000-7000-8000-000000000031", Attitude: "friendly"}}, ControllerID: "0190c7a8-0000-7000-8000-00000000000f"}
 	id := "0190c7a8-0000-7000-8000-00000000000c"
 	view := &live.View{
 		Roster: []live.RosterEntry{{TokenID: token.ID, Label: token.Label, Kind: token.Kind, HP: nil, HPMax: nil, TempHP: 0, Health: "hurt", Hidden: false, Acting: true, Effects: []live.EffectView{}, Companion: true}},

@@ -339,6 +339,8 @@ type TokenView struct {
 	// Standing, for the DM alone.
 	FactionID     string `json:"factionId,omitempty"`
 	FirstReaction string `json:"firstReaction,omitempty"`
+	// Attitudes are how the creature takes to each Character an Influence check has moved it towards.
+	Attitudes []AttitudeView `json:"attitudes,omitempty"`
 	// AC, HP and attacks go to the DM, and to everyone for party tokens; others only show their health.
 	AC     *int   `json:"ac,omitempty"`
 	HP     *int   `json:"hp,omitempty"`
@@ -793,6 +795,12 @@ type MarchView struct {
 	CharacterID string `json:"characterId"`
 	Name        string `json:"name"`
 	Place       int    `json:"place,omitempty"`
+}
+
+// AttitudeView is a creature's attitude towards one Character: hostile, indifferent or friendly.
+type AttitudeView struct {
+	CharacterID string `json:"characterId"`
+	Attitude    string `json:"attitude"`
 }
 
 // MaxWaypoints is how many waypoints a measured route may have, and MaxMeasuredMiles how long it may be.
