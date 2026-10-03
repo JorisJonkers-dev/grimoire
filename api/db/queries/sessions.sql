@@ -3,17 +3,17 @@ SELECT coalesce(max(number), 0)::int + 1 FROM play.sessions WHERE campaign_id = 
 
 -- name: InsertSession :one
 INSERT INTO play.sessions (campaign_id, number, status, started_at) VALUES (@campaign_id, @number, 'live', @now)
-RETURNING id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id, world_map_id, sneaking;
+RETURNING id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id, world_map_id, sneaking, parent_session_id, group_name, table_session_id;
 
 -- name: GetSession :one
-SELECT id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id, world_map_id, sneaking
+SELECT id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id, world_map_id, sneaking, parent_session_id, group_name, table_session_id
 FROM play.sessions WHERE campaign_id = @campaign_id AND id = @id;
 
 -- name: SessionByID :one
-SELECT id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id, world_map_id, sneaking FROM play.sessions WHERE id = $1;
+SELECT id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id, world_map_id, sneaking, parent_session_id, group_name, table_session_id FROM play.sessions WHERE id = $1;
 
 -- name: ListSessions :many
-SELECT id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id, world_map_id, sneaking
+SELECT id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id, world_map_id, sneaking, parent_session_id, group_name, table_session_id
 FROM play.sessions WHERE campaign_id = $1 ORDER BY number DESC LIMIT 50;
 
 -- name: EndSession :execrows
@@ -464,3 +464,63 @@ ORDER BY e.id;
 
 -- name: CampaignExhaustion :one
 SELECT exhaustion_variant FROM campaign.campaigns WHERE id = $1;
+
+-- name: InsertGroupSession :one
+-- A group that leaves the party plays in a Session of its own, on its own map.
+INSERT INTO play.sessions (campaign_id, number, status, started_at, parent_session_id, group_name, map_id)
+VALUES (@campaign_id, @number, 'live', @now, @parent_session_id, @group_name, @map_id)
+RETURNING id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id, world_map_id, sneaking, parent_session_id, group_name, table_session_id;
+
+-- name: PartyGroups :many
+-- The live Sessions a party is split over: the one it split from first, then each group that left it.
+SELECT s.id, s.number, s.group_name, (s.parent_session_id IS NULL)::boolean AS home,
+    (s.id = coalesce((SELECT f.id FROM play.sessions f WHERE f.id = r.table_session_id AND f.status = 'live' AND f.parent_session_id = r.id), r.id))::boolean AS shown
+FROM play.sessions s JOIN play.sessions r ON r.id = @root
+WHERE s.status = 'live' AND (s.id = @root OR s.parent_session_id = @root)
+ORDER BY s.parent_session_id NULLS FIRST, s.number;
+
+-- name: PartyGroupTokens :many
+SELECT t.session_id, t.id, t.label, t.controller_member_id
+FROM play.tokens t JOIN play.sessions s ON s.id = t.session_id
+WHERE t.kind = 'party' AND s.status = 'live' AND (s.id = @root OR s.parent_session_id = @root)
+ORDER BY t.label, t.id;
+
+-- name: MoveToken :execrows
+UPDATE play.tokens SET session_id = @to_session, q = @q, r = @r WHERE session_id = @from_session AND id = @id;
+
+-- name: MoveTokenEffects :exec
+UPDATE play.active_effects SET session_id = @to_session WHERE session_id = @from_session AND target_token_id = ANY(@ids::uuid[]);
+
+-- name: MoveEffectSaves :exec
+UPDATE play.pending_saves p SET session_id = @to_session
+FROM play.active_effects e WHERE e.id = p.effect_id AND p.session_id = @from_session AND e.target_token_id = ANY(@ids::uuid[]);
+
+-- name: MoveTokenDying :exec
+UPDATE play.dying SET session_id = @to_session WHERE session_id = @from_session AND token_id = ANY(@ids::uuid[]);
+
+-- name: SessionTokenIDs :many
+SELECT id FROM play.tokens WHERE session_id = $1 ORDER BY label, id;
+
+-- name: SetTableSession :exec
+UPDATE play.sessions SET table_session_id = sqlc.narg(table_session_id) WHERE id = @id;
+
+-- name: DropGroupCheckpoints :exec
+-- A Checkpoint keeps one Session's rows; once tokens change Sessions it can no longer be put back.
+DELETE FROM play.checkpoints c USING play.sessions s WHERE s.id = c.session_id AND (s.id = @root OR s.parent_session_id = @root);
+
+-- name: SessionPlace :one
+-- Where the Table Display belongs among a party's groups: the group the DM has it follow, or the
+-- Session the party split from.
+SELECT coalesce((SELECT f.id FROM play.sessions f WHERE f.id = r.table_session_id AND f.status = 'live' AND f.parent_session_id = r.id), r.id)::uuid AS table_session
+FROM play.sessions r WHERE r.id = @root;
+
+-- name: MemberGroups :many
+-- The live groups in which a member plays a party token, the Session the party split from first.
+SELECT s.id FROM play.sessions s
+WHERE s.status = 'live' AND (s.id = @root OR s.parent_session_id = @root)
+    AND EXISTS (SELECT 1 FROM play.tokens t WHERE t.session_id = s.id AND t.kind = 'party' AND t.controller_member_id = @member)
+ORDER BY s.parent_session_id NULLS FIRST, s.number;
+
+-- name: EndGroupSessions :many
+-- The groups of a party do not outlive the Session the party split from.
+UPDATE play.sessions SET status = 'ended', ended_at = @now WHERE parent_session_id = @root AND status = 'live' RETURNING id;

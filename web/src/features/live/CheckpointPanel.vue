@@ -5,7 +5,7 @@ import { GButton, GField } from '@/shared/ui'
 
 // The DM keeps named Checkpoints and rewinds to one, or to the start of a round, which every round of a
 // fight leaves by itself. A rewind takes back everything since, so it asks before it goes.
-const props = defineProps<{ checkpoints: LiveCheckpoint[]; noUndo: boolean }>()
+const props = withDefaults(defineProps<{ checkpoints: LiveCheckpoint[]; noUndo: boolean; split?: boolean }>(), { split: false })
 const emit = defineEmits<{ send: [command: { kind: 'checkpoint'; name: string } | { kind: 'rewind'; checkpointId: string }] }>()
 const name = ref('')
 const asking = ref<LiveCheckpoint | null>(null)
@@ -27,6 +27,7 @@ function rewind() {
   <section class="g-card panel" aria-label="Checkpoints" data-testid="checkpoints">
     <h2>Checkpoints</h2>
     <p v-if="noUndo" data-testid="no-undo">This Campaign is played without undo: nothing is taken back.</p>
+    <p v-else-if="split" data-testid="checkpoints-split">Bring the party back together to keep Checkpoints again: one group's Session is not the whole of it.</p>
     <template v-else>
       <form class="keep" data-testid="checkpoint-form" @submit.prevent="keep">
         <GField v-model="name" label="Name this point" :maxlength="60" data-testid="checkpoint-name" />

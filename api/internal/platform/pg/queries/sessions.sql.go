@@ -640,6 +640,46 @@ func (q *Queries) DeleteZone(ctx context.Context, arg DeleteZoneParams) error {
 	return err
 }
 
+const dropGroupCheckpoints = `-- name: DropGroupCheckpoints :exec
+DELETE FROM play.checkpoints c USING play.sessions s WHERE s.id = c.session_id AND (s.id = $1 OR s.parent_session_id = $1)
+`
+
+// A Checkpoint keeps one Session's rows; once tokens change Sessions it can no longer be put back.
+func (q *Queries) DropGroupCheckpoints(ctx context.Context, root uuid.UUID) error {
+	_, err := q.db.Exec(ctx, dropGroupCheckpoints, root)
+	return err
+}
+
+const endGroupSessions = `-- name: EndGroupSessions :many
+UPDATE play.sessions SET status = 'ended', ended_at = $1 WHERE parent_session_id = $2 AND status = 'live' RETURNING id
+`
+
+type EndGroupSessionsParams struct {
+	Now  pgtype.Timestamptz
+	Root pgtype.UUID
+}
+
+// The groups of a party do not outlive the Session the party split from.
+func (q *Queries) EndGroupSessions(ctx context.Context, arg EndGroupSessionsParams) ([]uuid.UUID, error) {
+	rows, err := q.db.Query(ctx, endGroupSessions, arg.Now, arg.Root)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []uuid.UUID{}
+	for rows.Next() {
+		var id uuid.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const endSession = `-- name: EndSession :execrows
 UPDATE play.sessions SET status = 'ended', ended_at = $1 WHERE campaign_id = $2 AND id = $3 AND status = 'live'
 `
@@ -659,7 +699,7 @@ func (q *Queries) EndSession(ctx context.Context, arg EndSessionParams) (int64, 
 }
 
 const getSession = `-- name: GetSession :one
-SELECT id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id, world_map_id, sneaking
+SELECT id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id, world_map_id, sneaking, parent_session_id, group_name, table_session_id
 FROM play.sessions WHERE campaign_id = $1 AND id = $2
 `
 
@@ -683,6 +723,9 @@ func (q *Queries) GetSession(ctx context.Context, arg GetSessionParams) (PlaySes
 		&i.MapID,
 		&i.WorldMapID,
 		&i.Sneaking,
+		&i.ParentSessionID,
+		&i.GroupName,
+		&i.TableSessionID,
 	)
 	return i, err
 }
@@ -782,6 +825,51 @@ func (q *Queries) InsertEffect(ctx context.Context, arg InsertEffectParams) erro
 	return err
 }
 
+const insertGroupSession = `-- name: InsertGroupSession :one
+INSERT INTO play.sessions (campaign_id, number, status, started_at, parent_session_id, group_name, map_id)
+VALUES ($1, $2, 'live', $3, $4, $5, $6)
+RETURNING id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id, world_map_id, sneaking, parent_session_id, group_name, table_session_id
+`
+
+type InsertGroupSessionParams struct {
+	CampaignID      uuid.UUID
+	Number          int32
+	Now             time.Time
+	ParentSessionID pgtype.UUID
+	GroupName       string
+	MapID           pgtype.UUID
+}
+
+// A group that leaves the party plays in a Session of its own, on its own map.
+func (q *Queries) InsertGroupSession(ctx context.Context, arg InsertGroupSessionParams) (PlaySession, error) {
+	row := q.db.QueryRow(ctx, insertGroupSession,
+		arg.CampaignID,
+		arg.Number,
+		arg.Now,
+		arg.ParentSessionID,
+		arg.GroupName,
+		arg.MapID,
+	)
+	var i PlaySession
+	err := row.Scan(
+		&i.ID,
+		&i.CampaignID,
+		&i.Number,
+		&i.Status,
+		&i.Seq,
+		&i.GridRadius,
+		&i.StartedAt,
+		&i.EndedAt,
+		&i.MapID,
+		&i.WorldMapID,
+		&i.Sneaking,
+		&i.ParentSessionID,
+		&i.GroupName,
+		&i.TableSessionID,
+	)
+	return i, err
+}
+
 const insertHPEvent = `-- name: InsertHPEvent :exec
 INSERT INTO play.action_hp_events (action_id, token_id, hp_before, hp_after, undoes_action_id)
 VALUES ($1, $2, $3, $4, $5)
@@ -878,7 +966,7 @@ func (q *Queries) InsertPendingSave(ctx context.Context, arg InsertPendingSavePa
 
 const insertSession = `-- name: InsertSession :one
 INSERT INTO play.sessions (campaign_id, number, status, started_at) VALUES ($1, $2, 'live', $3)
-RETURNING id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id, world_map_id, sneaking
+RETURNING id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id, world_map_id, sneaking, parent_session_id, group_name, table_session_id
 `
 
 type InsertSessionParams struct {
@@ -902,6 +990,9 @@ func (q *Queries) InsertSession(ctx context.Context, arg InsertSessionParams) (P
 		&i.MapID,
 		&i.WorldMapID,
 		&i.Sneaking,
+		&i.ParentSessionID,
+		&i.GroupName,
+		&i.TableSessionID,
 	)
 	return i, err
 }
@@ -1143,7 +1234,7 @@ func (q *Queries) LastDamage(ctx context.Context, sessionID pgtype.UUID) (LastDa
 }
 
 const listSessions = `-- name: ListSessions :many
-SELECT id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id, world_map_id, sneaking
+SELECT id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id, world_map_id, sneaking, parent_session_id, group_name, table_session_id
 FROM play.sessions WHERE campaign_id = $1 ORDER BY number DESC LIMIT 50
 `
 
@@ -1168,6 +1259,9 @@ func (q *Queries) ListSessions(ctx context.Context, campaignID uuid.UUID) ([]Pla
 			&i.MapID,
 			&i.WorldMapID,
 			&i.Sneaking,
+			&i.ParentSessionID,
+			&i.GroupName,
+			&i.TableSessionID,
 		); err != nil {
 			return nil, err
 		}
@@ -1307,6 +1401,39 @@ func (q *Queries) MapObjects(ctx context.Context, mapID uuid.UUID) ([]MapObjects
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const memberGroups = `-- name: MemberGroups :many
+SELECT s.id FROM play.sessions s
+WHERE s.status = 'live' AND (s.id = $1 OR s.parent_session_id = $1)
+    AND EXISTS (SELECT 1 FROM play.tokens t WHERE t.session_id = s.id AND t.kind = 'party' AND t.controller_member_id = $2)
+ORDER BY s.parent_session_id NULLS FIRST, s.number
+`
+
+type MemberGroupsParams struct {
+	Root   uuid.UUID
+	Member pgtype.UUID
+}
+
+// The live groups in which a member plays a party token, the Session the party split from first.
+func (q *Queries) MemberGroups(ctx context.Context, arg MemberGroupsParams) ([]uuid.UUID, error) {
+	rows, err := q.db.Query(ctx, memberGroups, arg.Root, arg.Member)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []uuid.UUID{}
+	for rows.Next() {
+		var id uuid.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -1475,6 +1602,78 @@ func (q *Queries) MonsterStatblock(ctx context.Context, arg MonsterStatblockPara
 	return i, err
 }
 
+const moveEffectSaves = `-- name: MoveEffectSaves :exec
+UPDATE play.pending_saves p SET session_id = $1
+FROM play.active_effects e WHERE e.id = p.effect_id AND p.session_id = $2 AND e.target_token_id = ANY($3::uuid[])
+`
+
+type MoveEffectSavesParams struct {
+	ToSession   uuid.UUID
+	FromSession uuid.UUID
+	Ids         []uuid.UUID
+}
+
+func (q *Queries) MoveEffectSaves(ctx context.Context, arg MoveEffectSavesParams) error {
+	_, err := q.db.Exec(ctx, moveEffectSaves, arg.ToSession, arg.FromSession, arg.Ids)
+	return err
+}
+
+const moveToken = `-- name: MoveToken :execrows
+UPDATE play.tokens SET session_id = $1, q = $2, r = $3 WHERE session_id = $4 AND id = $5
+`
+
+type MoveTokenParams struct {
+	ToSession   uuid.UUID
+	Q           int32
+	R           int32
+	FromSession uuid.UUID
+	ID          uuid.UUID
+}
+
+func (q *Queries) MoveToken(ctx context.Context, arg MoveTokenParams) (int64, error) {
+	result, err := q.db.Exec(ctx, moveToken,
+		arg.ToSession,
+		arg.Q,
+		arg.R,
+		arg.FromSession,
+		arg.ID,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const moveTokenDying = `-- name: MoveTokenDying :exec
+UPDATE play.dying SET session_id = $1 WHERE session_id = $2 AND token_id = ANY($3::uuid[])
+`
+
+type MoveTokenDyingParams struct {
+	ToSession   uuid.UUID
+	FromSession uuid.UUID
+	Ids         []uuid.UUID
+}
+
+func (q *Queries) MoveTokenDying(ctx context.Context, arg MoveTokenDyingParams) error {
+	_, err := q.db.Exec(ctx, moveTokenDying, arg.ToSession, arg.FromSession, arg.Ids)
+	return err
+}
+
+const moveTokenEffects = `-- name: MoveTokenEffects :exec
+UPDATE play.active_effects SET session_id = $1 WHERE session_id = $2 AND target_token_id = ANY($3::uuid[])
+`
+
+type MoveTokenEffectsParams struct {
+	ToSession   uuid.UUID
+	FromSession uuid.UUID
+	Ids         []uuid.UUID
+}
+
+func (q *Queries) MoveTokenEffects(ctx context.Context, arg MoveTokenEffectsParams) error {
+	_, err := q.db.Exec(ctx, moveTokenEffects, arg.ToSession, arg.FromSession, arg.Ids)
+	return err
+}
+
 const nextSessionNumber = `-- name: NextSessionNumber :one
 SELECT coalesce(max(number), 0)::int + 1 FROM play.sessions WHERE campaign_id = $1
 `
@@ -1500,6 +1699,88 @@ type ObserveDamageParams struct {
 func (q *Queries) ObserveDamage(ctx context.Context, arg ObserveDamageParams) error {
 	_, err := q.db.Exec(ctx, observeDamage, arg.Observer, arg.Attacker, arg.Amount)
 	return err
+}
+
+const partyGroupTokens = `-- name: PartyGroupTokens :many
+SELECT t.session_id, t.id, t.label, t.controller_member_id
+FROM play.tokens t JOIN play.sessions s ON s.id = t.session_id
+WHERE t.kind = 'party' AND s.status = 'live' AND (s.id = $1 OR s.parent_session_id = $1)
+ORDER BY t.label, t.id
+`
+
+type PartyGroupTokensRow struct {
+	SessionID          uuid.UUID
+	ID                 uuid.UUID
+	Label              string
+	ControllerMemberID pgtype.UUID
+}
+
+func (q *Queries) PartyGroupTokens(ctx context.Context, root uuid.UUID) ([]PartyGroupTokensRow, error) {
+	rows, err := q.db.Query(ctx, partyGroupTokens, root)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []PartyGroupTokensRow{}
+	for rows.Next() {
+		var i PartyGroupTokensRow
+		if err := rows.Scan(
+			&i.SessionID,
+			&i.ID,
+			&i.Label,
+			&i.ControllerMemberID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const partyGroups = `-- name: PartyGroups :many
+SELECT s.id, s.number, s.group_name, (s.parent_session_id IS NULL)::boolean AS home,
+    (s.id = coalesce((SELECT f.id FROM play.sessions f WHERE f.id = r.table_session_id AND f.status = 'live' AND f.parent_session_id = r.id), r.id))::boolean AS shown
+FROM play.sessions s JOIN play.sessions r ON r.id = $1
+WHERE s.status = 'live' AND (s.id = $1 OR s.parent_session_id = $1)
+ORDER BY s.parent_session_id NULLS FIRST, s.number
+`
+
+type PartyGroupsRow struct {
+	ID        uuid.UUID
+	Number    int32
+	GroupName string
+	Home      bool
+	Shown     bool
+}
+
+// The live Sessions a party is split over: the one it split from first, then each group that left it.
+func (q *Queries) PartyGroups(ctx context.Context, root uuid.UUID) ([]PartyGroupsRow, error) {
+	rows, err := q.db.Query(ctx, partyGroups, root)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []PartyGroupsRow{}
+	for rows.Next() {
+		var i PartyGroupsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Number,
+			&i.GroupName,
+			&i.Home,
+			&i.Shown,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const resumePath = `-- name: ResumePath :many
@@ -1987,7 +2268,7 @@ func (q *Queries) SaveZoneCheck(ctx context.Context, arg SaveZoneCheckParams) er
 }
 
 const sessionByID = `-- name: SessionByID :one
-SELECT id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id, world_map_id, sneaking FROM play.sessions WHERE id = $1
+SELECT id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id, world_map_id, sneaking, parent_session_id, group_name, table_session_id FROM play.sessions WHERE id = $1
 `
 
 func (q *Queries) SessionByID(ctx context.Context, id uuid.UUID) (PlaySession, error) {
@@ -2005,6 +2286,9 @@ func (q *Queries) SessionByID(ctx context.Context, id uuid.UUID) (PlaySession, e
 		&i.MapID,
 		&i.WorldMapID,
 		&i.Sneaking,
+		&i.ParentSessionID,
+		&i.GroupName,
+		&i.TableSessionID,
 	)
 	return i, err
 }
@@ -2275,6 +2559,20 @@ func (q *Queries) SessionPendingSaves(ctx context.Context, sessionID uuid.UUID) 
 	return items, nil
 }
 
+const sessionPlace = `-- name: SessionPlace :one
+SELECT coalesce((SELECT f.id FROM play.sessions f WHERE f.id = r.table_session_id AND f.status = 'live' AND f.parent_session_id = r.id), r.id)::uuid AS table_session
+FROM play.sessions r WHERE r.id = $1
+`
+
+// Where the Table Display belongs among a party's groups: the group the DM has it follow, or the
+// Session the party split from.
+func (q *Queries) SessionPlace(ctx context.Context, root uuid.UUID) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, sessionPlace, root)
+	var table_session uuid.UUID
+	err := row.Scan(&table_session)
+	return table_session, err
+}
+
 const sessionSneakRolls = `-- name: SessionSneakRolls :many
 SELECT token_id, roll_id, total FROM play.sneak_rolls WHERE session_id = $1 ORDER BY token_id
 `
@@ -2449,6 +2747,30 @@ func (q *Queries) SessionTokenForms(ctx context.Context, sessionID uuid.UUID) ([
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const sessionTokenIDs = `-- name: SessionTokenIDs :many
+SELECT id FROM play.tokens WHERE session_id = $1 ORDER BY label, id
+`
+
+func (q *Queries) SessionTokenIDs(ctx context.Context, sessionID uuid.UUID) ([]uuid.UUID, error) {
+	rows, err := q.db.Query(ctx, sessionTokenIDs, sessionID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []uuid.UUID{}
+	for rows.Next() {
+		var id uuid.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -2779,6 +3101,20 @@ type SetSessionSneakingParams struct {
 
 func (q *Queries) SetSessionSneaking(ctx context.Context, arg SetSessionSneakingParams) error {
 	_, err := q.db.Exec(ctx, setSessionSneaking, arg.Sneaking, arg.ID)
+	return err
+}
+
+const setTableSession = `-- name: SetTableSession :exec
+UPDATE play.sessions SET table_session_id = $1 WHERE id = $2
+`
+
+type SetTableSessionParams struct {
+	TableSessionID pgtype.UUID
+	ID             uuid.UUID
+}
+
+func (q *Queries) SetTableSession(ctx context.Context, arg SetTableSessionParams) error {
+	_, err := q.db.Exec(ctx, setTableSession, arg.TableSessionID, arg.ID)
 	return err
 }
 

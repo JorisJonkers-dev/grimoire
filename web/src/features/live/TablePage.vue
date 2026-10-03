@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useLiveSession } from '@/realtime/liveSession'
 import { type Coord, toPixel } from '@/shared/hex'
 import { gridBox } from '@/shared/map/grid'
@@ -22,6 +22,14 @@ const HEX = 36
 const route = useRoute()
 const campaignId = String(route.params.id)
 const { view: state } = useLiveSession(campaignId, String(route.params.sid), 'table')
+// The Table Display follows one group of a split party: it goes where it is sent.
+const router = useRouter()
+watch(
+  () => state.regroup,
+  (to) => {
+    if (to) void router.replace({ name: 'table', params: { id: campaignId, sid: to } })
+  },
+)
 const table = computed(() => state.view?.table)
 const cells = computed(() =>
   state.session && state.view

@@ -61,6 +61,8 @@ type state struct {
 	// writes into it. noUndo is the Campaign played without undo.
 	checkpoints []domain.Checkpoint
 	noUndo      bool
+	// groups are the Sessions the party is split over, this one among them; one when it is together.
+	groups []domain.PartyGroup
 }
 
 // cloneEffects copies a Session's Effects so a change never touches the committed state.
@@ -74,7 +76,7 @@ func (s *state) clone() *state {
 		next.observed[k] = maps.Clone(v)
 	}
 	next.surfaces, next.table, next.tableMap = maps.Clone(s.surfaces), s.table, s.tableMap
-	next.checkpoints, next.noUndo = s.checkpoints, s.noUndo
+	next.checkpoints, next.noUndo, next.groups = s.checkpoints, s.noUndo, s.groups
 	if s.world != nil {
 		next.world = s.world.Clone()
 	}
@@ -198,7 +200,7 @@ func (s *state) project(a Audience) View {
 	v.Shop, v.Rest, v.GameDay, v.Sneak, v.Exploration = s.shopView(), s.restView(a), s.day, s.sneakView(a, seen), s.explorationView()
 	if a == AudienceDM {
 		v.Zones, v.SurfaceKinds, v.Conditions = s.zoneViews(), s.surfaceKindViews(), s.conditionViews()
-		v.Checkpoints, v.NoUndo = s.checkpointViews(), s.noUndo
+		v.Checkpoints, v.NoUndo, v.Groups = s.checkpointViews(), s.noUndo, s.groupViews()
 	}
 	v.Roster = rosterOf(v)
 	return v

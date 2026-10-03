@@ -43,6 +43,15 @@ func session(s queries.PlaySession) domain.Session {
 		id := domain.MapID(s.WorldMapID.Bytes)
 		out.WorldMapID = &id
 	}
+	out.Group = s.GroupName
+	if s.ParentSessionID.Valid {
+		id := domain.SessionID(s.ParentSessionID.Bytes)
+		out.Parent = &id
+	}
+	if s.TableSessionID.Valid {
+		id := domain.SessionID(s.TableSessionID.Bytes)
+		out.Table = &id
+	}
 	return out
 }
 
@@ -113,9 +122,10 @@ func (s *Store) Sessions(ctx context.Context, campaign uuid.UUID) ([]domain.Sess
 	return out, nil
 }
 
-// EndSession ends a live Session.
-func (s *Store) EndSession(ctx context.Context, campaign uuid.UUID, id domain.SessionID, actor domain.Member, c caller.Caller, now time.Time) error {
-	return s.InTx(ctx, func(r app.Repository) error {
+// EndSession ends a live Session and, with the Session a party split from, the Sessions of its groups.
+func (s *Store) EndSession(ctx context.Context, campaign uuid.UUID, id domain.SessionID, actor domain.Member, c caller.Caller, now time.Time) ([]domain.SessionID, error) {
+	var groups []domain.SessionID
+	err := s.InTx(ctx, func(r app.Repository) error {
 		tx := r.(*Store) //nolint:forcetypeassert // InTx always hands back a *Store
 		n, err := tx.q.EndSession(ctx, queries.EndSessionParams{CampaignID: campaign, ID: uuid.UUID(id), Now: pgtypeTime(now)})
 		if err != nil {
@@ -124,9 +134,23 @@ func (s *Store) EndSession(ctx context.Context, campaign uuid.UUID, id domain.Se
 		if n == 0 {
 			return apperr.ErrNotFound
 		}
-		_, err = tx.sessionAction(ctx, campaign, id, domain.ActionSessionEnded, actor, c, now)
-		return err
+		if _, err := tx.sessionAction(ctx, campaign, id, domain.ActionSessionEnded, actor, c, now); err != nil {
+			return err
+		}
+		// The groups of a split party end with the Session the party split from.
+		ended, err := tx.q.EndGroupSessions(ctx, queries.EndGroupSessionsParams{Now: pgtypeTime(now), Root: pgtype.UUID{Bytes: id, Valid: true}})
+		if err != nil {
+			return err
+		}
+		for _, g := range ended {
+			if _, err := tx.sessionAction(ctx, campaign, domain.SessionID(g), domain.ActionSessionEnded, actor, c, now); err != nil {
+				return err
+			}
+			groups = append(groups, domain.SessionID(g))
+		}
+		return nil
 	})
+	return groups, err
 }
 
 // Load reads a Session, its Tokens and its active Map for the live runtime.

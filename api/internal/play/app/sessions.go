@@ -16,7 +16,9 @@ type SessionRepository interface {
 	CreateSession(ctx context.Context, campaign uuid.UUID, actor domain.Member, c caller.Caller, now time.Time) (domain.Session, error)
 	Session(ctx context.Context, campaign uuid.UUID, id domain.SessionID) (domain.Session, error)
 	Sessions(ctx context.Context, campaign uuid.UUID) ([]domain.Session, error)
-	EndSession(ctx context.Context, campaign uuid.UUID, id domain.SessionID, actor domain.Member, c caller.Caller, now time.Time) error
+	// EndSession ends a live Session and, with the Session a party split from, the Sessions of its groups;
+	// it returns those.
+	EndSession(ctx context.Context, campaign uuid.UUID, id domain.SessionID, actor domain.Member, c caller.Caller, now time.Time) ([]domain.SessionID, error)
 	SessionLog(ctx context.Context, id domain.SessionID, limit int) ([]domain.LoggedAction, error)
 }
 
@@ -86,9 +88,13 @@ func (s *Sessions) End(ctx context.Context, c caller.Caller, campaign uuid.UUID,
 	if err != nil {
 		return domain.Session{}, err
 	}
-	if err := s.Repo.EndSession(ctx, campaign, id, me, c, s.Now()); err != nil {
+	groups, err := s.Repo.EndSession(ctx, campaign, id, me, c, s.Now())
+	if err != nil {
 		return domain.Session{}, err
 	}
 	s.Live.Close(id)
+	for _, g := range groups {
+		s.Live.Close(g)
+	}
 	return s.Repo.Session(ctx, campaign, id)
 }

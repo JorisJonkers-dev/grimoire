@@ -186,6 +186,10 @@ _Avoid_: Actor, unit, token
 A named point in a live Session's Action Log the DM can rewind to.
 _Avoid_: Save, snapshot
 
+**Group**:
+A part of a split party that plays on a map of its own, in a Session of its own, with its own Party Vision. The DM sees every Group; the Table Display follows one.
+_Avoid_: Sub-party, team, squad
+
 **Token**:
 The marker that shows a Combatant or object on a Map.
 _Avoid_: Piece, figure

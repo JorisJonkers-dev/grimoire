@@ -150,6 +150,19 @@ func (h *Handler) LiveSocket(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) relay(ctx context.Context, conn *websocket.Conn, sid playdomain.SessionID, me playdomain.Member, c caller.Caller, a live.Audience) {
 	sub, err := h.Hub.Join(ctx, sid, me, c, a)
+	var away *live.ElsewhereError
+	if errors.As(err, &away) {
+		// The party is split and this screen belongs with another group: it is told where, shown nothing,
+		// and let go.
+		_ = wsjson.Write(ctx, conn, live.Update{Kind: live.UpdRegroup, Group: &live.GroupView{SessionID: uuid.UUID(away.Session).String(), Tokens: []string{}}})
+		_ = conn.Close(websocket.StatusNormalClosure, "regroup")
+		return
+	}
+	if errors.Is(err, apperr.ErrForbidden) {
+		// A Table Display that would show another group's Party Vision.
+		_ = conn.Close(websocket.StatusPolicyViolation, "not your group")
+		return
+	}
 	if err != nil {
 		_ = conn.Close(websocket.StatusTryAgainLater, "session unavailable")
 		return

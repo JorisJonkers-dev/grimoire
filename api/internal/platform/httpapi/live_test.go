@@ -271,3 +271,73 @@ func TestDevIdentityReachesTheSocket(t *testing.T) {
 		t.Fatalf("dev identity: %v", err)
 	}
 }
+
+// When the party splits, a screen that belongs with another group is told where over the socket and
+// let go; one that knocks at the wrong group later is told the same before it is shown anything.
+func TestASplitPartyOverWebSockets(t *testing.T) {
+	t.Parallel()
+	h := realCampaigns(t)
+	srv := httptest.NewServer(h)
+	t.Cleanup(srv.Close)
+	id, _ := campaignWithPlayer(t, h)
+	sid, _ := decode(t, call(h, http.MethodPost, "/api/v1/campaigns/"+id+"/sessions", "dm", ""))["id"].(string)
+	tower, _ := decode(t, postBinary(h, "/api/v1/campaigns/"+id+"/maps?name=Tower", "dm", mapPNG(t)))["id"].(string)
+	var tamsin string
+	members, _ := decode(t, call(h, http.MethodGet, "/api/v1/campaigns/"+id, "dm", ""))["members"].([]any)
+	for _, m := range members {
+		if member, _ := m.(map[string]any); member["displayName"] == "Tamsin" {
+			tamsin, _ = member["id"].(string)
+		}
+	}
+	base := "/api/v1/campaigns/" + id + "/sessions/"
+	dm, _, err := dial(t, srv, base+sid+"/live?audience=dm", "dm")
+	if err != nil || tower == "" || tamsin == "" {
+		t.Fatalf("set up: %v, map %q, member %q", err, tower, tamsin)
+	}
+	player, _, _ := dial(t, srv, base+sid+"/live?audience=party", "player")
+	dm.next()
+	player.next()
+	dm.send(live.Command{Nonce: "1", Kind: live.CmdPlace, Label: "Aria", TokenKind: "party", ControllerID: tamsin})
+	aria := dm.next().View.Tokens[0].ID
+	player.next()
+
+	dm.send(live.Command{Nonce: "2", Kind: live.CmdSplitParty, Name: "The tower", TokenIDs: []string{aria}, MapID: tower})
+	split := dm.next()
+	if split.Kind != live.UpdSnapshot || len(split.View.Groups) != 2 || len(split.View.Tokens) != 0 {
+		t.Fatalf("split = %+v", split)
+	}
+	away := split.View.Groups[1].SessionID
+	// The player's screen is sent after the group, and that is the last it hears.
+	if u := player.next(); u.Kind != live.UpdRegroup || u.Group == nil || u.Group.SessionID != away {
+		t.Fatalf("the player after the split = %+v", u)
+	}
+	if _, _, err := player.conn.Read(context.Background()); err == nil {
+		t.Fatal("the player's socket stayed open")
+	}
+	// Knocking at the Session the party split from again: told where to go, shown nothing.
+	again, _, err := dial(t, srv, base+sid+"/live?audience=party", "player")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if u := again.next(); u.Kind != live.UpdRegroup || u.Group.SessionID != away || u.View != nil {
+		t.Fatalf("knocking at the wrong group = %+v", u)
+	}
+	if _, _, err := again.conn.Read(context.Background()); err == nil {
+		t.Fatal("the socket at the wrong group stayed open")
+	}
+	if joined := strings.Join(again.raw, "\n"); strings.Contains(joined, `"view"`) || strings.Contains(joined, "Aria") {
+		t.Fatalf("the wrong group was shown: %s", joined)
+	}
+	// With their own group they are let in, on its map.
+	there, _, err := dial(t, srv, base+away+"/live?audience=party", "player")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if u := there.next(); u.Kind != live.UpdSnapshot || len(u.View.Tokens) != 1 || u.View.Map == nil || u.View.Map.Name != "Tower" {
+		t.Fatalf("the player with their group = %+v", u)
+	}
+	// The same goes for the tools an agent uses in the player's name.
+	if rec := call(h, http.MethodGet, base+sid+"/view", "player", ""); rec.Code != http.StatusConflict || !strings.Contains(rec.Body.String(), away) {
+		t.Fatalf("an agent's look at the wrong group: %d %s", rec.Code, rec.Body.String())
+	}
+}

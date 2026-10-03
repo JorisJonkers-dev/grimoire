@@ -43,6 +43,10 @@ func (s *state) checkpointViews() []CheckpointView {
 // checkpoint keeps the Session as it is under the name the DM gives it.
 func (r *runtime) checkpoint(req request) {
 	name := strings.TrimSpace(req.cmd.Name)
+	if r.st.split() {
+		r.reject(req, "Bring the party back together before keeping a checkpoint.")
+		return
+	}
 	if name == "" || wireLen(name) > maxCheckpointName {
 		r.reject(req, "Name the checkpoint, in up to 60 characters.")
 		return
@@ -74,7 +78,7 @@ func (r *runtime) checkpoint(req request) {
 
 // markRound keeps the start of every round of a fight as a Checkpoint of its own.
 func (r *runtime) markRound(prev, next *state, action int64) {
-	if next.noUndo || next.round() <= prev.round() {
+	if next.noUndo || next.split() || next.round() <= prev.round() {
 		return
 	}
 	c := domain.Checkpoint{
@@ -121,7 +125,7 @@ func (r *runtime) rewind(req request) {
 	var st *state
 	done, err := r.store.Rewind(context.Background(), r.st.session, r.st.checkpoints[at], req.from.Member, req.from.Caller, r.now(), func(tx Store) error {
 		var err error
-		st, err = r.reload(context.Background(), tx)
+		st, err = r.reload(context.Background(), tx, r.st.session.ID)
 		return err
 	})
 	if err != nil {

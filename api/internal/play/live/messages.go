@@ -111,6 +111,9 @@ const (
 	CmdThrow          = "throw"
 	CmdCheckpoint     = "checkpoint"
 	CmdRewind         = "rewind"
+	CmdSplitParty     = "split_party"
+	CmdRejoinParty    = "rejoin_party"
+	CmdTableFollow    = "table_follow"
 	CmdSneak          = "sneak"
 	CmdExplore        = "explore"
 	CmdPassTurn       = "pass_turn"
@@ -121,6 +124,10 @@ const (
 	cmdPromptTimeout = "prompt_timeout"
 	// cmdRollResolved comes from the rolls service, never from a client.
 	cmdRollResolved = "roll_resolved"
+	// cmdRegroup comes from another group of the same party: who belongs where has changed.
+	cmdRegroup = "regroup"
+	// cmdRefresh comes from another group too: what the Campaign's Containers hold has changed.
+	cmdRefresh = "refresh"
 )
 
 // Economy resources a spend command names.
@@ -261,11 +268,16 @@ type Command struct {
 	Monsters []SpawnMonster `json:"monsters,omitempty"`
 	HPDelta  int            `json:"hpDelta,omitempty"`
 	Seq      int64          `json:"seq,omitempty"`
-	// Name is what checkpoint calls the Checkpoint; CheckpointID the one rewind goes back to.
+	// Name is what checkpoint calls the Checkpoint, or split_party the group; CheckpointID the one
+	// rewind goes back to.
 	Name         string `json:"name,omitempty"`
 	CheckpointID string `json:"checkpointId,omitempty"`
-	promptID     uuid.UUID
-	rollID       domain.RollID
+	// TokenIDs are the party tokens split_party sends off, to the map MapID around Q and R. SessionID is
+	// the group rejoin_party brings back, or table_follow has the Table Display follow.
+	TokenIDs  []string `json:"tokenIds,omitempty"`
+	SessionID string   `json:"sessionId,omitempty"`
+	promptID  uuid.UUID
+	rollID    domain.RollID
 }
 
 // Update kinds. A snapshot answers a join or resync; a view follows every change.
@@ -279,6 +291,8 @@ const (
 	UpdPing          = "ping"
 	UpdRoll          = "roll"
 	UpdEnded         = "ended"
+	// UpdRegroup tells a screen it belongs with another group of the party; it is the last it is sent.
+	UpdRegroup = "regroup"
 )
 
 // SessionView is the Session as a client sees it.
@@ -539,6 +553,22 @@ type View struct {
 	// without undo; both go to the DM only.
 	Checkpoints []CheckpointView `json:"checkpoints,omitempty"`
 	NoUndo      bool             `json:"noUndo,omitempty"`
+	// Groups are the Sessions a split party plays in, for the DM, who alone sees them all. A party that
+	// is together has none.
+	Groups []GroupView `json:"groups,omitempty"`
+}
+
+// GroupView is one of the Sessions a split party plays in. Home is the Session the party split from,
+// Here the one this view is of, Table the one the Table Display follows; Tokens are the party tokens
+// there, by name.
+type GroupView struct {
+	SessionID string   `json:"sessionId"`
+	Number    int      `json:"number"`
+	Name      string   `json:"name"`
+	Home      bool     `json:"home"`
+	Here      bool     `json:"here"`
+	Table     bool     `json:"table"`
+	Tokens    []string `json:"tokens"`
 }
 
 // CheckpointView is a point the DM can rewind to: one they named, or the start of a round.
@@ -810,6 +840,8 @@ type Update struct {
 	Reason    string       `json:"reason,omitempty"`
 	Session   *SessionView `json:"session,omitempty"`
 	View      *View        `json:"view,omitempty"`
+	// Group is the Session a regroup sends the screen to.
+	Group *GroupView `json:"group,omitempty"`
 	// Steps are the views along a walk before its final View, for clients to play back at walking pace.
 	Steps   []View         `json:"steps,omitempty"`
 	Path    *PathView      `json:"path,omitempty"`

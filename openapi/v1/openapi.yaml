@@ -10735,7 +10735,7 @@ components:
       required: [nonce, kind, q, r, hidden]
       properties:
         nonce: { type: string, minLength: 1, maxLength: 64 }
-        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual, preview_area, cast_area, paint_surface, set_elevation, table_camera, table_scene, table_blackout, table_caption, ping, set_world, add_node, add_route, remove_node, remove_route, place_party, travel, add_zone, remove_zone, hold_zone, spring_zone, rest, encounter_check, schedule_check, roll_loot, move_item, move_coins, claim_loot, settle_loot, trade, open_shop, close_shop, buy, sell, haggle, spawn_encounter, adjust_hp, undo, propose_rest, agree_rest, spend_hit_die, finish_rest, interrupt_rest, take_action, unarmed, interact, swap_weapons, set_reaction, stabilise, revive, teleport, summon, command, set_visibility, place_object, remove_object, use_object, damage_object, find_object, unlock, disarm, jump, throw, sneak, explore, pass_turn, legendary_action, lair_action, legendary_resistance, checkpoint, rewind] }
+        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual, preview_area, cast_area, paint_surface, set_elevation, table_camera, table_scene, table_blackout, table_caption, ping, set_world, add_node, add_route, remove_node, remove_route, place_party, travel, add_zone, remove_zone, hold_zone, spring_zone, rest, encounter_check, schedule_check, roll_loot, move_item, move_coins, claim_loot, settle_loot, trade, open_shop, close_shop, buy, sell, haggle, spawn_encounter, adjust_hp, undo, propose_rest, agree_rest, spend_hit_die, finish_rest, interrupt_rest, take_action, unarmed, interact, swap_weapons, set_reaction, stabilise, revive, teleport, summon, command, set_visibility, place_object, remove_object, use_object, damage_object, find_object, unlock, disarm, jump, throw, sneak, explore, pass_turn, legendary_action, lair_action, legendary_resistance, checkpoint, rewind, split_party, rejoin_party, table_follow] }
         caption: { type: string, maxLength: 400 }
         tokenId: { $ref: "#/components/schemas/Id" }
         label: { type: string, maxLength: 40 }
@@ -10852,6 +10852,12 @@ components:
         seq: { type: integer, format: int32, minimum: 1, maximum: 2147483647, description: "With undo, the Action Log sequence of the Action to undo." }
         name: { type: string, maxLength: 120, description: "With checkpoint, what to call the Checkpoint, in up to 60 characters." }
         checkpointId: { type: string, maxLength: 64, description: "With rewind, the Checkpoint to go back to." }
+        tokenIds:
+          type: array
+          maxItems: 40
+          description: With split_party, the party tokens that go off as a group, to the map mapId around q and r.
+          items: { $ref: "#/components/schemas/Id" }
+        sessionId: { type: string, maxLength: 64, description: "With rejoin_party, the group to bring back around q and r. With table_follow, the group the Table Display follows; left out, it follows the Session the party split from." }
     SpawnMonster:
       type: object
       description: One kind of monster an encounter spawns, and how many.
@@ -12684,17 +12690,18 @@ components:
         suggestion: { $ref: "#/components/schemas/LiveSuggestion" }
     LiveUpdate:
       type: object
-      description: A WebSocket frame from a live Session. Snapshots answer joins and resyncs; a view follows every change, and a view whose seq is not the next one means resync. A walk's view carries the views along the way as steps, to play back at walking pace; a path answers plan_walk to its sender only.
+      description: A WebSocket frame from a live Session. Snapshots answer joins and resyncs; a regroup sends the screen to the Session of its own group of a split party; a view follows every change, and a view whose seq is not the next one means resync. A walk's view carries the views along the way as steps, to play back at walking pace; a path answers plan_walk to its sender only.
       additionalProperties: false
       required: [kind, seq]
       properties:
-        kind: { type: string, enum: [snapshot, view, rejected, ended, path, attack_preview, area_preview, ping, roll] }
+        kind: { type: string, enum: [snapshot, view, rejected, ended, path, attack_preview, area_preview, ping, roll, regroup] }
         seq: { type: integer, format: int32, minimum: 0, maximum: 2147483647 }
         nonce: { type: string, maxLength: 64 }
         actionSeq: { type: integer, format: int32, minimum: 1, maximum: 2147483647 }
         reason: { type: string, maxLength: 200 }
         session: { $ref: "#/components/schemas/LiveSessionView" }
         view: { $ref: "#/components/schemas/LiveView" }
+        group: { $ref: "#/components/schemas/LiveGroup" }
         steps:
           type: array
           maxItems: 60
@@ -12729,6 +12736,23 @@ components:
         modifier: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
         total: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
         look: { $ref: "#/components/schemas/LiveDiceLook" }
+    LiveGroup:
+      type: object
+      description: One of the Sessions a split party plays in, each with its own map, fog and fight. In a regroup frame it names the Session a screen belongs in instead, and is the last frame the screen is sent.
+      additionalProperties: false
+      required: [sessionId, number, name, home, here, table, tokens]
+      properties:
+        sessionId: { $ref: "#/components/schemas/Id" }
+        number: { type: integer, format: int32, minimum: 0, maximum: 100000 }
+        name: { type: string, maxLength: 40, description: "What the group calls itself. The Session the party split from has no name." }
+        home: { type: boolean, description: "The Session the party split from." }
+        here: { type: boolean, description: "The Session this view is of." }
+        table: { type: boolean, description: "The group the Table Display follows." }
+        tokens:
+          type: array
+          maxItems: 200
+          description: The party tokens in the group, by name.
+          items: { type: string, maxLength: 40 }
     LiveCheckpoint:
       type: object
       description: A point in a live Session the DM can rewind to. One the DM named, or the start of a round, which every round of a fight leaves by itself.
@@ -12980,6 +13004,11 @@ components:
           description: The points the DM can rewind to, oldest first. Sent to the DM only.
           items: { $ref: "#/components/schemas/LiveCheckpoint" }
         noUndo: { type: boolean, description: "The Campaign is played without undo. Sent to the DM only." }
+        groups:
+          type: array
+          maxItems: 8
+          description: The Sessions a split party plays in. Sent to the DM only, and only while the party is split.
+          items: { $ref: "#/components/schemas/LiveGroup" }
         walls:
           type: array
           maxItems: 100000

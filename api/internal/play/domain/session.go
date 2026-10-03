@@ -30,7 +30,52 @@ type Session struct {
 	MapID      *MapID
 	// WorldMapID is the world Map the party travels this Session.
 	WorldMapID *MapID
+	// Parent is the Session a group left when the party split, and Group what the group calls itself;
+	// the Session the others stayed in has neither. Table is the group the Table Display follows, kept
+	// on the Session the party split from: nil follows that Session itself.
+	Parent *SessionID
+	Group  string
+	Table  *SessionID
 }
+
+// Root is the Session the party split from: the Session itself unless it is a group that left one.
+func (s Session) Root() SessionID {
+	if s.Parent != nil {
+		return *s.Parent
+	}
+	return s.ID
+}
+
+// PartyGroup is one of the Sessions a split party plays in, with the party tokens that are there.
+type PartyGroup struct {
+	Session SessionID
+	Number  int
+	Name    string
+	// Home is the Session the party split from; Table the group the Table Display follows.
+	Home   bool
+	Table  bool
+	Tokens []GroupToken
+}
+
+// GroupToken is a party token of a group and who plays it.
+type GroupToken struct {
+	ID         TokenID
+	Label      string
+	Controller *uuid.UUID
+}
+
+// TokenPlace is where a token goes when it changes groups.
+type TokenPlace struct {
+	ID TokenID
+	Q  int
+	R  int
+}
+
+// Split-party action kinds in the Action Log.
+const (
+	ActionPartySplit    = "party_split"
+	ActionPartyRejoined = "party_rejoined"
+)
 
 // TokenID identifies a Token.
 type TokenID uuid.UUID

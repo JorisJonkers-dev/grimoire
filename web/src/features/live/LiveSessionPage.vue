@@ -30,6 +30,7 @@ import VisibilityPanel from './VisibilityPanel.vue'
 import ObjectsPanel from './ObjectsPanel.vue'
 import ActionLog from './ActionLog.vue'
 import CheckpointPanel from './CheckpointPanel.vue'
+import GroupsPanel from './GroupsPanel.vue'
 import DyingPanel from './DyingPanel.vue'
 import EncounterChecks from './EncounterChecks.vue'
 import InventoryPanel from './InventoryPanel.vue'
@@ -77,6 +78,13 @@ watch(
     if (c && !live.value) live.value = useLiveSession(campaignId, sessionId, c.myRole === 'dm' ? 'dm' : 'party')
   },
   { immediate: true },
+)
+// A split party sends each screen to its own group's Session.
+watch(
+  () => state.value?.regroup,
+  (to) => {
+    if (to) void router.replace({ name: 'session', params: { id: campaignId, sid: to } })
+  },
 )
 // The session opens in a watcher, outside setup, so the page closes it itself.
 onBeforeUnmount(() => {
@@ -872,7 +880,23 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
           :tables="encounterTables.data.value ?? []"
           @send="(cmd) => live?.send(cmd)"
         />
-        <CheckpointPanel v-if="isDM" data-page="tools" :checkpoints="view?.checkpoints ?? []" :no-undo="view?.noUndo ?? false" @send="(cmd) => live?.send(cmd)" />
+        <GroupsPanel
+          v-if="isDM"
+          data-page="tools"
+          :campaign-id="campaignId"
+          :groups="view?.groups ?? []"
+          :tokens="view?.tokens ?? []"
+          :maps="maps.data.value ?? []"
+          @send="(cmd) => live?.send(cmd)"
+        />
+        <CheckpointPanel
+          v-if="isDM"
+          data-page="tools"
+          :checkpoints="view?.checkpoints ?? []"
+          :no-undo="view?.noUndo ?? false"
+          :split="(view?.groups?.length ?? 0) > 1"
+          @send="(cmd) => live?.send(cmd)"
+        />
         <ActionLog v-if="isDM" data-page="party" :campaign-id="campaignId" :session-id="sessionId" :view="view" :no-undo="view?.noUndo ?? false" @undo="(seq) => live?.send({ kind: 'undo', seq })" />
         <ul data-page="party" class="g-list tokens" aria-label="Tokens in view" data-testid="tokens">
           <li v-for="t in view?.tokens ?? []" :key="t.id">{{ describe(t) }} · {{ t.kind }}</li>

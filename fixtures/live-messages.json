@@ -731,6 +731,41 @@
       "checkpointId": "0190c7a8-0000-7000-8000-00000000000a"
     },
     {
+      "nonce": "n92",
+      "kind": "split_party",
+      "q": 1,
+      "r": 0,
+      "hidden": false,
+      "mapId": "0190c7a8-0000-7000-8000-00000000000c",
+      "name": "The tower",
+      "tokenIds": [
+        "0190c7a8-0000-7000-8000-00000000000a"
+      ]
+    },
+    {
+      "nonce": "n93",
+      "kind": "rejoin_party",
+      "q": 2,
+      "r": 0,
+      "hidden": false,
+      "sessionId": "0190c7a8-0000-7000-8000-00000000000a"
+    },
+    {
+      "nonce": "n94",
+      "kind": "table_follow",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "sessionId": "0190c7a8-0000-7000-8000-00000000000a"
+    },
+    {
+      "nonce": "n95",
+      "kind": "table_follow",
+      "q": 0,
+      "r": 0,
+      "hidden": false
+    },
+    {
       "nonce": "n73b",
       "kind": "swap_weapons",
       "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
@@ -1237,7 +1272,31 @@
             "at": "2026-10-03T20:05:00Z"
           }
         ],
-        "noUndo": true
+        "noUndo": true,
+        "groups": [
+          {
+            "sessionId": "0190c7a8-0000-7000-8000-00000000000c",
+            "number": 3,
+            "name": "",
+            "home": true,
+            "here": true,
+            "table": false,
+            "tokens": [
+              "Brom"
+            ]
+          },
+          {
+            "sessionId": "0190c7a8-0000-7000-8000-00000000000a",
+            "number": 4,
+            "name": "The tower",
+            "home": false,
+            "here": false,
+            "table": true,
+            "tokens": [
+              "Aria"
+            ]
+          }
+        ]
       }
     },
     {
@@ -1748,7 +1807,31 @@
             "at": "2026-10-03T20:05:00Z"
           }
         ],
-        "noUndo": true
+        "noUndo": true,
+        "groups": [
+          {
+            "sessionId": "0190c7a8-0000-7000-8000-00000000000c",
+            "number": 3,
+            "name": "",
+            "home": true,
+            "here": true,
+            "table": false,
+            "tokens": [
+              "Brom"
+            ]
+          },
+          {
+            "sessionId": "0190c7a8-0000-7000-8000-00000000000a",
+            "number": 4,
+            "name": "The tower",
+            "home": false,
+            "here": false,
+            "table": true,
+            "tokens": [
+              "Aria"
+            ]
+          }
+        ]
       }
     },
     {
@@ -2338,7 +2421,31 @@
             "at": "2026-10-03T20:05:00Z"
           }
         ],
-        "noUndo": true
+        "noUndo": true,
+        "groups": [
+          {
+            "sessionId": "0190c7a8-0000-7000-8000-00000000000c",
+            "number": 3,
+            "name": "",
+            "home": true,
+            "here": true,
+            "table": false,
+            "tokens": [
+              "Brom"
+            ]
+          },
+          {
+            "sessionId": "0190c7a8-0000-7000-8000-00000000000a",
+            "number": 4,
+            "name": "The tower",
+            "home": false,
+            "here": false,
+            "table": true,
+            "tokens": [
+              "Aria"
+            ]
+          }
+        ]
       },
       "steps": [
         {
@@ -2789,7 +2896,31 @@
               "at": "2026-10-03T20:05:00Z"
             }
           ],
-          "noUndo": true
+          "noUndo": true,
+          "groups": [
+            {
+              "sessionId": "0190c7a8-0000-7000-8000-00000000000c",
+              "number": 3,
+              "name": "",
+              "home": true,
+              "here": true,
+              "table": false,
+              "tokens": [
+                "Brom"
+              ]
+            },
+            {
+              "sessionId": "0190c7a8-0000-7000-8000-00000000000a",
+              "number": 4,
+              "name": "The tower",
+              "home": false,
+              "here": false,
+              "table": true,
+              "tokens": [
+                "Aria"
+              ]
+            }
+          ]
         }
       ]
     },
@@ -2843,6 +2974,19 @@
       "ping": {
         "q": 1,
         "r": 0
+      }
+    },
+    {
+      "kind": "regroup",
+      "seq": 7,
+      "group": {
+        "sessionId": "0190c7a8-0000-7000-8000-00000000000a",
+        "number": 0,
+        "name": "",
+        "home": false,
+        "here": false,
+        "table": false,
+        "tokens": []
       }
     },
     {
