@@ -62,7 +62,7 @@ func (q *Queries) CampaignShopStock(ctx context.Context, campaignID uuid.UUID) (
 
 const campaignShops = `-- name: CampaignShops :many
 SELECT s.id, s.settlement_id, s.name, s.kind, s.owner_npc_id, s.markup_pct, s.haggle_dc, s.haggle_pct, s.loot_table_id, s.restock, s.restock_days,
-    s.stocked_day, s.updated_at
+    s.stocked_day, s.updated_at, s.faction_id
 FROM prep.shops s JOIN prep.settlements t ON t.id = s.settlement_id
 WHERE t.campaign_id = $1 ORDER BY s.name, s.id
 `
@@ -90,6 +90,7 @@ func (q *Queries) CampaignShops(ctx context.Context, campaignID uuid.UUID) ([]Pr
 			&i.RestockDays,
 			&i.StockedDay,
 			&i.UpdatedAt,
+			&i.FactionID,
 		); err != nil {
 			return nil, err
 		}
@@ -224,6 +225,22 @@ func (q *Queries) DeleteShopStock(ctx context.Context, arg DeleteShopStockParams
 	return err
 }
 
+const factionExists = `-- name: FactionExists :one
+SELECT EXISTS (SELECT 1 FROM campaign.factions WHERE campaign_id = $1 AND id = $2)
+`
+
+type FactionExistsParams struct {
+	CampaignID uuid.UUID
+	ID         uuid.UUID
+}
+
+func (q *Queries) FactionExists(ctx context.Context, arg FactionExistsParams) (bool, error) {
+	row := q.db.QueryRow(ctx, factionExists, arg.CampaignID, arg.ID)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
 const gameDay = `-- name: GameDay :one
 SELECT game_day FROM campaign.campaigns WHERE id = $1
 `
@@ -268,7 +285,7 @@ func (q *Queries) GetSettlementRevision(ctx context.Context, arg GetSettlementRe
 
 const getShopRevision = `-- name: GetShopRevision :one
 SELECT r.id, s.settlement_id, s.name, s.kind, s.owner_npc_id, s.markup_pct, s.haggle_dc, s.haggle_pct, s.loot_table_id, s.restock, s.restock_days,
-    s.stocked_day
+    s.stocked_day, s.faction_id
 FROM campaign.revisions r JOIN prep.shop_revisions s ON s.revision_id = r.id
 WHERE r.campaign_id = $1 AND r.entity_type = 'shop' AND r.entity_id = $2 AND r.revision_no = $3
 `
@@ -292,6 +309,7 @@ type GetShopRevisionRow struct {
 	Restock      string
 	RestockDays  pgtype.Int4
 	StockedDay   int32
+	FactionID    pgtype.UUID
 }
 
 func (q *Queries) GetShopRevision(ctx context.Context, arg GetShopRevisionParams) (GetShopRevisionRow, error) {
@@ -310,6 +328,7 @@ func (q *Queries) GetShopRevision(ctx context.Context, arg GetShopRevisionParams
 		&i.Restock,
 		&i.RestockDays,
 		&i.StockedDay,
+		&i.FactionID,
 	)
 	return i, err
 }
@@ -339,9 +358,9 @@ func (q *Queries) InsertSettlementRevision(ctx context.Context, arg InsertSettle
 
 const insertShopRevision = `-- name: InsertShopRevision :exec
 INSERT INTO prep.shop_revisions (revision_id, settlement_id, name, kind, owner_npc_id, markup_pct, haggle_dc, haggle_pct, loot_table_id, restock,
-    restock_days, stocked_day)
+    restock_days, stocked_day, faction_id)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9,
-    $10, $11, $12)
+    $10, $11, $12, $13)
 `
 
 type InsertShopRevisionParams struct {
@@ -357,6 +376,7 @@ type InsertShopRevisionParams struct {
 	Restock      string
 	RestockDays  pgtype.Int4
 	StockedDay   int32
+	FactionID    pgtype.UUID
 }
 
 func (q *Queries) InsertShopRevision(ctx context.Context, arg InsertShopRevisionParams) error {
@@ -373,6 +393,7 @@ func (q *Queries) InsertShopRevision(ctx context.Context, arg InsertShopRevision
 		arg.Restock,
 		arg.RestockDays,
 		arg.StockedDay,
+		arg.FactionID,
 	)
 	return err
 }
@@ -543,10 +564,10 @@ func (q *Queries) SaveSettlement(ctx context.Context, arg SaveSettlementParams) 
 
 const saveShop = `-- name: SaveShop :exec
 INSERT INTO prep.shops (id, settlement_id, name, kind, owner_npc_id, markup_pct, haggle_dc, haggle_pct, loot_table_id, restock, restock_days,
-    stocked_day, updated_at)
+    stocked_day, updated_at, faction_id)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-    $11, $12, $13)
-ON CONFLICT (id) DO UPDATE SET settlement_id = excluded.settlement_id, name = excluded.name, kind = excluded.kind,
+    $11, $12, $13, $14)
+ON CONFLICT (id) DO UPDATE SET settlement_id = excluded.settlement_id, name = excluded.name, kind = excluded.kind, faction_id = excluded.faction_id,
     owner_npc_id = excluded.owner_npc_id, markup_pct = excluded.markup_pct, haggle_dc = excluded.haggle_dc, haggle_pct = excluded.haggle_pct,
     loot_table_id = excluded.loot_table_id, restock = excluded.restock, restock_days = excluded.restock_days, stocked_day = excluded.stocked_day,
     updated_at = excluded.updated_at
@@ -566,6 +587,7 @@ type SaveShopParams struct {
 	RestockDays  pgtype.Int4
 	StockedDay   int32
 	Now          time.Time
+	FactionID    pgtype.UUID
 }
 
 func (q *Queries) SaveShop(ctx context.Context, arg SaveShopParams) error {
@@ -583,6 +605,7 @@ func (q *Queries) SaveShop(ctx context.Context, arg SaveShopParams) error {
 		arg.RestockDays,
 		arg.StockedDay,
 		arg.Now,
+		arg.FactionID,
 	)
 	return err
 }

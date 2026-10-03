@@ -1902,13 +1902,14 @@ export type EncounterMonster = {
 };
 
 /**
- * One weighted line of an Encounter Table. An encounter lists its monsters, a pool names poolId, nothing has neither.
+ * One weighted line of an Encounter Table. An encounter lists its monsters, a pool names poolId, nothing has neither. An entry with factionId is that Faction's own and weighs by how the Faction regards the party, twice as much when Hostile down to a fifth when Allied.
  */
 export type EncounterEntry = {
     weight: number;
     kind: 'encounter' | 'pool' | 'nothing';
     label: string;
     poolId?: Id;
+    factionId?: Id;
     monsters?: Array<EncounterMonster>;
 };
 
@@ -2055,6 +2056,7 @@ export type ShopInput = {
     name: string;
     kind: string;
     ownerId?: Id;
+    factionId?: Id;
     markupPct: number;
     haggleDc: number;
     hagglePct: number;
@@ -2081,6 +2083,7 @@ export type Shop = {
     name: string;
     kind: string;
     ownerId?: Id;
+    factionId?: Id;
     markupPct: number;
     haggleDc: number;
     hagglePct: number;
@@ -2395,6 +2398,11 @@ export type LiveToken = {
     kind: TokenKind;
     darkvisionFt: number;
     companionId?: Id;
+    factionId?: Id;
+    /**
+     * How a creature of a Faction first takes to the party, by the Faction's Standing. For the DM alone; factionId itself goes to every screen that sees the creature.
+     */
+    firstReaction?: 'hostile' | 'indifferent' | 'friendly';
     q: number;
     r: number;
     hidden: boolean;
@@ -2682,6 +2690,10 @@ export type LiveCommand = {
      * With set_clock, the time of day, in minutes after midnight.
      */
     gameMinute?: number;
+    /**
+     * With place_token, the Faction the creature openly belongs to: every screen that sees the creature is told. An Influence check against it (take_action with targetId) is rolled by how that Faction regards whoever tries, and its Roll Card says so. A Player can aim one only at a creature the party can see.
+     */
+    factionId?: string;
     /**
      * With place_token, the Companion to put on the map. It stands with the party under its own name, run by whoever it is given to, with the hit points it kept. With assign_control, controllerId is the Member who runs the token from now on; left out, the DM does.
      */
@@ -3760,6 +3772,15 @@ export type LiveCoins = {
 };
 
 /**
+ * The Faction a Shop belongs to, the tier it holds the party in, and what that adds to the Shop's prices in percent. A Character with a Personal Standing pays by that instead.
+ */
+export type LiveShopStanding = {
+    faction: string;
+    tier: StandingTier;
+    pricePct: number;
+};
+
+/**
  * The Shop open in the Session, its Stock at asking prices in copper, and each Character's haggling.
  */
 export type LiveShop = {
@@ -3768,6 +3789,7 @@ export type LiveShop = {
     kind: string;
     settlement: string;
     owner?: string;
+    standing?: LiveShopStanding;
     stock: Array<LiveStock>;
     haggles: Array<LiveHaggle>;
     /**

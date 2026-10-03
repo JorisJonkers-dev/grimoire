@@ -1213,6 +1213,7 @@ export const zShopInput = z.object({
     name: z.string().min(1).max(80),
     kind: z.string().min(1).max(40),
     ownerId: zId.optional(),
+    factionId: zId.optional(),
     markupPct: z.int().gte(0).lte(300),
     haggleDc: z.int().gte(5).lte(30),
     hagglePct: z.int().gte(0).lte(50),
@@ -3030,6 +3031,12 @@ export const zLiveToken = z.object({
     kind: zTokenKind,
     darkvisionFt: z.int().gte(0).lte(300),
     companionId: zId.optional(),
+    factionId: zId.optional(),
+    firstReaction: z.enum([
+        'hostile',
+        'indifferent',
+        'friendly'
+    ]).optional(),
     q: z.int().gte(-500).lte(500),
     r: z.int().gte(-500).lte(500),
     hidden: z.boolean(),
@@ -3194,6 +3201,15 @@ export const zStandingTier = z.enum([
     'friendly',
     'allied'
 ]);
+
+/**
+ * The Faction a Shop belongs to, the tier it holds the party in, and what that adds to the Shop's prices in percent. A Character with a Personal Standing pays by that instead.
+ */
+export const zLiveShopStanding = z.object({
+    faction: z.string().max(80),
+    tier: zStandingTier,
+    pricePct: z.int().gte(-100).lte(100)
+});
 
 /**
  * What only the DM knows of a Faction.
@@ -4181,7 +4197,7 @@ export const zEncounterMonster = z.object({
 });
 
 /**
- * One weighted line of an Encounter Table. An encounter lists its monsters, a pool names poolId, nothing has neither.
+ * One weighted line of an Encounter Table. An encounter lists its monsters, a pool names poolId, nothing has neither. An entry with factionId is that Faction's own and weighs by how the Faction regards the party, twice as much when Hostile down to a fifth when Allied.
  */
 export const zEncounterEntry = z.object({
     weight: z.int().gte(1).lte(100),
@@ -4192,6 +4208,7 @@ export const zEncounterEntry = z.object({
     ]),
     label: z.string().max(80),
     poolId: zId.optional(),
+    factionId: zId.optional(),
     monsters: z.array(zEncounterMonster).max(10).optional()
 });
 
@@ -4294,6 +4311,7 @@ export const zShop = z.object({
     name: z.string().max(80),
     kind: z.string().max(40),
     ownerId: zId.optional(),
+    factionId: zId.optional(),
     markupPct: z.int().gte(0).lte(300),
     haggleDc: z.int().gte(5).lte(30),
     hagglePct: z.int().gte(0).lte(50),
@@ -4647,6 +4665,7 @@ export const zLiveCommand = z.object({
     characterIds: z.array(zId).max(100).optional(),
     gameDay: z.int().gte(0).lte(1000000).optional(),
     gameMinute: z.int().gte(0).lte(1439).optional(),
+    factionId: z.string().max(64).optional(),
     companionId: z.string().max(64).optional(),
     tokenIds: z.array(zId).max(40).optional(),
     sessionId: z.string().max(64).optional()
@@ -4672,6 +4691,7 @@ export const zLiveShop = z.object({
     kind: z.string().max(40),
     settlement: z.string().max(80),
     owner: z.string().max(80).optional(),
+    standing: zLiveShopStanding.optional(),
     stock: z.array(zLiveStock).max(200),
     haggles: z.array(zLiveHaggle).max(50),
     offers: z.array(zLiveOffer).max(2000)

@@ -12,7 +12,7 @@ import {
   listEncounterPoolsOptions,
   listEncounterTableRevisionsOptions,
   listEncounterTablesOptions,
-  listLocationsOptions,
+  listFactionsOptions, listLocationsOptions,
   restoreEncounterPoolRevisionMutation,
   restoreEncounterTableRevisionMutation,
   updateEncounterPoolMutation,
@@ -32,6 +32,7 @@ const path = { path: { campaignId } }
 const pools = useQuery({ ...listEncounterPoolsOptions(path), retry: false })
 const tables = useQuery({ ...listEncounterTablesOptions(path), retry: false })
 const locations = useQuery({ ...listLocationsOptions(path), retry: false })
+const factions = useQuery({ ...listFactionsOptions({ path: { campaignId } }), retry: false })
 const checks = useQuery({ ...listEncounterChecksOptions(path), retry: false })
 // What is open: 'new' or an id for an editor, an id for a history.
 const editingPool = ref<string | null>(null)
@@ -134,7 +135,7 @@ function logLine(c: EncounterCheck): string {
               <GButton :aria-label="`History of ${t.name}`" @click="tableHistory = tableHistory === t.id ? null : t.id">History</GButton>
               <GButton variant="danger" :aria-label="`Delete ${t.name}`" @click="deleteTable.mutate({ path: { campaignId, tableId: t.id } }, { ...done(() => {}), onError: fail('Deleting the table') })">Delete</GButton>
             </div>
-            <TableEditor v-if="editingTable === t.id" :table="tableOf(t.id)" :pools="pools.data.value ?? []" :locations="locations.data.value ?? []" @save="saveTable" @cancel="editingTable = null" />
+            <TableEditor v-if="editingTable === t.id" :table="tableOf(t.id)" :pools="pools.data.value ?? []" :locations="locations.data.value ?? []" :factions="factions.data.value ?? []" @save="saveTable" @cancel="editingTable = null" />
             <RevisionHistory
               v-if="tableHistory === t.id"
               :revisions="tableRevisions.data.value ?? []"
@@ -143,7 +144,7 @@ function logLine(c: EncounterCheck): string {
             />
           </li>
         </ul>
-        <TableEditor v-if="editingTable === 'new'" :pools="pools.data.value ?? []" :locations="locations.data.value ?? []" @save="saveTable" @cancel="editingTable = null" />
+        <TableEditor v-if="editingTable === 'new'" :pools="pools.data.value ?? []" :locations="locations.data.value ?? []" :factions="factions.data.value ?? []" @save="saveTable" @cancel="editingTable = null" />
         <GButton v-else data-testid="new-table" @click="editingTable = 'new'">New table</GButton>
       </section>
 

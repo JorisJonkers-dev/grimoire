@@ -144,7 +144,7 @@ function rest() {
       <li v-for="(b, i) in rollBreakdown(roll)" :key="i"><span>{{ b.label }}</span><span>{{ b.value }}</span></li>
     </ul>
     <ul v-else class="breakdown" aria-label="Modifiers">
-      <li v-for="m in roll.modifiers" :key="m.label"><span>{{ m.label }}</span><span>{{ signed(m.value) }}</span></li>
+      <li v-for="m in roll.modifiers" :key="m.label"><span>{{ m.label }}</span><span v-if="m.value !== 0">{{ signed(m.value) }}</span></li>
     </ul>
     <p v-if="natural" class="natural" data-testid="roll-natural">{{ natural === 'hit' ? 'Natural 20!' : 'Natural 1' }}</p>
     <p v-if="roll.status === 'resolved'" class="total" data-testid="roll-total">

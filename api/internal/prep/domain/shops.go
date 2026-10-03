@@ -49,15 +49,17 @@ type Shop struct {
 	Name         string
 	Kind         string
 	OwnerID      *uuid.UUID
-	MarkupPct    int
-	HaggleDC     int
-	HagglePct    int
-	LootTable    *LootTableID
-	Restock      string
-	RestockDays  int
-	StockedDay   int
-	Stock        []StockItem
-	UpdatedAt    time.Time
+	// FactionID is the Faction the Shop belongs to, if any: it prices by that Faction's Standing.
+	FactionID   *uuid.UUID
+	MarkupPct   int
+	HaggleDC    int
+	HagglePct   int
+	LootTable   *LootTableID
+	Restock     string
+	RestockDays int
+	StockedDay  int
+	Stock       []StockItem
+	UpdatedAt   time.Time
 }
 
 // Due reports whether the Shop restocks now: after a long rest, or once enough days have passed.

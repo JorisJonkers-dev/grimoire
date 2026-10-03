@@ -51,7 +51,7 @@ SELECT count(*)::int FROM prep.table_entries WHERE pool_id = $1;
 SELECT id, name, region_node_id, chance_pct, visibility, updated_at FROM prep.encounter_tables WHERE campaign_id = $1 ORDER BY name, id;
 
 -- name: CampaignTableEntries :many
-SELECT e.table_id, e.ordering, e.weight, e.kind, e.label, e.pool_id
+SELECT e.table_id, e.ordering, e.weight, e.kind, e.label, e.pool_id, e.faction_id
 FROM prep.table_entries e JOIN prep.encounter_tables t ON t.id = e.table_id
 WHERE t.campaign_id = $1 ORDER BY e.table_id, e.ordering;
 
@@ -70,8 +70,8 @@ ON CONFLICT (id) DO UPDATE SET name = excluded.name, region_node_id = excluded.r
 DELETE FROM prep.table_entries WHERE table_id = $1;
 
 -- name: InsertTableEntry :exec
-INSERT INTO prep.table_entries (table_id, ordering, weight, kind, label, pool_id)
-VALUES (@table_id, @ordering, @weight, @kind, @label, sqlc.narg(pool_id));
+INSERT INTO prep.table_entries (table_id, ordering, weight, kind, label, pool_id, faction_id)
+VALUES (@table_id, @ordering, @weight, @kind, @label, sqlc.narg(pool_id), sqlc.narg(faction_id));
 
 -- name: InsertEntryMonster :exec
 INSERT INTO prep.entry_monsters (table_id, ordering, position, monster_slug, count)
@@ -101,8 +101,8 @@ INSERT INTO prep.table_revisions (revision_id, name, region_node_id, chance_pct,
 VALUES (@revision_id, @name, sqlc.narg(region_node_id), @chance_pct, @visibility);
 
 -- name: InsertTableRevisionEntry :exec
-INSERT INTO prep.table_revision_entries (revision_id, ordering, weight, kind, label, pool_id)
-VALUES (@revision_id, @ordering, @weight, @kind, @label, sqlc.narg(pool_id));
+INSERT INTO prep.table_revision_entries (revision_id, ordering, weight, kind, label, pool_id, faction_id)
+VALUES (@revision_id, @ordering, @weight, @kind, @label, sqlc.narg(pool_id), sqlc.narg(faction_id));
 
 -- name: InsertTableRevisionMonster :exec
 INSERT INTO prep.table_revision_monsters (revision_id, ordering, position, monster_slug, count)
@@ -114,7 +114,7 @@ FROM campaign.revisions r JOIN prep.table_revisions t ON t.revision_id = r.id
 WHERE r.campaign_id = @campaign_id AND r.entity_type = 'encounter_table' AND r.entity_id = @entity_id AND r.revision_no = @revision_no;
 
 -- name: TableRevisionEntries :many
-SELECT ordering, weight, kind, label, pool_id FROM prep.table_revision_entries WHERE revision_id = $1 ORDER BY ordering;
+SELECT ordering, weight, kind, label, pool_id, faction_id FROM prep.table_revision_entries WHERE revision_id = $1 ORDER BY ordering;
 
 -- name: TableRevisionMonsters :many
 SELECT ordering, position, monster_slug, count FROM prep.table_revision_monsters WHERE revision_id = $1 ORDER BY ordering, position;

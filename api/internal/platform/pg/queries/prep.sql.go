@@ -195,7 +195,7 @@ func (q *Queries) CampaignPoolMembers(ctx context.Context, campaignID uuid.UUID)
 }
 
 const campaignTableEntries = `-- name: CampaignTableEntries :many
-SELECT e.table_id, e.ordering, e.weight, e.kind, e.label, e.pool_id
+SELECT e.table_id, e.ordering, e.weight, e.kind, e.label, e.pool_id, e.faction_id
 FROM prep.table_entries e JOIN prep.encounter_tables t ON t.id = e.table_id
 WHERE t.campaign_id = $1 ORDER BY e.table_id, e.ordering
 `
@@ -216,6 +216,7 @@ func (q *Queries) CampaignTableEntries(ctx context.Context, campaignID uuid.UUID
 			&i.Kind,
 			&i.Label,
 			&i.PoolID,
+			&i.FactionID,
 		); err != nil {
 			return nil, err
 		}
@@ -530,17 +531,18 @@ func (q *Queries) InsertScheduledCheck(ctx context.Context, arg InsertScheduledC
 }
 
 const insertTableEntry = `-- name: InsertTableEntry :exec
-INSERT INTO prep.table_entries (table_id, ordering, weight, kind, label, pool_id)
-VALUES ($1, $2, $3, $4, $5, $6)
+INSERT INTO prep.table_entries (table_id, ordering, weight, kind, label, pool_id, faction_id)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
 `
 
 type InsertTableEntryParams struct {
-	TableID  uuid.UUID
-	Ordering int32
-	Weight   int32
-	Kind     string
-	Label    string
-	PoolID   pgtype.UUID
+	TableID   uuid.UUID
+	Ordering  int32
+	Weight    int32
+	Kind      string
+	Label     string
+	PoolID    pgtype.UUID
+	FactionID pgtype.UUID
 }
 
 func (q *Queries) InsertTableEntry(ctx context.Context, arg InsertTableEntryParams) error {
@@ -551,6 +553,7 @@ func (q *Queries) InsertTableEntry(ctx context.Context, arg InsertTableEntryPara
 		arg.Kind,
 		arg.Label,
 		arg.PoolID,
+		arg.FactionID,
 	)
 	return err
 }
@@ -580,8 +583,8 @@ func (q *Queries) InsertTableRevision(ctx context.Context, arg InsertTableRevisi
 }
 
 const insertTableRevisionEntry = `-- name: InsertTableRevisionEntry :exec
-INSERT INTO prep.table_revision_entries (revision_id, ordering, weight, kind, label, pool_id)
-VALUES ($1, $2, $3, $4, $5, $6)
+INSERT INTO prep.table_revision_entries (revision_id, ordering, weight, kind, label, pool_id, faction_id)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
 `
 
 type InsertTableRevisionEntryParams struct {
@@ -591,6 +594,7 @@ type InsertTableRevisionEntryParams struct {
 	Kind       string
 	Label      string
 	PoolID     pgtype.UUID
+	FactionID  pgtype.UUID
 }
 
 func (q *Queries) InsertTableRevisionEntry(ctx context.Context, arg InsertTableRevisionEntryParams) error {
@@ -601,6 +605,7 @@ func (q *Queries) InsertTableRevisionEntry(ctx context.Context, arg InsertTableR
 		arg.Kind,
 		arg.Label,
 		arg.PoolID,
+		arg.FactionID,
 	)
 	return err
 }
@@ -1009,15 +1014,16 @@ func (q *Queries) SessionChecks(ctx context.Context, sessionID pgtype.UUID) ([]S
 }
 
 const tableRevisionEntries = `-- name: TableRevisionEntries :many
-SELECT ordering, weight, kind, label, pool_id FROM prep.table_revision_entries WHERE revision_id = $1 ORDER BY ordering
+SELECT ordering, weight, kind, label, pool_id, faction_id FROM prep.table_revision_entries WHERE revision_id = $1 ORDER BY ordering
 `
 
 type TableRevisionEntriesRow struct {
-	Ordering int32
-	Weight   int32
-	Kind     string
-	Label    string
-	PoolID   pgtype.UUID
+	Ordering  int32
+	Weight    int32
+	Kind      string
+	Label     string
+	PoolID    pgtype.UUID
+	FactionID pgtype.UUID
 }
 
 func (q *Queries) TableRevisionEntries(ctx context.Context, revisionID uuid.UUID) ([]TableRevisionEntriesRow, error) {
@@ -1035,6 +1041,7 @@ func (q *Queries) TableRevisionEntries(ctx context.Context, revisionID uuid.UUID
 			&i.Kind,
 			&i.Label,
 			&i.PoolID,
+			&i.FactionID,
 		); err != nil {
 			return nil, err
 		}

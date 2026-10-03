@@ -1,23 +1,24 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue'
-import type { EncounterEntry, EncounterPool, EncounterTable, EncounterTableInput, EncounterVisibility, Location } from '@/infrastructure/api/types.gen'
+import type { EncounterEntry, EncounterPool, EncounterTable, EncounterTableInput, EncounterVisibility, Faction, Location } from '@/infrastructure/api/types.gen'
 import { GButton } from '@/shared/ui'
 import { formatMonsters, parseMonsters } from './monsters'
 
-type Row = { weight: number; kind: EncounterEntry['kind']; label: string; poolId: string; monsters: string }
+type Row = { weight: number; kind: EncounterEntry['kind']; label: string; poolId: string; monsters: string; factionId: string }
 
-const props = defineProps<{ table?: EncounterTable; pools: EncounterPool[]; locations: Location[] }>()
+const props = defineProps<{ table?: EncounterTable; pools: EncounterPool[]; locations: Location[]; factions: Faction[] }>()
 const emit = defineEmits<{ save: [input: EncounterTableInput]; cancel: [] }>()
 const form = reactive({ name: props.table?.name ?? '', chancePct: props.table?.chancePct ?? 20, regionId: props.table?.regionId ?? '' })
 const visibility = ref<EncounterVisibility>(props.table?.visibility ?? 'secret')
 const rows = ref<Row[]>(
-  props.table?.entries.map((e) => ({ weight: e.weight, kind: e.kind, label: e.label, poolId: e.poolId ?? '', monsters: formatMonsters(e.monsters) })) ?? [
-    { weight: 1, kind: 'nothing', label: '', poolId: '', monsters: '' },
+  props.table?.entries.map((e) => ({ weight: e.weight, kind: e.kind, label: e.label, poolId: e.poolId ?? '', monsters: formatMonsters(e.monsters), factionId: e.factionId ?? '' })) ?? [
+    { weight: 1, kind: 'nothing', label: '', poolId: '', monsters: '', factionId: '' },
   ],
 )
 const unreadable = computed(() => rows.value.findIndex((r) => r.kind === 'encounter' && parseMonsters(r.monsters) === null))
 function entry(r: Row): EncounterEntry {
-  const base = { weight: r.weight, kind: r.kind, label: r.label.trim() }
+  // An entry that is a Faction's own weighs by how that Faction regards the party.
+  const base = { weight: r.weight, kind: r.kind, label: r.label.trim(), ...(r.factionId ? { factionId: r.factionId } : {}) }
   if (r.kind === 'pool') return { ...base, poolId: r.poolId }
   if (r.kind === 'encounter') return { ...base, monsters: parseMonsters(r.monsters) ?? [] }
   return base
@@ -69,13 +70,20 @@ function save() {
             <option v-for="p in pools" :key="p.id" :value="p.id">{{ p.name }}</option>
           </select>
         </label>
+        <label class="g-field">
+          <span>Faction's own</span>
+          <select v-model="r.factionId" :data-testid="`entry-faction-${String(i)}`">
+            <option value="">No Faction</option>
+            <option v-for="f in factions" :key="f.id" :value="f.id">{{ f.name }}</option>
+          </select>
+        </label>
         <label v-if="r.kind === 'encounter'" class="g-field grow">
           <span>Creatures (goblin x3, ogre)</span>
           <input v-model="r.monsters" maxlength="400" :data-testid="`entry-monsters-${String(i)}`" />
         </label>
         <GButton :aria-label="`Remove entry ${String(i + 1)}`" :disabled="rows.length === 1" @click="rows.splice(i, 1)">Remove</GButton>
       </div>
-      <GButton data-testid="add-entry" @click="rows.push({ weight: 1, kind: 'encounter', label: '', poolId: '', monsters: '' })">Add an entry</GButton>
+      <GButton data-testid="add-entry" @click="rows.push({ weight: 1, kind: 'encounter', label: '', poolId: '', monsters: '', factionId: '' })">Add an entry</GButton>
     </fieldset>
     <p v-if="unreadable >= 0" role="alert" class="g-alert" data-testid="monsters-unreadable">Entry {{ unreadable + 1 }}: write creatures as "goblin x3, ogre".</p>
     <div class="row">

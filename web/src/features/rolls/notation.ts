@@ -49,6 +49,7 @@ export function rollBreakdown(roll: RollRequest): { label: string; value: string
     const value = g.label && !g.keep ? signed(g.sign * counted) : dice.map((d) => `${String(d.value ?? 0)}${g.keep && !d.kept ? ' dropped' : ''}`).join(g.keep ? ', ' : ' + ')
     return { label: g.label ?? `d${String(g.faces)}`, value }
   })
-  const modifiers = roll.modifiers.map((m) => ({ label: m.label, value: signed(m.value) }))
+  // A line that only changes how the die is rolled, such as a Standing that gives Advantage, adds nothing.
+  const modifiers = roll.modifiers.map((m) => ({ label: m.label, value: m.value === 0 ? '' : signed(m.value) }))
   return [...groups, ...modifiers, ...(roll.rerolled ? [{ label: 'Heroic Inspiration', value: 'rerolled a die' }] : [])]
 }

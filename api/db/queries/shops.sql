@@ -31,7 +31,7 @@ WHERE r.campaign_id = @campaign_id AND r.entity_type = 'settlement' AND r.entity
 
 -- name: CampaignShops :many
 SELECT s.id, s.settlement_id, s.name, s.kind, s.owner_npc_id, s.markup_pct, s.haggle_dc, s.haggle_pct, s.loot_table_id, s.restock, s.restock_days,
-    s.stocked_day, s.updated_at
+    s.stocked_day, s.updated_at, s.faction_id
 FROM prep.shops s JOIN prep.settlements t ON t.id = s.settlement_id
 WHERE t.campaign_id = $1 ORDER BY s.name, s.id;
 
@@ -42,10 +42,10 @@ WHERE t.campaign_id = $1 ORDER BY k.shop_id, k.item_slug;
 
 -- name: SaveShop :exec
 INSERT INTO prep.shops (id, settlement_id, name, kind, owner_npc_id, markup_pct, haggle_dc, haggle_pct, loot_table_id, restock, restock_days,
-    stocked_day, updated_at)
+    stocked_day, updated_at, faction_id)
 VALUES (@id, @settlement_id, @name, @kind, sqlc.narg(owner_npc_id), @markup_pct, @haggle_dc, @haggle_pct, sqlc.narg(loot_table_id), @restock,
-    sqlc.narg(restock_days), @stocked_day, @now)
-ON CONFLICT (id) DO UPDATE SET settlement_id = excluded.settlement_id, name = excluded.name, kind = excluded.kind,
+    sqlc.narg(restock_days), @stocked_day, @now, sqlc.narg(faction_id))
+ON CONFLICT (id) DO UPDATE SET settlement_id = excluded.settlement_id, name = excluded.name, kind = excluded.kind, faction_id = excluded.faction_id,
     owner_npc_id = excluded.owner_npc_id, markup_pct = excluded.markup_pct, haggle_dc = excluded.haggle_dc, haggle_pct = excluded.haggle_pct,
     loot_table_id = excluded.loot_table_id, restock = excluded.restock, restock_days = excluded.restock_days, stocked_day = excluded.stocked_day,
     updated_at = excluded.updated_at;
@@ -65,16 +65,16 @@ DELETE FROM prep.shop_stock WHERE shop_id = @shop_id AND item_slug = @item_slug;
 
 -- name: InsertShopRevision :exec
 INSERT INTO prep.shop_revisions (revision_id, settlement_id, name, kind, owner_npc_id, markup_pct, haggle_dc, haggle_pct, loot_table_id, restock,
-    restock_days, stocked_day)
+    restock_days, stocked_day, faction_id)
 VALUES (@revision_id, @settlement_id, @name, @kind, sqlc.narg(owner_npc_id), @markup_pct, @haggle_dc, @haggle_pct, sqlc.narg(loot_table_id),
-    @restock, sqlc.narg(restock_days), @stocked_day);
+    @restock, sqlc.narg(restock_days), @stocked_day, sqlc.narg(faction_id));
 
 -- name: InsertShopRevisionStock :exec
 INSERT INTO prep.shop_revision_stock (revision_id, item_slug, quantity, price_cp) VALUES (@revision_id, @item_slug, @quantity, @price_cp);
 
 -- name: GetShopRevision :one
 SELECT r.id, s.settlement_id, s.name, s.kind, s.owner_npc_id, s.markup_pct, s.haggle_dc, s.haggle_pct, s.loot_table_id, s.restock, s.restock_days,
-    s.stocked_day
+    s.stocked_day, s.faction_id
 FROM campaign.revisions r JOIN prep.shop_revisions s ON s.revision_id = r.id
 WHERE r.campaign_id = @campaign_id AND r.entity_type = 'shop' AND r.entity_id = @entity_id AND r.revision_no = @revision_no;
 
@@ -115,3 +115,6 @@ DELETE FROM campaign.container_coins WHERE container_id = $1;
 
 -- name: GameDay :one
 SELECT game_day FROM campaign.campaigns WHERE id = $1;
+
+-- name: FactionExists :one
+SELECT EXISTS (SELECT 1 FROM campaign.factions WHERE campaign_id = @campaign_id AND id = @id);

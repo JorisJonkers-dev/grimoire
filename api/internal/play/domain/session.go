@@ -112,6 +112,8 @@ type Token struct {
 	Summon *EffectID
 	// Companion is the Companion this token is on the map as.
 	Companion *uuid.UUID
+	// Faction is the Faction the creature belongs to, if any.
+	Faction *uuid.UUID
 	// Form is the creature the token has taken the shape of, if any; Stats are then the form's.
 	Form *Form
 	// Qualities are the token's Visibility Qualities, each marked when the party has seen through it

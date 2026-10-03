@@ -2,7 +2,7 @@
 import { useMutation, useQuery } from '@tanstack/vue-query'
 import { computed, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { endSessionMutation, getCampaignOptions, getSessionLogOptions, listCharactersOptions, listCompanionsOptions, listEncounterTablesOptions, listLootTablesOptions, listMapsOptions, listShopsOptions } from '@/infrastructure/api/@tanstack/vue-query.gen'
+import { endSessionMutation, getCampaignOptions, getSessionLogOptions, listCharactersOptions, listCompanionsOptions, listFactionsOptions, listEncounterTablesOptions, listLootTablesOptions, listMapsOptions, listShopsOptions } from '@/infrastructure/api/@tanstack/vue-query.gen'
 import { rollRest } from '@/infrastructure/api/sdk.gen'
 import type { AmbientLight, LiveCombatant, LiveCombatantSetup, LiveSuggestion, LiveToken, MapObjectKind, TokenKind } from '@/infrastructure/api/types.gen'
 import { useLiveSession } from '@/realtime/liveSession'
@@ -116,6 +116,14 @@ const elevationFt = ref(10)
 const character = ref('')
 // The Companions of the Campaign that are not on the map yet, for the DM to put there.
 const companions = useQuery(computed(() => ({ ...listCompanionsOptions({ path: { campaignId } }), enabled: isDM.value, retry: false })))
+// The DM places a creature as one of a Faction, openly: its Standing then shapes social checks with it.
+const factions = useQuery(computed(() => ({ ...listFactionsOptions({ path: { campaignId } }), retry: false })))
+const faction = ref('')
+// An Influence check is aimed at a creature: how its Faction regards whoever tries shapes the roll.
+const swayed = ref('')
+const swayable = computed(() => (view.value?.tokens ?? []).filter((t) => t.kind === 'npc' || t.kind === 'enemy'))
+const factionName = (id: string) => factions.data.value?.find((f) => f.id === id)?.name ?? 'a Faction'
+
 const companion = ref('')
 const offMap = computed(() => (companions.data.value ?? []).filter((c) => !view.value?.tokens.some((t) => t.companionId === c.id)))
 const players = computed(() => campaign.data.value?.members.filter((m) => m.role === 'player') ?? [])
@@ -353,6 +361,7 @@ function tokenTool(c: Coord) {
       ...(controller.value ? { controllerId: controller.value } : {}),
       ...(character.value ? { characterId: character.value } : monster.value.trim() ? { monsterSlug: monster.value.trim() } : {}),
       ...(knowsShield.value ? { shield: true } : {}),
+      ...(faction.value ? { factionId: faction.value } : {}),
     })
     label.value = ''
   }
@@ -601,6 +610,13 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
           @spend="(r) => live?.send({ kind: 'spend', combatantId: c.id, resource: r })"
           @end="live?.send({ kind: 'end_turn', combatantId: c.id })"
         />
+        <label v-if="bars.length > 0 && swayable.length > 0" class="g-field" data-page="actions">
+          <span>Whom Influence is aimed at</span>
+          <select v-model="swayed" data-testid="influence-target">
+            <option value="">Nobody in particular</option>
+            <option v-for="t in swayable" :key="t.id" :value="t.id">{{ t.label }}{{ t.factionId ? ` (${factionName(t.factionId)})` : '' }}</option>
+          </select>
+        </label>
         <Hotbar
           v-for="b in bars"
           :key="b.token.id"
@@ -621,7 +637,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
           @use="useSuggestion(b.token.id, b.c.suggestion)"
           @tactics="(t) => live?.send({ kind: 'set_tactics', tokenId: b.token.id, tactics: t })"
           @area="(e, n) => aimArea(b.token, e, n)"
-          @action="(a) => live?.send({ kind: 'take_action', tokenId: b.token.id, action: a as 'dash' })"
+          @action="(a) => live?.send({ kind: 'take_action', tokenId: b.token.id, action: a as 'dash', ...(a === 'influence' && swayed ? { targetId: swayed } : {}) })"
           @ready="(n) => live?.send({ kind: 'take_action', tokenId: b.token.id, action: 'ready', trigger: 'enters_reach', attackNo: n })"
           @unarmed="(o) => (grabbing = { tokenId: b.token.id, option: o })"
           @off-hand="(n) => armOffHand(b.token, n)"
@@ -783,6 +799,13 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
               </select>
             </label>
             <label v-if="isDM" class="g-field">
+              <span>Faction</span>
+              <select v-model="faction" data-testid="token-faction">
+                <option value="">No Faction</option>
+                <option v-for="f in factions.data.value ?? []" :key="f.id" :value="f.id">{{ f.name }}</option>
+              </select>
+            </label>
+            <label v-if="isDM" class="g-field">
               <span>Companion</span>
               <select v-model="companion" data-testid="token-companion">
                 <option value="">None</option>
@@ -811,6 +834,9 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
           />
           <div v-if="chosen" class="row" data-testid="selected-token">
             <span>{{ chosen.label }}{{ chosen.hidden ? ' (hidden)' : '' }}</span>
+            <p v-if="chosen.factionId" class="hint" data-testid="token-faction-line">
+              Of {{ factionName(chosen.factionId) }}.<template v-if="chosen.firstReaction"> First reaction: {{ chosen.firstReaction }}.</template>
+            </p>
             <label v-if="isDM && chosen.companionId" class="g-field">
               <span>Run by</span>
               <select

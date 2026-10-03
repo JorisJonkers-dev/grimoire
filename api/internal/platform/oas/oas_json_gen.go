@@ -17753,6 +17753,12 @@ func (s *EncounterEntry) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.FactionId.Set {
+			e.FieldStart("factionId")
+			s.FactionId.Encode(e)
+		}
+	}
+	{
 		if s.Monsters != nil {
 			e.FieldStart("monsters")
 			e.ArrStart()
@@ -17764,12 +17770,13 @@ func (s *EncounterEntry) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfEncounterEntry = [5]string{
+var jsonFieldsNameOfEncounterEntry = [6]string{
 	0: "weight",
 	1: "kind",
 	2: "label",
 	3: "poolId",
-	4: "monsters",
+	4: "factionId",
+	5: "monsters",
 }
 
 // Decode decodes EncounterEntry from json.
@@ -17824,6 +17831,16 @@ func (s *EncounterEntry) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"poolId\"")
+			}
+		case "factionId":
+			if err := func() error {
+				s.FactionId.Reset()
+				if err := s.FactionId.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"factionId\"")
 			}
 		case "monsters":
 			if err := func() error {
@@ -35322,6 +35339,12 @@ func (s *LiveCommand) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.FactionId.Set {
+			e.FieldStart("factionId")
+			s.FactionId.Encode(e)
+		}
+	}
+	{
 		if s.CompanionId.Set {
 			e.FieldStart("companionId")
 			s.CompanionId.Encode(e)
@@ -35345,7 +35368,7 @@ func (s *LiveCommand) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfLiveCommand = [107]string{
+var jsonFieldsNameOfLiveCommand = [108]string{
 	0:   "nonce",
 	1:   "kind",
 	2:   "caption",
@@ -35450,9 +35473,10 @@ var jsonFieldsNameOfLiveCommand = [107]string{
 	101: "characterIds",
 	102: "gameDay",
 	103: "gameMinute",
-	104: "companionId",
-	105: "tokenIds",
-	106: "sessionId",
+	104: "factionId",
+	105: "companionId",
+	106: "tokenIds",
+	107: "sessionId",
 }
 
 // Decode decodes LiveCommand from json.
@@ -36574,6 +36598,16 @@ func (s *LiveCommand) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"gameMinute\"")
+			}
+		case "factionId":
+			if err := func() error {
+				s.FactionId.Reset()
+				if err := s.FactionId.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"factionId\"")
 			}
 		case "companionId":
 			if err := func() error {
@@ -44463,6 +44497,12 @@ func (s *LiveShop) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.Standing.Set {
+			e.FieldStart("standing")
+			s.Standing.Encode(e)
+		}
+	}
+	{
 		e.FieldStart("stock")
 		e.ArrStart()
 		for _, elem := range s.Stock {
@@ -44488,15 +44528,16 @@ func (s *LiveShop) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfLiveShop = [8]string{
+var jsonFieldsNameOfLiveShop = [9]string{
 	0: "id",
 	1: "name",
 	2: "kind",
 	3: "settlement",
 	4: "owner",
-	5: "stock",
-	6: "haggles",
-	7: "offers",
+	5: "standing",
+	6: "stock",
+	7: "haggles",
+	8: "offers",
 }
 
 // Decode decodes LiveShop from json.
@@ -44504,7 +44545,7 @@ func (s *LiveShop) Decode(d *jx.Decoder) error {
 	if s == nil {
 		return errors.New("invalid: unable to decode LiveShop to nil")
 	}
-	var requiredBitSet [1]uint8
+	var requiredBitSet [2]uint8
 
 	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
 		switch string(k) {
@@ -44564,8 +44605,18 @@ func (s *LiveShop) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"owner\"")
 			}
+		case "standing":
+			if err := func() error {
+				s.Standing.Reset()
+				if err := s.Standing.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"standing\"")
+			}
 		case "stock":
-			requiredBitSet[0] |= 1 << 5
+			requiredBitSet[0] |= 1 << 6
 			if err := func() error {
 				s.Stock = make([]LiveStock, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
@@ -44583,7 +44634,7 @@ func (s *LiveShop) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"stock\"")
 			}
 		case "haggles":
-			requiredBitSet[0] |= 1 << 6
+			requiredBitSet[0] |= 1 << 7
 			if err := func() error {
 				s.Haggles = make([]LiveHaggle, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
@@ -44601,7 +44652,7 @@ func (s *LiveShop) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"haggles\"")
 			}
 		case "offers":
-			requiredBitSet[0] |= 1 << 7
+			requiredBitSet[1] |= 1 << 0
 			if err := func() error {
 				s.Offers = make([]LiveOffer, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
@@ -44627,8 +44678,9 @@ func (s *LiveShop) Decode(d *jx.Decoder) error {
 	}
 	// Validate required fields.
 	var failures []validate.FieldError
-	for i, mask := range [1]uint8{
-		0b11101111,
+	for i, mask := range [2]uint8{
+		0b11001111,
+		0b00000001,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -44670,6 +44722,134 @@ func (s *LiveShop) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *LiveShop) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
+func (s *LiveShopStanding) Encode(e *jx.Encoder) {
+	e.ObjStart()
+	s.encodeFields(e)
+	e.ObjEnd()
+}
+
+// encodeFields encodes fields.
+func (s *LiveShopStanding) encodeFields(e *jx.Encoder) {
+	{
+		e.FieldStart("faction")
+		e.Str(s.Faction)
+	}
+	{
+		e.FieldStart("tier")
+		s.Tier.Encode(e)
+	}
+	{
+		e.FieldStart("pricePct")
+		e.Int32(s.PricePct)
+	}
+}
+
+var jsonFieldsNameOfLiveShopStanding = [3]string{
+	0: "faction",
+	1: "tier",
+	2: "pricePct",
+}
+
+// Decode decodes LiveShopStanding from json.
+func (s *LiveShopStanding) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode LiveShopStanding to nil")
+	}
+	var requiredBitSet [1]uint8
+
+	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
+		switch string(k) {
+		case "faction":
+			requiredBitSet[0] |= 1 << 0
+			if err := func() error {
+				v, err := d.Str()
+				s.Faction = string(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"faction\"")
+			}
+		case "tier":
+			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				if err := s.Tier.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"tier\"")
+			}
+		case "pricePct":
+			requiredBitSet[0] |= 1 << 2
+			if err := func() error {
+				v, err := d.Int32()
+				s.PricePct = int32(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"pricePct\"")
+			}
+		default:
+			return errors.Errorf("unexpected field %q", k)
+		}
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "decode LiveShopStanding")
+	}
+	// Validate required fields.
+	var failures []validate.FieldError
+	for i, mask := range [1]uint8{
+		0b00000111,
+	} {
+		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
+			// Mask only required fields and check equality to mask using XOR.
+			//
+			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
+			// Bits of fields which would be set are actually bits of missed fields.
+			missed := bits.OnesCount8(result)
+			for bitN := 0; bitN < missed; bitN++ {
+				bitIdx := bits.TrailingZeros8(result)
+				fieldIdx := i*8 + bitIdx
+				var name string
+				if fieldIdx < len(jsonFieldsNameOfLiveShopStanding) {
+					name = jsonFieldsNameOfLiveShopStanding[fieldIdx]
+				} else {
+					name = strconv.Itoa(fieldIdx)
+				}
+				failures = append(failures, validate.FieldError{
+					Name:  name,
+					Error: validate.ErrFieldRequired,
+				})
+				// Reset bit.
+				result &^= 1 << bitIdx
+			}
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *LiveShopStanding) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *LiveShopStanding) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -45389,6 +45569,18 @@ func (s *LiveToken) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.FactionId.Set {
+			e.FieldStart("factionId")
+			s.FactionId.Encode(e)
+		}
+	}
+	{
+		if s.FirstReaction.Set {
+			e.FieldStart("firstReaction")
+			s.FirstReaction.Encode(e)
+		}
+	}
+	{
 		e.FieldStart("q")
 		e.Int32(s.Q)
 	}
@@ -45514,31 +45706,33 @@ func (s *LiveToken) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfLiveToken = [24]string{
+var jsonFieldsNameOfLiveToken = [26]string{
 	0:  "id",
 	1:  "label",
 	2:  "kind",
 	3:  "darkvisionFt",
 	4:  "companionId",
-	5:  "q",
-	6:  "r",
-	7:  "hidden",
-	8:  "controllerId",
-	9:  "characterId",
-	10: "ac",
-	11: "hp",
-	12: "hpMax",
-	13: "tempHp",
-	14: "form",
-	15: "qualities",
-	16: "disguise",
-	17: "health",
-	18: "attacks",
-	19: "shield",
-	20: "effects",
-	21: "reactions",
-	22: "dying",
-	23: "legend",
+	5:  "factionId",
+	6:  "firstReaction",
+	7:  "q",
+	8:  "r",
+	9:  "hidden",
+	10: "controllerId",
+	11: "characterId",
+	12: "ac",
+	13: "hp",
+	14: "hpMax",
+	15: "tempHp",
+	16: "form",
+	17: "qualities",
+	18: "disguise",
+	19: "health",
+	20: "attacks",
+	21: "shield",
+	22: "effects",
+	23: "reactions",
+	24: "dying",
+	25: "legend",
 }
 
 // Decode decodes LiveToken from json.
@@ -45546,7 +45740,7 @@ func (s *LiveToken) Decode(d *jx.Decoder) error {
 	if s == nil {
 		return errors.New("invalid: unable to decode LiveToken to nil")
 	}
-	var requiredBitSet [3]uint8
+	var requiredBitSet [4]uint8
 
 	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
 		switch string(k) {
@@ -45604,8 +45798,28 @@ func (s *LiveToken) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"companionId\"")
 			}
+		case "factionId":
+			if err := func() error {
+				s.FactionId.Reset()
+				if err := s.FactionId.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"factionId\"")
+			}
+		case "firstReaction":
+			if err := func() error {
+				s.FirstReaction.Reset()
+				if err := s.FirstReaction.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"firstReaction\"")
+			}
 		case "q":
-			requiredBitSet[0] |= 1 << 5
+			requiredBitSet[0] |= 1 << 7
 			if err := func() error {
 				v, err := d.Int32()
 				s.Q = int32(v)
@@ -45617,7 +45831,7 @@ func (s *LiveToken) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"q\"")
 			}
 		case "r":
-			requiredBitSet[0] |= 1 << 6
+			requiredBitSet[1] |= 1 << 0
 			if err := func() error {
 				v, err := d.Int32()
 				s.R = int32(v)
@@ -45629,7 +45843,7 @@ func (s *LiveToken) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"r\"")
 			}
 		case "hidden":
-			requiredBitSet[0] |= 1 << 7
+			requiredBitSet[1] |= 1 << 1
 			if err := func() error {
 				v, err := d.Bool()
 				s.Hidden = bool(v)
@@ -45837,8 +46051,9 @@ func (s *LiveToken) Decode(d *jx.Decoder) error {
 	}
 	// Validate required fields.
 	var failures []validate.FieldError
-	for i, mask := range [3]uint8{
-		0b11101111,
+	for i, mask := range [4]uint8{
+		0b10001111,
+		0b00000011,
 		0b00000000,
 		0b00000000,
 	} {
@@ -45882,6 +46097,48 @@ func (s *LiveToken) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *LiveToken) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes LiveTokenFirstReaction as json.
+func (s LiveTokenFirstReaction) Encode(e *jx.Encoder) {
+	e.Str(string(s))
+}
+
+// Decode decodes LiveTokenFirstReaction from json.
+func (s *LiveTokenFirstReaction) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode LiveTokenFirstReaction to nil")
+	}
+	v, err := d.StrBytes()
+	if err != nil {
+		return err
+	}
+	// Try to use constant string.
+	switch LiveTokenFirstReaction(v) {
+	case LiveTokenFirstReactionHostile:
+		*s = LiveTokenFirstReactionHostile
+	case LiveTokenFirstReactionIndifferent:
+		*s = LiveTokenFirstReactionIndifferent
+	case LiveTokenFirstReactionFriendly:
+		*s = LiveTokenFirstReactionFriendly
+	default:
+		*s = LiveTokenFirstReaction(v)
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s LiveTokenFirstReaction) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *LiveTokenFirstReaction) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -59031,6 +59288,39 @@ func (s *OptLiveShop) UnmarshalJSON(data []byte) error {
 	return s.Decode(d)
 }
 
+// Encode encodes LiveShopStanding as json.
+func (o OptLiveShopStanding) Encode(e *jx.Encoder) {
+	if !o.Set {
+		return
+	}
+	o.Value.Encode(e)
+}
+
+// Decode decodes LiveShopStanding from json.
+func (o *OptLiveShopStanding) Decode(d *jx.Decoder) error {
+	if o == nil {
+		return errors.New("invalid: unable to decode OptLiveShopStanding to nil")
+	}
+	o.Set = true
+	if err := o.Value.Decode(d); err != nil {
+		return err
+	}
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s OptLiveShopStanding) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *OptLiveShopStanding) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
 // Encode encodes LiveSuggestion as json.
 func (o OptLiveSuggestion) Encode(e *jx.Encoder) {
 	if !o.Set {
@@ -59093,6 +59383,39 @@ func (s OptLiveTable) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *OptLiveTable) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes LiveTokenFirstReaction as json.
+func (o OptLiveTokenFirstReaction) Encode(e *jx.Encoder) {
+	if !o.Set {
+		return
+	}
+	e.Str(string(o.Value))
+}
+
+// Decode decodes LiveTokenFirstReaction from json.
+func (o *OptLiveTokenFirstReaction) Decode(d *jx.Decoder) error {
+	if o == nil {
+		return errors.New("invalid: unable to decode OptLiveTokenFirstReaction to nil")
+	}
+	o.Set = true
+	if err := o.Value.Decode(d); err != nil {
+		return err
+	}
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s OptLiveTokenFirstReaction) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *OptLiveTokenFirstReaction) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -68332,6 +68655,12 @@ func (s *Shop) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.FactionId.Set {
+			e.FieldStart("factionId")
+			s.FactionId.Encode(e)
+		}
+	}
+	{
 		e.FieldStart("markupPct")
 		e.Int32(s.MarkupPct)
 	}
@@ -68377,21 +68706,22 @@ func (s *Shop) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfShop = [14]string{
+var jsonFieldsNameOfShop = [15]string{
 	0:  "id",
 	1:  "settlementId",
 	2:  "name",
 	3:  "kind",
 	4:  "ownerId",
-	5:  "markupPct",
-	6:  "haggleDc",
-	7:  "hagglePct",
-	8:  "lootTableId",
-	9:  "restock",
-	10: "restockDays",
-	11: "stockedDay",
-	12: "stock",
-	13: "updatedAt",
+	5:  "factionId",
+	6:  "markupPct",
+	7:  "haggleDc",
+	8:  "hagglePct",
+	9:  "lootTableId",
+	10: "restock",
+	11: "restockDays",
+	12: "stockedDay",
+	13: "stock",
+	14: "updatedAt",
 }
 
 // Decode decodes Shop from json.
@@ -68457,8 +68787,18 @@ func (s *Shop) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"ownerId\"")
 			}
+		case "factionId":
+			if err := func() error {
+				s.FactionId.Reset()
+				if err := s.FactionId.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"factionId\"")
+			}
 		case "markupPct":
-			requiredBitSet[0] |= 1 << 5
+			requiredBitSet[0] |= 1 << 6
 			if err := func() error {
 				v, err := d.Int32()
 				s.MarkupPct = int32(v)
@@ -68470,7 +68810,7 @@ func (s *Shop) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"markupPct\"")
 			}
 		case "haggleDc":
-			requiredBitSet[0] |= 1 << 6
+			requiredBitSet[0] |= 1 << 7
 			if err := func() error {
 				v, err := d.Int32()
 				s.HaggleDc = int32(v)
@@ -68482,7 +68822,7 @@ func (s *Shop) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"haggleDc\"")
 			}
 		case "hagglePct":
-			requiredBitSet[0] |= 1 << 7
+			requiredBitSet[1] |= 1 << 0
 			if err := func() error {
 				v, err := d.Int32()
 				s.HagglePct = int32(v)
@@ -68504,7 +68844,7 @@ func (s *Shop) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"lootTableId\"")
 			}
 		case "restock":
-			requiredBitSet[1] |= 1 << 1
+			requiredBitSet[1] |= 1 << 2
 			if err := func() error {
 				if err := s.Restock.Decode(d); err != nil {
 					return err
@@ -68524,7 +68864,7 @@ func (s *Shop) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"restockDays\"")
 			}
 		case "stockedDay":
-			requiredBitSet[1] |= 1 << 3
+			requiredBitSet[1] |= 1 << 4
 			if err := func() error {
 				v, err := d.Int32()
 				s.StockedDay = int32(v)
@@ -68536,7 +68876,7 @@ func (s *Shop) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"stockedDay\"")
 			}
 		case "stock":
-			requiredBitSet[1] |= 1 << 4
+			requiredBitSet[1] |= 1 << 5
 			if err := func() error {
 				s.Stock = make([]StockItem, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
@@ -68554,7 +68894,7 @@ func (s *Shop) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"stock\"")
 			}
 		case "updatedAt":
-			requiredBitSet[1] |= 1 << 5
+			requiredBitSet[1] |= 1 << 6
 			if err := func() error {
 				v, err := json.DecodeDateTime(d)
 				s.UpdatedAt = v
@@ -68575,8 +68915,8 @@ func (s *Shop) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [2]uint8{
-		0b11101111,
-		0b00111010,
+		0b11001111,
+		0b01110101,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -68650,6 +68990,12 @@ func (s *ShopInput) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.FactionId.Set {
+			e.FieldStart("factionId")
+			s.FactionId.Encode(e)
+		}
+	}
+	{
 		e.FieldStart("markupPct")
 		e.Int32(s.MarkupPct)
 	}
@@ -68679,17 +69025,18 @@ func (s *ShopInput) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfShopInput = [10]string{
-	0: "settlementId",
-	1: "name",
-	2: "kind",
-	3: "ownerId",
-	4: "markupPct",
-	5: "haggleDc",
-	6: "hagglePct",
-	7: "lootTableId",
-	8: "restock",
-	9: "restockDays",
+var jsonFieldsNameOfShopInput = [11]string{
+	0:  "settlementId",
+	1:  "name",
+	2:  "kind",
+	3:  "ownerId",
+	4:  "factionId",
+	5:  "markupPct",
+	6:  "haggleDc",
+	7:  "hagglePct",
+	8:  "lootTableId",
+	9:  "restock",
+	10: "restockDays",
 }
 
 // Decode decodes ShopInput from json.
@@ -68745,8 +69092,18 @@ func (s *ShopInput) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"ownerId\"")
 			}
+		case "factionId":
+			if err := func() error {
+				s.FactionId.Reset()
+				if err := s.FactionId.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"factionId\"")
+			}
 		case "markupPct":
-			requiredBitSet[0] |= 1 << 4
+			requiredBitSet[0] |= 1 << 5
 			if err := func() error {
 				v, err := d.Int32()
 				s.MarkupPct = int32(v)
@@ -68758,7 +69115,7 @@ func (s *ShopInput) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"markupPct\"")
 			}
 		case "haggleDc":
-			requiredBitSet[0] |= 1 << 5
+			requiredBitSet[0] |= 1 << 6
 			if err := func() error {
 				v, err := d.Int32()
 				s.HaggleDc = int32(v)
@@ -68770,7 +69127,7 @@ func (s *ShopInput) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"haggleDc\"")
 			}
 		case "hagglePct":
-			requiredBitSet[0] |= 1 << 6
+			requiredBitSet[0] |= 1 << 7
 			if err := func() error {
 				v, err := d.Int32()
 				s.HagglePct = int32(v)
@@ -68792,7 +69149,7 @@ func (s *ShopInput) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"lootTableId\"")
 			}
 		case "restock":
-			requiredBitSet[1] |= 1 << 0
+			requiredBitSet[1] |= 1 << 1
 			if err := func() error {
 				if err := s.Restock.Decode(d); err != nil {
 					return err
@@ -68821,8 +69178,8 @@ func (s *ShopInput) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [2]uint8{
-		0b01110111,
-		0b00000001,
+		0b11100111,
+		0b00000010,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.

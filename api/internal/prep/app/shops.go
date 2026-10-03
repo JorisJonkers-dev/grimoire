@@ -189,6 +189,15 @@ func refs(ctx context.Context, r Repository, campaign uuid.UUID, x domain.Shop) 
 			return apperr.Refuse("choose one of the campaign's NPCs as the owner")
 		}
 	}
+	if x.FactionID != nil {
+		ok, err := r.FactionExists(ctx, campaign, *x.FactionID)
+		if err != nil {
+			return err
+		}
+		if !ok {
+			return apperr.Refuse("choose one of the campaign's Factions")
+		}
+	}
 	if x.LootTable == nil {
 		return nil
 	}

@@ -74,8 +74,18 @@ func (r *runtime) planAction(m domain.Member, cmd Command) (Write, string) {
 		w.effect = &e
 	case actions.Ready:
 		return r.ready(t, cmd, w)
-	case actions.Hide, actions.Search, actions.Study, actions.Influence:
-		w.Rolls = []domain.Roll{r.abilityCheck(m, t, info)}
+	case actions.Influence:
+		notation, line, reason := r.swayed(m, t, cmd.TargetID)
+		if reason != "" {
+			return Write{}, reason
+		}
+		roll := r.abilityCheck(m, t, info, notation)
+		if line != nil {
+			roll.Modifiers = append(roll.Modifiers, *line)
+		}
+		w.Rolls = []domain.Roll{roll}
+	case actions.Hide, actions.Search, actions.Study:
+		w.Rolls = []domain.Roll{r.abilityCheck(m, t, info, attack.D20(attack.Normal))}
 		if info.Action == actions.Hide {
 			w.Pending = &domain.PendingAction{RollID: w.Rolls[0].ID, Actor: t.ID, Action: string(actions.Hide), DC: actions.HideDC}
 		}
@@ -97,13 +107,13 @@ type takenAction struct {
 }
 
 // abilityCheck opens an action's ability check, with the skill bonus the token's statblock has for it.
-func (r *runtime) abilityCheck(m domain.Member, t domain.Token, info actions.Info) domain.Roll {
+func (r *runtime) abilityCheck(m domain.Member, t domain.Token, info actions.Info, notation string) domain.Roll {
 	bonus := map[string]int{"stealth": t.Stats.Stealth, "perception": t.Stats.Perception}[info.Skill]
 	label := strings.ToUpper(info.Check[:1]) + info.Check[1:]
 	if info.Skill != "" {
 		label += " (" + strings.ToUpper(info.Skill[:1]) + info.Skill[1:] + ")"
 	}
-	return r.request(m, t, info.Name+": "+label+" check", "1d20", domain.Modifier{Label: label, Value: bonus})
+	return r.request(m, t, info.Name+": "+label+" check", notation, domain.Modifier{Label: label, Value: bonus})
 }
 
 // ready sets an attack to fire when its trigger happens, before the token's next turn.

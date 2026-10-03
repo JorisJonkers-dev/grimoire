@@ -59,3 +59,7 @@ WHERE f.campaign_id = @campaign_id AND s.id = @id FOR UPDATE OF s, f;
 -- name: DecideStandingChange :exec
 UPDATE campaign.standing_changes SET status = @status, delta = @delta, reason = @reason, share_reason = @share_reason, decided_at = @now
 WHERE id = @id AND status = 'pending';
+
+-- name: Standings :many
+-- How each Faction of a Campaign regards the party.
+SELECT id, name, score FROM campaign.factions WHERE campaign_id = $1 ORDER BY name, id;

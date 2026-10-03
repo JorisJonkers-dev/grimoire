@@ -10100,14 +10100,16 @@ func (s *EncounterDifficulty) UnmarshalText(data []byte) error {
 }
 
 // One weighted line of an Encounter Table. An encounter lists its monsters, a pool names poolId,
-// nothing has neither.
+// nothing has neither. An entry with factionId is that Faction's own and weighs by how the Faction
+// regards the party, twice as much when Hostile down to a fifth when Allied.
 // Ref: #/components/schemas/EncounterEntry
 type EncounterEntry struct {
-	Weight   int32              `json:"weight"`
-	Kind     EncounterEntryKind `json:"kind"`
-	Label    string             `json:"label"`
-	PoolId   OptID              `json:"poolId"`
-	Monsters []EncounterMonster `json:"monsters"`
+	Weight    int32              `json:"weight"`
+	Kind      EncounterEntryKind `json:"kind"`
+	Label     string             `json:"label"`
+	PoolId    OptID              `json:"poolId"`
+	FactionId OptID              `json:"factionId"`
+	Monsters  []EncounterMonster `json:"monsters"`
 }
 
 // GetWeight returns the value of Weight.
@@ -10128,6 +10130,11 @@ func (s *EncounterEntry) GetLabel() string {
 // GetPoolId returns the value of PoolId.
 func (s *EncounterEntry) GetPoolId() OptID {
 	return s.PoolId
+}
+
+// GetFactionId returns the value of FactionId.
+func (s *EncounterEntry) GetFactionId() OptID {
+	return s.FactionId
 }
 
 // GetMonsters returns the value of Monsters.
@@ -10153,6 +10160,11 @@ func (s *EncounterEntry) SetLabel(val string) {
 // SetPoolId sets the value of PoolId.
 func (s *EncounterEntry) SetPoolId(val OptID) {
 	s.PoolId = val
+}
+
+// SetFactionId sets the value of FactionId.
+func (s *EncounterEntry) SetFactionId(val OptID) {
+	s.FactionId = val
 }
 
 // SetMonsters sets the value of Monsters.
@@ -21105,6 +21117,11 @@ type LiveCommand struct {
 	GameDay OptInt32 `json:"gameDay"`
 	// With set_clock, the time of day, in minutes after midnight.
 	GameMinute OptInt32 `json:"gameMinute"`
+	// With place_token, the Faction the creature openly belongs to: every screen that sees the creature is
+	// told. An Influence check against it (take_action with targetId) is rolled by how that Faction
+	// regards whoever tries, and its Roll Card says so. A Player can aim one only at a creature the party
+	// can see.
+	FactionId OptString `json:"factionId"`
 	// With place_token, the Companion to put on the map. It stands with the party under its own name, run
 	// by whoever it is given to, with the hit points it kept. With assign_control, controllerId is the
 	// Member who runs the token from now on; left out, the DM does.
@@ -21634,6 +21651,11 @@ func (s *LiveCommand) GetGameDay() OptInt32 {
 // GetGameMinute returns the value of GameMinute.
 func (s *LiveCommand) GetGameMinute() OptInt32 {
 	return s.GameMinute
+}
+
+// GetFactionId returns the value of FactionId.
+func (s *LiveCommand) GetFactionId() OptString {
+	return s.FactionId
 }
 
 // GetCompanionId returns the value of CompanionId.
@@ -22169,6 +22191,11 @@ func (s *LiveCommand) SetGameDay(val OptInt32) {
 // SetGameMinute sets the value of GameMinute.
 func (s *LiveCommand) SetGameMinute(val OptInt32) {
 	s.GameMinute = val
+}
+
+// SetFactionId sets the value of FactionId.
+func (s *LiveCommand) SetFactionId(val OptString) {
+	s.FactionId = val
 }
 
 // SetCompanionId sets the value of CompanionId.
@@ -26733,13 +26760,14 @@ func (s *LiveSessionViewAudience) UnmarshalText(data []byte) error {
 // The Shop open in the Session, its Stock at asking prices in copper, and each Character's haggling.
 // Ref: #/components/schemas/LiveShop
 type LiveShop struct {
-	ID         ID           `json:"id"`
-	Name       string       `json:"name"`
-	Kind       string       `json:"kind"`
-	Settlement string       `json:"settlement"`
-	Owner      OptString    `json:"owner"`
-	Stock      []LiveStock  `json:"stock"`
-	Haggles    []LiveHaggle `json:"haggles"`
+	ID         ID                  `json:"id"`
+	Name       string              `json:"name"`
+	Kind       string              `json:"kind"`
+	Settlement string              `json:"settlement"`
+	Owner      OptString           `json:"owner"`
+	Standing   OptLiveShopStanding `json:"standing"`
+	Stock      []LiveStock         `json:"stock"`
+	Haggles    []LiveHaggle        `json:"haggles"`
 	// What the Shop pays each Character for the items in its pack, after its haggle.
 	Offers []LiveOffer `json:"offers"`
 }
@@ -26767,6 +26795,11 @@ func (s *LiveShop) GetSettlement() string {
 // GetOwner returns the value of Owner.
 func (s *LiveShop) GetOwner() OptString {
 	return s.Owner
+}
+
+// GetStanding returns the value of Standing.
+func (s *LiveShop) GetStanding() OptLiveShopStanding {
+	return s.Standing
 }
 
 // GetStock returns the value of Stock.
@@ -26809,6 +26842,11 @@ func (s *LiveShop) SetOwner(val OptString) {
 	s.Owner = val
 }
 
+// SetStanding sets the value of Standing.
+func (s *LiveShop) SetStanding(val OptLiveShopStanding) {
+	s.Standing = val
+}
+
 // SetStock sets the value of Stock.
 func (s *LiveShop) SetStock(val []LiveStock) {
 	s.Stock = val
@@ -26822,6 +26860,45 @@ func (s *LiveShop) SetHaggles(val []LiveHaggle) {
 // SetOffers sets the value of Offers.
 func (s *LiveShop) SetOffers(val []LiveOffer) {
 	s.Offers = val
+}
+
+// The Faction a Shop belongs to, the tier it holds the party in, and what that adds to the Shop's
+// prices in percent. A Character with a Personal Standing pays by that instead.
+// Ref: #/components/schemas/LiveShopStanding
+type LiveShopStanding struct {
+	Faction  string       `json:"faction"`
+	Tier     StandingTier `json:"tier"`
+	PricePct int32        `json:"pricePct"`
+}
+
+// GetFaction returns the value of Faction.
+func (s *LiveShopStanding) GetFaction() string {
+	return s.Faction
+}
+
+// GetTier returns the value of Tier.
+func (s *LiveShopStanding) GetTier() StandingTier {
+	return s.Tier
+}
+
+// GetPricePct returns the value of PricePct.
+func (s *LiveShopStanding) GetPricePct() int32 {
+	return s.PricePct
+}
+
+// SetFaction sets the value of Faction.
+func (s *LiveShopStanding) SetFaction(val string) {
+	s.Faction = val
+}
+
+// SetTier sets the value of Tier.
+func (s *LiveShopStanding) SetTier(val StandingTier) {
+	s.Tier = val
+}
+
+// SetPricePct sets the value of PricePct.
+func (s *LiveShopStanding) SetPricePct(val int32) {
+	s.PricePct = val
 }
 
 // One item the open Shop sells, and its asking price in copper before haggling.
@@ -27097,14 +27174,18 @@ type LiveToken struct {
 	Kind         TokenKind `json:"kind"`
 	DarkvisionFt int32     `json:"darkvisionFt"`
 	CompanionId  OptID     `json:"companionId"`
-	Q            int32     `json:"q"`
-	R            int32     `json:"r"`
-	Hidden       bool      `json:"hidden"`
-	ControllerId OptID     `json:"controllerId"`
-	CharacterId  OptID     `json:"characterId"`
-	Ac           OptInt32  `json:"ac"`
-	Hp           OptInt32  `json:"hp"`
-	HpMax        OptInt32  `json:"hpMax"`
+	FactionId    OptID     `json:"factionId"`
+	// How a creature of a Faction first takes to the party, by the Faction's Standing. For the DM alone;
+	// factionId itself goes to every screen that sees the creature.
+	FirstReaction OptLiveTokenFirstReaction `json:"firstReaction"`
+	Q             int32                     `json:"q"`
+	R             int32                     `json:"r"`
+	Hidden        bool                      `json:"hidden"`
+	ControllerId  OptID                     `json:"controllerId"`
+	CharacterId   OptID                     `json:"characterId"`
+	Ac            OptInt32                  `json:"ac"`
+	Hp            OptInt32                  `json:"hp"`
+	HpMax         OptInt32                  `json:"hpMax"`
 	// Temporary hit points, lost before hit points.
 	TempHp OptInt32 `json:"tempHp"`
 	// The creature whose shape the token has taken.
@@ -27146,6 +27227,16 @@ func (s *LiveToken) GetDarkvisionFt() int32 {
 // GetCompanionId returns the value of CompanionId.
 func (s *LiveToken) GetCompanionId() OptID {
 	return s.CompanionId
+}
+
+// GetFactionId returns the value of FactionId.
+func (s *LiveToken) GetFactionId() OptID {
+	return s.FactionId
+}
+
+// GetFirstReaction returns the value of FirstReaction.
+func (s *LiveToken) GetFirstReaction() OptLiveTokenFirstReaction {
+	return s.FirstReaction
 }
 
 // GetQ returns the value of Q.
@@ -27268,6 +27359,16 @@ func (s *LiveToken) SetCompanionId(val OptID) {
 	s.CompanionId = val
 }
 
+// SetFactionId sets the value of FactionId.
+func (s *LiveToken) SetFactionId(val OptID) {
+	s.FactionId = val
+}
+
+// SetFirstReaction sets the value of FirstReaction.
+func (s *LiveToken) SetFirstReaction(val OptLiveTokenFirstReaction) {
+	s.FirstReaction = val
+}
+
 // SetQ sets the value of Q.
 func (s *LiveToken) SetQ(val int32) {
 	s.Q = val
@@ -27361,6 +27462,56 @@ func (s *LiveToken) SetDying(val OptLiveDying) {
 // SetLegend sets the value of Legend.
 func (s *LiveToken) SetLegend(val OptLiveLegend) {
 	s.Legend = val
+}
+
+// How a creature of a Faction first takes to the party, by the Faction's Standing. For the DM alone;
+// factionId itself goes to every screen that sees the creature.
+type LiveTokenFirstReaction string
+
+const (
+	LiveTokenFirstReactionHostile     LiveTokenFirstReaction = "hostile"
+	LiveTokenFirstReactionIndifferent LiveTokenFirstReaction = "indifferent"
+	LiveTokenFirstReactionFriendly    LiveTokenFirstReaction = "friendly"
+)
+
+// AllValues returns all LiveTokenFirstReaction values.
+func (LiveTokenFirstReaction) AllValues() []LiveTokenFirstReaction {
+	return []LiveTokenFirstReaction{
+		LiveTokenFirstReactionHostile,
+		LiveTokenFirstReactionIndifferent,
+		LiveTokenFirstReactionFriendly,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveTokenFirstReaction) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveTokenFirstReactionHostile:
+		return []byte(s), nil
+	case LiveTokenFirstReactionIndifferent:
+		return []byte(s), nil
+	case LiveTokenFirstReactionFriendly:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveTokenFirstReaction) UnmarshalText(data []byte) error {
+	switch LiveTokenFirstReaction(data) {
+	case LiveTokenFirstReactionHostile:
+		*s = LiveTokenFirstReactionHostile
+		return nil
+	case LiveTokenFirstReactionIndifferent:
+		*s = LiveTokenFirstReactionIndifferent
+		return nil
+	case LiveTokenFirstReactionFriendly:
+		*s = LiveTokenFirstReactionFriendly
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 // What anyone can tell by looking, for creatures whose hit points the audience may not see.
@@ -35735,6 +35886,52 @@ func (o OptLiveShop) Or(d LiveShop) LiveShop {
 	return d
 }
 
+// NewOptLiveShopStanding returns new OptLiveShopStanding with value set to v.
+func NewOptLiveShopStanding(v LiveShopStanding) OptLiveShopStanding {
+	return OptLiveShopStanding{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveShopStanding is optional LiveShopStanding.
+type OptLiveShopStanding struct {
+	Value LiveShopStanding
+	Set   bool
+}
+
+// IsSet returns true if OptLiveShopStanding was set.
+func (o OptLiveShopStanding) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveShopStanding) Reset() {
+	var v LiveShopStanding
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveShopStanding) SetTo(v LiveShopStanding) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveShopStanding) Get() (v LiveShopStanding, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveShopStanding) Or(d LiveShopStanding) LiveShopStanding {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptLiveSuggestion returns new OptLiveSuggestion with value set to v.
 func NewOptLiveSuggestion(v LiveSuggestion) OptLiveSuggestion {
 	return OptLiveSuggestion{
@@ -35821,6 +36018,52 @@ func (o OptLiveTable) Get() (v LiveTable, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptLiveTable) Or(d LiveTable) LiveTable {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptLiveTokenFirstReaction returns new OptLiveTokenFirstReaction with value set to v.
+func NewOptLiveTokenFirstReaction(v LiveTokenFirstReaction) OptLiveTokenFirstReaction {
+	return OptLiveTokenFirstReaction{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveTokenFirstReaction is optional LiveTokenFirstReaction.
+type OptLiveTokenFirstReaction struct {
+	Value LiveTokenFirstReaction
+	Set   bool
+}
+
+// IsSet returns true if OptLiveTokenFirstReaction was set.
+func (o OptLiveTokenFirstReaction) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveTokenFirstReaction) Reset() {
+	var v LiveTokenFirstReaction
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveTokenFirstReaction) SetTo(v LiveTokenFirstReaction) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveTokenFirstReaction) Get() (v LiveTokenFirstReaction, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveTokenFirstReaction) Or(d LiveTokenFirstReaction) LiveTokenFirstReaction {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -42559,6 +42802,7 @@ type Shop struct {
 	Name         string      `json:"name"`
 	Kind         string      `json:"kind"`
 	OwnerId      OptID       `json:"ownerId"`
+	FactionId    OptID       `json:"factionId"`
 	MarkupPct    int32       `json:"markupPct"`
 	HaggleDc     int32       `json:"haggleDc"`
 	HagglePct    int32       `json:"hagglePct"`
@@ -42593,6 +42837,11 @@ func (s *Shop) GetKind() string {
 // GetOwnerId returns the value of OwnerId.
 func (s *Shop) GetOwnerId() OptID {
 	return s.OwnerId
+}
+
+// GetFactionId returns the value of FactionId.
+func (s *Shop) GetFactionId() OptID {
+	return s.FactionId
 }
 
 // GetMarkupPct returns the value of MarkupPct.
@@ -42663,6 +42912,11 @@ func (s *Shop) SetKind(val string) {
 // SetOwnerId sets the value of OwnerId.
 func (s *Shop) SetOwnerId(val OptID) {
 	s.OwnerId = val
+}
+
+// SetFactionId sets the value of FactionId.
+func (s *Shop) SetFactionId(val OptID) {
+	s.FactionId = val
 }
 
 // SetMarkupPct sets the value of MarkupPct.
@@ -42770,6 +43024,7 @@ type ShopInput struct {
 	Name         string      `json:"name"`
 	Kind         string      `json:"kind"`
 	OwnerId      OptID       `json:"ownerId"`
+	FactionId    OptID       `json:"factionId"`
 	MarkupPct    int32       `json:"markupPct"`
 	HaggleDc     int32       `json:"haggleDc"`
 	HagglePct    int32       `json:"hagglePct"`
@@ -42796,6 +43051,11 @@ func (s *ShopInput) GetKind() string {
 // GetOwnerId returns the value of OwnerId.
 func (s *ShopInput) GetOwnerId() OptID {
 	return s.OwnerId
+}
+
+// GetFactionId returns the value of FactionId.
+func (s *ShopInput) GetFactionId() OptID {
+	return s.FactionId
 }
 
 // GetMarkupPct returns the value of MarkupPct.
@@ -42846,6 +43106,11 @@ func (s *ShopInput) SetKind(val string) {
 // SetOwnerId sets the value of OwnerId.
 func (s *ShopInput) SetOwnerId(val OptID) {
 	s.OwnerId = val
+}
+
+// SetFactionId sets the value of FactionId.
+func (s *ShopInput) SetFactionId(val OptID) {
+	s.FactionId = val
 }
 
 // SetMarkupPct sets the value of MarkupPct.

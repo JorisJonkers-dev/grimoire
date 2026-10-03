@@ -5,7 +5,7 @@ import { fakeClock, mountApp } from '@/test/mountApp'
 import { configureApi } from '@/infrastructure/http'
 import { jsonResponse } from '@/test/mountWithQuery'
 import type { RollRequest } from '@/infrastructure/api/types.gen'
-import { describeGroup, notationFor, signed } from './notation'
+import { describeGroup, notationFor, rollBreakdown, signed } from './notation'
 import RollCard from './RollCard.vue'
 
 const ID = '0190c7a8-0000-7000-8000-000000000001'
@@ -98,6 +98,14 @@ describe('roll card', () => {
     await flushPromises()
     expect(sent).toEqual(['0=3', '1=4'])
     expect(w.emitted('updated')).toHaveLength(2)
+  })
+
+  it('carries a Standing line: its words alone when it only changes how the d20 is rolled, with its bonus when it has one', () => {
+    const allied = { label: 'Allied with The Lantern Watch: Advantage', value: 0 }
+    const friendly = { label: 'Friendly with The Lantern Watch', value: 2 }
+    const waiting = show(roll({ modifiers: [{ label: 'Charisma', value: 3 }, allied, friendly] }))
+    expect(waiting.findAll('[aria-label="Modifiers"] li').map((li) => li.text())).toEqual(['Charisma+3', 'Allied with The Lantern Watch: Advantage', 'Friendly with The Lantern Watch+2'])
+    expect(rollBreakdown(plain(12, { modifiers: [allied, friendly] }) as RollRequest).slice(-2)).toEqual([{ label: allied.label, value: '' }, { label: friendly.label, value: '+2' }])
   })
 
   it('celebrates a natural 20 and a natural 1 on the d20 that counts', () => {

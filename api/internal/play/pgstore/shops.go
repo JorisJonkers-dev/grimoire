@@ -71,6 +71,29 @@ func (s *Store) saveShared(ctx context.Context, campaign uuid.UUID, w live.Write
 	return nil
 }
 
+// Standings reads how each Faction of the Campaign regards the party and its Characters.
+func (s *Store) Standings(ctx context.Context, campaign uuid.UUID) ([]domain.Standing, error) {
+	rows, err := s.q.Standings(ctx, campaign)
+	if err != nil {
+		return nil, err
+	}
+	personal, err := s.q.ListPersonalStandings(ctx, campaign)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]domain.Standing, 0, len(rows))
+	for _, r := range rows {
+		st := domain.Standing{Faction: r.ID, Name: r.Name, Score: int(r.Score), Personal: map[uuid.UUID]int{}}
+		for _, p := range personal {
+			if p.FactionID == r.ID {
+				st.Personal[p.CharacterID] = int(p.Score)
+			}
+		}
+		out = append(out, st)
+	}
+	return out, nil
+}
+
 // GameClock reads the Campaign's Game Clock.
 func (s *Store) GameClock(ctx context.Context, campaign uuid.UUID) (clock.Time, error) {
 	c, err := s.q.CampaignClock(ctx, campaign)

@@ -66,7 +66,7 @@ func entriesOf(id uuid.UUID, entries []queries.PrepTableEntry, monsters []querie
 		if e.TableID != id {
 			continue
 		}
-		entry := domain.Entry{Weight: int(e.Weight), Kind: e.Kind, Label: e.Label, PoolID: poolRef(fromUUID(e.PoolID))}
+		entry := domain.Entry{Weight: int(e.Weight), Kind: e.Kind, Label: e.Label, PoolID: poolRef(fromUUID(e.PoolID)), FactionID: fromUUID(e.FactionID)}
 		for _, m := range monsters {
 			if m.TableID == id && m.Ordering == e.Ordering {
 				entry.Monsters = append(entry.Monsters, domain.EntryMonster{Slug: m.MonsterSlug, Count: int(m.Count)})
@@ -92,7 +92,7 @@ func (s *Store) SaveTable(ctx context.Context, campaign uuid.UUID, t domain.Tabl
 	}
 	for i, e := range t.Entries {
 		if err := s.q.InsertTableEntry(ctx, queries.InsertTableEntryParams{
-			TableID: id, Ordering: int32(i), Weight: int32(e.Weight), Kind: e.Kind, Label: e.Label, PoolID: optUUID(poolUUID(e.PoolID)),
+			TableID: id, Ordering: int32(i), Weight: int32(e.Weight), Kind: e.Kind, Label: e.Label, PoolID: optUUID(poolUUID(e.PoolID)), FactionID: optUUID(e.FactionID),
 		}); err != nil {
 			return err
 		}
@@ -128,7 +128,7 @@ func (s *Store) RecordTable(ctx context.Context, campaign uuid.UUID, rev campaig
 	}
 	for i, e := range t.Entries {
 		if err := s.q.InsertTableRevisionEntry(ctx, queries.InsertTableRevisionEntryParams{
-			RevisionID: revID, Ordering: int32(i), Weight: int32(e.Weight), Kind: e.Kind, Label: e.Label, PoolID: optUUID(poolUUID(e.PoolID)),
+			RevisionID: revID, Ordering: int32(i), Weight: int32(e.Weight), Kind: e.Kind, Label: e.Label, PoolID: optUUID(poolUUID(e.PoolID)), FactionID: optUUID(e.FactionID),
 		}); err != nil {
 			return err
 		}
@@ -159,7 +159,7 @@ func (s *Store) TableAt(ctx context.Context, campaign uuid.UUID, id domain.Table
 	}
 	t := domain.Table{ID: id, Name: r.Name, RegionID: fromUUID(r.RegionNodeID), ChancePct: int(r.ChancePct), Visibility: r.Visibility, Entries: []domain.Entry{}}
 	for _, e := range entries {
-		entry := domain.Entry{Weight: int(e.Weight), Kind: e.Kind, Label: e.Label, PoolID: poolRef(fromUUID(e.PoolID))}
+		entry := domain.Entry{Weight: int(e.Weight), Kind: e.Kind, Label: e.Label, PoolID: poolRef(fromUUID(e.PoolID)), FactionID: fromUUID(e.FactionID)}
 		for _, m := range monsters {
 			if m.Ordering == e.Ordering {
 				entry.Monsters = append(entry.Monsters, domain.EntryMonster{Slug: m.MonsterSlug, Count: int(m.Count)})
