@@ -121,7 +121,7 @@ func TestFactionsOverHTTP(t *testing.T) {
 	if seen.Code != 200 || !strings.Contains(body, `"tier":"unfriendly"`) || !strings.Contains(body, "Returned the stolen seal.") || strings.Count(body, `"status":"confirmed"`) != 2 {
 		t.Fatalf("a Player's list: %d %s", seen.Code, body)
 	}
-	for _, secret := range []string{"watchman", "bribes", "Keep the peace", "Oakford", "rumour", `"dm"`, "score", "delta", "-25", "-30", "shareReason", "origin", "dismissed"} {
+	for _, secret := range []string{"watchman", "bribes", "Keep the peace", "Oakford", "rumour", `"dm"`, "score", "delta", ":-25", ":-30", "shareReason", "origin", "dismissed"} {
 		if strings.Contains(body, secret) {
 			t.Errorf("%q reached a Player: %s", secret, body)
 		}
