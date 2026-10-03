@@ -1339,6 +1339,23 @@ export type ItemCard = {
     attunementDetail?: string;
     maxCharges?: number;
     fits: Array<EquipmentSlot>;
+    /**
+     * Spells the item lets its bearer cast, at will or for charges.
+     */
+    spells?: Array<ItemSpell>;
+    /**
+     * A homebrew item's card, as far as its holder knows it.
+     */
+    lines?: Array<string>;
+};
+
+/**
+ * A spell an item grants; cost is the charges it spends, 0 at will.
+ */
+export type ItemSpell = {
+    slug: Slug;
+    name: string;
+    cost: number;
 };
 
 /**
@@ -1408,11 +1425,12 @@ export type InventoryTake = {
 export type InventoryUse = {
     instanceId?: Id;
     slug?: Slug;
-    use: 'drink' | 'throw' | 'attune' | 'unattune' | 'identify' | 'charge';
+    use: 'drink' | 'throw' | 'attune' | 'unattune' | 'identify' | 'charge' | 'cast';
     /**
      * Charges to spend.
      */
     count?: number;
+    spell?: Slug;
 };
 
 /**
@@ -2936,6 +2954,99 @@ export type SpellBuild = {
     effect: string;
     text: Array<string>;
     hexes: Array<BuilderHex>;
+};
+
+/**
+ * A homebrew item as the item builder makes it, from its kind, base item, rarity, enchantment, attunement, charges and Item Properties.
+ */
+export type ItemDesign = {
+    kind: string;
+    base?: string;
+    rarity: 'common' | 'uncommon' | 'rare' | 'very_rare' | 'legendary';
+    enchantment: number;
+    weightLb: number;
+    valueGp: number;
+    attunement?: {
+        kind?: string;
+        value?: string;
+    };
+    weapon?: {
+        properties: Array<string>;
+        mastery?: string;
+        custom?: string;
+    };
+    charges?: {
+        max: number;
+        on: string;
+        dice?: number;
+        faces?: number;
+        bonus?: number;
+    };
+    properties: Array<ItemProperty>;
+};
+
+/**
+ * One Item Property row; which fields count depends on its type. A hidden one shows once the item is identified or attuned.
+ */
+export type ItemProperty = {
+    type: string;
+    hidden?: boolean;
+    skill?: string;
+    mode?: string;
+    target?: string;
+    value?: number;
+    dice?: string;
+    damage?: string;
+    sense?: string;
+    speed?: string;
+    feet?: number;
+    spell?: string;
+    name?: string;
+    level?: number;
+    cost?: number;
+    brightFt?: number;
+    dimFt?: number;
+    uses?: string;
+    hits?: number;
+    text?: string;
+    cannotDrop?: boolean;
+    atLevel?: number;
+    set?: string;
+    pieces?: number;
+    capacityLb?: number;
+    weightless?: boolean;
+    onlyKind?: string;
+    misfire?: number;
+    reload?: number;
+    burst?: number;
+};
+
+/**
+ * A design to preview, with the item's name.
+ */
+export type ItemPreviewInput = {
+    name: string;
+    design: ItemDesign;
+};
+
+/**
+ * A homebrew item in the item builder, the slug it is known by in play, its card as players read it once known, and its Price Check.
+ */
+export type ItemBuild = {
+    entry?: LibraryEntry;
+    design: ItemDesign;
+    slug?: string;
+    card: Array<string>;
+    /**
+     * Whether the rarity and value fit what the properties are worth.
+     */
+    price: {
+        points: number;
+        suggested: string;
+        priceGp: number;
+        fits: boolean;
+        notes: Array<string>;
+    };
 };
 
 /**
@@ -9218,6 +9329,103 @@ export type SaveSpellBuildResponses = {
 };
 
 export type SaveSpellBuildResponse = SaveSpellBuildResponses[keyof SaveSpellBuildResponses];
+
+export type PreviewItemData = {
+    body: ItemPreviewInput;
+    path?: never;
+    query?: never;
+    url: '/api/v1/builders/items/preview';
+};
+
+export type PreviewItemErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type PreviewItemError = PreviewItemErrors[keyof PreviewItemErrors];
+
+export type PreviewItemResponses = {
+    /**
+     * The preview.
+     */
+    200: ItemBuild;
+};
+
+export type PreviewItemResponse = PreviewItemResponses[keyof PreviewItemResponses];
+
+export type GetItemBuildData = {
+    body?: never;
+    path: {
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/builders/items/{entryId}';
+};
+
+export type GetItemBuildErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetItemBuildError = GetItemBuildErrors[keyof GetItemBuildErrors];
+
+export type GetItemBuildResponses = {
+    /**
+     * The item.
+     */
+    200: ItemBuild;
+};
+
+export type GetItemBuildResponse = GetItemBuildResponses[keyof GetItemBuildResponses];
+
+export type SaveItemBuildData = {
+    body: ItemDesign;
+    path: {
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/builders/items/{entryId}';
+};
+
+export type SaveItemBuildErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SaveItemBuildError = SaveItemBuildErrors[keyof SaveItemBuildErrors];
+
+export type SaveItemBuildResponses = {
+    /**
+     * The item.
+     */
+    200: ItemBuild;
+};
+
+export type SaveItemBuildResponse = SaveItemBuildResponses[keyof SaveItemBuildResponses];
 
 export type GetMeData = {
     body?: never;

@@ -4616,6 +4616,96 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/builders/items/preview:
+    post:
+      operationId: previewItem
+      x-ogen-operation-group: Read
+      summary: Preview a homebrew item
+      description: "Checks a design without saving it: its item card and its Price Check. A design the rules refuse comes back with the reason."
+      tags: [Library]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ItemPreviewInput"
+      responses:
+        "200":
+          description: The preview.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ItemBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/builders/items/{entryId}:
+    get:
+      operationId: getItemBuild
+      x-ogen-operation-group: Read
+      summary: Open an item in the item builder
+      description: "A homebrew item's design with its card and Price Check: one of the caller's items, or a Shared Library copy."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/LibraryEntryId"
+      responses:
+        "200":
+          description: The item.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ItemBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    put:
+      operationId: saveItemBuild
+      x-ogen-operation-group: Build
+      summary: Save an item design
+      description: "Saves the design of one of the caller's items as its next Revision; Campaigns that see it carry it in Inventories by its slug."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/LibraryEntryId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ItemDesign"
+      responses:
+        "200":
+          description: The item.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ItemBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /api/v1/me:
     get:
       operationId: getMe
@@ -8272,6 +8362,25 @@ components:
           type: array
           maxItems: 14
           items: { $ref: "#/components/schemas/EquipmentSlot" }
+        spells:
+          type: array
+          description: Spells the item lets its bearer cast, at will or for charges.
+          maxItems: 40
+          items: { $ref: "#/components/schemas/ItemSpell" }
+        lines:
+          type: array
+          description: A homebrew item's card, as far as its holder knows it.
+          maxItems: 60
+          items: { type: string, maxLength: 1200 }
+    ItemSpell:
+      type: object
+      description: A spell an item grants; cost is the charges it spends, 0 at will.
+      additionalProperties: false
+      required: [slug, name, cost]
+      properties:
+        slug: { $ref: "#/components/schemas/Slug" }
+        name: { type: string, maxLength: 120 }
+        cost: { type: integer, format: int32, minimum: 0, maximum: 100 }
     SlotLine:
       type: object
       description: An equipment slot and what is in it.
@@ -8352,8 +8461,9 @@ components:
       properties:
         instanceId: { $ref: "#/components/schemas/Id" }
         slug: { $ref: "#/components/schemas/Slug" }
-        use: { type: string, enum: [drink, throw, attune, unattune, identify, charge] }
+        use: { type: string, enum: [drink, throw, attune, unattune, identify, charge, cast] }
         count: { type: integer, format: int32, minimum: 1, maximum: 100, description: "Charges to spend." }
+        spell: { $ref: "#/components/schemas/Slug" }
     InventoryUseResult:
       type: object
       description: The Inventory after using an item, and the hit points it restored.
@@ -9991,6 +10101,120 @@ components:
           type: array
           maxItems: 20000
           items: { $ref: "#/components/schemas/BuilderHex" }
+    ItemDesign:
+      type: object
+      description: A homebrew item as the item builder makes it, from its kind, base item, rarity, enchantment, attunement, charges and Item Properties.
+      additionalProperties: false
+      required: [kind, rarity, enchantment, weightLb, valueGp, properties]
+      properties:
+        kind: { type: string, maxLength: 40 }
+        base: { type: string, maxLength: 80 }
+        rarity: { type: string, enum: [common, uncommon, rare, very_rare, legendary] }
+        enchantment: { type: integer, format: int32, minimum: -100000, maximum: 100000000 }
+        weightLb: { type: number, format: double, minimum: -100000, maximum: 100000 }
+        valueGp: { type: integer, format: int32, minimum: -100000, maximum: 100000000 }
+        attunement:
+          type: object
+          additionalProperties: false
+          properties:
+            kind: { type: string, maxLength: 40 }
+            value: { type: string, maxLength: 200 }
+        weapon:
+          type: object
+          additionalProperties: false
+          required: [properties]
+          properties:
+            properties:
+              type: array
+              maxItems: 20
+              items: { type: string, maxLength: 40 }
+            mastery: { type: string, maxLength: 40 }
+            custom: { type: string, maxLength: 1000 }
+        charges:
+          type: object
+          additionalProperties: false
+          required: [max, "on"]
+          properties:
+            max: { type: integer, format: int32, minimum: -100000, maximum: 100000000 }
+            "on": { type: string, maxLength: 40 }
+            dice: { type: integer, format: int32, minimum: -100000, maximum: 100000000 }
+            faces: { type: integer, format: int32, minimum: -100000, maximum: 100000000 }
+            bonus: { type: integer, format: int32, minimum: -100000, maximum: 100000000 }
+        properties:
+          type: array
+          maxItems: 100
+          items: { $ref: "#/components/schemas/ItemProperty" }
+    ItemProperty:
+      type: object
+      description: One Item Property row; which fields count depends on its type. A hidden one shows once the item is identified or attuned.
+      additionalProperties: false
+      required: [type]
+      properties:
+        type: { type: string, maxLength: 40 }
+        hidden: { type: boolean }
+        skill: { type: string, maxLength: 40 }
+        mode: { type: string, maxLength: 40 }
+        target: { type: string, maxLength: 40 }
+        value: { type: integer, format: int32, minimum: -100000, maximum: 100000000 }
+        dice: { type: string, maxLength: 20 }
+        damage: { type: string, maxLength: 40 }
+        sense: { type: string, maxLength: 40 }
+        speed: { type: string, maxLength: 40 }
+        feet: { type: integer, format: int32, minimum: -100000, maximum: 100000000 }
+        spell: { type: string, maxLength: 80 }
+        name: { type: string, maxLength: 120 }
+        level: { type: integer, format: int32, minimum: -100000, maximum: 100000000 }
+        cost: { type: integer, format: int32, minimum: -100000, maximum: 100000000 }
+        brightFt: { type: integer, format: int32, minimum: -100000, maximum: 100000000 }
+        dimFt: { type: integer, format: int32, minimum: -100000, maximum: 100000000 }
+        uses: { type: string, maxLength: 40 }
+        hits: { type: integer, format: int32, minimum: -100000, maximum: 100000000 }
+        text: { type: string, maxLength: 2000 }
+        cannotDrop: { type: boolean }
+        atLevel: { type: integer, format: int32, minimum: -100000, maximum: 100000000 }
+        set: { type: string, maxLength: 80 }
+        pieces: { type: integer, format: int32, minimum: -100000, maximum: 100000000 }
+        capacityLb: { type: integer, format: int32, minimum: -100000, maximum: 100000000 }
+        weightless: { type: boolean }
+        onlyKind: { type: string, maxLength: 40 }
+        misfire: { type: integer, format: int32, minimum: -100000, maximum: 100000000 }
+        reload: { type: integer, format: int32, minimum: -100000, maximum: 100000000 }
+        burst: { type: integer, format: int32, minimum: -100000, maximum: 100000000 }
+    ItemPreviewInput:
+      type: object
+      description: A design to preview, with the item's name.
+      additionalProperties: false
+      required: [name, design]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        design: { $ref: "#/components/schemas/ItemDesign" }
+    ItemBuild:
+      type: object
+      description: A homebrew item in the item builder, the slug it is known by in play, its card as players read it once known, and its Price Check.
+      additionalProperties: false
+      required: [design, card, price]
+      properties:
+        entry: { $ref: "#/components/schemas/LibraryEntry" }
+        design: { $ref: "#/components/schemas/ItemDesign" }
+        slug: { type: string, maxLength: 40 }
+        card:
+          type: array
+          maxItems: 200
+          items: { type: string, maxLength: 1200 }
+        price:
+          type: object
+          description: Whether the rarity and value fit what the properties are worth.
+          additionalProperties: false
+          required: [points, suggested, priceGp, fits, notes]
+          properties:
+            points: { type: integer, format: int32, minimum: 0, maximum: 100000 }
+            suggested: { type: string, maxLength: 40 }
+            priceGp: { type: integer, format: int32, minimum: 0, maximum: 100000000 }
+            fits: { type: boolean }
+            notes:
+              type: array
+              maxItems: 10
+              items: { type: string, maxLength: 300 }
     LiveContainer:
       type: object
       description: A Character's Inventory, the Party Stash, a drop of loot, or a bag inside another container, with what it weighs including its bags. A Character's names its owner and how much they can carry.

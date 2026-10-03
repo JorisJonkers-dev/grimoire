@@ -280,7 +280,7 @@ func serve(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 			Campaigns:  campaignapp.NewService(campaignpg.New(store.Pool())),
 			Characters: characters,
 			NPCs:       &campaignapp.NPCs{Repo: campaignpg.New(store.Pool()), Now: time.Now},
-			Library:    library, Spells: library,
+			Library:    library, Spells: library, ItemBuilder: library,
 			Sessions: &playapp.Sessions{
 				Repo: playpg.New(store.Pool()), Members: playpg.CampaignMembers{Store: campaignpg.New(store.Pool())}, Live: hub, Now: time.Now,
 			},

@@ -19,6 +19,7 @@ type InventoryService interface {
 	Move(ctx context.Context, c caller.Caller, campaign, character uuid.UUID, mv playapp.ItemMove) (playapp.InventoryView, error)
 	Take(ctx context.Context, c caller.Caller, campaign, character uuid.UUID, ref playapp.ItemRef, count int) (playapp.InventoryView, error)
 	Use(ctx context.Context, c caller.Caller, campaign, character uuid.UUID, ref playapp.ItemRef, use string, count int) (playapp.InventoryView, int, error)
+	CastFrom(ctx context.Context, c caller.Caller, campaign, character uuid.UUID, ref playapp.ItemRef, spell string) (playapp.InventoryView, error)
 	Swap(ctx context.Context, c caller.Caller, campaign, character uuid.UUID) (playapp.InventoryView, error)
 }
 
@@ -92,7 +93,15 @@ func (h *Handler) UseItem(ctx context.Context, req *oas.InventoryUse, p oas.UseI
 	if !ok {
 		return unauthorized(), nil
 	}
-	v, healed, err := h.Inventory.Use(ctx, c, uuid.UUID(p.CampaignId), uuid.UUID(p.CharacterId), itemRef(req.InstanceId, req.Slug), string(req.Use), int(req.Count.Or(1)))
+	ref := itemRef(req.InstanceId, req.Slug)
+	if req.Use == oas.InventoryUseUseCast {
+		v, err := h.Inventory.CastFrom(ctx, c, uuid.UUID(p.CampaignId), uuid.UUID(p.CharacterId), ref, string(req.Spell.Or("")))
+		if err != nil {
+			return h.campaignProblem(ctx, "cast from item", err), nil
+		}
+		return &oas.InventoryUseResultHeaders{Response: oas.InventoryUseResult{Inventory: inventoryOut(v)}}, nil
+	}
+	v, healed, err := h.Inventory.Use(ctx, c, uuid.UUID(p.CampaignId), uuid.UUID(p.CharacterId), ref, string(req.Use), int(req.Count.Or(1)))
 	if err != nil {
 		return h.campaignProblem(ctx, "use item", err), nil
 	}
@@ -141,6 +150,10 @@ func card(items map[string]playdomain.ItemInfo, slug string, n int) oas.ItemCard
 			k.Fits = append(k.Fits, oas.EquipmentSlot(slot))
 		}
 	}
+	for _, g := range info.Spells {
+		k.Spells = append(k.Spells, oas.ItemSpell{Slug: oas.Slug(g.Slug), Name: g.Name, Cost: int32(g.Cost)}) //nolint:gosec // bounded by the builder
+	}
+	k.Lines = append(k.Lines, info.KnownCard...)
 	return k
 }
 

@@ -4,15 +4,22 @@ import (
 	"context"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 
+	campaignpg "github.com/JorisJonkers-dev/grimoire/api/internal/campaign/pgstore"
 	comppg "github.com/JorisJonkers-dev/grimoire/api/internal/compendium/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium/snapshot"
+	libraryapp "github.com/JorisJonkers-dev/grimoire/api/internal/library/app"
+	librarydomain "github.com/JorisJonkers-dev/grimoire/api/internal/library/domain"
+	librarypg "github.com/JorisJonkers-dev/grimoire/api/internal/library/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/live"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/features"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/itembuild"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/spellbuild"
 )
 
 // restingParty gives Aria (a level 3 fighter with Constitution 14) and Brom (a level 6 barbarian who
@@ -206,6 +213,7 @@ func TestALongRestCanBeInterruptedAndCostsRations(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
+	bow := ashwoodIn(t, w, ids["Aria"])
 	stash(2)
 	tb.dmSays(live.Command{Kind: live.CmdProposeRest, Rest: live.RestLong})
 	tb.playerSays(live.Command{Kind: live.CmdAgreeRest})
@@ -213,6 +221,9 @@ func TestALongRestCanBeInterruptedAndCostsRations(t *testing.T) {
 	var charges int
 	if err := w.pool.QueryRow(ctx, "SELECT charges FROM campaign.item_instances WHERE id = $1", wand).Scan(&charges); err != nil || charges < 2 || charges > 7 {
 		t.Fatalf("the wand regains 1d6+1 at dawn: %d %v", charges, err)
+	}
+	if err := w.pool.QueryRow(ctx, "SELECT charges FROM campaign.item_instances WHERE id = $1", bow).Scan(&charges); err != nil || charges < 1 || charges > 3 {
+		t.Fatalf("the homebrew Ashwood Longbow regains 1d4 of its 3 charges at dawn: %d %v", charges, err)
 	}
 	if d2.View.Rest != nil || d2.View.GameDay != day+1 || *tokenByID(t, d2.View, ids["aria-token"]).HP != 12 {
 		t.Fatalf("a finished Long Rest heals and moves the day on = %+v", d2.View)
@@ -338,4 +349,35 @@ func TestARestKeepsItsShapeAndItsRules(t *testing.T) {
 	if _, err := w.hub.Join(context.Background(), w.session.ID, w.dm, dmCaller, live.AudienceDM); err == nil {
 		t.Fatal("an unreadable rest is ignored")
 	}
+}
+
+// ashwoodIn builds the Ashwood Longbow in the DM's Library, links it into the Campaign and puts a spent
+// one in a Character's pack.
+func ashwoodIn(t *testing.T, w world, character string) uuid.UUID {
+	t.Helper()
+	ctx := context.Background()
+	lib := &libraryapp.Service{Repo: librarypg.New(w.pool), Members: pgstore.CampaignMembers{Store: campaignpg.New(w.pool)}, Now: time.Now}
+	entry, err := lib.Create(ctx, dmCaller, librarydomain.Draft{Kind: "item", Name: "Ashwood Longbow"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	design := itembuild.Design{
+		Kind: "weapon", Base: "longbow", Rarity: "rare", Enchantment: 1, WeightLb: 2, ValueGP: 4000, Attunement: &itembuild.Attunement{},
+		Charges: &itembuild.Charges{Max: 3, On: "dawn", Dice: 1, Faces: 4},
+		Properties: []itembuild.Property{
+			{Type: "cantrip", Spell: "light", Name: "Light"}, {Type: "spell", Spell: "hunters-mark", Name: "Hunter's Mark", Level: 1, Cost: 1},
+		},
+	}
+	if _, err := lib.SaveItem(ctx, dmCaller, entry.ID, design); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := lib.Link(ctx, dmCaller, w.session.CampaignID, entry.ID); err != nil {
+		t.Fatal(err)
+	}
+	bow := uuid.New()
+	if _, err := w.pool.Exec(ctx, `INSERT INTO campaign.item_instances (id, container_id, item_slug, quantity, charges, identified, attuned, created_at)
+		SELECT $1, id, $3, 1, 0, true, true, now() FROM campaign.containers WHERE character_id = $2`, bow, character, spellbuild.Slug(entry.ID.String())); err != nil {
+		t.Fatal(err)
+	}
+	return bow
 }

@@ -16,6 +16,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg/pgtest"
 	playpg "github.com/JorisJonkers-dev/grimoire/api/internal/play/pgstore"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/itembuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/spellbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
@@ -181,6 +182,17 @@ func TestEveryLibraryDatabaseFaultSurfaces(t *testing.T) {
 				return err
 			}
 			_, err = s.Spell(ctx, dm, e.ID)
+			return err
+		},
+		"item build": func(s *app.Service) error {
+			e, err := base.Create(ctx, dm, domain.Draft{Kind: "item", Name: "Charm"})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if _, err := s.SaveItem(ctx, dm, e.ID, itembuild.Design{Kind: "ring", Rarity: "common", Properties: []itembuild.Property{}}); err != nil {
+				return err
+			}
+			_, err = s.Item(ctx, dm, e.ID)
 			return err
 		},
 	}

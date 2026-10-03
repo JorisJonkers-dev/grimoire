@@ -439,3 +439,18 @@ LEFT JOIN library.campaign_links l ON l.entry_id = e.id AND l.campaign_id = @cam
 LEFT JOIN library.entry_revisions r ON r.entry_id = e.id AND r.no = l.pinned_revision
 WHERE coalesce(r.design, e.design) IS NOT NULL
 ORDER BY e.id;
+
+-- name: CampaignHomebrewItems :many
+WITH visible AS (
+    SELECT l.entry_id FROM library.campaign_links l WHERE l.campaign_id = @campaign_id AND l.direct
+    UNION
+    SELECT ce.entry_id FROM library.collection_entries ce
+    JOIN library.campaign_collections cc ON cc.collection_id = ce.collection_id WHERE cc.campaign_id = @campaign_id
+)
+SELECT e.id, coalesce(r.name, e.name)::text AS name, coalesce(r.design, e.design)::jsonb AS design
+FROM visible v
+JOIN library.entries e ON e.id = v.entry_id AND e.kind = 'item'
+LEFT JOIN library.campaign_links l ON l.entry_id = e.id AND l.campaign_id = @campaign_id
+LEFT JOIN library.entry_revisions r ON r.entry_id = e.id AND r.no = l.pinned_revision
+WHERE coalesce(r.design, e.design) IS NOT NULL
+ORDER BY e.id;

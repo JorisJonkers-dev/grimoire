@@ -10,7 +10,7 @@ import {
   takeFromStashMutation,
   useItemMutation,
 } from '@/infrastructure/api/@tanstack/vue-query.gen'
-import type { EquipmentSlot, InventoryView, ItemCard } from '@/infrastructure/api/types.gen'
+import type { EquipmentSlot, InventoryView, ItemCard, ItemSpell } from '@/infrastructure/api/types.gen'
 import { GButton } from '@/shared/ui'
 
 const route = useRoute()
@@ -84,6 +84,16 @@ function act(c: ItemCard, what: 'drink' | 'throw' | 'attune' | 'unattune' | 'ide
     },
   )
 }
+
+function castFrom(c: ItemCard, spell: ItemSpell) {
+  status.value = ''
+  use.mutate(
+    { path: ids.value, body: { ...ref_(c), use: 'cast', spell: spell.slug } },
+    { onSuccess: (r) => { done(r.inventory, `You cast ${spell.name} from ${c.name}.`) } },
+  )
+}
+// Every item that grants spells, worn or in the bag.
+const casters = computed(() => [...(inv.value?.slots.flatMap((sl) => (sl.item ? [sl.item] : [])) ?? []), ...(inv.value?.bag ?? [])].filter((c) => c.spells?.length))
 
 // Drag and drop: what is being dragged, and from where.
 const dragging = ref<{ card: ItemCard; from: 'bag' | 'slot' | 'stash' } | null>(null)
@@ -176,6 +186,7 @@ const key = (c: ItemCard) => c.instanceId ?? c.slug
                 {{ c.category }} · {{ (c.weightLb * c.quantity).toFixed(1) }} lb<template v-if="c.maxCharges"> · {{ c.charges ?? c.maxCharges }}/{{ c.maxCharges }} charges</template>
                 <template v-if="c.attuned"> · attuned</template><template v-if="!c.identified"> · unidentified</template>
               </small>
+              <span v-for="(line, i) in c.lines ?? []" :key="i" class="line">{{ line }}</span>
               <span class="actions">
                 <select v-if="c.fits.length" :aria-label="`Equip ${c.name}`" :data-testid="`equip-${c.slug}`" @change="send(c, 'slot', { slot: ($event.target as HTMLSelectElement).value as EquipmentSlot })">
                   <option value="">Equip…</option>
@@ -219,6 +230,24 @@ const key = (c: ItemCard) => c.instanceId ?? c.slug
             <li v-for="c in inv.stash" :key="key(c)" class="card" draggable="true" :data-testid="`stash-item-${c.slug}`" @dragstart="dragStart($event, c, 'stash')">
               <span class="name">{{ c.customName ?? c.name }}<small v-if="c.quantity > 1"> ×{{ c.quantity }}</small></span>
               <GButton :data-testid="`take-${c.slug}`" @click="takeOut(c)">Take</GButton>
+            </li>
+          </ul>
+        </section>
+
+        <section v-if="casters.length" class="g-card spells" aria-label="Item spells" data-testid="item-spells">
+          <h2>Item spells</h2>
+          <ul class="cards">
+            <li v-for="c in casters" :key="key(c)" class="card">
+              <span class="name">{{ c.customName ?? c.name }}<small v-if="c.maxCharges"> · {{ c.charges ?? c.maxCharges }}/{{ c.maxCharges }} charges</small></span>
+              <span class="actions">
+                <GButton
+                  v-for="sp in c.spells"
+                  :key="sp.slug"
+                  :disabled="use.isPending.value || (sp.cost > 0 && (c.charges ?? c.maxCharges ?? 0) < sp.cost)"
+                  :data-testid="`cast-${c.slug}-${sp.slug}`"
+                  @click="castFrom(c, sp)"
+                >Cast {{ sp.name }}{{ sp.cost ? ` (${String(sp.cost)} ${sp.cost === 1 ? 'charge' : 'charges'})` : ' (at will)' }}</GButton>
+              </span>
             </li>
           </ul>
         </section>
@@ -378,6 +407,10 @@ select {
   margin: 0;
   padding: 0;
   list-style: none;
+}
+.line {
+  font-size: 14px;
+  color: var(--color-text-2);
 }
 .card {
   display: flex;

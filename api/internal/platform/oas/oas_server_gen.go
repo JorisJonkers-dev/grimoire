@@ -611,6 +611,13 @@ type BuildHandler interface {
 	//
 	// PUT /api/v1/campaigns/{campaignId}/character-draft
 	SaveCharacterDraft(ctx context.Context, req *CharacterDraftSave, params SaveCharacterDraftParams) (SaveCharacterDraftRes, error)
+	// SaveItemBuild implements saveItemBuild operation.
+	//
+	// Saves the design of one of the caller's items as its next Revision; Campaigns that see it carry it
+	// in Inventories by its slug.
+	//
+	// PUT /api/v1/builders/items/{entryId}
+	SaveItemBuild(ctx context.Context, req *ItemDesign, params SaveItemBuildParams) (SaveItemBuildRes, error)
 	// SaveSpellBuild implements saveSpellBuild operation.
 	//
 	// Saves the design of one of the caller's spells as its next Revision; in a live Session it runs as an
@@ -950,6 +957,13 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/inventory
 	GetInventory(ctx context.Context, params GetInventoryParams) (GetInventoryRes, error)
+	// GetItemBuild implements getItemBuild operation.
+	//
+	// A homebrew item's design with its card and Price Check: one of the caller's items, or a Shared
+	// Library copy.
+	//
+	// GET /api/v1/builders/items/{entryId}
+	GetItemBuild(ctx context.Context, params GetItemBuildParams) (GetItemBuildRes, error)
 	// GetLibraryEntry implements getLibraryEntry operation.
 	//
 	// One of the caller's entries with its Revisions and the Campaigns it is linked into.
@@ -1369,6 +1383,13 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/level-up
 	PlanLevelUp(ctx context.Context, params PlanLevelUpParams) (PlanLevelUpRes, error)
+	// PreviewItem implements previewItem operation.
+	//
+	// Checks a design without saving it: its item card and its Price Check. A design the rules refuse
+	// comes back with the reason.
+	//
+	// POST /api/v1/builders/items/preview
+	PreviewItem(ctx context.Context, req *ItemPreviewInput) (PreviewItemRes, error)
 	// PreviewSpell implements previewSpell operation.
 	//
 	// Builds a design without saving it: its rules text and its area drawn as hexes. A design the rules

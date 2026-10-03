@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/library/domain"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/itembuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/spellbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
@@ -132,10 +133,17 @@ func (s *Service) checkDesign(ctx context.Context, x domain.Exported) string {
 	if x.Design == nil {
 		return ""
 	}
-	var d spellbuild.Design
-	err := json.Unmarshal(x.Design, &d)
-	if err == nil {
-		_, err = s.build(ctx, uuid.Nil, x.Name, d)
+	var err error
+	if x.Kind == "item" {
+		var d itembuild.Design
+		if err = json.Unmarshal(x.Design, &d); err == nil {
+			err = itembuild.Check(d)
+		}
+	} else {
+		var d spellbuild.Design
+		if err = json.Unmarshal(x.Design, &d); err == nil {
+			_, err = s.build(ctx, uuid.Nil, x.Name, d)
+		}
 	}
 	if err != nil {
 		return err.Error()

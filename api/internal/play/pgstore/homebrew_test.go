@@ -12,6 +12,7 @@ import (
 	librarypg "github.com/JorisJonkers-dev/grimoire/api/internal/library/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg/pgtest"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/pgstore"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/itembuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/spellbuild"
 )
 
@@ -55,6 +56,55 @@ func TestHomebrewSpellsBuildForPlay(t *testing.T) {
 	}
 	pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
 		_, err := pgstore.NewFaulty(tb.pool, f).Homebrew(ctx, tb.campaign)
+		if err != nil && !errors.Is(err, pgtest.ErrInjected) {
+			t.Fatal(err)
+		}
+		return err
+	})
+}
+
+// A Campaign's homebrew items read like any other item, by their slug; a design that no longer reads is
+// left out.
+func TestHomebrewItemsReadInPlay(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	tb := setup(t)
+	store := pgstore.New(tb.pool)
+	lib := &libraryapp.Service{Repo: librarypg.New(tb.pool), Members: pgstore.CampaignMembers{Store: campaignpg.New(tb.pool)}, Now: time.Now}
+	var slugs []string
+	for _, name := range []string{"Ashwood Longbow", "Broken"} {
+		e, err := lib.Create(ctx, dm, librarydomain.Draft{Kind: "item", Name: name})
+		if err != nil {
+			t.Fatal(err)
+		}
+		design := itembuild.Design{
+			Kind: "weapon", Rarity: "rare", Attunement: &itembuild.Attunement{Kind: "class", Value: "ranger"}, Charges: &itembuild.Charges{Max: 3, On: "dawn", Dice: 1, Faces: 4},
+			Properties: []itembuild.Property{{Type: "spell", Spell: "hunters-mark", Name: "Hunter's Mark", Level: 1, Cost: 1}},
+		}
+		if _, err := lib.SaveItem(ctx, dm, e.ID, design); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := lib.Link(ctx, dm, tb.campaign, e.ID); err != nil {
+			t.Fatal(err)
+		}
+		slugs = append(slugs, spellbuild.Slug(e.ID.String()))
+		if name == "Broken" {
+			if _, err := tb.pool.Exec(ctx, "UPDATE library.entries SET design = '{\"properties\":\"x\"}' WHERE id = $1", e.ID); err != nil {
+				t.Fatal(err)
+			}
+		}
+	}
+	items, err := store.Items(ctx, tb.campaign, append(slugs, "hb-000000000000"))
+	bow := items[slugs[0]]
+	if err != nil || len(items) != 1 || bow.Name != "Ashwood Longbow" || bow.Category != "weapon" || !bow.RequiresAttunement || bow.AttunementDetail != "Requires Attunement by a ranger" ||
+		bow.MaxCharges != 3 || bow.RechargeOn != "dawn" || len(bow.Spells) != 1 || bow.Spells[0].Cost != 1 || len(bow.KnownCard) == 0 {
+		t.Fatalf("items = %+v %v", items, err)
+	}
+	if plain, err := store.Items(ctx, tb.campaign, []string{"rope"}); err != nil || len(plain) != 0 {
+		t.Fatalf("no homebrew asked for = %v %v", plain, err)
+	}
+	pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
+		_, err := pgstore.NewFaulty(tb.pool, f).Items(ctx, tb.campaign, slugs)
 		if err != nil && !errors.Is(err, pgtest.ErrInjected) {
 			t.Fatal(err)
 		}

@@ -537,6 +537,16 @@ func (UnimplementedHandler) GetInventory(ctx context.Context, params GetInventor
 	return r, ht.ErrNotImplemented
 }
 
+// GetItemBuild implements getItemBuild operation.
+//
+// A homebrew item's design with its card and Price Check: one of the caller's items, or a Shared
+// Library copy.
+//
+// GET /api/v1/builders/items/{entryId}
+func (UnimplementedHandler) GetItemBuild(ctx context.Context, params GetItemBuildParams) (r GetItemBuildRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetLibraryEntry implements getLibraryEntry operation.
 //
 // One of the caller's entries with its Revisions and the Campaigns it is linked into.
@@ -1294,6 +1304,16 @@ func (UnimplementedHandler) PreviewInvite(ctx context.Context, req *InviteToken)
 	return r, ht.ErrNotImplemented
 }
 
+// PreviewItem implements previewItem operation.
+//
+// Checks a design without saving it: its item card and its Price Check. A design the rules refuse
+// comes back with the reason.
+//
+// POST /api/v1/builders/items/preview
+func (UnimplementedHandler) PreviewItem(ctx context.Context, req *ItemPreviewInput) (r PreviewItemRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // PreviewReach implements previewReach operation.
 //
 // Every hex a mover can reach and, with a target, the cheapest path to it. Changes nothing.
@@ -1549,6 +1569,16 @@ func (UnimplementedHandler) RollRest(ctx context.Context, params RollRestParams)
 //
 // PUT /api/v1/campaigns/{campaignId}/character-draft
 func (UnimplementedHandler) SaveCharacterDraft(ctx context.Context, req *CharacterDraftSave, params SaveCharacterDraftParams) (r SaveCharacterDraftRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// SaveItemBuild implements saveItemBuild operation.
+//
+// Saves the design of one of the caller's items as its next Revision; Campaigns that see it carry it
+// in Inventories by its slug.
+//
+// PUT /api/v1/builders/items/{entryId}
+func (UnimplementedHandler) SaveItemBuild(ctx context.Context, req *ItemDesign, params SaveItemBuildParams) (r SaveItemBuildRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

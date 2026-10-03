@@ -467,7 +467,7 @@ func title(s string) string {
 	return strings.ToUpper(s[:1]) + s[1:]
 }
 
-// Slug is the Effect slug a Library entry's homebrew spell runs under in play.
+// Slug is what a Library entry's homebrew is known by in play: a spell's Effect slug, an item's slug.
 func Slug(entryID string) string {
 	return "hb-" + strings.ReplaceAll(entryID, "-", "")[:12]
 }

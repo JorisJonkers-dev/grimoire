@@ -229,6 +229,10 @@ type GetInventoryRes interface {
 	getInventoryRes()
 }
 
+type GetItemBuildRes interface {
+	getItemBuildRes()
+}
+
 type GetLibraryEntryRes interface {
 	getLibraryEntryRes()
 }
@@ -557,6 +561,10 @@ type PreviewInviteRes interface {
 	previewInviteRes()
 }
 
+type PreviewItemRes interface {
+	previewItemRes()
+}
+
 type PreviewReachRes interface {
 	previewReachRes()
 }
@@ -663,6 +671,10 @@ type RollRestRes interface {
 
 type SaveCharacterDraftRes interface {
 	saveCharacterDraftRes()
+}
+
+type SaveItemBuildRes interface {
+	saveItemBuildRes()
 }
 
 type SaveSpellBuildRes interface {

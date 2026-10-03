@@ -2018,6 +2018,102 @@ export const zSpellBuild = z.object({
 });
 
 /**
+ * One Item Property row; which fields count depends on its type. A hidden one shows once the item is identified or attuned.
+ */
+export const zItemProperty = z.object({
+    type: z.string().max(40),
+    hidden: z.boolean().optional(),
+    skill: z.string().max(40).optional(),
+    mode: z.string().max(40).optional(),
+    target: z.string().max(40).optional(),
+    value: z.int().gte(-100000).lte(100000000).optional(),
+    dice: z.string().max(20).optional(),
+    damage: z.string().max(40).optional(),
+    sense: z.string().max(40).optional(),
+    speed: z.string().max(40).optional(),
+    feet: z.int().gte(-100000).lte(100000000).optional(),
+    spell: z.string().max(80).optional(),
+    name: z.string().max(120).optional(),
+    level: z.int().gte(-100000).lte(100000000).optional(),
+    cost: z.int().gte(-100000).lte(100000000).optional(),
+    brightFt: z.int().gte(-100000).lte(100000000).optional(),
+    dimFt: z.int().gte(-100000).lte(100000000).optional(),
+    uses: z.string().max(40).optional(),
+    hits: z.int().gte(-100000).lte(100000000).optional(),
+    text: z.string().max(2000).optional(),
+    cannotDrop: z.boolean().optional(),
+    atLevel: z.int().gte(-100000).lte(100000000).optional(),
+    set: z.string().max(80).optional(),
+    pieces: z.int().gte(-100000).lte(100000000).optional(),
+    capacityLb: z.int().gte(-100000).lte(100000000).optional(),
+    weightless: z.boolean().optional(),
+    onlyKind: z.string().max(40).optional(),
+    misfire: z.int().gte(-100000).lte(100000000).optional(),
+    reload: z.int().gte(-100000).lte(100000000).optional(),
+    burst: z.int().gte(-100000).lte(100000000).optional()
+});
+
+/**
+ * A homebrew item as the item builder makes it, from its kind, base item, rarity, enchantment, attunement, charges and Item Properties.
+ */
+export const zItemDesign = z.object({
+    kind: z.string().max(40),
+    base: z.string().max(80).optional(),
+    rarity: z.enum([
+        'common',
+        'uncommon',
+        'rare',
+        'very_rare',
+        'legendary'
+    ]),
+    enchantment: z.int().gte(-100000).lte(100000000),
+    weightLb: z.number().gte(-100000).lte(100000),
+    valueGp: z.int().gte(-100000).lte(100000000),
+    attunement: z.object({
+        kind: z.string().max(40).optional(),
+        value: z.string().max(200).optional()
+    }).optional(),
+    weapon: z.object({
+        properties: z.array(z.string().max(40)).max(20),
+        mastery: z.string().max(40).optional(),
+        custom: z.string().max(1000).optional()
+    }).optional(),
+    charges: z.object({
+        max: z.int().gte(-100000).lte(100000000),
+        on: z.string().max(40),
+        dice: z.int().gte(-100000).lte(100000000).optional(),
+        faces: z.int().gte(-100000).lte(100000000).optional(),
+        bonus: z.int().gte(-100000).lte(100000000).optional()
+    }).optional(),
+    properties: z.array(zItemProperty).max(100)
+});
+
+/**
+ * A design to preview, with the item's name.
+ */
+export const zItemPreviewInput = z.object({
+    name: z.string().min(1).max(80),
+    design: zItemDesign
+});
+
+/**
+ * A homebrew item in the item builder, the slug it is known by in play, its card as players read it once known, and its Price Check.
+ */
+export const zItemBuild = z.object({
+    entry: zLibraryEntry.optional(),
+    design: zItemDesign,
+    slug: z.string().max(40).optional(),
+    card: z.array(z.string().max(1200)).max(200),
+    price: z.object({
+        points: z.int().gte(0).lte(100000),
+        suggested: z.string().max(40),
+        priceGp: z.int().gte(0).lte(100000000),
+        fits: z.boolean(),
+        notes: z.array(z.string().max(300)).max(10)
+    })
+});
+
+/**
  * A Character's need or greed call on a loot pile's item, with the d20 it rolled. Need beats greed, then the higher roll, then the earlier claim.
  */
 export const zLiveClaim = z.object({
@@ -2781,6 +2877,15 @@ export const zCharacterRevisionLine = z.object({
 });
 
 /**
+ * A spell an item grants; cost is the charges it spends, 0 at will.
+ */
+export const zItemSpell = z.object({
+    slug: zSlug,
+    name: z.string().max(120),
+    cost: z.int().gte(0).lte(100)
+});
+
+/**
  * An item in an Inventory, with the slots it fits.
  */
 export const zItemCard = z.object({
@@ -2798,7 +2903,9 @@ export const zItemCard = z.object({
     requiresAttunement: z.boolean().optional(),
     attunementDetail: z.string().max(200).optional(),
     maxCharges: z.int().gte(0).lte(100).optional(),
-    fits: z.array(zEquipmentSlot).max(14)
+    fits: z.array(zEquipmentSlot).max(14),
+    spells: z.array(zItemSpell).max(40).optional(),
+    lines: z.array(z.string().max(1200)).max(60).optional()
 });
 
 /**
@@ -2869,9 +2976,11 @@ export const zInventoryUse = z.object({
         'attune',
         'unattune',
         'identify',
-        'charge'
+        'charge',
+        'cast'
     ]),
-    count: z.int().gte(1).lte(100).optional()
+    count: z.int().gte(1).lte(100).optional(),
+    spell: zSlug.optional()
 });
 
 /**
@@ -5687,6 +5796,33 @@ export const zSaveSpellBuildPath = z.object({
  * The spell.
  */
 export const zSaveSpellBuildResponse = zSpellBuild;
+
+export const zPreviewItemBody = zItemPreviewInput;
+
+/**
+ * The preview.
+ */
+export const zPreviewItemResponse = zItemBuild;
+
+export const zGetItemBuildPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The item.
+ */
+export const zGetItemBuildResponse = zItemBuild;
+
+export const zSaveItemBuildBody = zItemDesign;
+
+export const zSaveItemBuildPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The item.
+ */
+export const zSaveItemBuildResponse = zItemBuild;
 
 /**
  * The signed-in account.

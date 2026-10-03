@@ -135,6 +135,48 @@ func (q *Queries) CampaignHighGround(ctx context.Context, id uuid.UUID) (bool, e
 	return high_ground, err
 }
 
+const campaignHomebrewItems = `-- name: CampaignHomebrewItems :many
+WITH visible AS (
+    SELECT l.entry_id FROM library.campaign_links l WHERE l.campaign_id = $1 AND l.direct
+    UNION
+    SELECT ce.entry_id FROM library.collection_entries ce
+    JOIN library.campaign_collections cc ON cc.collection_id = ce.collection_id WHERE cc.campaign_id = $1
+)
+SELECT e.id, coalesce(r.name, e.name)::text AS name, coalesce(r.design, e.design)::jsonb AS design
+FROM visible v
+JOIN library.entries e ON e.id = v.entry_id AND e.kind = 'item'
+LEFT JOIN library.campaign_links l ON l.entry_id = e.id AND l.campaign_id = $1
+LEFT JOIN library.entry_revisions r ON r.entry_id = e.id AND r.no = l.pinned_revision
+WHERE coalesce(r.design, e.design) IS NOT NULL
+ORDER BY e.id
+`
+
+type CampaignHomebrewItemsRow struct {
+	ID     uuid.UUID
+	Name   string
+	Design []byte
+}
+
+func (q *Queries) CampaignHomebrewItems(ctx context.Context, campaignID uuid.UUID) ([]CampaignHomebrewItemsRow, error) {
+	rows, err := q.db.Query(ctx, campaignHomebrewItems, campaignID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CampaignHomebrewItemsRow{}
+	for rows.Next() {
+		var i CampaignHomebrewItemsRow
+		if err := rows.Scan(&i.ID, &i.Name, &i.Design); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const campaignHomebrewSpells = `-- name: CampaignHomebrewSpells :many
 WITH visible AS (
     SELECT l.entry_id FROM library.campaign_links l WHERE l.campaign_id = $1 AND l.direct
