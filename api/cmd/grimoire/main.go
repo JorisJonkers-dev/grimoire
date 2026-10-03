@@ -27,6 +27,8 @@ import (
 	identityapp "github.com/JorisJonkers-dev/grimoire/api/internal/identity/app"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/identity/oidc"
 	identitypg "github.com/JorisJonkers-dev/grimoire/api/internal/identity/pgstore"
+	libraryapp "github.com/JorisJonkers-dev/grimoire/api/internal/library/app"
+	librarypg "github.com/JorisJonkers-dev/grimoire/api/internal/library/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/config"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/httpapi"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/httpx"
@@ -44,6 +46,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/dice"
 	socialapp "github.com/JorisJonkers-dev/grimoire/api/internal/social/app"
+	socialdomain "github.com/JorisJonkers-dev/grimoire/api/internal/social/domain"
 	socialpg "github.com/JorisJonkers-dev/grimoire/api/internal/social/pgstore"
 )
 
@@ -273,6 +276,10 @@ func serve(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 			Campaigns:  campaignapp.NewService(campaignpg.New(store.Pool())),
 			Characters: characters,
 			NPCs:       &campaignapp.NPCs{Repo: campaignpg.New(store.Pool()), Now: time.Now},
+			Library: &libraryapp.Service{
+				Repo: librarypg.New(store.Pool()), Members: playpg.CampaignMembers{Store: campaignpg.New(store.Pool())}, Now: time.Now,
+				Notices: proposalNotices{social: social}, Log: logger, Admins: accounts,
+			},
 			Sessions: &playapp.Sessions{
 				Repo: playpg.New(store.Pool()), Members: playpg.CampaignMembers{Store: campaignpg.New(store.Pool())}, Live: hub, Now: time.Now,
 			},
@@ -331,4 +338,13 @@ func rollDice(count, faces int) int {
 		total += dice.Face(src, faces)
 	}
 	return total
+}
+
+// proposalNotices rings Proposal Notifications through the social bell.
+type proposalNotices struct{ social *socialapp.Service }
+
+func (p proposalNotices) Notify(ctx context.Context, subject string, n libraryapp.Notice) error {
+	return p.social.NotifySubject(ctx, subject, socialdomain.Notice{
+		Kind: socialdomain.KindProposal, Title: n.Title, Body: n.Body, ActionLabel: n.Label, ActionPath: n.Path, Dedupe: n.Dedupe,
+	})
 }

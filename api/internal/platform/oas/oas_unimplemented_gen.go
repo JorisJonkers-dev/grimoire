@@ -171,6 +171,24 @@ func (UnimplementedHandler) CreateInvite(ctx context.Context, params CreateInvit
 	return r, ht.ErrNotImplemented
 }
 
+// CreateLibraryCollection implements createLibraryCollection operation.
+//
+// Starts an empty Collection in the caller's Library.
+//
+// POST /api/v1/library/collections
+func (UnimplementedHandler) CreateLibraryCollection(ctx context.Context, req *LibraryCollectionInput) (r CreateLibraryCollectionRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// CreateLibraryEntry implements createLibraryEntry operation.
+//
+// Adds an entry to the caller's Library as its first Revision.
+//
+// POST /api/v1/library
+func (UnimplementedHandler) CreateLibraryEntry(ctx context.Context, req *LibraryEntryInput) (r CreateLibraryEntryRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // CreateLootTable implements createLootTable operation.
 //
 // Adds a Loot Table and records its first Revision. DM only.
@@ -195,6 +213,15 @@ func (UnimplementedHandler) CreateNpc(ctx context.Context, req *NpcInput, params
 //
 // POST /api/v1/oidc/accounts
 func (UnimplementedHandler) CreateOidcAccount(ctx context.Context, req *OidcAccountSetup) (r CreateOidcAccountRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// CreateProposal implements createProposal operation.
+//
+// Sends the DM a new entry for the Campaign, or a change to one it sees. The DMs hear of it.
+//
+// POST /api/v1/campaigns/{campaignId}/proposals
+func (UnimplementedHandler) CreateProposal(ctx context.Context, req *ProposalInput, params CreateProposalParams) (r CreateProposalRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -380,6 +407,16 @@ func (UnimplementedHandler) EndSession(ctx context.Context, params EndSessionPar
 	return r, ht.ErrNotImplemented
 }
 
+// ExportLibrary implements exportLibrary operation.
+//
+// The caller's Library in Grimoire's own JSON schema: every entry and Collection, one Collection with
+// its entries, or one entry.
+//
+// GET /api/v1/library/export
+func (UnimplementedHandler) ExportLibrary(ctx context.Context, params ExportLibraryParams) (r ExportLibraryRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // FinishOidc implements finishOidc operation.
 //
 // Takes the code and state the provider sent back. Signs in a linked login, links the login when the
@@ -500,6 +537,15 @@ func (UnimplementedHandler) GetInventory(ctx context.Context, params GetInventor
 	return r, ht.ErrNotImplemented
 }
 
+// GetLibraryEntry implements getLibraryEntry operation.
+//
+// One of the caller's entries with its Revisions and the Campaigns it is linked into.
+//
+// GET /api/v1/library/{entryId}
+func (UnimplementedHandler) GetLibraryEntry(ctx context.Context, params GetLibraryEntryParams) (r GetLibraryEntryRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetMap implements getMap operation.
 //
 // One Map with its calibration. DM only.
@@ -561,6 +607,16 @@ func (UnimplementedHandler) GetNpc(ctx context.Context, params GetNpcParams) (r 
 //
 // GET /api/v1/campaigns/{campaignId}/characters/{characterId}/portrait
 func (UnimplementedHandler) GetPortrait(ctx context.Context, params GetPortraitParams) (r GetPortraitRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetProposal implements getProposal operation.
+//
+// One Proposal with its history and, for a change, the entry as the Campaign sees it now. Its author
+// or a DM.
+//
+// GET /api/v1/campaigns/{campaignId}/proposals/{proposalId}
+func (UnimplementedHandler) GetProposal(ctx context.Context, params GetProposalParams) (r GetProposalRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -674,6 +730,17 @@ func (UnimplementedHandler) GetUnseenReleaseNote(ctx context.Context) (r GetUnse
 	return r, ht.ErrNotImplemented
 }
 
+// ImportLibrary implements importLibrary operation.
+//
+// Adds the entries and Collections of an export to the caller's Library as new ones. Whatever Grimoire
+// cannot take (an unknown kind, a field that is not text, a part no builder runs yet) is reported as
+// Manual, to redo by hand.
+//
+// POST /api/v1/library/import
+func (UnimplementedHandler) ImportLibrary(ctx context.Context, req *LibraryImport) (r ImportLibraryRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // JoinCampaign implements joinCampaign operation.
 //
 // Adds the Character to a Campaign the signed-in Account belongs to, with its build checked against
@@ -699,6 +766,16 @@ func (UnimplementedHandler) KeepRoll(ctx context.Context, params KeepRollParams)
 //
 // POST /api/v1/campaigns/{campaignId}/characters/{characterId}/level-up
 func (UnimplementedHandler) LevelUp(ctx context.Context, req *LevelUpRequest, params LevelUpParams) (r LevelUpRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// LinkLibraryEntry implements linkLibraryEntry operation.
+//
+// Links one of the caller's entries into a Campaign they run; linking it again changes nothing. DM
+// only.
+//
+// POST /api/v1/campaigns/{campaignId}/library
+func (UnimplementedHandler) LinkLibraryEntry(ctx context.Context, req *LibraryLinkInput, params LinkLibraryEntryParams) (r LinkLibraryEntryRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -736,6 +813,16 @@ func (UnimplementedHandler) ListActivity(ctx context.Context, params ListActivit
 //
 // GET /api/v1/admin/accounts
 func (UnimplementedHandler) ListAdminAccounts(ctx context.Context) (r ListAdminAccountsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListCampaignCollections implements listCampaignCollections operation.
+//
+// The caller's Collections and any other switched on in the Campaign, each saying whether it is on
+// there. DM only.
+//
+// GET /api/v1/campaigns/{campaignId}/collections
+func (UnimplementedHandler) ListCampaignCollections(ctx context.Context, params ListCampaignCollectionsParams) (r ListCampaignCollectionsRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -857,6 +944,34 @@ func (UnimplementedHandler) ListInvites(ctx context.Context, params ListInvitesP
 	return r, ht.ErrNotImplemented
 }
 
+// ListLibraryCollections implements listLibraryCollections operation.
+//
+// The caller's Collections.
+//
+// GET /api/v1/library/collections
+func (UnimplementedHandler) ListLibraryCollections(ctx context.Context) (r ListLibraryCollectionsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListLibraryEntries implements listLibraryEntries operation.
+//
+// The caller's Library entries in kind and name order.
+//
+// GET /api/v1/library
+func (UnimplementedHandler) ListLibraryEntries(ctx context.Context, params ListLibraryEntriesParams) (r ListLibraryEntriesRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListLinkedEntries implements listLinkedEntries operation.
+//
+// The Library entries linked into the Campaign, each with its Campaign Override and pinned Revision
+// resolved. DM only.
+//
+// GET /api/v1/campaigns/{campaignId}/library
+func (UnimplementedHandler) ListLinkedEntries(ctx context.Context, params ListLinkedEntriesParams) (r ListLinkedEntriesRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // ListLocations implements listLocations operation.
 //
 // The places on the Campaign's world maps an Encounter Table can belong to. DM only.
@@ -921,6 +1036,15 @@ func (UnimplementedHandler) ListMyCharacters(ctx context.Context) (r ListMyChara
 	return r, ht.ErrNotImplemented
 }
 
+// ListMySubmissions implements listMySubmissions operation.
+//
+// The caller's requests to put entries in the Shared Library, pending first.
+//
+// GET /api/v1/shared-library/submissions
+func (UnimplementedHandler) ListMySubmissions(ctx context.Context) (r ListMySubmissionsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // ListNotifications implements listNotifications operation.
 //
 // The latest Notifications in the signed-in Account's bell, newest first, and how many are unread.
@@ -945,6 +1069,15 @@ func (UnimplementedHandler) ListNpcRevisions(ctx context.Context, params ListNpc
 //
 // GET /api/v1/campaigns/{campaignId}/npcs
 func (UnimplementedHandler) ListNpcs(ctx context.Context, params ListNpcsParams) (r ListNpcsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListProposals implements listProposals operation.
+//
+// The Campaign's Proposals, newest first: every one for a DM, a Player's own otherwise.
+//
+// GET /api/v1/campaigns/{campaignId}/proposals
+func (UnimplementedHandler) ListProposals(ctx context.Context, params ListProposalsParams) (r ListProposalsRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -1011,6 +1144,24 @@ func (UnimplementedHandler) ListSettlements(ctx context.Context, params ListSett
 	return r, ht.ErrNotImplemented
 }
 
+// ListSharedEntries implements listSharedEntries operation.
+//
+// Read-only entries every DM can link into their Campaigns, approved by an Admin with an IP check.
+//
+// GET /api/v1/shared-library
+func (UnimplementedHandler) ListSharedEntries(ctx context.Context, params ListSharedEntriesParams) (r ListSharedEntriesRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListSharedSubmissions implements listSharedSubmissions operation.
+//
+// Every request to put an entry in the Shared Library, pending first. Admins only.
+//
+// GET /api/v1/admin/shared-library
+func (UnimplementedHandler) ListSharedSubmissions(ctx context.Context) (r ListSharedSubmissionsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // ListShopRevisions implements listShopRevisions operation.
 //
 // Every Revision of the Shop, newest first. DM only.
@@ -1074,6 +1225,16 @@ func (UnimplementedHandler) PassInspiration(ctx context.Context, req *Inspiratio
 //
 // POST /api/v1/sign-in/two-step
 func (UnimplementedHandler) PassTwoStep(ctx context.Context, req *TwoStepAnswer) (r PassTwoStepRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// PinLibraryRevision implements pinLibraryRevision operation.
+//
+// Holds the Campaign to one Revision of the entry, so later edits to its base pass the Campaign by. DM
+// only.
+//
+// PUT /api/v1/campaigns/{campaignId}/library/{entryId}/pin
+func (UnimplementedHandler) PinLibraryRevision(ctx context.Context, req *LibraryPinInput, params PinLibraryRevisionParams) (r PinLibraryRevisionRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -1294,6 +1455,37 @@ func (UnimplementedHandler) RestoreShopRevision(ctx context.Context, params Rest
 	return r, ht.ErrNotImplemented
 }
 
+// ResubmitProposal implements resubmitProposal operation.
+//
+// Its author sends a Proposal the DM asked changes to again, changed.
+//
+// PUT /api/v1/campaigns/{campaignId}/proposals/{proposalId}
+func (UnimplementedHandler) ResubmitProposal(ctx context.Context, req *ProposalUpdate, params ResubmitProposalParams) (r ResubmitProposalRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ReviewProposal implements reviewProposal operation.
+//
+// A DM approves a pending Proposal (copied once into their Library and linked into the Campaign
+// Collection, edited first if they like), asks for changes with a message, or declines it. The author
+// hears either way.
+//
+// POST /api/v1/campaigns/{campaignId}/proposals/{proposalId}/review
+func (UnimplementedHandler) ReviewProposal(ctx context.Context, req *ProposalReviewInput, params ReviewProposalParams) (r ReviewProposalRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ReviewSharedSubmission implements reviewSharedSubmission operation.
+//
+// Approves or declines a request with the IP check recorded either way; approval needs the Admin's
+// check that the entry carries no non-SRD text and puts a read-only copy in the Shared Library. Admins
+// only.
+//
+// POST /api/v1/admin/shared-library/{submissionId}/review
+func (UnimplementedHandler) ReviewSharedSubmission(ctx context.Context, req *SharedReviewInput, params ReviewSharedSubmissionParams) (r ReviewSharedSubmissionRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // RevokeAccessToken implements revokeAccessToken operation.
 //
 // The token stops working at once.
@@ -1414,6 +1606,15 @@ func (UnimplementedHandler) SetAdminRole(ctx context.Context, req *Toggle, param
 	return r, ht.ErrNotImplemented
 }
 
+// SetCampaignOverride implements setCampaignOverride operation.
+//
+// Replaces the fields this Campaign sees differently from the entry's base. DM only.
+//
+// PUT /api/v1/campaigns/{campaignId}/library/{entryId}/override
+func (UnimplementedHandler) SetCampaignOverride(ctx context.Context, req *CampaignOverrideInput, params SetCampaignOverrideParams) (r SetCampaignOverrideRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // SetDie implements setDie operation.
 //
 // The server rolls the die from a logged seed, or takes the face read off a physical die. The roller
@@ -1448,6 +1649,15 @@ func (UnimplementedHandler) SetPortrait(ctx context.Context, req SetPortraitReq,
 //
 // PUT /api/v1/campaigns/{campaignId}/characters/{characterId}/token
 func (UnimplementedHandler) SetTokenIcon(ctx context.Context, req SetTokenIconReq, params SetTokenIconParams) (r SetTokenIconRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ShareLibraryEntry implements shareLibraryEntry operation.
+//
+// Asks the Admins to put the latest Revision of one of the caller's entries in the Shared Library.
+//
+// POST /api/v1/shared-library/submissions
+func (UnimplementedHandler) ShareLibraryEntry(ctx context.Context, req *ShareInput) (r ShareLibraryEntryRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -1518,6 +1728,16 @@ func (UnimplementedHandler) SwapWeaponSet(ctx context.Context, params SwapWeapon
 	return r, ht.ErrNotImplemented
 }
 
+// SwitchLibraryCollection implements switchLibraryCollection operation.
+//
+// On brings the Collection's entries into the Campaign; off hides those not linked otherwise. Only its
+// owner switches it on; any DM of the Campaign switches it off.
+//
+// PUT /api/v1/campaigns/{campaignId}/collections/{collectionId}
+func (UnimplementedHandler) SwitchLibraryCollection(ctx context.Context, req *LibrarySwitchInput, params SwitchLibraryCollectionParams) (r SwitchLibraryCollectionRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // TakeFromStash implements takeFromStash operation.
 //
 // Moves an item from the Party Stash into the Character's bag. Not during a live Session.
@@ -1556,12 +1776,31 @@ func (UnimplementedHandler) Unfriend(ctx context.Context, params UnfriendParams)
 	return r, ht.ErrNotImplemented
 }
 
+// UnlinkLibraryEntry implements unlinkLibraryEntry operation.
+//
+// Takes the entry out of the Campaign with its Campaign Override; the entry stays in the Library. DM
+// only.
+//
+// DELETE /api/v1/campaigns/{campaignId}/library/{entryId}
+func (UnimplementedHandler) UnlinkLibraryEntry(ctx context.Context, params UnlinkLibraryEntryParams) (r UnlinkLibraryEntryRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // UnlinkOidc implements unlinkOidc operation.
 //
 // Removes the linked login; the Account stays. An Account without a password keeps its login.
 //
 // DELETE /api/v1/account/oidc-link
 func (UnimplementedHandler) UnlinkOidc(ctx context.Context) (r UnlinkOidcRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// UnpinLibraryRevision implements unpinLibraryRevision operation.
+//
+// The Campaign follows the entry's latest Revision again. DM only.
+//
+// DELETE /api/v1/campaigns/{campaignId}/library/{entryId}/pin
+func (UnimplementedHandler) UnpinLibraryRevision(ctx context.Context, params UnpinLibraryRevisionParams) (r UnpinLibraryRevisionRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -1608,6 +1847,26 @@ func (UnimplementedHandler) UpdateEncounterPool(ctx context.Context, req *Encoun
 //
 // PUT /api/v1/campaigns/{campaignId}/encounter-tables/{tableId}
 func (UnimplementedHandler) UpdateEncounterTable(ctx context.Context, req *EncounterTableInput, params UpdateEncounterTableParams) (r UpdateEncounterTableRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// UpdateLibraryCollection implements updateLibraryCollection operation.
+//
+// Renames one of the caller's Collections and sets which of their entries it holds; every Campaign it
+// is switched on in sees the new set.
+//
+// PUT /api/v1/library/collections/{collectionId}
+func (UnimplementedHandler) UpdateLibraryCollection(ctx context.Context, req *LibraryCollectionUpdate, params UpdateLibraryCollectionParams) (r UpdateLibraryCollectionRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// UpdateLibraryEntry implements updateLibraryEntry operation.
+//
+// Saves a new base as the entry's next Revision. Every Campaign that follows the latest Revision sees
+// it; a pinned Campaign does not.
+//
+// PUT /api/v1/library/{entryId}
+func (UnimplementedHandler) UpdateLibraryEntry(ctx context.Context, req *LibraryEntryUpdate, params UpdateLibraryEntryParams) (r UpdateLibraryEntryRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

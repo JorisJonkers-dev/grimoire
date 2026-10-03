@@ -323,3 +323,34 @@ func TestEveryReleaseDatabaseFaultSurfaces(t *testing.T) {
 		t.Fatalf("unseen = %v %v", n, err)
 	}
 }
+
+// A Notice for a subject rings the bell of the Account it signs in as; a subject without one has no bell.
+func TestNotifyingASubject(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	db, err := pg.Open(ctx, pgtest.URL(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(db.Close)
+	account(t, db.Pool(), "aria")
+	s := &app.Service{Repo: pgstore.New(db.Pool()), Now: time.Now}
+	n := domain.Notice{Kind: domain.KindProposal, Title: "Bram proposes Frost Lance", ActionLabel: "Review", ActionPath: "/campaigns/x/proposals/y"}
+	if err := s.NotifySubject(ctx, "aria", n); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.NotifySubject(ctx, "nobody", n); err != nil {
+		t.Fatalf("a subject without an Account: %v", err)
+	}
+	got, unread, err := s.Notifications(ctx, "aria")
+	if err != nil || unread != 1 || got[0].Title != "Bram proposes Frost Lance" {
+		t.Fatalf("aria's bell = %+v %d %v", got, unread, err)
+	}
+	pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
+		err := (&app.Service{Repo: pgstore.NewFaulty(db.Pool(), f), Now: time.Now}).NotifySubject(ctx, "aria", n)
+		if err != nil && !errors.Is(err, pgtest.ErrInjected) {
+			t.Fatal(err)
+		}
+		return err
+	})
+}

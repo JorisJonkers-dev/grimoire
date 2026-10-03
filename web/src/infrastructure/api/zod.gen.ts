@@ -1544,6 +1544,360 @@ export const zSessionAction = z.object({
 });
 
 /**
+ * What a Library entry is.
+ */
+export const zLibraryKind = z.enum([
+    'creature',
+    'npc',
+    'location',
+    'shop',
+    'item',
+    'spell',
+    'table'
+]);
+
+/**
+ * One named value of a Library entry.
+ */
+export const zLibraryField = z.object({
+    name: z.string().min(1).max(60),
+    value: z.string().max(4000)
+});
+
+/**
+ * Named values, in name order.
+ */
+export const zLibraryFields = z.array(zLibraryField).max(100);
+
+/**
+ * A Library entry's base at its latest Revision.
+ */
+export const zLibraryEntry = z.object({
+    id: zId,
+    kind: zLibraryKind,
+    name: z.string().max(80),
+    fields: zLibraryFields,
+    revision: z.int().gte(1).lte(1000000),
+    shared: z.boolean().optional(),
+    createdAt: z.iso.datetime().max(40),
+    updatedAt: z.iso.datetime().max(40)
+});
+
+/**
+ * A new Library entry.
+ */
+export const zLibraryEntryInput = z.object({
+    kind: zLibraryKind,
+    name: z.string().min(1).max(80),
+    fields: zLibraryFields
+});
+
+/**
+ * A Library entry's new base; its kind stays.
+ */
+export const zLibraryEntryUpdate = z.object({
+    name: z.string().min(1).max(80),
+    fields: zLibraryFields
+});
+
+/**
+ * One saved version of an entry's base.
+ */
+export const zLibraryRevision = z.object({
+    no: z.int().gte(1).lte(1000000),
+    name: z.string().max(80),
+    fields: zLibraryFields,
+    createdAt: z.iso.datetime().max(40)
+});
+
+/**
+ * A Campaign an entry is linked into, and the Revision it is pinned to there.
+ */
+export const zLibraryUse = z.object({
+    campaignId: zId,
+    campaign: z.string().max(80),
+    pinnedRevision: z.int().gte(1).lte(1000000).optional()
+});
+
+/**
+ * A Library entry with its Revisions, newest first, and the Campaigns it is linked into.
+ */
+export const zLibraryEntryDetail = z.object({
+    entry: zLibraryEntry,
+    revisions: z.array(zLibraryRevision).max(10000),
+    uses: z.array(zLibraryUse).max(1000)
+});
+
+/**
+ * A Library entry as one Campaign sees it. The base is the pinned Revision, or the latest; the Campaign Override sits on top; fields are the two resolved together.
+ */
+export const zLinkedEntry = z.object({
+    entry: zLibraryEntry,
+    direct: z.boolean(),
+    via: z.array(z.string().max(80)).max(100),
+    pinnedRevision: z.int().gte(1).lte(1000000).optional(),
+    baseName: z.string().max(80),
+    base: zLibraryFields,
+    override: zLibraryFields,
+    fields: zLibraryFields
+});
+
+/**
+ * A named group of Library entries, switched on per Campaign. switchedOn says whether it is on in the Campaign it was listed for; mine whether the caller owns it.
+ */
+export const zLibraryCollection = z.object({
+    id: zId,
+    name: z.string().max(80),
+    description: z.string().max(2000),
+    entryIds: z.array(zId).max(10000),
+    mine: z.boolean(),
+    switchedOn: z.boolean().optional()
+});
+
+/**
+ * A new Collection.
+ */
+export const zLibraryCollectionInput = z.object({
+    name: z.string().min(1).max(80),
+    description: z.string().max(2000).optional()
+});
+
+/**
+ * A Collection's name, description and the entries it holds.
+ */
+export const zLibraryCollectionUpdate = z.object({
+    name: z.string().min(1).max(80),
+    description: z.string().max(2000).optional(),
+    entryIds: z.array(zId).max(10000)
+});
+
+/**
+ * Whether the Collection is on in the Campaign.
+ */
+export const zLibrarySwitchInput = z.object({
+    on: z.boolean()
+});
+
+/**
+ * The entry to link.
+ */
+export const zLibraryLinkInput = z.object({
+    entryId: zId
+});
+
+/**
+ * Every field this Campaign sees differently; an empty list follows the base again.
+ */
+export const zCampaignOverrideInput = z.object({
+    fields: zLibraryFields
+});
+
+/**
+ * The Revision to pin.
+ */
+export const zLibraryPinInput = z.object({
+    revision: z.int().gte(1).lte(1000000)
+});
+
+/**
+ * Where a Proposal stands.
+ */
+export const zProposalStatus = z.enum([
+    'pending',
+    'changes_requested',
+    'approved',
+    'declined'
+]);
+
+/**
+ * A Player's request that the DM accept a new entry into a Campaign, or a change to one it sees (baseEntryId). entryId is the Library entry an approval made or changed.
+ */
+export const zProposal = z.object({
+    id: zId,
+    kind: zLibraryKind,
+    name: z.string().max(80),
+    fields: zLibraryFields,
+    note: z.string().max(2000),
+    authorName: z.string().max(80),
+    status: zProposalStatus,
+    message: z.string().max(2000),
+    baseEntryId: zId.optional(),
+    entryId: zId.optional(),
+    createdAt: z.iso.datetime().max(40),
+    updatedAt: z.iso.datetime().max(40)
+});
+
+/**
+ * One step of a Proposal's history.
+ */
+export const zProposalStep = z.object({
+    no: z.int().gte(1).lte(100000),
+    action: z.enum([
+        'submitted',
+        'resubmitted',
+        'changes_requested',
+        'approved',
+        'declined'
+    ]),
+    message: z.string().max(2000),
+    by: z.string().max(80),
+    createdAt: z.iso.datetime().max(40)
+});
+
+/**
+ * A Proposal with its history and, for a change, the entry as the Campaign sees it now, for a side-by-side review.
+ */
+export const zProposalDetail = z.object({
+    proposal: zProposal,
+    steps: z.array(zProposalStep).max(1000),
+    current: zLinkedEntry.optional()
+});
+
+/**
+ * A new entry to propose, or a change to the entry baseEntryId.
+ */
+export const zProposalInput = z.object({
+    kind: zLibraryKind,
+    name: z.string().min(1).max(80),
+    fields: zLibraryFields,
+    note: z.string().max(2000).optional(),
+    baseEntryId: zId.optional()
+});
+
+/**
+ * A Proposal changed as the DM asked.
+ */
+export const zProposalUpdate = z.object({
+    name: z.string().min(1).max(80),
+    fields: zLibraryFields,
+    note: z.string().max(2000).optional()
+});
+
+/**
+ * A DM's decision; an approval may edit the name and fields first.
+ */
+export const zProposalReviewInput = z.object({
+    action: z.enum([
+        'approve',
+        'request_changes',
+        'decline'
+    ]),
+    message: z.string().max(2000).optional(),
+    name: z.string().min(1).max(80).optional(),
+    fields: zLibraryFields.optional()
+});
+
+/**
+ * A request to put one Revision of an entry in the Shared Library, and the Admin's review. ipClear is the Admin's check that it carries no non-SRD text, absent until reviewed.
+ */
+export const zSharedSubmission = z.object({
+    id: zId,
+    entryId: zId,
+    revision: z.int().gte(1).lte(1000000),
+    kind: zLibraryKind,
+    name: z.string().max(80),
+    fields: zLibraryFields,
+    note: z.string().max(2000),
+    status: z.enum([
+        'pending',
+        'approved',
+        'declined'
+    ]),
+    ipClear: z.boolean().optional(),
+    ipNote: z.string().max(2000),
+    message: z.string().max(2000),
+    sharedEntryId: zId.optional(),
+    createdAt: z.iso.datetime().max(40),
+    decidedAt: z.iso.datetime().max(40).optional()
+});
+
+/**
+ * The entry to share, with a note for the Admins.
+ */
+export const zShareInput = z.object({
+    entryId: zId,
+    note: z.string().max(2000).optional()
+});
+
+/**
+ * An Admin's decision on a request to share, with the IP check.
+ */
+export const zSharedReviewInput = z.object({
+    decision: z.enum(['approve', 'decline']),
+    ipClear: z.boolean(),
+    ipNote: z.string().max(2000).optional(),
+    message: z.string().max(2000).optional()
+});
+
+/**
+ * One entry in an export.
+ */
+export const zExportedEntry = z.object({
+    key: z.string().min(1).max(80),
+    kind: zLibraryKind,
+    name: z.string().max(80),
+    fields: z.record(z.string(), z.string().max(4000)),
+    parts: z.array(z.record(z.string(), z.unknown())).max(100)
+});
+
+/**
+ * One Collection in an export, naming its entries by key.
+ */
+export const zExportedCollection = z.object({
+    name: z.string().max(80),
+    description: z.string().max(2000),
+    entries: z.array(z.string().max(80)).max(10000)
+});
+
+/**
+ * Homebrew in Grimoire's own JSON schema. Entries are keyed so Collections can name them.
+ */
+export const zLibraryExport = z.object({
+    format: z.enum(['grimoire-library']),
+    version: z.int().gte(1).lte(1),
+    entries: z.array(zExportedEntry).max(10000),
+    collections: z.array(zExportedCollection).max(1000)
+});
+
+/**
+ * One entry to import; its kind, fields and parts are checked by Grimoire, not refused by shape.
+ */
+export const zImportedEntry = z.object({
+    key: z.string().min(1).max(80),
+    kind: z.string().max(40),
+    name: z.string().max(200),
+    fields: z.record(z.string(), z.unknown()).optional(),
+    parts: z.array(z.record(z.string(), z.unknown())).max(200).optional()
+});
+
+/**
+ * An export to import. Parts of it Grimoire cannot take are reported, not refused.
+ */
+export const zLibraryImport = z.object({
+    format: z.enum(['grimoire-library']),
+    version: z.int().gte(1).lte(1),
+    entries: z.array(zImportedEntry).max(10000),
+    collections: z.array(zExportedCollection).max(1000).optional()
+});
+
+/**
+ * A part of an import Grimoire could not take, and why.
+ */
+export const zManualPart = z.object({
+    where: z.string().max(300),
+    reason: z.string().max(300)
+});
+
+/**
+ * What an import added, and what needs doing by hand.
+ */
+export const zImportReport = z.object({
+    entries: z.array(zLibraryEntry).max(10000),
+    collections: z.array(zLibraryCollection).max(1000),
+    manual: z.array(zManualPart).max(100000)
+});
+
+/**
  * A Character's need or greed call on a loot pile's item, with the d20 it rolled. Need beats greed, then the higher roll, then the earlier claim.
  */
 export const zLiveClaim = z.object({
@@ -3673,6 +4027,26 @@ export const zPoolId = zId;
 export const zTableId = zId;
 
 /**
+ * Collection id.
+ */
+export const zCollectionId = zId;
+
+/**
+ * Proposal id.
+ */
+export const zProposalId = zId;
+
+/**
+ * Shared Library request id.
+ */
+export const zSubmissionId = zId;
+
+/**
+ * Library entry id.
+ */
+export const zLibraryEntryId = zId;
+
+/**
  * NPC id.
  */
 export const zNpcId = zId;
@@ -4914,6 +5288,258 @@ export const zPreviewSightBody = zSightRequest;
  * The preview.
  */
 export const zPreviewSightResponse = zSightPreview;
+
+export const zListLibraryEntriesQuery = z.object({
+    kind: zLibraryKind.optional()
+});
+
+/**
+ * The entries.
+ */
+export const zListLibraryEntriesResponse = z.array(zLibraryEntry).max(1000);
+
+export const zCreateLibraryEntryBody = zLibraryEntryInput;
+
+/**
+ * The new entry.
+ */
+export const zCreateLibraryEntryResponse = zLibraryEntry;
+
+/**
+ * The Collections.
+ */
+export const zListLibraryCollectionsResponse = z.array(zLibraryCollection).max(1000);
+
+export const zCreateLibraryCollectionBody = zLibraryCollectionInput;
+
+/**
+ * The new Collection.
+ */
+export const zCreateLibraryCollectionResponse = zLibraryCollection;
+
+export const zUpdateLibraryCollectionBody = zLibraryCollectionUpdate;
+
+export const zUpdateLibraryCollectionPath = z.object({
+    collectionId: zId
+});
+
+/**
+ * The Collection.
+ */
+export const zUpdateLibraryCollectionResponse = zLibraryCollection;
+
+export const zListCampaignCollectionsPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The Collections.
+ */
+export const zListCampaignCollectionsResponse = z.array(zLibraryCollection).max(1000);
+
+export const zSwitchLibraryCollectionBody = zLibrarySwitchInput;
+
+export const zSwitchLibraryCollectionPath = z.object({
+    campaignId: zId,
+    collectionId: zId
+});
+
+/**
+ * The Campaign's Collections.
+ */
+export const zSwitchLibraryCollectionResponse = z.array(zLibraryCollection).max(1000);
+
+export const zExportLibraryQuery = z.object({
+    collectionId: zId.optional(),
+    entryId: zId.optional()
+});
+
+/**
+ * The export.
+ */
+export const zExportLibraryResponse = zLibraryExport;
+
+export const zImportLibraryBody = zLibraryImport;
+
+/**
+ * What was imported, and what needs doing by hand.
+ */
+export const zImportLibraryResponse = zImportReport;
+
+export const zGetLibraryEntryPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The entry.
+ */
+export const zGetLibraryEntryResponse = zLibraryEntryDetail;
+
+export const zUpdateLibraryEntryBody = zLibraryEntryUpdate;
+
+export const zUpdateLibraryEntryPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The entry.
+ */
+export const zUpdateLibraryEntryResponse = zLibraryEntryDetail;
+
+export const zListLinkedEntriesPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The linked entries.
+ */
+export const zListLinkedEntriesResponse = z.array(zLinkedEntry).max(1000);
+
+export const zLinkLibraryEntryBody = zLibraryLinkInput;
+
+export const zLinkLibraryEntryPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The linked entry.
+ */
+export const zLinkLibraryEntryResponse = zLinkedEntry;
+
+export const zUnlinkLibraryEntryPath = z.object({
+    campaignId: zId,
+    entryId: zId
+});
+
+/**
+ * Unlinked.
+ */
+export const zUnlinkLibraryEntryResponse = z.void();
+
+export const zSetCampaignOverrideBody = zCampaignOverrideInput;
+
+export const zSetCampaignOverridePath = z.object({
+    campaignId: zId,
+    entryId: zId
+});
+
+/**
+ * The linked entry.
+ */
+export const zSetCampaignOverrideResponse = zLinkedEntry;
+
+export const zUnpinLibraryRevisionPath = z.object({
+    campaignId: zId,
+    entryId: zId
+});
+
+/**
+ * The linked entry.
+ */
+export const zUnpinLibraryRevisionResponse = zLinkedEntry;
+
+export const zPinLibraryRevisionBody = zLibraryPinInput;
+
+export const zPinLibraryRevisionPath = z.object({
+    campaignId: zId,
+    entryId: zId
+});
+
+/**
+ * The linked entry.
+ */
+export const zPinLibraryRevisionResponse = zLinkedEntry;
+
+export const zListProposalsPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The Proposals.
+ */
+export const zListProposalsResponse = z.array(zProposal).max(1000);
+
+export const zCreateProposalBody = zProposalInput;
+
+export const zCreateProposalPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The Proposal.
+ */
+export const zCreateProposalResponse = zProposal;
+
+export const zGetProposalPath = z.object({
+    campaignId: zId,
+    proposalId: zId
+});
+
+/**
+ * The Proposal.
+ */
+export const zGetProposalResponse = zProposalDetail;
+
+export const zResubmitProposalBody = zProposalUpdate;
+
+export const zResubmitProposalPath = z.object({
+    campaignId: zId,
+    proposalId: zId
+});
+
+/**
+ * The Proposal.
+ */
+export const zResubmitProposalResponse = zProposalDetail;
+
+export const zReviewProposalBody = zProposalReviewInput;
+
+export const zReviewProposalPath = z.object({
+    campaignId: zId,
+    proposalId: zId
+});
+
+/**
+ * The Proposal.
+ */
+export const zReviewProposalResponse = zProposalDetail;
+
+export const zListSharedEntriesQuery = z.object({
+    kind: zLibraryKind.optional()
+});
+
+/**
+ * The shared entries.
+ */
+export const zListSharedEntriesResponse = z.array(zLibraryEntry).max(1000);
+
+/**
+ * The requests.
+ */
+export const zListMySubmissionsResponse = z.array(zSharedSubmission).max(1000);
+
+export const zShareLibraryEntryBody = zShareInput;
+
+/**
+ * The request.
+ */
+export const zShareLibraryEntryResponse = zSharedSubmission;
+
+/**
+ * The requests.
+ */
+export const zListSharedSubmissionsResponse = z.array(zSharedSubmission).max(1000);
+
+export const zReviewSharedSubmissionBody = zSharedReviewInput;
+
+export const zReviewSharedSubmissionPath = z.object({
+    submissionId: zId
+});
+
+/**
+ * The request.
+ */
+export const zReviewSharedSubmissionResponse = zSharedSubmission;
 
 /**
  * The signed-in account.

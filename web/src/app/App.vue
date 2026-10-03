@@ -26,6 +26,7 @@ function leave() {
       <nav aria-label="Main">
         <RouterLink :to="{ name: 'campaigns' }">Campaigns</RouterLink>
         <RouterLink v-if="account.data.value" :to="{ name: 'my-characters' }" data-testid="characters-link">Characters</RouterLink>
+        <RouterLink v-if="account.data.value" :to="{ name: 'library' }" data-testid="library-link">Library</RouterLink>
         <RouterLink v-if="account.data.value" :to="{ name: 'friends' }" data-testid="friends-link">Friends</RouterLink>
         <RouterLink v-if="account.data.value" :to="{ name: 'conversations' }" data-testid="conversations-link">Talk</RouterLink>
         <RouterLink :to="{ name: 'spells' }">Compendium</RouterLink>

@@ -169,6 +169,14 @@ type AccountHandler interface {
 	//
 	// POST /api/v1/account/two-step/recovery-codes
 	ResetRecoveryCodes(ctx context.Context, req *TwoStepCode) (ResetRecoveryCodesRes, error)
+	// ReviewSharedSubmission implements reviewSharedSubmission operation.
+	//
+	// Approves or declines a request with the IP check recorded either way; approval needs the Admin's
+	// check that the entry carries no non-SRD text and puts a read-only copy in the Shared Library. Admins
+	// only.
+	//
+	// POST /api/v1/admin/shared-library/{submissionId}/review
+	ReviewSharedSubmission(ctx context.Context, req *SharedReviewInput, params ReviewSharedSubmissionParams) (ReviewSharedSubmissionRes, error)
 	// RevokeAccessToken implements revokeAccessToken operation.
 	//
 	// The token stops working at once.
@@ -347,6 +355,18 @@ type BuildHandler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/invites
 	CreateInvite(ctx context.Context, params CreateInviteParams) (CreateInviteRes, error)
+	// CreateLibraryCollection implements createLibraryCollection operation.
+	//
+	// Starts an empty Collection in the caller's Library.
+	//
+	// POST /api/v1/library/collections
+	CreateLibraryCollection(ctx context.Context, req *LibraryCollectionInput) (CreateLibraryCollectionRes, error)
+	// CreateLibraryEntry implements createLibraryEntry operation.
+	//
+	// Adds an entry to the caller's Library as its first Revision.
+	//
+	// POST /api/v1/library
+	CreateLibraryEntry(ctx context.Context, req *LibraryEntryInput) (CreateLibraryEntryRes, error)
 	// CreateLootTable implements createLootTable operation.
 	//
 	// Adds a Loot Table and records its first Revision. DM only.
@@ -359,6 +379,12 @@ type BuildHandler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/npcs
 	CreateNpc(ctx context.Context, req *NpcInput, params CreateNpcParams) (CreateNpcRes, error)
+	// CreateProposal implements createProposal operation.
+	//
+	// Sends the DM a new entry for the Campaign, or a change to one it sees. The DMs hear of it.
+	//
+	// POST /api/v1/campaigns/{campaignId}/proposals
+	CreateProposal(ctx context.Context, req *ProposalInput, params CreateProposalParams) (CreateProposalRes, error)
 	// CreateSettlement implements createSettlement operation.
 	//
 	// Adds a Settlement and records its first Revision. DM only.
@@ -425,6 +451,14 @@ type BuildHandler interface {
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/character-draft
 	DiscardCharacterDraft(ctx context.Context, params DiscardCharacterDraftParams) (DiscardCharacterDraftRes, error)
+	// ImportLibrary implements importLibrary operation.
+	//
+	// Adds the entries and Collections of an export to the caller's Library as new ones. Whatever Grimoire
+	// cannot take (an unknown kind, a field that is not text, a part no builder runs yet) is reported as
+	// Manual, to redo by hand.
+	//
+	// POST /api/v1/library/import
+	ImportLibrary(ctx context.Context, req *LibraryImport) (ImportLibraryRes, error)
 	// JoinCampaign implements joinCampaign operation.
 	//
 	// Adds the Character to a Campaign the signed-in Account belongs to, with its build checked against
@@ -438,6 +472,20 @@ type BuildHandler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/characters/{characterId}/level-up
 	LevelUp(ctx context.Context, req *LevelUpRequest, params LevelUpParams) (LevelUpRes, error)
+	// LinkLibraryEntry implements linkLibraryEntry operation.
+	//
+	// Links one of the caller's entries into a Campaign they run; linking it again changes nothing. DM
+	// only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/library
+	LinkLibraryEntry(ctx context.Context, req *LibraryLinkInput, params LinkLibraryEntryParams) (LinkLibraryEntryRes, error)
+	// PinLibraryRevision implements pinLibraryRevision operation.
+	//
+	// Holds the Campaign to one Revision of the entry, so later edits to its base pass the Campaign by. DM
+	// only.
+	//
+	// PUT /api/v1/campaigns/{campaignId}/library/{entryId}/pin
+	PinLibraryRevision(ctx context.Context, req *LibraryPinInput, params PinLibraryRevisionParams) (PinLibraryRevisionRes, error)
 	// PrepareSpells implements prepareSpells operation.
 	//
 	// Sets the spells prepared through one class within its limit, after a long rest or a new level.
@@ -530,6 +578,20 @@ type BuildHandler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/shops/{shopId}/revisions/{revisionNo}/restore
 	RestoreShopRevision(ctx context.Context, params RestoreShopRevisionParams) (RestoreShopRevisionRes, error)
+	// ResubmitProposal implements resubmitProposal operation.
+	//
+	// Its author sends a Proposal the DM asked changes to again, changed.
+	//
+	// PUT /api/v1/campaigns/{campaignId}/proposals/{proposalId}
+	ResubmitProposal(ctx context.Context, req *ProposalUpdate, params ResubmitProposalParams) (ResubmitProposalRes, error)
+	// ReviewProposal implements reviewProposal operation.
+	//
+	// A DM approves a pending Proposal (copied once into their Library and linked into the Campaign
+	// Collection, edited first if they like), asks for changes with a message, or declines it. The author
+	// hears either way.
+	//
+	// POST /api/v1/campaigns/{campaignId}/proposals/{proposalId}/review
+	ReviewProposal(ctx context.Context, req *ProposalReviewInput, params ReviewProposalParams) (ReviewProposalRes, error)
 	// RevokeInvite implements revokeInvite operation.
 	//
 	// Closes an invite link. DM only.
@@ -549,6 +611,12 @@ type BuildHandler interface {
 	//
 	// PUT /api/v1/campaigns/{campaignId}/character-draft
 	SaveCharacterDraft(ctx context.Context, req *CharacterDraftSave, params SaveCharacterDraftParams) (SaveCharacterDraftRes, error)
+	// SetCampaignOverride implements setCampaignOverride operation.
+	//
+	// Replaces the fields this Campaign sees differently from the entry's base. DM only.
+	//
+	// PUT /api/v1/campaigns/{campaignId}/library/{entryId}/override
+	SetCampaignOverride(ctx context.Context, req *CampaignOverrideInput, params SetCampaignOverrideParams) (SetCampaignOverrideRes, error)
 	// SetPortrait implements setPortrait operation.
 	//
 	// A PNG, JPEG or WebP picture of at most 10 MB. The owner or a DM, never during Combat.
@@ -561,6 +629,19 @@ type BuildHandler interface {
 	//
 	// PUT /api/v1/campaigns/{campaignId}/characters/{characterId}/token
 	SetTokenIcon(ctx context.Context, req SetTokenIconReq, params SetTokenIconParams) (SetTokenIconRes, error)
+	// ShareLibraryEntry implements shareLibraryEntry operation.
+	//
+	// Asks the Admins to put the latest Revision of one of the caller's entries in the Shared Library.
+	//
+	// POST /api/v1/shared-library/submissions
+	ShareLibraryEntry(ctx context.Context, req *ShareInput) (ShareLibraryEntryRes, error)
+	// SwitchLibraryCollection implements switchLibraryCollection operation.
+	//
+	// On brings the Collection's entries into the Campaign; off hides those not linked otherwise. Only its
+	// owner switches it on; any DM of the Campaign switches it off.
+	//
+	// PUT /api/v1/campaigns/{campaignId}/collections/{collectionId}
+	SwitchLibraryCollection(ctx context.Context, req *LibrarySwitchInput, params SwitchLibraryCollectionParams) (SwitchLibraryCollectionRes, error)
 	// UndoChange implements undoChange operation.
 	//
 	// Undoes a prep change by its Revision id. A creation is deleted; anything else is restored to the
@@ -569,6 +650,19 @@ type BuildHandler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/activity/{revisionId}/undo
 	UndoChange(ctx context.Context, params UndoChangeParams) (UndoChangeRes, error)
+	// UnlinkLibraryEntry implements unlinkLibraryEntry operation.
+	//
+	// Takes the entry out of the Campaign with its Campaign Override; the entry stays in the Library. DM
+	// only.
+	//
+	// DELETE /api/v1/campaigns/{campaignId}/library/{entryId}
+	UnlinkLibraryEntry(ctx context.Context, params UnlinkLibraryEntryParams) (UnlinkLibraryEntryRes, error)
+	// UnpinLibraryRevision implements unpinLibraryRevision operation.
+	//
+	// The Campaign follows the entry's latest Revision again. DM only.
+	//
+	// DELETE /api/v1/campaigns/{campaignId}/library/{entryId}/pin
+	UnpinLibraryRevision(ctx context.Context, params UnpinLibraryRevisionParams) (UnpinLibraryRevisionRes, error)
 	// UpdateCampaign implements updateCampaign operation.
 	//
 	// Changes a Campaign's settings. DM only.
@@ -593,6 +687,20 @@ type BuildHandler interface {
 	//
 	// PUT /api/v1/campaigns/{campaignId}/encounter-tables/{tableId}
 	UpdateEncounterTable(ctx context.Context, req *EncounterTableInput, params UpdateEncounterTableParams) (UpdateEncounterTableRes, error)
+	// UpdateLibraryCollection implements updateLibraryCollection operation.
+	//
+	// Renames one of the caller's Collections and sets which of their entries it holds; every Campaign it
+	// is switched on in sees the new set.
+	//
+	// PUT /api/v1/library/collections/{collectionId}
+	UpdateLibraryCollection(ctx context.Context, req *LibraryCollectionUpdate, params UpdateLibraryCollectionParams) (UpdateLibraryCollectionRes, error)
+	// UpdateLibraryEntry implements updateLibraryEntry operation.
+	//
+	// Saves a new base as the entry's next Revision. Every Campaign that follows the latest Revision sees
+	// it; a pinned Campaign does not.
+	//
+	// PUT /api/v1/library/{entryId}
+	UpdateLibraryEntry(ctx context.Context, req *LibraryEntryUpdate, params UpdateLibraryEntryParams) (UpdateLibraryEntryRes, error)
 	// UpdateLootTable implements updateLootTable operation.
 	//
 	// Replaces the Loot Table and records a Revision. DM only.
@@ -754,6 +862,13 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions/diff
 	DiffNpcRevisions(ctx context.Context, params DiffNpcRevisionsParams) (DiffNpcRevisionsRes, error)
+	// ExportLibrary implements exportLibrary operation.
+	//
+	// The caller's Library in Grimoire's own JSON schema: every entry and Collection, one Collection with
+	// its entries, or one entry.
+	//
+	// GET /api/v1/library/export
+	ExportLibrary(ctx context.Context, params ExportLibraryParams) (ExportLibraryRes, error)
 	// GetAccount implements getAccount operation.
 	//
 	// The Account the caller is signed in as.
@@ -828,6 +943,12 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/inventory
 	GetInventory(ctx context.Context, params GetInventoryParams) (GetInventoryRes, error)
+	// GetLibraryEntry implements getLibraryEntry operation.
+	//
+	// One of the caller's entries with its Revisions and the Campaigns it is linked into.
+	//
+	// GET /api/v1/library/{entryId}
+	GetLibraryEntry(ctx context.Context, params GetLibraryEntryParams) (GetLibraryEntryRes, error)
 	// GetMap implements getMap operation.
 	//
 	// One Map with its calibration. DM only.
@@ -871,6 +992,13 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/portrait
 	GetPortrait(ctx context.Context, params GetPortraitParams) (GetPortraitRes, error)
+	// GetProposal implements getProposal operation.
+	//
+	// One Proposal with its history and, for a change, the entry as the Campaign sees it now. Its author
+	// or a DM.
+	//
+	// GET /api/v1/campaigns/{campaignId}/proposals/{proposalId}
+	GetProposal(ctx context.Context, params GetProposalParams) (GetProposalRes, error)
 	// GetPushKey implements getPushKey operation.
 	//
 	// The server's VAPID public key, for a device to subscribe to notifications with. Not found when the
@@ -964,6 +1092,13 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/admin/accounts
 	ListAdminAccounts(ctx context.Context) (ListAdminAccountsRes, error)
+	// ListCampaignCollections implements listCampaignCollections operation.
+	//
+	// The caller's Collections and any other switched on in the Campaign, each saying whether it is on
+	// there. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/collections
+	ListCampaignCollections(ctx context.Context, params ListCampaignCollectionsParams) (ListCampaignCollectionsRes, error)
 	// ListCampaigns implements listCampaigns operation.
 	//
 	// The Campaigns the caller is a Member of, newest first.
@@ -1043,6 +1178,25 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/invites
 	ListInvites(ctx context.Context, params ListInvitesParams) (ListInvitesRes, error)
+	// ListLibraryCollections implements listLibraryCollections operation.
+	//
+	// The caller's Collections.
+	//
+	// GET /api/v1/library/collections
+	ListLibraryCollections(ctx context.Context) (ListLibraryCollectionsRes, error)
+	// ListLibraryEntries implements listLibraryEntries operation.
+	//
+	// The caller's Library entries in kind and name order.
+	//
+	// GET /api/v1/library
+	ListLibraryEntries(ctx context.Context, params ListLibraryEntriesParams) (ListLibraryEntriesRes, error)
+	// ListLinkedEntries implements listLinkedEntries operation.
+	//
+	// The Library entries linked into the Campaign, each with its Campaign Override and pinned Revision
+	// resolved. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/library
+	ListLinkedEntries(ctx context.Context, params ListLinkedEntriesParams) (ListLinkedEntriesRes, error)
 	// ListLocations implements listLocations operation.
 	//
 	// The places on the Campaign's world maps an Encounter Table can belong to. DM only.
@@ -1086,6 +1240,12 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/characters
 	ListMyCharacters(ctx context.Context) (ListMyCharactersRes, error)
+	// ListMySubmissions implements listMySubmissions operation.
+	//
+	// The caller's requests to put entries in the Shared Library, pending first.
+	//
+	// GET /api/v1/shared-library/submissions
+	ListMySubmissions(ctx context.Context) (ListMySubmissionsRes, error)
 	// ListNotifications implements listNotifications operation.
 	//
 	// The latest Notifications in the signed-in Account's bell, newest first, and how many are unread.
@@ -1104,6 +1264,12 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/npcs
 	ListNpcs(ctx context.Context, params ListNpcsParams) (ListNpcsRes, error)
+	// ListProposals implements listProposals operation.
+	//
+	// The Campaign's Proposals, newest first: every one for a DM, a Player's own otherwise.
+	//
+	// GET /api/v1/campaigns/{campaignId}/proposals
+	ListProposals(ctx context.Context, params ListProposalsParams) (ListProposalsRes, error)
 	// ListReleaseNotes implements listReleaseNotes operation.
 	//
 	// Every Release Note, drafts and scheduled ones too, newest first. For Admins.
@@ -1146,6 +1312,18 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/settlements
 	ListSettlements(ctx context.Context, params ListSettlementsParams) (ListSettlementsRes, error)
+	// ListSharedEntries implements listSharedEntries operation.
+	//
+	// Read-only entries every DM can link into their Campaigns, approved by an Admin with an IP check.
+	//
+	// GET /api/v1/shared-library
+	ListSharedEntries(ctx context.Context, params ListSharedEntriesParams) (ListSharedEntriesRes, error)
+	// ListSharedSubmissions implements listSharedSubmissions operation.
+	//
+	// Every request to put an entry in the Shared Library, pending first. Admins only.
+	//
+	// GET /api/v1/admin/shared-library
+	ListSharedSubmissions(ctx context.Context) (ListSharedSubmissionsRes, error)
 	// ListShopRevisions implements listShopRevisions operation.
 	//
 	// Every Revision of the Shop, newest first. DM only.

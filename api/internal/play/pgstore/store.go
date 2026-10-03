@@ -243,6 +243,18 @@ func (c CampaignMembers) Membership(ctx context.Context, campaign uuid.UUID, sub
 	return member(m), err
 }
 
+// DMs lists a Campaign's DMs.
+func (c CampaignMembers) DMs(ctx context.Context, campaign uuid.UUID) ([]domain.Member, error) {
+	all, err := c.Store.Members(ctx, campaigndomain.CampaignID(campaign))
+	var out []domain.Member
+	for _, m := range all {
+		if m.Role == campaigndomain.RoleDM {
+			out = append(out, member(m))
+		}
+	}
+	return out, err
+}
+
 // Member finds a member by id.
 func (c CampaignMembers) Member(ctx context.Context, campaign, id uuid.UUID) (domain.Member, error) {
 	m, err := c.Store.Member(ctx, campaigndomain.CampaignID(campaign), campaigndomain.MemberID(id))

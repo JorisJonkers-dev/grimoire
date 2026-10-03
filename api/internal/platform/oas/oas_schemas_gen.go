@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/go-faster/errors"
+	"github.com/go-faster/jx"
 	"github.com/google/uuid"
 )
 
@@ -3707,6 +3708,22 @@ func (*CampaignHeaders) createCampaignRes() {}
 func (*CampaignHeaders) getCampaignRes()    {}
 
 type CampaignName string
+
+// Every field this Campaign sees differently; an empty list follows the base again.
+// Ref: #/components/schemas/CampaignOverrideInput
+type CampaignOverrideInput struct {
+	Fields LibraryFields `json:"fields"`
+}
+
+// GetFields returns the value of Fields.
+func (s *CampaignOverrideInput) GetFields() LibraryFields {
+	return s.Fields
+}
+
+// SetFields sets the value of Fields.
+func (s *CampaignOverrideInput) SetFields(val LibraryFields) {
+	s.Fields = val
+}
 
 // One page of campaigns.
 // Ref: #/components/schemas/CampaignPage
@@ -8847,6 +8864,127 @@ func (s *EquipmentSlot) UnmarshalText(data []byte) error {
 	}
 }
 
+// One Collection in an export, naming its entries by key.
+// Ref: #/components/schemas/ExportedCollection
+type ExportedCollection struct {
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	Entries     []string `json:"entries"`
+}
+
+// GetName returns the value of Name.
+func (s *ExportedCollection) GetName() string {
+	return s.Name
+}
+
+// GetDescription returns the value of Description.
+func (s *ExportedCollection) GetDescription() string {
+	return s.Description
+}
+
+// GetEntries returns the value of Entries.
+func (s *ExportedCollection) GetEntries() []string {
+	return s.Entries
+}
+
+// SetName sets the value of Name.
+func (s *ExportedCollection) SetName(val string) {
+	s.Name = val
+}
+
+// SetDescription sets the value of Description.
+func (s *ExportedCollection) SetDescription(val string) {
+	s.Description = val
+}
+
+// SetEntries sets the value of Entries.
+func (s *ExportedCollection) SetEntries(val []string) {
+	s.Entries = val
+}
+
+// One entry in an export.
+// Ref: #/components/schemas/ExportedEntry
+type ExportedEntry struct {
+	Key    string              `json:"key"`
+	Kind   LibraryKind         `json:"kind"`
+	Name   string              `json:"name"`
+	Fields ExportedEntryFields `json:"fields"`
+	// Typed parts such as Effects; none are exported yet.
+	Parts []ExportedEntryPartsItem `json:"parts"`
+}
+
+// GetKey returns the value of Key.
+func (s *ExportedEntry) GetKey() string {
+	return s.Key
+}
+
+// GetKind returns the value of Kind.
+func (s *ExportedEntry) GetKind() LibraryKind {
+	return s.Kind
+}
+
+// GetName returns the value of Name.
+func (s *ExportedEntry) GetName() string {
+	return s.Name
+}
+
+// GetFields returns the value of Fields.
+func (s *ExportedEntry) GetFields() ExportedEntryFields {
+	return s.Fields
+}
+
+// GetParts returns the value of Parts.
+func (s *ExportedEntry) GetParts() []ExportedEntryPartsItem {
+	return s.Parts
+}
+
+// SetKey sets the value of Key.
+func (s *ExportedEntry) SetKey(val string) {
+	s.Key = val
+}
+
+// SetKind sets the value of Kind.
+func (s *ExportedEntry) SetKind(val LibraryKind) {
+	s.Kind = val
+}
+
+// SetName sets the value of Name.
+func (s *ExportedEntry) SetName(val string) {
+	s.Name = val
+}
+
+// SetFields sets the value of Fields.
+func (s *ExportedEntry) SetFields(val ExportedEntryFields) {
+	s.Fields = val
+}
+
+// SetParts sets the value of Parts.
+func (s *ExportedEntry) SetParts(val []ExportedEntryPartsItem) {
+	s.Parts = val
+}
+
+type ExportedEntryFields map[string]string
+
+func (s *ExportedEntryFields) init() ExportedEntryFields {
+	m := *s
+	if m == nil {
+		m = map[string]string{}
+		*s = m
+	}
+	return m
+}
+
+type ExportedEntryPartsItem map[string]jx.Raw
+
+func (s *ExportedEntryPartsItem) init() ExportedEntryPartsItem {
+	m := *s
+	if m == nil {
+		m = map[string]jx.Raw{}
+		*s = m
+	}
+	return m
+}
+
 // A field whose value differs between two Revisions.
 // Ref: #/components/schemas/FieldChange
 type FieldChange struct {
@@ -10273,6 +10411,176 @@ func (s *HexOccupantSide) UnmarshalText(data []byte) error {
 }
 
 type ID uuid.UUID
+
+// What an import added, and what needs doing by hand.
+// Ref: #/components/schemas/ImportReport
+type ImportReport struct {
+	Entries     []LibraryEntry      `json:"entries"`
+	Collections []LibraryCollection `json:"collections"`
+	Manual      []ManualPart        `json:"manual"`
+}
+
+// GetEntries returns the value of Entries.
+func (s *ImportReport) GetEntries() []LibraryEntry {
+	return s.Entries
+}
+
+// GetCollections returns the value of Collections.
+func (s *ImportReport) GetCollections() []LibraryCollection {
+	return s.Collections
+}
+
+// GetManual returns the value of Manual.
+func (s *ImportReport) GetManual() []ManualPart {
+	return s.Manual
+}
+
+// SetEntries sets the value of Entries.
+func (s *ImportReport) SetEntries(val []LibraryEntry) {
+	s.Entries = val
+}
+
+// SetCollections sets the value of Collections.
+func (s *ImportReport) SetCollections(val []LibraryCollection) {
+	s.Collections = val
+}
+
+// SetManual sets the value of Manual.
+func (s *ImportReport) SetManual(val []ManualPart) {
+	s.Manual = val
+}
+
+// ImportReportHeaders wraps ImportReport with response headers.
+type ImportReportHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           ImportReport
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ImportReportHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ImportReportHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ImportReportHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ImportReportHeaders) GetResponse() ImportReport {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ImportReportHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ImportReportHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ImportReportHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ImportReportHeaders) SetResponse(val ImportReport) {
+	s.Response = val
+}
+
+func (*ImportReportHeaders) importLibraryRes() {}
+
+// One entry to import; its kind, fields and parts are checked by Grimoire, not refused by shape.
+// Ref: #/components/schemas/ImportedEntry
+type ImportedEntry struct {
+	Key    string                   `json:"key"`
+	Kind   string                   `json:"kind"`
+	Name   string                   `json:"name"`
+	Fields OptImportedEntryFields   `json:"fields"`
+	Parts  []ImportedEntryPartsItem `json:"parts"`
+}
+
+// GetKey returns the value of Key.
+func (s *ImportedEntry) GetKey() string {
+	return s.Key
+}
+
+// GetKind returns the value of Kind.
+func (s *ImportedEntry) GetKind() string {
+	return s.Kind
+}
+
+// GetName returns the value of Name.
+func (s *ImportedEntry) GetName() string {
+	return s.Name
+}
+
+// GetFields returns the value of Fields.
+func (s *ImportedEntry) GetFields() OptImportedEntryFields {
+	return s.Fields
+}
+
+// GetParts returns the value of Parts.
+func (s *ImportedEntry) GetParts() []ImportedEntryPartsItem {
+	return s.Parts
+}
+
+// SetKey sets the value of Key.
+func (s *ImportedEntry) SetKey(val string) {
+	s.Key = val
+}
+
+// SetKind sets the value of Kind.
+func (s *ImportedEntry) SetKind(val string) {
+	s.Kind = val
+}
+
+// SetName sets the value of Name.
+func (s *ImportedEntry) SetName(val string) {
+	s.Name = val
+}
+
+// SetFields sets the value of Fields.
+func (s *ImportedEntry) SetFields(val OptImportedEntryFields) {
+	s.Fields = val
+}
+
+// SetParts sets the value of Parts.
+func (s *ImportedEntry) SetParts(val []ImportedEntryPartsItem) {
+	s.Parts = val
+}
+
+type ImportedEntryFields map[string]jx.Raw
+
+func (s *ImportedEntryFields) init() ImportedEntryFields {
+	m := *s
+	if m == nil {
+		m = map[string]jx.Raw{}
+		*s = m
+	}
+	return m
+}
+
+type ImportedEntryPartsItem map[string]jx.Raw
+
+func (s *ImportedEntryPartsItem) init() ImportedEntryPartsItem {
+	m := *s
+	if m == nil {
+		m = map[string]jx.Raw{}
+		*s = m
+	}
+	return m
+}
 
 // How a fight rolls initiative, each Combatant for itself or one roll per side.
 // Ref: #/components/schemas/InitiativeMode
@@ -11890,6 +12198,950 @@ func (s *LevelUpRequestHitPoints) UnmarshalText(data []byte) error {
 	}
 }
 
+// A named group of Library entries, switched on per Campaign. switchedOn says whether it is on in the
+// Campaign it was listed for; mine whether the caller owns it.
+// Ref: #/components/schemas/LibraryCollection
+type LibraryCollection struct {
+	ID          ID      `json:"id"`
+	Name        string  `json:"name"`
+	Description string  `json:"description"`
+	EntryIds    []ID    `json:"entryIds"`
+	Mine        bool    `json:"mine"`
+	SwitchedOn  OptBool `json:"switchedOn"`
+}
+
+// GetID returns the value of ID.
+func (s *LibraryCollection) GetID() ID {
+	return s.ID
+}
+
+// GetName returns the value of Name.
+func (s *LibraryCollection) GetName() string {
+	return s.Name
+}
+
+// GetDescription returns the value of Description.
+func (s *LibraryCollection) GetDescription() string {
+	return s.Description
+}
+
+// GetEntryIds returns the value of EntryIds.
+func (s *LibraryCollection) GetEntryIds() []ID {
+	return s.EntryIds
+}
+
+// GetMine returns the value of Mine.
+func (s *LibraryCollection) GetMine() bool {
+	return s.Mine
+}
+
+// GetSwitchedOn returns the value of SwitchedOn.
+func (s *LibraryCollection) GetSwitchedOn() OptBool {
+	return s.SwitchedOn
+}
+
+// SetID sets the value of ID.
+func (s *LibraryCollection) SetID(val ID) {
+	s.ID = val
+}
+
+// SetName sets the value of Name.
+func (s *LibraryCollection) SetName(val string) {
+	s.Name = val
+}
+
+// SetDescription sets the value of Description.
+func (s *LibraryCollection) SetDescription(val string) {
+	s.Description = val
+}
+
+// SetEntryIds sets the value of EntryIds.
+func (s *LibraryCollection) SetEntryIds(val []ID) {
+	s.EntryIds = val
+}
+
+// SetMine sets the value of Mine.
+func (s *LibraryCollection) SetMine(val bool) {
+	s.Mine = val
+}
+
+// SetSwitchedOn sets the value of SwitchedOn.
+func (s *LibraryCollection) SetSwitchedOn(val OptBool) {
+	s.SwitchedOn = val
+}
+
+// LibraryCollectionHeaders wraps LibraryCollection with response headers.
+type LibraryCollectionHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           LibraryCollection
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *LibraryCollectionHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *LibraryCollectionHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *LibraryCollectionHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *LibraryCollectionHeaders) GetResponse() LibraryCollection {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *LibraryCollectionHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *LibraryCollectionHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *LibraryCollectionHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *LibraryCollectionHeaders) SetResponse(val LibraryCollection) {
+	s.Response = val
+}
+
+func (*LibraryCollectionHeaders) createLibraryCollectionRes() {}
+func (*LibraryCollectionHeaders) updateLibraryCollectionRes() {}
+
+// A new Collection.
+// Ref: #/components/schemas/LibraryCollectionInput
+type LibraryCollectionInput struct {
+	Name        string    `json:"name"`
+	Description OptString `json:"description"`
+}
+
+// GetName returns the value of Name.
+func (s *LibraryCollectionInput) GetName() string {
+	return s.Name
+}
+
+// GetDescription returns the value of Description.
+func (s *LibraryCollectionInput) GetDescription() OptString {
+	return s.Description
+}
+
+// SetName sets the value of Name.
+func (s *LibraryCollectionInput) SetName(val string) {
+	s.Name = val
+}
+
+// SetDescription sets the value of Description.
+func (s *LibraryCollectionInput) SetDescription(val OptString) {
+	s.Description = val
+}
+
+// A Collection's name, description and the entries it holds.
+// Ref: #/components/schemas/LibraryCollectionUpdate
+type LibraryCollectionUpdate struct {
+	Name        string    `json:"name"`
+	Description OptString `json:"description"`
+	EntryIds    []ID      `json:"entryIds"`
+}
+
+// GetName returns the value of Name.
+func (s *LibraryCollectionUpdate) GetName() string {
+	return s.Name
+}
+
+// GetDescription returns the value of Description.
+func (s *LibraryCollectionUpdate) GetDescription() OptString {
+	return s.Description
+}
+
+// GetEntryIds returns the value of EntryIds.
+func (s *LibraryCollectionUpdate) GetEntryIds() []ID {
+	return s.EntryIds
+}
+
+// SetName sets the value of Name.
+func (s *LibraryCollectionUpdate) SetName(val string) {
+	s.Name = val
+}
+
+// SetDescription sets the value of Description.
+func (s *LibraryCollectionUpdate) SetDescription(val OptString) {
+	s.Description = val
+}
+
+// SetEntryIds sets the value of EntryIds.
+func (s *LibraryCollectionUpdate) SetEntryIds(val []ID) {
+	s.EntryIds = val
+}
+
+// A Library entry's base at its latest Revision.
+// Ref: #/components/schemas/LibraryEntry
+type LibraryEntry struct {
+	ID       ID            `json:"id"`
+	Kind     LibraryKind   `json:"kind"`
+	Name     string        `json:"name"`
+	Fields   LibraryFields `json:"fields"`
+	Revision int32         `json:"revision"`
+	// A read-only copy in the Shared Library.
+	Shared    OptBool   `json:"shared"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+// GetID returns the value of ID.
+func (s *LibraryEntry) GetID() ID {
+	return s.ID
+}
+
+// GetKind returns the value of Kind.
+func (s *LibraryEntry) GetKind() LibraryKind {
+	return s.Kind
+}
+
+// GetName returns the value of Name.
+func (s *LibraryEntry) GetName() string {
+	return s.Name
+}
+
+// GetFields returns the value of Fields.
+func (s *LibraryEntry) GetFields() LibraryFields {
+	return s.Fields
+}
+
+// GetRevision returns the value of Revision.
+func (s *LibraryEntry) GetRevision() int32 {
+	return s.Revision
+}
+
+// GetShared returns the value of Shared.
+func (s *LibraryEntry) GetShared() OptBool {
+	return s.Shared
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *LibraryEntry) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// GetUpdatedAt returns the value of UpdatedAt.
+func (s *LibraryEntry) GetUpdatedAt() time.Time {
+	return s.UpdatedAt
+}
+
+// SetID sets the value of ID.
+func (s *LibraryEntry) SetID(val ID) {
+	s.ID = val
+}
+
+// SetKind sets the value of Kind.
+func (s *LibraryEntry) SetKind(val LibraryKind) {
+	s.Kind = val
+}
+
+// SetName sets the value of Name.
+func (s *LibraryEntry) SetName(val string) {
+	s.Name = val
+}
+
+// SetFields sets the value of Fields.
+func (s *LibraryEntry) SetFields(val LibraryFields) {
+	s.Fields = val
+}
+
+// SetRevision sets the value of Revision.
+func (s *LibraryEntry) SetRevision(val int32) {
+	s.Revision = val
+}
+
+// SetShared sets the value of Shared.
+func (s *LibraryEntry) SetShared(val OptBool) {
+	s.Shared = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *LibraryEntry) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+// SetUpdatedAt sets the value of UpdatedAt.
+func (s *LibraryEntry) SetUpdatedAt(val time.Time) {
+	s.UpdatedAt = val
+}
+
+// A Library entry with its Revisions, newest first, and the Campaigns it is linked into.
+// Ref: #/components/schemas/LibraryEntryDetail
+type LibraryEntryDetail struct {
+	Entry     LibraryEntry      `json:"entry"`
+	Revisions []LibraryRevision `json:"revisions"`
+	Uses      []LibraryUse      `json:"uses"`
+}
+
+// GetEntry returns the value of Entry.
+func (s *LibraryEntryDetail) GetEntry() LibraryEntry {
+	return s.Entry
+}
+
+// GetRevisions returns the value of Revisions.
+func (s *LibraryEntryDetail) GetRevisions() []LibraryRevision {
+	return s.Revisions
+}
+
+// GetUses returns the value of Uses.
+func (s *LibraryEntryDetail) GetUses() []LibraryUse {
+	return s.Uses
+}
+
+// SetEntry sets the value of Entry.
+func (s *LibraryEntryDetail) SetEntry(val LibraryEntry) {
+	s.Entry = val
+}
+
+// SetRevisions sets the value of Revisions.
+func (s *LibraryEntryDetail) SetRevisions(val []LibraryRevision) {
+	s.Revisions = val
+}
+
+// SetUses sets the value of Uses.
+func (s *LibraryEntryDetail) SetUses(val []LibraryUse) {
+	s.Uses = val
+}
+
+// LibraryEntryDetailHeaders wraps LibraryEntryDetail with response headers.
+type LibraryEntryDetailHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           LibraryEntryDetail
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *LibraryEntryDetailHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *LibraryEntryDetailHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *LibraryEntryDetailHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *LibraryEntryDetailHeaders) GetResponse() LibraryEntryDetail {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *LibraryEntryDetailHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *LibraryEntryDetailHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *LibraryEntryDetailHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *LibraryEntryDetailHeaders) SetResponse(val LibraryEntryDetail) {
+	s.Response = val
+}
+
+func (*LibraryEntryDetailHeaders) getLibraryEntryRes()    {}
+func (*LibraryEntryDetailHeaders) updateLibraryEntryRes() {}
+
+// LibraryEntryHeaders wraps LibraryEntry with response headers.
+type LibraryEntryHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           LibraryEntry
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *LibraryEntryHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *LibraryEntryHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *LibraryEntryHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *LibraryEntryHeaders) GetResponse() LibraryEntry {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *LibraryEntryHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *LibraryEntryHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *LibraryEntryHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *LibraryEntryHeaders) SetResponse(val LibraryEntry) {
+	s.Response = val
+}
+
+func (*LibraryEntryHeaders) createLibraryEntryRes() {}
+
+// A new Library entry.
+// Ref: #/components/schemas/LibraryEntryInput
+type LibraryEntryInput struct {
+	Kind   LibraryKind   `json:"kind"`
+	Name   string        `json:"name"`
+	Fields LibraryFields `json:"fields"`
+}
+
+// GetKind returns the value of Kind.
+func (s *LibraryEntryInput) GetKind() LibraryKind {
+	return s.Kind
+}
+
+// GetName returns the value of Name.
+func (s *LibraryEntryInput) GetName() string {
+	return s.Name
+}
+
+// GetFields returns the value of Fields.
+func (s *LibraryEntryInput) GetFields() LibraryFields {
+	return s.Fields
+}
+
+// SetKind sets the value of Kind.
+func (s *LibraryEntryInput) SetKind(val LibraryKind) {
+	s.Kind = val
+}
+
+// SetName sets the value of Name.
+func (s *LibraryEntryInput) SetName(val string) {
+	s.Name = val
+}
+
+// SetFields sets the value of Fields.
+func (s *LibraryEntryInput) SetFields(val LibraryFields) {
+	s.Fields = val
+}
+
+// A Library entry's new base; its kind stays.
+// Ref: #/components/schemas/LibraryEntryUpdate
+type LibraryEntryUpdate struct {
+	Name   string        `json:"name"`
+	Fields LibraryFields `json:"fields"`
+}
+
+// GetName returns the value of Name.
+func (s *LibraryEntryUpdate) GetName() string {
+	return s.Name
+}
+
+// GetFields returns the value of Fields.
+func (s *LibraryEntryUpdate) GetFields() LibraryFields {
+	return s.Fields
+}
+
+// SetName sets the value of Name.
+func (s *LibraryEntryUpdate) SetName(val string) {
+	s.Name = val
+}
+
+// SetFields sets the value of Fields.
+func (s *LibraryEntryUpdate) SetFields(val LibraryFields) {
+	s.Fields = val
+}
+
+// Homebrew in Grimoire's own JSON schema. Entries are keyed so Collections can name them.
+// Ref: #/components/schemas/LibraryExport
+type LibraryExport struct {
+	Format      LibraryExportFormat  `json:"format"`
+	Version     int32                `json:"version"`
+	Entries     []ExportedEntry      `json:"entries"`
+	Collections []ExportedCollection `json:"collections"`
+}
+
+// GetFormat returns the value of Format.
+func (s *LibraryExport) GetFormat() LibraryExportFormat {
+	return s.Format
+}
+
+// GetVersion returns the value of Version.
+func (s *LibraryExport) GetVersion() int32 {
+	return s.Version
+}
+
+// GetEntries returns the value of Entries.
+func (s *LibraryExport) GetEntries() []ExportedEntry {
+	return s.Entries
+}
+
+// GetCollections returns the value of Collections.
+func (s *LibraryExport) GetCollections() []ExportedCollection {
+	return s.Collections
+}
+
+// SetFormat sets the value of Format.
+func (s *LibraryExport) SetFormat(val LibraryExportFormat) {
+	s.Format = val
+}
+
+// SetVersion sets the value of Version.
+func (s *LibraryExport) SetVersion(val int32) {
+	s.Version = val
+}
+
+// SetEntries sets the value of Entries.
+func (s *LibraryExport) SetEntries(val []ExportedEntry) {
+	s.Entries = val
+}
+
+// SetCollections sets the value of Collections.
+func (s *LibraryExport) SetCollections(val []ExportedCollection) {
+	s.Collections = val
+}
+
+type LibraryExportFormat string
+
+const (
+	LibraryExportFormatGrimoireLibrary LibraryExportFormat = "grimoire-library"
+)
+
+// AllValues returns all LibraryExportFormat values.
+func (LibraryExportFormat) AllValues() []LibraryExportFormat {
+	return []LibraryExportFormat{
+		LibraryExportFormatGrimoireLibrary,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LibraryExportFormat) MarshalText() ([]byte, error) {
+	switch s {
+	case LibraryExportFormatGrimoireLibrary:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LibraryExportFormat) UnmarshalText(data []byte) error {
+	switch LibraryExportFormat(data) {
+	case LibraryExportFormatGrimoireLibrary:
+		*s = LibraryExportFormatGrimoireLibrary
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// LibraryExportHeaders wraps LibraryExport with response headers.
+type LibraryExportHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           LibraryExport
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *LibraryExportHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *LibraryExportHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *LibraryExportHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *LibraryExportHeaders) GetResponse() LibraryExport {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *LibraryExportHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *LibraryExportHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *LibraryExportHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *LibraryExportHeaders) SetResponse(val LibraryExport) {
+	s.Response = val
+}
+
+func (*LibraryExportHeaders) exportLibraryRes() {}
+
+// One named value of a Library entry.
+// Ref: #/components/schemas/LibraryField
+type LibraryField struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
+// GetName returns the value of Name.
+func (s *LibraryField) GetName() string {
+	return s.Name
+}
+
+// GetValue returns the value of Value.
+func (s *LibraryField) GetValue() string {
+	return s.Value
+}
+
+// SetName sets the value of Name.
+func (s *LibraryField) SetName(val string) {
+	s.Name = val
+}
+
+// SetValue sets the value of Value.
+func (s *LibraryField) SetValue(val string) {
+	s.Value = val
+}
+
+type LibraryFields []LibraryField
+
+// An export to import. Parts of it Grimoire cannot take are reported, not refused.
+// Ref: #/components/schemas/LibraryImport
+type LibraryImport struct {
+	Format      LibraryImportFormat  `json:"format"`
+	Version     int32                `json:"version"`
+	Entries     []ImportedEntry      `json:"entries"`
+	Collections []ExportedCollection `json:"collections"`
+}
+
+// GetFormat returns the value of Format.
+func (s *LibraryImport) GetFormat() LibraryImportFormat {
+	return s.Format
+}
+
+// GetVersion returns the value of Version.
+func (s *LibraryImport) GetVersion() int32 {
+	return s.Version
+}
+
+// GetEntries returns the value of Entries.
+func (s *LibraryImport) GetEntries() []ImportedEntry {
+	return s.Entries
+}
+
+// GetCollections returns the value of Collections.
+func (s *LibraryImport) GetCollections() []ExportedCollection {
+	return s.Collections
+}
+
+// SetFormat sets the value of Format.
+func (s *LibraryImport) SetFormat(val LibraryImportFormat) {
+	s.Format = val
+}
+
+// SetVersion sets the value of Version.
+func (s *LibraryImport) SetVersion(val int32) {
+	s.Version = val
+}
+
+// SetEntries sets the value of Entries.
+func (s *LibraryImport) SetEntries(val []ImportedEntry) {
+	s.Entries = val
+}
+
+// SetCollections sets the value of Collections.
+func (s *LibraryImport) SetCollections(val []ExportedCollection) {
+	s.Collections = val
+}
+
+type LibraryImportFormat string
+
+const (
+	LibraryImportFormatGrimoireLibrary LibraryImportFormat = "grimoire-library"
+)
+
+// AllValues returns all LibraryImportFormat values.
+func (LibraryImportFormat) AllValues() []LibraryImportFormat {
+	return []LibraryImportFormat{
+		LibraryImportFormatGrimoireLibrary,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LibraryImportFormat) MarshalText() ([]byte, error) {
+	switch s {
+	case LibraryImportFormatGrimoireLibrary:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LibraryImportFormat) UnmarshalText(data []byte) error {
+	switch LibraryImportFormat(data) {
+	case LibraryImportFormatGrimoireLibrary:
+		*s = LibraryImportFormatGrimoireLibrary
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// What a Library entry is.
+// Ref: #/components/schemas/LibraryKind
+type LibraryKind string
+
+const (
+	LibraryKindCreature LibraryKind = "creature"
+	LibraryKindNpc      LibraryKind = "npc"
+	LibraryKindLocation LibraryKind = "location"
+	LibraryKindShop     LibraryKind = "shop"
+	LibraryKindItem     LibraryKind = "item"
+	LibraryKindSpell    LibraryKind = "spell"
+	LibraryKindTable    LibraryKind = "table"
+)
+
+// AllValues returns all LibraryKind values.
+func (LibraryKind) AllValues() []LibraryKind {
+	return []LibraryKind{
+		LibraryKindCreature,
+		LibraryKindNpc,
+		LibraryKindLocation,
+		LibraryKindShop,
+		LibraryKindItem,
+		LibraryKindSpell,
+		LibraryKindTable,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LibraryKind) MarshalText() ([]byte, error) {
+	switch s {
+	case LibraryKindCreature:
+		return []byte(s), nil
+	case LibraryKindNpc:
+		return []byte(s), nil
+	case LibraryKindLocation:
+		return []byte(s), nil
+	case LibraryKindShop:
+		return []byte(s), nil
+	case LibraryKindItem:
+		return []byte(s), nil
+	case LibraryKindSpell:
+		return []byte(s), nil
+	case LibraryKindTable:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LibraryKind) UnmarshalText(data []byte) error {
+	switch LibraryKind(data) {
+	case LibraryKindCreature:
+		*s = LibraryKindCreature
+		return nil
+	case LibraryKindNpc:
+		*s = LibraryKindNpc
+		return nil
+	case LibraryKindLocation:
+		*s = LibraryKindLocation
+		return nil
+	case LibraryKindShop:
+		*s = LibraryKindShop
+		return nil
+	case LibraryKindItem:
+		*s = LibraryKindItem
+		return nil
+	case LibraryKindSpell:
+		*s = LibraryKindSpell
+		return nil
+	case LibraryKindTable:
+		*s = LibraryKindTable
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// The entry to link.
+// Ref: #/components/schemas/LibraryLinkInput
+type LibraryLinkInput struct {
+	EntryId ID `json:"entryId"`
+}
+
+// GetEntryId returns the value of EntryId.
+func (s *LibraryLinkInput) GetEntryId() ID {
+	return s.EntryId
+}
+
+// SetEntryId sets the value of EntryId.
+func (s *LibraryLinkInput) SetEntryId(val ID) {
+	s.EntryId = val
+}
+
+// The Revision to pin.
+// Ref: #/components/schemas/LibraryPinInput
+type LibraryPinInput struct {
+	Revision int32 `json:"revision"`
+}
+
+// GetRevision returns the value of Revision.
+func (s *LibraryPinInput) GetRevision() int32 {
+	return s.Revision
+}
+
+// SetRevision sets the value of Revision.
+func (s *LibraryPinInput) SetRevision(val int32) {
+	s.Revision = val
+}
+
+// One saved version of an entry's base.
+// Ref: #/components/schemas/LibraryRevision
+type LibraryRevision struct {
+	No        int32         `json:"no"`
+	Name      string        `json:"name"`
+	Fields    LibraryFields `json:"fields"`
+	CreatedAt time.Time     `json:"createdAt"`
+}
+
+// GetNo returns the value of No.
+func (s *LibraryRevision) GetNo() int32 {
+	return s.No
+}
+
+// GetName returns the value of Name.
+func (s *LibraryRevision) GetName() string {
+	return s.Name
+}
+
+// GetFields returns the value of Fields.
+func (s *LibraryRevision) GetFields() LibraryFields {
+	return s.Fields
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *LibraryRevision) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// SetNo sets the value of No.
+func (s *LibraryRevision) SetNo(val int32) {
+	s.No = val
+}
+
+// SetName sets the value of Name.
+func (s *LibraryRevision) SetName(val string) {
+	s.Name = val
+}
+
+// SetFields sets the value of Fields.
+func (s *LibraryRevision) SetFields(val LibraryFields) {
+	s.Fields = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *LibraryRevision) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+// Whether the Collection is on in the Campaign.
+// Ref: #/components/schemas/LibrarySwitchInput
+type LibrarySwitchInput struct {
+	On bool `json:"on"`
+}
+
+// GetOn returns the value of On.
+func (s *LibrarySwitchInput) GetOn() bool {
+	return s.On
+}
+
+// SetOn sets the value of On.
+func (s *LibrarySwitchInput) SetOn(val bool) {
+	s.On = val
+}
+
+// A Campaign an entry is linked into, and the Revision it is pinned to there.
+// Ref: #/components/schemas/LibraryUse
+type LibraryUse struct {
+	CampaignId     ID       `json:"campaignId"`
+	Campaign       string   `json:"campaign"`
+	PinnedRevision OptInt32 `json:"pinnedRevision"`
+}
+
+// GetCampaignId returns the value of CampaignId.
+func (s *LibraryUse) GetCampaignId() ID {
+	return s.CampaignId
+}
+
+// GetCampaign returns the value of Campaign.
+func (s *LibraryUse) GetCampaign() string {
+	return s.Campaign
+}
+
+// GetPinnedRevision returns the value of PinnedRevision.
+func (s *LibraryUse) GetPinnedRevision() OptInt32 {
+	return s.PinnedRevision
+}
+
+// SetCampaignId sets the value of CampaignId.
+func (s *LibraryUse) SetCampaignId(val ID) {
+	s.CampaignId = val
+}
+
+// SetCampaign sets the value of Campaign.
+func (s *LibraryUse) SetCampaign(val string) {
+	s.Campaign = val
+}
+
+// SetPinnedRevision sets the value of PinnedRevision.
+func (s *LibraryUse) SetPinnedRevision(val OptInt32) {
+	s.PinnedRevision = val
+}
+
 // The token an invite or sign-in link carries.
 // Ref: #/components/schemas/LinkToken
 type LinkToken struct {
@@ -11905,6 +13157,155 @@ func (s *LinkToken) GetToken() string {
 func (s *LinkToken) SetToken(val string) {
 	s.Token = val
 }
+
+// A Library entry as one Campaign sees it. The base is the pinned Revision, or the latest; the
+// Campaign Override sits on top; fields are the two resolved together.
+// Ref: #/components/schemas/LinkedEntry
+type LinkedEntry struct {
+	Entry LibraryEntry `json:"entry"`
+	// The DM linked it themselves, rather than only through a Collection.
+	Direct bool `json:"direct"`
+	// The switched-on Collections that bring it in.
+	Via            []string      `json:"via"`
+	PinnedRevision OptInt32      `json:"pinnedRevision"`
+	BaseName       string        `json:"baseName"`
+	Base           LibraryFields `json:"base"`
+	Override       LibraryFields `json:"override"`
+	Fields         LibraryFields `json:"fields"`
+}
+
+// GetEntry returns the value of Entry.
+func (s *LinkedEntry) GetEntry() LibraryEntry {
+	return s.Entry
+}
+
+// GetDirect returns the value of Direct.
+func (s *LinkedEntry) GetDirect() bool {
+	return s.Direct
+}
+
+// GetVia returns the value of Via.
+func (s *LinkedEntry) GetVia() []string {
+	return s.Via
+}
+
+// GetPinnedRevision returns the value of PinnedRevision.
+func (s *LinkedEntry) GetPinnedRevision() OptInt32 {
+	return s.PinnedRevision
+}
+
+// GetBaseName returns the value of BaseName.
+func (s *LinkedEntry) GetBaseName() string {
+	return s.BaseName
+}
+
+// GetBase returns the value of Base.
+func (s *LinkedEntry) GetBase() LibraryFields {
+	return s.Base
+}
+
+// GetOverride returns the value of Override.
+func (s *LinkedEntry) GetOverride() LibraryFields {
+	return s.Override
+}
+
+// GetFields returns the value of Fields.
+func (s *LinkedEntry) GetFields() LibraryFields {
+	return s.Fields
+}
+
+// SetEntry sets the value of Entry.
+func (s *LinkedEntry) SetEntry(val LibraryEntry) {
+	s.Entry = val
+}
+
+// SetDirect sets the value of Direct.
+func (s *LinkedEntry) SetDirect(val bool) {
+	s.Direct = val
+}
+
+// SetVia sets the value of Via.
+func (s *LinkedEntry) SetVia(val []string) {
+	s.Via = val
+}
+
+// SetPinnedRevision sets the value of PinnedRevision.
+func (s *LinkedEntry) SetPinnedRevision(val OptInt32) {
+	s.PinnedRevision = val
+}
+
+// SetBaseName sets the value of BaseName.
+func (s *LinkedEntry) SetBaseName(val string) {
+	s.BaseName = val
+}
+
+// SetBase sets the value of Base.
+func (s *LinkedEntry) SetBase(val LibraryFields) {
+	s.Base = val
+}
+
+// SetOverride sets the value of Override.
+func (s *LinkedEntry) SetOverride(val LibraryFields) {
+	s.Override = val
+}
+
+// SetFields sets the value of Fields.
+func (s *LinkedEntry) SetFields(val LibraryFields) {
+	s.Fields = val
+}
+
+// LinkedEntryHeaders wraps LinkedEntry with response headers.
+type LinkedEntryHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           LinkedEntry
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *LinkedEntryHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *LinkedEntryHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *LinkedEntryHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *LinkedEntryHeaders) GetResponse() LinkedEntry {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *LinkedEntryHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *LinkedEntryHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *LinkedEntryHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *LinkedEntryHeaders) SetResponse(val LinkedEntry) {
+	s.Response = val
+}
+
+func (*LinkedEntryHeaders) linkLibraryEntryRes()     {}
+func (*LinkedEntryHeaders) pinLibraryRevisionRes()   {}
+func (*LinkedEntryHeaders) setCampaignOverrideRes()  {}
+func (*LinkedEntryHeaders) unpinLibraryRevisionRes() {}
 
 // ListActivityOKHeaders wraps []Activity with response headers.
 type ListActivityOKHeaders struct {
@@ -11955,6 +13356,56 @@ func (s *ListActivityOKHeaders) SetResponse(val []Activity) {
 }
 
 func (*ListActivityOKHeaders) listActivityRes() {}
+
+// ListCampaignCollectionsOKHeaders wraps []LibraryCollection with response headers.
+type ListCampaignCollectionsOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []LibraryCollection
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ListCampaignCollectionsOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ListCampaignCollectionsOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ListCampaignCollectionsOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ListCampaignCollectionsOKHeaders) GetResponse() []LibraryCollection {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ListCampaignCollectionsOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ListCampaignCollectionsOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ListCampaignCollectionsOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ListCampaignCollectionsOKHeaders) SetResponse(val []LibraryCollection) {
+	s.Response = val
+}
+
+func (*ListCampaignCollectionsOKHeaders) listCampaignCollectionsRes() {}
 
 // ListCharacterRevisionsOKHeaders wraps []CharacterRevisionLine with response headers.
 type ListCharacterRevisionsOKHeaders struct {
@@ -12423,6 +13874,156 @@ func (s *ListInvitesOKHeaders) SetResponse(val []Invite) {
 
 func (*ListInvitesOKHeaders) listInvitesRes() {}
 
+// ListLibraryCollectionsOKHeaders wraps []LibraryCollection with response headers.
+type ListLibraryCollectionsOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []LibraryCollection
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ListLibraryCollectionsOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ListLibraryCollectionsOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ListLibraryCollectionsOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ListLibraryCollectionsOKHeaders) GetResponse() []LibraryCollection {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ListLibraryCollectionsOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ListLibraryCollectionsOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ListLibraryCollectionsOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ListLibraryCollectionsOKHeaders) SetResponse(val []LibraryCollection) {
+	s.Response = val
+}
+
+func (*ListLibraryCollectionsOKHeaders) listLibraryCollectionsRes() {}
+
+// ListLibraryEntriesOKHeaders wraps []LibraryEntry with response headers.
+type ListLibraryEntriesOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []LibraryEntry
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ListLibraryEntriesOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ListLibraryEntriesOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ListLibraryEntriesOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ListLibraryEntriesOKHeaders) GetResponse() []LibraryEntry {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ListLibraryEntriesOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ListLibraryEntriesOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ListLibraryEntriesOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ListLibraryEntriesOKHeaders) SetResponse(val []LibraryEntry) {
+	s.Response = val
+}
+
+func (*ListLibraryEntriesOKHeaders) listLibraryEntriesRes() {}
+
+// ListLinkedEntriesOKHeaders wraps []LinkedEntry with response headers.
+type ListLinkedEntriesOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []LinkedEntry
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ListLinkedEntriesOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ListLinkedEntriesOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ListLinkedEntriesOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ListLinkedEntriesOKHeaders) GetResponse() []LinkedEntry {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ListLinkedEntriesOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ListLinkedEntriesOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ListLinkedEntriesOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ListLinkedEntriesOKHeaders) SetResponse(val []LinkedEntry) {
+	s.Response = val
+}
+
+func (*ListLinkedEntriesOKHeaders) listLinkedEntriesRes() {}
+
 // ListLocationsOKHeaders wraps []Location with response headers.
 type ListLocationsOKHeaders struct {
 	RateLimitLimit     OptInt32
@@ -12623,6 +14224,56 @@ func (s *ListMapsOKHeaders) SetResponse(val []LocalMap) {
 
 func (*ListMapsOKHeaders) listMapsRes() {}
 
+// ListMySubmissionsOKHeaders wraps []SharedSubmission with response headers.
+type ListMySubmissionsOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []SharedSubmission
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ListMySubmissionsOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ListMySubmissionsOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ListMySubmissionsOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ListMySubmissionsOKHeaders) GetResponse() []SharedSubmission {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ListMySubmissionsOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ListMySubmissionsOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ListMySubmissionsOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ListMySubmissionsOKHeaders) SetResponse(val []SharedSubmission) {
+	s.Response = val
+}
+
+func (*ListMySubmissionsOKHeaders) listMySubmissionsRes() {}
+
 // ListNpcRevisionsOKHeaders wraps []Revision with response headers.
 type ListNpcRevisionsOKHeaders struct {
 	RateLimitLimit     OptInt32
@@ -12722,6 +14373,56 @@ func (s *ListNpcsOKHeaders) SetResponse(val []Npc) {
 }
 
 func (*ListNpcsOKHeaders) listNpcsRes() {}
+
+// ListProposalsOKHeaders wraps []Proposal with response headers.
+type ListProposalsOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []Proposal
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ListProposalsOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ListProposalsOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ListProposalsOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ListProposalsOKHeaders) GetResponse() []Proposal {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ListProposalsOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ListProposalsOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ListProposalsOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ListProposalsOKHeaders) SetResponse(val []Proposal) {
+	s.Response = val
+}
+
+func (*ListProposalsOKHeaders) listProposalsRes() {}
 
 // ListRetrainChoicesOKHeaders wraps []RetrainChoice with response headers.
 type ListRetrainChoicesOKHeaders struct {
@@ -13022,6 +14723,106 @@ func (s *ListSettlementsOKHeaders) SetResponse(val []Settlement) {
 }
 
 func (*ListSettlementsOKHeaders) listSettlementsRes() {}
+
+// ListSharedEntriesOKHeaders wraps []LibraryEntry with response headers.
+type ListSharedEntriesOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []LibraryEntry
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ListSharedEntriesOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ListSharedEntriesOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ListSharedEntriesOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ListSharedEntriesOKHeaders) GetResponse() []LibraryEntry {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ListSharedEntriesOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ListSharedEntriesOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ListSharedEntriesOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ListSharedEntriesOKHeaders) SetResponse(val []LibraryEntry) {
+	s.Response = val
+}
+
+func (*ListSharedEntriesOKHeaders) listSharedEntriesRes() {}
+
+// ListSharedSubmissionsOKHeaders wraps []SharedSubmission with response headers.
+type ListSharedSubmissionsOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []SharedSubmission
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ListSharedSubmissionsOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ListSharedSubmissionsOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ListSharedSubmissionsOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ListSharedSubmissionsOKHeaders) GetResponse() []SharedSubmission {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ListSharedSubmissionsOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ListSharedSubmissionsOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ListSharedSubmissionsOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ListSharedSubmissionsOKHeaders) SetResponse(val []SharedSubmission) {
+	s.Response = val
+}
+
+func (*ListSharedSubmissionsOKHeaders) listSharedSubmissionsRes() {}
 
 // ListShopRevisionsOKHeaders wraps []Revision with response headers.
 type ListShopRevisionsOKHeaders struct {
@@ -21512,6 +23313,33 @@ func (s *LootTableInput) SetEntries(val []LootEntry) {
 	s.Entries = val
 }
 
+// A part of an import Grimoire could not take, and why.
+// Ref: #/components/schemas/ManualPart
+type ManualPart struct {
+	Where  string `json:"where"`
+	Reason string `json:"reason"`
+}
+
+// GetWhere returns the value of Where.
+func (s *ManualPart) GetWhere() string {
+	return s.Where
+}
+
+// GetReason returns the value of Reason.
+func (s *ManualPart) GetReason() string {
+	return s.Reason
+}
+
+// SetWhere sets the value of Where.
+func (s *ManualPart) SetWhere(val string) {
+	s.Where = val
+}
+
+// SetReason sets the value of Reason.
+func (s *ManualPart) SetReason(val string) {
+	s.Reason = val
+}
+
 // A Map's name, calibration and ambient light.
 // Ref: #/components/schemas/MapEdit
 type MapEdit struct {
@@ -24673,6 +26501,52 @@ func (o OptID) Or(d ID) ID {
 	return d
 }
 
+// NewOptImportedEntryFields returns new OptImportedEntryFields with value set to v.
+func NewOptImportedEntryFields(v ImportedEntryFields) OptImportedEntryFields {
+	return OptImportedEntryFields{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptImportedEntryFields is optional ImportedEntryFields.
+type OptImportedEntryFields struct {
+	Value ImportedEntryFields
+	Set   bool
+}
+
+// IsSet returns true if OptImportedEntryFields was set.
+func (o OptImportedEntryFields) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptImportedEntryFields) Reset() {
+	var v ImportedEntryFields
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptImportedEntryFields) SetTo(v ImportedEntryFields) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptImportedEntryFields) Get() (v ImportedEntryFields, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptImportedEntryFields) Or(d ImportedEntryFields) ImportedEntryFields {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptInitiativeMode returns new OptInitiativeMode with value set to v.
 func NewOptInitiativeMode(v InitiativeMode) OptInitiativeMode {
 	return OptInitiativeMode{
@@ -24851,6 +26725,98 @@ func (o OptLevelUpRequestHitPoints) Get() (v LevelUpRequestHitPoints, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptLevelUpRequestHitPoints) Or(d LevelUpRequestHitPoints) LevelUpRequestHitPoints {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptLibraryKind returns new OptLibraryKind with value set to v.
+func NewOptLibraryKind(v LibraryKind) OptLibraryKind {
+	return OptLibraryKind{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLibraryKind is optional LibraryKind.
+type OptLibraryKind struct {
+	Value LibraryKind
+	Set   bool
+}
+
+// IsSet returns true if OptLibraryKind was set.
+func (o OptLibraryKind) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLibraryKind) Reset() {
+	var v LibraryKind
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLibraryKind) SetTo(v LibraryKind) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLibraryKind) Get() (v LibraryKind, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLibraryKind) Or(d LibraryKind) LibraryKind {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptLinkedEntry returns new OptLinkedEntry with value set to v.
+func NewOptLinkedEntry(v LinkedEntry) OptLinkedEntry {
+	return OptLinkedEntry{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLinkedEntry is optional LinkedEntry.
+type OptLinkedEntry struct {
+	Value LinkedEntry
+	Set   bool
+}
+
+// IsSet returns true if OptLinkedEntry was set.
+func (o OptLinkedEntry) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLinkedEntry) Reset() {
+	var v LinkedEntry
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLinkedEntry) SetTo(v LinkedEntry) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLinkedEntry) Get() (v LinkedEntry, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLinkedEntry) Or(d LinkedEntry) LinkedEntry {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -27881,9 +29847,12 @@ func (*ProblemStatusCodeWithHeaders) createCharacterRes()               {}
 func (*ProblemStatusCodeWithHeaders) createEncounterPoolRes()           {}
 func (*ProblemStatusCodeWithHeaders) createEncounterTableRes()          {}
 func (*ProblemStatusCodeWithHeaders) createInviteRes()                  {}
+func (*ProblemStatusCodeWithHeaders) createLibraryCollectionRes()       {}
+func (*ProblemStatusCodeWithHeaders) createLibraryEntryRes()            {}
 func (*ProblemStatusCodeWithHeaders) createLootTableRes()               {}
 func (*ProblemStatusCodeWithHeaders) createNpcRes()                     {}
 func (*ProblemStatusCodeWithHeaders) createOidcAccountRes()             {}
+func (*ProblemStatusCodeWithHeaders) createProposalRes()                {}
 func (*ProblemStatusCodeWithHeaders) createPushSubscriptionRes()        {}
 func (*ProblemStatusCodeWithHeaders) createRollRes()                    {}
 func (*ProblemStatusCodeWithHeaders) createSettlementRes()              {}
@@ -27904,6 +29873,7 @@ func (*ProblemStatusCodeWithHeaders) discardCharacterDraftRes()         {}
 func (*ProblemStatusCodeWithHeaders) draftReleaseNoteRes()              {}
 func (*ProblemStatusCodeWithHeaders) editReleaseNoteRes()               {}
 func (*ProblemStatusCodeWithHeaders) endSessionRes()                    {}
+func (*ProblemStatusCodeWithHeaders) exportLibraryRes()                 {}
 func (*ProblemStatusCodeWithHeaders) finishOidcRes()                    {}
 func (*ProblemStatusCodeWithHeaders) getAccountHistoryRes()             {}
 func (*ProblemStatusCodeWithHeaders) getAccountRes()                    {}
@@ -27917,6 +29887,7 @@ func (*ProblemStatusCodeWithHeaders) getCharacterRes()                  {}
 func (*ProblemStatusCodeWithHeaders) getEntryRes()                      {}
 func (*ProblemStatusCodeWithHeaders) getHealthRes()                     {}
 func (*ProblemStatusCodeWithHeaders) getInventoryRes()                  {}
+func (*ProblemStatusCodeWithHeaders) getLibraryEntryRes()               {}
 func (*ProblemStatusCodeWithHeaders) getMapImageRes()                   {}
 func (*ProblemStatusCodeWithHeaders) getMapRes()                        {}
 func (*ProblemStatusCodeWithHeaders) getMeRes()                         {}
@@ -27924,6 +29895,7 @@ func (*ProblemStatusCodeWithHeaders) getMyCharacterRes()                {}
 func (*ProblemStatusCodeWithHeaders) getNotificationPreferencesRes()    {}
 func (*ProblemStatusCodeWithHeaders) getNpcRes()                        {}
 func (*ProblemStatusCodeWithHeaders) getPortraitRes()                   {}
+func (*ProblemStatusCodeWithHeaders) getProposalRes()                   {}
 func (*ProblemStatusCodeWithHeaders) getPushKeyRes()                    {}
 func (*ProblemStatusCodeWithHeaders) getReadinessRes()                  {}
 func (*ProblemStatusCodeWithHeaders) getRollRes()                       {}
@@ -27936,13 +29908,16 @@ func (*ProblemStatusCodeWithHeaders) getSpellcastingRes()               {}
 func (*ProblemStatusCodeWithHeaders) getStatusRes()                     {}
 func (*ProblemStatusCodeWithHeaders) getTokenIconRes()                  {}
 func (*ProblemStatusCodeWithHeaders) getUnseenReleaseNoteRes()          {}
+func (*ProblemStatusCodeWithHeaders) importLibraryRes()                 {}
 func (*ProblemStatusCodeWithHeaders) joinCampaignRes()                  {}
 func (*ProblemStatusCodeWithHeaders) keepRollRes()                      {}
 func (*ProblemStatusCodeWithHeaders) levelUpRes()                       {}
+func (*ProblemStatusCodeWithHeaders) linkLibraryEntryRes()              {}
 func (*ProblemStatusCodeWithHeaders) linkOidcAccountRes()               {}
 func (*ProblemStatusCodeWithHeaders) listAccessTokensRes()              {}
 func (*ProblemStatusCodeWithHeaders) listActivityRes()                  {}
 func (*ProblemStatusCodeWithHeaders) listAdminAccountsRes()             {}
+func (*ProblemStatusCodeWithHeaders) listCampaignCollectionsRes()       {}
 func (*ProblemStatusCodeWithHeaders) listCampaignsRes()                 {}
 func (*ProblemStatusCodeWithHeaders) listCharacterRevisionsRes()        {}
 func (*ProblemStatusCodeWithHeaders) listCharactersRes()                {}
@@ -27956,6 +29931,9 @@ func (*ProblemStatusCodeWithHeaders) listEncounterTablesRes()           {}
 func (*ProblemStatusCodeWithHeaders) listEntriesRes()                   {}
 func (*ProblemStatusCodeWithHeaders) listFriendsRes()                   {}
 func (*ProblemStatusCodeWithHeaders) listInvitesRes()                   {}
+func (*ProblemStatusCodeWithHeaders) listLibraryCollectionsRes()        {}
+func (*ProblemStatusCodeWithHeaders) listLibraryEntriesRes()            {}
+func (*ProblemStatusCodeWithHeaders) listLinkedEntriesRes()             {}
 func (*ProblemStatusCodeWithHeaders) listLocationsRes()                 {}
 func (*ProblemStatusCodeWithHeaders) listLootTableRevisionsRes()        {}
 func (*ProblemStatusCodeWithHeaders) listLootTablesRes()                {}
@@ -27963,9 +29941,11 @@ func (*ProblemStatusCodeWithHeaders) listMapsRes()                      {}
 func (*ProblemStatusCodeWithHeaders) listMentionablesRes()              {}
 func (*ProblemStatusCodeWithHeaders) listMessagesRes()                  {}
 func (*ProblemStatusCodeWithHeaders) listMyCharactersRes()              {}
+func (*ProblemStatusCodeWithHeaders) listMySubmissionsRes()             {}
 func (*ProblemStatusCodeWithHeaders) listNotificationsRes()             {}
 func (*ProblemStatusCodeWithHeaders) listNpcRevisionsRes()              {}
 func (*ProblemStatusCodeWithHeaders) listNpcsRes()                      {}
+func (*ProblemStatusCodeWithHeaders) listProposalsRes()                 {}
 func (*ProblemStatusCodeWithHeaders) listReleaseNotesRes()              {}
 func (*ProblemStatusCodeWithHeaders) listRetrainChoicesRes()            {}
 func (*ProblemStatusCodeWithHeaders) listRetrainsRes()                  {}
@@ -27973,6 +29953,8 @@ func (*ProblemStatusCodeWithHeaders) listRollsRes()                     {}
 func (*ProblemStatusCodeWithHeaders) listSessionsRes()                  {}
 func (*ProblemStatusCodeWithHeaders) listSettlementRevisionsRes()       {}
 func (*ProblemStatusCodeWithHeaders) listSettlementsRes()               {}
+func (*ProblemStatusCodeWithHeaders) listSharedEntriesRes()             {}
+func (*ProblemStatusCodeWithHeaders) listSharedSubmissionsRes()         {}
 func (*ProblemStatusCodeWithHeaders) listShopRevisionsRes()             {}
 func (*ProblemStatusCodeWithHeaders) listShopsRes()                     {}
 func (*ProblemStatusCodeWithHeaders) listSourcesRes()                   {}
@@ -27980,6 +29962,7 @@ func (*ProblemStatusCodeWithHeaders) listSpellsRes()                    {}
 func (*ProblemStatusCodeWithHeaders) moveItemRes()                      {}
 func (*ProblemStatusCodeWithHeaders) passInspirationRes()               {}
 func (*ProblemStatusCodeWithHeaders) passTwoStepRes()                   {}
+func (*ProblemStatusCodeWithHeaders) pinLibraryRevisionRes()            {}
 func (*ProblemStatusCodeWithHeaders) planLevelUpRes()                   {}
 func (*ProblemStatusCodeWithHeaders) prepareSpellsRes()                 {}
 func (*ProblemStatusCodeWithHeaders) previewAccountInviteRes()          {}
@@ -28003,6 +29986,9 @@ func (*ProblemStatusCodeWithHeaders) restoreLootTableRevisionRes()      {}
 func (*ProblemStatusCodeWithHeaders) restoreNpcRevisionRes()            {}
 func (*ProblemStatusCodeWithHeaders) restoreSettlementRevisionRes()     {}
 func (*ProblemStatusCodeWithHeaders) restoreShopRevisionRes()           {}
+func (*ProblemStatusCodeWithHeaders) resubmitProposalRes()              {}
+func (*ProblemStatusCodeWithHeaders) reviewProposalRes()                {}
+func (*ProblemStatusCodeWithHeaders) reviewSharedSubmissionRes()        {}
 func (*ProblemStatusCodeWithHeaders) revokeAccessTokenRes()             {}
 func (*ProblemStatusCodeWithHeaders) revokeInviteRes()                  {}
 func (*ProblemStatusCodeWithHeaders) rollCharacterScoresRes()           {}
@@ -28016,10 +30002,12 @@ func (*ProblemStatusCodeWithHeaders) sendMessageRes()                   {}
 func (*ProblemStatusCodeWithHeaders) setAccountDisabledRes()            {}
 func (*ProblemStatusCodeWithHeaders) setAccountPasswordRes()            {}
 func (*ProblemStatusCodeWithHeaders) setAdminRoleRes()                  {}
+func (*ProblemStatusCodeWithHeaders) setCampaignOverrideRes()           {}
 func (*ProblemStatusCodeWithHeaders) setDieRes()                        {}
 func (*ProblemStatusCodeWithHeaders) setNotificationPreferencesRes()    {}
 func (*ProblemStatusCodeWithHeaders) setPortraitRes()                   {}
 func (*ProblemStatusCodeWithHeaders) setTokenIconRes()                  {}
+func (*ProblemStatusCodeWithHeaders) shareLibraryEntryRes()             {}
 func (*ProblemStatusCodeWithHeaders) signInRes()                        {}
 func (*ProblemStatusCodeWithHeaders) signOutRes()                       {}
 func (*ProblemStatusCodeWithHeaders) startConversationRes()             {}
@@ -28027,16 +30015,21 @@ func (*ProblemStatusCodeWithHeaders) startOidcLinkRes()                 {}
 func (*ProblemStatusCodeWithHeaders) startOidcSignInRes()               {}
 func (*ProblemStatusCodeWithHeaders) startSessionRes()                  {}
 func (*ProblemStatusCodeWithHeaders) swapWeaponSetRes()                 {}
+func (*ProblemStatusCodeWithHeaders) switchLibraryCollectionRes()       {}
 func (*ProblemStatusCodeWithHeaders) takeFromStashRes()                 {}
 func (*ProblemStatusCodeWithHeaders) unblockRes()                       {}
 func (*ProblemStatusCodeWithHeaders) undoChangeRes()                    {}
 func (*ProblemStatusCodeWithHeaders) unfriendRes()                      {}
+func (*ProblemStatusCodeWithHeaders) unlinkLibraryEntryRes()            {}
 func (*ProblemStatusCodeWithHeaders) unlinkOidcRes()                    {}
+func (*ProblemStatusCodeWithHeaders) unpinLibraryRevisionRes()          {}
 func (*ProblemStatusCodeWithHeaders) updateAccountRes()                 {}
 func (*ProblemStatusCodeWithHeaders) updateCampaignRes()                {}
 func (*ProblemStatusCodeWithHeaders) updateCharacterRes()               {}
 func (*ProblemStatusCodeWithHeaders) updateEncounterPoolRes()           {}
 func (*ProblemStatusCodeWithHeaders) updateEncounterTableRes()          {}
+func (*ProblemStatusCodeWithHeaders) updateLibraryCollectionRes()       {}
+func (*ProblemStatusCodeWithHeaders) updateLibraryEntryRes()            {}
 func (*ProblemStatusCodeWithHeaders) updateLootTableRes()               {}
 func (*ProblemStatusCodeWithHeaders) updateMapRes()                     {}
 func (*ProblemStatusCodeWithHeaders) updateMemberRes()                  {}
@@ -28073,6 +30066,660 @@ func (s *Proficiencies) SetArmor(val []string) {
 // SetWeapons sets the value of Weapons.
 func (s *Proficiencies) SetWeapons(val []string) {
 	s.Weapons = val
+}
+
+// A Player's request that the DM accept a new entry into a Campaign, or a change to one it sees
+// (baseEntryId). entryId is the Library entry an approval made or changed.
+// Ref: #/components/schemas/Proposal
+type Proposal struct {
+	ID         ID             `json:"id"`
+	Kind       LibraryKind    `json:"kind"`
+	Name       string         `json:"name"`
+	Fields     LibraryFields  `json:"fields"`
+	Note       string         `json:"note"`
+	AuthorName string         `json:"authorName"`
+	Status     ProposalStatus `json:"status"`
+	// The DM's latest message.
+	Message     string    `json:"message"`
+	BaseEntryId OptID     `json:"baseEntryId"`
+	EntryId     OptID     `json:"entryId"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
+}
+
+// GetID returns the value of ID.
+func (s *Proposal) GetID() ID {
+	return s.ID
+}
+
+// GetKind returns the value of Kind.
+func (s *Proposal) GetKind() LibraryKind {
+	return s.Kind
+}
+
+// GetName returns the value of Name.
+func (s *Proposal) GetName() string {
+	return s.Name
+}
+
+// GetFields returns the value of Fields.
+func (s *Proposal) GetFields() LibraryFields {
+	return s.Fields
+}
+
+// GetNote returns the value of Note.
+func (s *Proposal) GetNote() string {
+	return s.Note
+}
+
+// GetAuthorName returns the value of AuthorName.
+func (s *Proposal) GetAuthorName() string {
+	return s.AuthorName
+}
+
+// GetStatus returns the value of Status.
+func (s *Proposal) GetStatus() ProposalStatus {
+	return s.Status
+}
+
+// GetMessage returns the value of Message.
+func (s *Proposal) GetMessage() string {
+	return s.Message
+}
+
+// GetBaseEntryId returns the value of BaseEntryId.
+func (s *Proposal) GetBaseEntryId() OptID {
+	return s.BaseEntryId
+}
+
+// GetEntryId returns the value of EntryId.
+func (s *Proposal) GetEntryId() OptID {
+	return s.EntryId
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *Proposal) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// GetUpdatedAt returns the value of UpdatedAt.
+func (s *Proposal) GetUpdatedAt() time.Time {
+	return s.UpdatedAt
+}
+
+// SetID sets the value of ID.
+func (s *Proposal) SetID(val ID) {
+	s.ID = val
+}
+
+// SetKind sets the value of Kind.
+func (s *Proposal) SetKind(val LibraryKind) {
+	s.Kind = val
+}
+
+// SetName sets the value of Name.
+func (s *Proposal) SetName(val string) {
+	s.Name = val
+}
+
+// SetFields sets the value of Fields.
+func (s *Proposal) SetFields(val LibraryFields) {
+	s.Fields = val
+}
+
+// SetNote sets the value of Note.
+func (s *Proposal) SetNote(val string) {
+	s.Note = val
+}
+
+// SetAuthorName sets the value of AuthorName.
+func (s *Proposal) SetAuthorName(val string) {
+	s.AuthorName = val
+}
+
+// SetStatus sets the value of Status.
+func (s *Proposal) SetStatus(val ProposalStatus) {
+	s.Status = val
+}
+
+// SetMessage sets the value of Message.
+func (s *Proposal) SetMessage(val string) {
+	s.Message = val
+}
+
+// SetBaseEntryId sets the value of BaseEntryId.
+func (s *Proposal) SetBaseEntryId(val OptID) {
+	s.BaseEntryId = val
+}
+
+// SetEntryId sets the value of EntryId.
+func (s *Proposal) SetEntryId(val OptID) {
+	s.EntryId = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *Proposal) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+// SetUpdatedAt sets the value of UpdatedAt.
+func (s *Proposal) SetUpdatedAt(val time.Time) {
+	s.UpdatedAt = val
+}
+
+// A Proposal with its history and, for a change, the entry as the Campaign sees it now, for a
+// side-by-side review.
+// Ref: #/components/schemas/ProposalDetail
+type ProposalDetail struct {
+	Proposal Proposal       `json:"proposal"`
+	Steps    []ProposalStep `json:"steps"`
+	Current  OptLinkedEntry `json:"current"`
+}
+
+// GetProposal returns the value of Proposal.
+func (s *ProposalDetail) GetProposal() Proposal {
+	return s.Proposal
+}
+
+// GetSteps returns the value of Steps.
+func (s *ProposalDetail) GetSteps() []ProposalStep {
+	return s.Steps
+}
+
+// GetCurrent returns the value of Current.
+func (s *ProposalDetail) GetCurrent() OptLinkedEntry {
+	return s.Current
+}
+
+// SetProposal sets the value of Proposal.
+func (s *ProposalDetail) SetProposal(val Proposal) {
+	s.Proposal = val
+}
+
+// SetSteps sets the value of Steps.
+func (s *ProposalDetail) SetSteps(val []ProposalStep) {
+	s.Steps = val
+}
+
+// SetCurrent sets the value of Current.
+func (s *ProposalDetail) SetCurrent(val OptLinkedEntry) {
+	s.Current = val
+}
+
+// ProposalDetailHeaders wraps ProposalDetail with response headers.
+type ProposalDetailHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           ProposalDetail
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ProposalDetailHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ProposalDetailHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ProposalDetailHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ProposalDetailHeaders) GetResponse() ProposalDetail {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ProposalDetailHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ProposalDetailHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ProposalDetailHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ProposalDetailHeaders) SetResponse(val ProposalDetail) {
+	s.Response = val
+}
+
+func (*ProposalDetailHeaders) getProposalRes()      {}
+func (*ProposalDetailHeaders) resubmitProposalRes() {}
+func (*ProposalDetailHeaders) reviewProposalRes()   {}
+
+// ProposalHeaders wraps Proposal with response headers.
+type ProposalHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           Proposal
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ProposalHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ProposalHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ProposalHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ProposalHeaders) GetResponse() Proposal {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ProposalHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ProposalHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ProposalHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ProposalHeaders) SetResponse(val Proposal) {
+	s.Response = val
+}
+
+func (*ProposalHeaders) createProposalRes() {}
+
+// A new entry to propose, or a change to the entry baseEntryId.
+// Ref: #/components/schemas/ProposalInput
+type ProposalInput struct {
+	Kind        LibraryKind   `json:"kind"`
+	Name        string        `json:"name"`
+	Fields      LibraryFields `json:"fields"`
+	Note        OptString     `json:"note"`
+	BaseEntryId OptID         `json:"baseEntryId"`
+}
+
+// GetKind returns the value of Kind.
+func (s *ProposalInput) GetKind() LibraryKind {
+	return s.Kind
+}
+
+// GetName returns the value of Name.
+func (s *ProposalInput) GetName() string {
+	return s.Name
+}
+
+// GetFields returns the value of Fields.
+func (s *ProposalInput) GetFields() LibraryFields {
+	return s.Fields
+}
+
+// GetNote returns the value of Note.
+func (s *ProposalInput) GetNote() OptString {
+	return s.Note
+}
+
+// GetBaseEntryId returns the value of BaseEntryId.
+func (s *ProposalInput) GetBaseEntryId() OptID {
+	return s.BaseEntryId
+}
+
+// SetKind sets the value of Kind.
+func (s *ProposalInput) SetKind(val LibraryKind) {
+	s.Kind = val
+}
+
+// SetName sets the value of Name.
+func (s *ProposalInput) SetName(val string) {
+	s.Name = val
+}
+
+// SetFields sets the value of Fields.
+func (s *ProposalInput) SetFields(val LibraryFields) {
+	s.Fields = val
+}
+
+// SetNote sets the value of Note.
+func (s *ProposalInput) SetNote(val OptString) {
+	s.Note = val
+}
+
+// SetBaseEntryId sets the value of BaseEntryId.
+func (s *ProposalInput) SetBaseEntryId(val OptID) {
+	s.BaseEntryId = val
+}
+
+// A DM's decision; an approval may edit the name and fields first.
+// Ref: #/components/schemas/ProposalReviewInput
+type ProposalReviewInput struct {
+	Action  ProposalReviewInputAction `json:"action"`
+	Message OptString                 `json:"message"`
+	Name    OptString                 `json:"name"`
+	Fields  LibraryFields             `json:"fields"`
+}
+
+// GetAction returns the value of Action.
+func (s *ProposalReviewInput) GetAction() ProposalReviewInputAction {
+	return s.Action
+}
+
+// GetMessage returns the value of Message.
+func (s *ProposalReviewInput) GetMessage() OptString {
+	return s.Message
+}
+
+// GetName returns the value of Name.
+func (s *ProposalReviewInput) GetName() OptString {
+	return s.Name
+}
+
+// GetFields returns the value of Fields.
+func (s *ProposalReviewInput) GetFields() LibraryFields {
+	return s.Fields
+}
+
+// SetAction sets the value of Action.
+func (s *ProposalReviewInput) SetAction(val ProposalReviewInputAction) {
+	s.Action = val
+}
+
+// SetMessage sets the value of Message.
+func (s *ProposalReviewInput) SetMessage(val OptString) {
+	s.Message = val
+}
+
+// SetName sets the value of Name.
+func (s *ProposalReviewInput) SetName(val OptString) {
+	s.Name = val
+}
+
+// SetFields sets the value of Fields.
+func (s *ProposalReviewInput) SetFields(val LibraryFields) {
+	s.Fields = val
+}
+
+type ProposalReviewInputAction string
+
+const (
+	ProposalReviewInputActionApprove        ProposalReviewInputAction = "approve"
+	ProposalReviewInputActionRequestChanges ProposalReviewInputAction = "request_changes"
+	ProposalReviewInputActionDecline        ProposalReviewInputAction = "decline"
+)
+
+// AllValues returns all ProposalReviewInputAction values.
+func (ProposalReviewInputAction) AllValues() []ProposalReviewInputAction {
+	return []ProposalReviewInputAction{
+		ProposalReviewInputActionApprove,
+		ProposalReviewInputActionRequestChanges,
+		ProposalReviewInputActionDecline,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s ProposalReviewInputAction) MarshalText() ([]byte, error) {
+	switch s {
+	case ProposalReviewInputActionApprove:
+		return []byte(s), nil
+	case ProposalReviewInputActionRequestChanges:
+		return []byte(s), nil
+	case ProposalReviewInputActionDecline:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *ProposalReviewInputAction) UnmarshalText(data []byte) error {
+	switch ProposalReviewInputAction(data) {
+	case ProposalReviewInputActionApprove:
+		*s = ProposalReviewInputActionApprove
+		return nil
+	case ProposalReviewInputActionRequestChanges:
+		*s = ProposalReviewInputActionRequestChanges
+		return nil
+	case ProposalReviewInputActionDecline:
+		*s = ProposalReviewInputActionDecline
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// Where a Proposal stands.
+// Ref: #/components/schemas/ProposalStatus
+type ProposalStatus string
+
+const (
+	ProposalStatusPending          ProposalStatus = "pending"
+	ProposalStatusChangesRequested ProposalStatus = "changes_requested"
+	ProposalStatusApproved         ProposalStatus = "approved"
+	ProposalStatusDeclined         ProposalStatus = "declined"
+)
+
+// AllValues returns all ProposalStatus values.
+func (ProposalStatus) AllValues() []ProposalStatus {
+	return []ProposalStatus{
+		ProposalStatusPending,
+		ProposalStatusChangesRequested,
+		ProposalStatusApproved,
+		ProposalStatusDeclined,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s ProposalStatus) MarshalText() ([]byte, error) {
+	switch s {
+	case ProposalStatusPending:
+		return []byte(s), nil
+	case ProposalStatusChangesRequested:
+		return []byte(s), nil
+	case ProposalStatusApproved:
+		return []byte(s), nil
+	case ProposalStatusDeclined:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *ProposalStatus) UnmarshalText(data []byte) error {
+	switch ProposalStatus(data) {
+	case ProposalStatusPending:
+		*s = ProposalStatusPending
+		return nil
+	case ProposalStatusChangesRequested:
+		*s = ProposalStatusChangesRequested
+		return nil
+	case ProposalStatusApproved:
+		*s = ProposalStatusApproved
+		return nil
+	case ProposalStatusDeclined:
+		*s = ProposalStatusDeclined
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// One step of a Proposal's history.
+// Ref: #/components/schemas/ProposalStep
+type ProposalStep struct {
+	No        int32              `json:"no"`
+	Action    ProposalStepAction `json:"action"`
+	Message   string             `json:"message"`
+	By        string             `json:"by"`
+	CreatedAt time.Time          `json:"createdAt"`
+}
+
+// GetNo returns the value of No.
+func (s *ProposalStep) GetNo() int32 {
+	return s.No
+}
+
+// GetAction returns the value of Action.
+func (s *ProposalStep) GetAction() ProposalStepAction {
+	return s.Action
+}
+
+// GetMessage returns the value of Message.
+func (s *ProposalStep) GetMessage() string {
+	return s.Message
+}
+
+// GetBy returns the value of By.
+func (s *ProposalStep) GetBy() string {
+	return s.By
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *ProposalStep) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// SetNo sets the value of No.
+func (s *ProposalStep) SetNo(val int32) {
+	s.No = val
+}
+
+// SetAction sets the value of Action.
+func (s *ProposalStep) SetAction(val ProposalStepAction) {
+	s.Action = val
+}
+
+// SetMessage sets the value of Message.
+func (s *ProposalStep) SetMessage(val string) {
+	s.Message = val
+}
+
+// SetBy sets the value of By.
+func (s *ProposalStep) SetBy(val string) {
+	s.By = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *ProposalStep) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+type ProposalStepAction string
+
+const (
+	ProposalStepActionSubmitted        ProposalStepAction = "submitted"
+	ProposalStepActionResubmitted      ProposalStepAction = "resubmitted"
+	ProposalStepActionChangesRequested ProposalStepAction = "changes_requested"
+	ProposalStepActionApproved         ProposalStepAction = "approved"
+	ProposalStepActionDeclined         ProposalStepAction = "declined"
+)
+
+// AllValues returns all ProposalStepAction values.
+func (ProposalStepAction) AllValues() []ProposalStepAction {
+	return []ProposalStepAction{
+		ProposalStepActionSubmitted,
+		ProposalStepActionResubmitted,
+		ProposalStepActionChangesRequested,
+		ProposalStepActionApproved,
+		ProposalStepActionDeclined,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s ProposalStepAction) MarshalText() ([]byte, error) {
+	switch s {
+	case ProposalStepActionSubmitted:
+		return []byte(s), nil
+	case ProposalStepActionResubmitted:
+		return []byte(s), nil
+	case ProposalStepActionChangesRequested:
+		return []byte(s), nil
+	case ProposalStepActionApproved:
+		return []byte(s), nil
+	case ProposalStepActionDeclined:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *ProposalStepAction) UnmarshalText(data []byte) error {
+	switch ProposalStepAction(data) {
+	case ProposalStepActionSubmitted:
+		*s = ProposalStepActionSubmitted
+		return nil
+	case ProposalStepActionResubmitted:
+		*s = ProposalStepActionResubmitted
+		return nil
+	case ProposalStepActionChangesRequested:
+		*s = ProposalStepActionChangesRequested
+		return nil
+	case ProposalStepActionApproved:
+		*s = ProposalStepActionApproved
+		return nil
+	case ProposalStepActionDeclined:
+		*s = ProposalStepActionDeclined
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// A Proposal changed as the DM asked.
+// Ref: #/components/schemas/ProposalUpdate
+type ProposalUpdate struct {
+	Name   string        `json:"name"`
+	Fields LibraryFields `json:"fields"`
+	Note   OptString     `json:"note"`
+}
+
+// GetName returns the value of Name.
+func (s *ProposalUpdate) GetName() string {
+	return s.Name
+}
+
+// GetFields returns the value of Fields.
+func (s *ProposalUpdate) GetFields() LibraryFields {
+	return s.Fields
+}
+
+// GetNote returns the value of Note.
+func (s *ProposalUpdate) GetNote() OptString {
+	return s.Note
+}
+
+// SetName sets the value of Name.
+func (s *ProposalUpdate) SetName(val string) {
+	s.Name = val
+}
+
+// SetFields sets the value of Fields.
+func (s *ProposalUpdate) SetFields(val LibraryFields) {
+	s.Fields = val
+}
+
+// SetNote sets the value of Note.
+func (s *ProposalUpdate) SetNote(val OptString) {
+	s.Note = val
 }
 
 // The VAPID public key devices subscribe with, base64url-encoded.
@@ -31218,6 +33865,383 @@ func (s *SettlementWealth) UnmarshalText(data []byte) error {
 	}
 }
 
+// The entry to share, with a note for the Admins.
+// Ref: #/components/schemas/ShareInput
+type ShareInput struct {
+	EntryId ID        `json:"entryId"`
+	Note    OptString `json:"note"`
+}
+
+// GetEntryId returns the value of EntryId.
+func (s *ShareInput) GetEntryId() ID {
+	return s.EntryId
+}
+
+// GetNote returns the value of Note.
+func (s *ShareInput) GetNote() OptString {
+	return s.Note
+}
+
+// SetEntryId sets the value of EntryId.
+func (s *ShareInput) SetEntryId(val ID) {
+	s.EntryId = val
+}
+
+// SetNote sets the value of Note.
+func (s *ShareInput) SetNote(val OptString) {
+	s.Note = val
+}
+
+// An Admin's decision on a request to share, with the IP check.
+// Ref: #/components/schemas/SharedReviewInput
+type SharedReviewInput struct {
+	Decision SharedReviewInputDecision `json:"decision"`
+	// The entry carries no non-SRD text.
+	IpClear bool      `json:"ipClear"`
+	IpNote  OptString `json:"ipNote"`
+	Message OptString `json:"message"`
+}
+
+// GetDecision returns the value of Decision.
+func (s *SharedReviewInput) GetDecision() SharedReviewInputDecision {
+	return s.Decision
+}
+
+// GetIpClear returns the value of IpClear.
+func (s *SharedReviewInput) GetIpClear() bool {
+	return s.IpClear
+}
+
+// GetIpNote returns the value of IpNote.
+func (s *SharedReviewInput) GetIpNote() OptString {
+	return s.IpNote
+}
+
+// GetMessage returns the value of Message.
+func (s *SharedReviewInput) GetMessage() OptString {
+	return s.Message
+}
+
+// SetDecision sets the value of Decision.
+func (s *SharedReviewInput) SetDecision(val SharedReviewInputDecision) {
+	s.Decision = val
+}
+
+// SetIpClear sets the value of IpClear.
+func (s *SharedReviewInput) SetIpClear(val bool) {
+	s.IpClear = val
+}
+
+// SetIpNote sets the value of IpNote.
+func (s *SharedReviewInput) SetIpNote(val OptString) {
+	s.IpNote = val
+}
+
+// SetMessage sets the value of Message.
+func (s *SharedReviewInput) SetMessage(val OptString) {
+	s.Message = val
+}
+
+type SharedReviewInputDecision string
+
+const (
+	SharedReviewInputDecisionApprove SharedReviewInputDecision = "approve"
+	SharedReviewInputDecisionDecline SharedReviewInputDecision = "decline"
+)
+
+// AllValues returns all SharedReviewInputDecision values.
+func (SharedReviewInputDecision) AllValues() []SharedReviewInputDecision {
+	return []SharedReviewInputDecision{
+		SharedReviewInputDecisionApprove,
+		SharedReviewInputDecisionDecline,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s SharedReviewInputDecision) MarshalText() ([]byte, error) {
+	switch s {
+	case SharedReviewInputDecisionApprove:
+		return []byte(s), nil
+	case SharedReviewInputDecisionDecline:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *SharedReviewInputDecision) UnmarshalText(data []byte) error {
+	switch SharedReviewInputDecision(data) {
+	case SharedReviewInputDecisionApprove:
+		*s = SharedReviewInputDecisionApprove
+		return nil
+	case SharedReviewInputDecisionDecline:
+		*s = SharedReviewInputDecisionDecline
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// A request to put one Revision of an entry in the Shared Library, and the Admin's review. ipClear is
+// the Admin's check that it carries no non-SRD text, absent until reviewed.
+// Ref: #/components/schemas/SharedSubmission
+type SharedSubmission struct {
+	ID            ID                     `json:"id"`
+	EntryId       ID                     `json:"entryId"`
+	Revision      int32                  `json:"revision"`
+	Kind          LibraryKind            `json:"kind"`
+	Name          string                 `json:"name"`
+	Fields        LibraryFields          `json:"fields"`
+	Note          string                 `json:"note"`
+	Status        SharedSubmissionStatus `json:"status"`
+	IpClear       OptBool                `json:"ipClear"`
+	IpNote        string                 `json:"ipNote"`
+	Message       string                 `json:"message"`
+	SharedEntryId OptID                  `json:"sharedEntryId"`
+	CreatedAt     time.Time              `json:"createdAt"`
+	DecidedAt     OptDateTime            `json:"decidedAt"`
+}
+
+// GetID returns the value of ID.
+func (s *SharedSubmission) GetID() ID {
+	return s.ID
+}
+
+// GetEntryId returns the value of EntryId.
+func (s *SharedSubmission) GetEntryId() ID {
+	return s.EntryId
+}
+
+// GetRevision returns the value of Revision.
+func (s *SharedSubmission) GetRevision() int32 {
+	return s.Revision
+}
+
+// GetKind returns the value of Kind.
+func (s *SharedSubmission) GetKind() LibraryKind {
+	return s.Kind
+}
+
+// GetName returns the value of Name.
+func (s *SharedSubmission) GetName() string {
+	return s.Name
+}
+
+// GetFields returns the value of Fields.
+func (s *SharedSubmission) GetFields() LibraryFields {
+	return s.Fields
+}
+
+// GetNote returns the value of Note.
+func (s *SharedSubmission) GetNote() string {
+	return s.Note
+}
+
+// GetStatus returns the value of Status.
+func (s *SharedSubmission) GetStatus() SharedSubmissionStatus {
+	return s.Status
+}
+
+// GetIpClear returns the value of IpClear.
+func (s *SharedSubmission) GetIpClear() OptBool {
+	return s.IpClear
+}
+
+// GetIpNote returns the value of IpNote.
+func (s *SharedSubmission) GetIpNote() string {
+	return s.IpNote
+}
+
+// GetMessage returns the value of Message.
+func (s *SharedSubmission) GetMessage() string {
+	return s.Message
+}
+
+// GetSharedEntryId returns the value of SharedEntryId.
+func (s *SharedSubmission) GetSharedEntryId() OptID {
+	return s.SharedEntryId
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *SharedSubmission) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// GetDecidedAt returns the value of DecidedAt.
+func (s *SharedSubmission) GetDecidedAt() OptDateTime {
+	return s.DecidedAt
+}
+
+// SetID sets the value of ID.
+func (s *SharedSubmission) SetID(val ID) {
+	s.ID = val
+}
+
+// SetEntryId sets the value of EntryId.
+func (s *SharedSubmission) SetEntryId(val ID) {
+	s.EntryId = val
+}
+
+// SetRevision sets the value of Revision.
+func (s *SharedSubmission) SetRevision(val int32) {
+	s.Revision = val
+}
+
+// SetKind sets the value of Kind.
+func (s *SharedSubmission) SetKind(val LibraryKind) {
+	s.Kind = val
+}
+
+// SetName sets the value of Name.
+func (s *SharedSubmission) SetName(val string) {
+	s.Name = val
+}
+
+// SetFields sets the value of Fields.
+func (s *SharedSubmission) SetFields(val LibraryFields) {
+	s.Fields = val
+}
+
+// SetNote sets the value of Note.
+func (s *SharedSubmission) SetNote(val string) {
+	s.Note = val
+}
+
+// SetStatus sets the value of Status.
+func (s *SharedSubmission) SetStatus(val SharedSubmissionStatus) {
+	s.Status = val
+}
+
+// SetIpClear sets the value of IpClear.
+func (s *SharedSubmission) SetIpClear(val OptBool) {
+	s.IpClear = val
+}
+
+// SetIpNote sets the value of IpNote.
+func (s *SharedSubmission) SetIpNote(val string) {
+	s.IpNote = val
+}
+
+// SetMessage sets the value of Message.
+func (s *SharedSubmission) SetMessage(val string) {
+	s.Message = val
+}
+
+// SetSharedEntryId sets the value of SharedEntryId.
+func (s *SharedSubmission) SetSharedEntryId(val OptID) {
+	s.SharedEntryId = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *SharedSubmission) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+// SetDecidedAt sets the value of DecidedAt.
+func (s *SharedSubmission) SetDecidedAt(val OptDateTime) {
+	s.DecidedAt = val
+}
+
+// SharedSubmissionHeaders wraps SharedSubmission with response headers.
+type SharedSubmissionHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           SharedSubmission
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *SharedSubmissionHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *SharedSubmissionHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *SharedSubmissionHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *SharedSubmissionHeaders) GetResponse() SharedSubmission {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *SharedSubmissionHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *SharedSubmissionHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *SharedSubmissionHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *SharedSubmissionHeaders) SetResponse(val SharedSubmission) {
+	s.Response = val
+}
+
+func (*SharedSubmissionHeaders) reviewSharedSubmissionRes() {}
+func (*SharedSubmissionHeaders) shareLibraryEntryRes()      {}
+
+type SharedSubmissionStatus string
+
+const (
+	SharedSubmissionStatusPending  SharedSubmissionStatus = "pending"
+	SharedSubmissionStatusApproved SharedSubmissionStatus = "approved"
+	SharedSubmissionStatusDeclined SharedSubmissionStatus = "declined"
+)
+
+// AllValues returns all SharedSubmissionStatus values.
+func (SharedSubmissionStatus) AllValues() []SharedSubmissionStatus {
+	return []SharedSubmissionStatus{
+		SharedSubmissionStatusPending,
+		SharedSubmissionStatusApproved,
+		SharedSubmissionStatusDeclined,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s SharedSubmissionStatus) MarshalText() ([]byte, error) {
+	switch s {
+	case SharedSubmissionStatusPending:
+		return []byte(s), nil
+	case SharedSubmissionStatusApproved:
+		return []byte(s), nil
+	case SharedSubmissionStatusDeclined:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *SharedSubmissionStatus) UnmarshalText(data []byte) error {
+	switch SharedSubmissionStatus(data) {
+	case SharedSubmissionStatusPending:
+		*s = SharedSubmissionStatusPending
+		return nil
+	case SharedSubmissionStatusApproved:
+		*s = SharedSubmissionStatusApproved
+		return nil
+	case SharedSubmissionStatusDeclined:
+		*s = SharedSubmissionStatusDeclined
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // A trader in a Settlement with its Stock; stockedDay is the in-game day it last restocked.
 // Ref: #/components/schemas/Shop
 type Shop struct {
@@ -33090,6 +36114,56 @@ func (s *StockItem) SetPriceCp(val int32) {
 	s.PriceCp = val
 }
 
+// SwitchLibraryCollectionOKHeaders wraps []LibraryCollection with response headers.
+type SwitchLibraryCollectionOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []LibraryCollection
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *SwitchLibraryCollectionOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *SwitchLibraryCollectionOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *SwitchLibraryCollectionOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *SwitchLibraryCollectionOKHeaders) GetResponse() []LibraryCollection {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *SwitchLibraryCollectionOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *SwitchLibraryCollectionOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *SwitchLibraryCollectionOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *SwitchLibraryCollectionOKHeaders) SetResponse(val []LibraryCollection) {
+	s.Response = val
+}
+
+func (*SwitchLibraryCollectionOKHeaders) switchLibraryCollectionRes() {}
+
 // How the Table Display's camera moves.
 // Ref: #/components/schemas/TableCamera
 type TableCamera string
@@ -33741,6 +36815,45 @@ func (s *UnfriendNoContent) SetRateLimitReset(val OptInt32) {
 }
 
 func (*UnfriendNoContent) unfriendRes() {}
+
+// UnlinkLibraryEntryNoContent is response for UnlinkLibraryEntry operation.
+type UnlinkLibraryEntryNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *UnlinkLibraryEntryNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *UnlinkLibraryEntryNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *UnlinkLibraryEntryNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *UnlinkLibraryEntryNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *UnlinkLibraryEntryNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *UnlinkLibraryEntryNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*UnlinkLibraryEntryNoContent) unlinkLibraryEntryRes() {}
 
 // UnlinkOidcNoContent is response for UnlinkOidc operation.
 type UnlinkOidcNoContent struct {

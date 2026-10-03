@@ -1122,6 +1122,107 @@ type IdentityTwoStepChallenge struct {
 	Attempts  int32
 }
 
+type LibraryCampaignCollection struct {
+	CampaignID   uuid.UUID
+	CollectionID uuid.UUID
+	SwitchedAt   time.Time
+}
+
+type LibraryCampaignHome struct {
+	CampaignID   uuid.UUID
+	CollectionID uuid.UUID
+}
+
+type LibraryCampaignLink struct {
+	CampaignID     uuid.UUID
+	EntryID        uuid.UUID
+	PinnedRevision pgtype.Int4
+	Override       []byte
+	LinkedAt       time.Time
+	UpdatedAt      time.Time
+	Direct         bool
+}
+
+type LibraryCollection struct {
+	ID           uuid.UUID
+	OwnerSubject string
+	Name         string
+	Description  string
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+}
+
+type LibraryCollectionEntry struct {
+	CollectionID uuid.UUID
+	EntryID      uuid.UUID
+}
+
+type LibraryEntry struct {
+	ID           uuid.UUID
+	OwnerSubject string
+	Kind         string
+	Name         string
+	Fields       []byte
+	Revision     int32
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	Shared       bool
+}
+
+type LibraryEntryRevision struct {
+	EntryID       uuid.UUID
+	No            int32
+	Name          string
+	Fields        []byte
+	AuthorSubject string
+	CreatedAt     time.Time
+}
+
+type LibraryProposal struct {
+	ID            uuid.UUID
+	CampaignID    uuid.UUID
+	AuthorSubject string
+	AuthorName    string
+	Kind          string
+	Name          string
+	Fields        []byte
+	Note          string
+	BaseEntryID   pgtype.UUID
+	Status        string
+	Message       string
+	EntryID       pgtype.UUID
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
+}
+
+type LibraryProposalReview struct {
+	ProposalID uuid.UUID
+	No         int32
+	Action     string
+	Message    string
+	ByName     string
+	CreatedAt  time.Time
+}
+
+type LibrarySharedSubmission struct {
+	ID               uuid.UUID
+	EntryID          uuid.UUID
+	Revision         int32
+	Kind             string
+	Name             string
+	Fields           []byte
+	Note             string
+	SubmitterSubject string
+	Status           string
+	IpClear          pgtype.Bool
+	IpNote           string
+	Message          string
+	ReviewerSubject  pgtype.Text
+	SharedEntryID    pgtype.UUID
+	CreatedAt        time.Time
+	DecidedAt        pgtype.Timestamptz
+}
+
 type OpsCompendiumImport struct {
 	ID           int64
 	SnapshotHash string

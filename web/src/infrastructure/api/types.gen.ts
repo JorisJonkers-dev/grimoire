@@ -2506,6 +2506,359 @@ export type SessionAction = {
 };
 
 /**
+ * What a Library entry is.
+ */
+export type LibraryKind = 'creature' | 'npc' | 'location' | 'shop' | 'item' | 'spell' | 'table';
+
+/**
+ * One named value of a Library entry.
+ */
+export type LibraryField = {
+    name: string;
+    value: string;
+};
+
+/**
+ * Named values, in name order.
+ */
+export type LibraryFields = Array<LibraryField>;
+
+/**
+ * A Library entry's base at its latest Revision.
+ */
+export type LibraryEntry = {
+    id: Id;
+    kind: LibraryKind;
+    name: string;
+    fields: LibraryFields;
+    revision: number;
+    /**
+     * A read-only copy in the Shared Library.
+     */
+    shared?: boolean;
+    createdAt: string;
+    updatedAt: string;
+};
+
+/**
+ * A new Library entry.
+ */
+export type LibraryEntryInput = {
+    kind: LibraryKind;
+    name: string;
+    fields: LibraryFields;
+};
+
+/**
+ * A Library entry's new base; its kind stays.
+ */
+export type LibraryEntryUpdate = {
+    name: string;
+    fields: LibraryFields;
+};
+
+/**
+ * One saved version of an entry's base.
+ */
+export type LibraryRevision = {
+    no: number;
+    name: string;
+    fields: LibraryFields;
+    createdAt: string;
+};
+
+/**
+ * A Campaign an entry is linked into, and the Revision it is pinned to there.
+ */
+export type LibraryUse = {
+    campaignId: Id;
+    campaign: string;
+    pinnedRevision?: number;
+};
+
+/**
+ * A Library entry with its Revisions, newest first, and the Campaigns it is linked into.
+ */
+export type LibraryEntryDetail = {
+    entry: LibraryEntry;
+    revisions: Array<LibraryRevision>;
+    uses: Array<LibraryUse>;
+};
+
+/**
+ * A Library entry as one Campaign sees it. The base is the pinned Revision, or the latest; the Campaign Override sits on top; fields are the two resolved together.
+ */
+export type LinkedEntry = {
+    entry: LibraryEntry;
+    /**
+     * The DM linked it themselves, rather than only through a Collection.
+     */
+    direct: boolean;
+    /**
+     * The switched-on Collections that bring it in.
+     */
+    via: Array<string>;
+    pinnedRevision?: number;
+    baseName: string;
+    base: LibraryFields;
+    override: LibraryFields;
+    fields: LibraryFields;
+};
+
+/**
+ * A named group of Library entries, switched on per Campaign. switchedOn says whether it is on in the Campaign it was listed for; mine whether the caller owns it.
+ */
+export type LibraryCollection = {
+    id: Id;
+    name: string;
+    description: string;
+    entryIds: Array<Id>;
+    mine: boolean;
+    switchedOn?: boolean;
+};
+
+/**
+ * A new Collection.
+ */
+export type LibraryCollectionInput = {
+    name: string;
+    description?: string;
+};
+
+/**
+ * A Collection's name, description and the entries it holds.
+ */
+export type LibraryCollectionUpdate = {
+    name: string;
+    description?: string;
+    entryIds: Array<Id>;
+};
+
+/**
+ * Whether the Collection is on in the Campaign.
+ */
+export type LibrarySwitchInput = {
+    on: boolean;
+};
+
+/**
+ * The entry to link.
+ */
+export type LibraryLinkInput = {
+    entryId: Id;
+};
+
+/**
+ * Every field this Campaign sees differently; an empty list follows the base again.
+ */
+export type CampaignOverrideInput = {
+    fields: LibraryFields;
+};
+
+/**
+ * The Revision to pin.
+ */
+export type LibraryPinInput = {
+    revision: number;
+};
+
+/**
+ * Where a Proposal stands.
+ */
+export type ProposalStatus = 'pending' | 'changes_requested' | 'approved' | 'declined';
+
+/**
+ * A Player's request that the DM accept a new entry into a Campaign, or a change to one it sees (baseEntryId). entryId is the Library entry an approval made or changed.
+ */
+export type Proposal = {
+    id: Id;
+    kind: LibraryKind;
+    name: string;
+    fields: LibraryFields;
+    note: string;
+    authorName: string;
+    status: ProposalStatus;
+    /**
+     * The DM's latest message.
+     */
+    message: string;
+    baseEntryId?: Id;
+    entryId?: Id;
+    createdAt: string;
+    updatedAt: string;
+};
+
+/**
+ * One step of a Proposal's history.
+ */
+export type ProposalStep = {
+    no: number;
+    action: 'submitted' | 'resubmitted' | 'changes_requested' | 'approved' | 'declined';
+    message: string;
+    by: string;
+    createdAt: string;
+};
+
+/**
+ * A Proposal with its history and, for a change, the entry as the Campaign sees it now, for a side-by-side review.
+ */
+export type ProposalDetail = {
+    proposal: Proposal;
+    steps: Array<ProposalStep>;
+    current?: LinkedEntry;
+};
+
+/**
+ * A new entry to propose, or a change to the entry baseEntryId.
+ */
+export type ProposalInput = {
+    kind: LibraryKind;
+    name: string;
+    fields: LibraryFields;
+    note?: string;
+    baseEntryId?: Id;
+};
+
+/**
+ * A Proposal changed as the DM asked.
+ */
+export type ProposalUpdate = {
+    name: string;
+    fields: LibraryFields;
+    note?: string;
+};
+
+/**
+ * A DM's decision; an approval may edit the name and fields first.
+ */
+export type ProposalReviewInput = {
+    action: 'approve' | 'request_changes' | 'decline';
+    message?: string;
+    name?: string;
+    fields?: LibraryFields;
+};
+
+/**
+ * A request to put one Revision of an entry in the Shared Library, and the Admin's review. ipClear is the Admin's check that it carries no non-SRD text, absent until reviewed.
+ */
+export type SharedSubmission = {
+    id: Id;
+    entryId: Id;
+    revision: number;
+    kind: LibraryKind;
+    name: string;
+    fields: LibraryFields;
+    note: string;
+    status: 'pending' | 'approved' | 'declined';
+    ipClear?: boolean;
+    ipNote: string;
+    message: string;
+    sharedEntryId?: Id;
+    createdAt: string;
+    decidedAt?: string;
+};
+
+/**
+ * The entry to share, with a note for the Admins.
+ */
+export type ShareInput = {
+    entryId: Id;
+    note?: string;
+};
+
+/**
+ * An Admin's decision on a request to share, with the IP check.
+ */
+export type SharedReviewInput = {
+    decision: 'approve' | 'decline';
+    /**
+     * The entry carries no non-SRD text.
+     */
+    ipClear: boolean;
+    ipNote?: string;
+    message?: string;
+};
+
+/**
+ * Homebrew in Grimoire's own JSON schema. Entries are keyed so Collections can name them.
+ */
+export type LibraryExport = {
+    format: 'grimoire-library';
+    version: number;
+    entries: Array<ExportedEntry>;
+    collections: Array<ExportedCollection>;
+};
+
+/**
+ * One entry in an export.
+ */
+export type ExportedEntry = {
+    key: string;
+    kind: LibraryKind;
+    name: string;
+    fields: {
+        [key: string]: string;
+    };
+    /**
+     * Typed parts such as Effects; none are exported yet.
+     */
+    parts: Array<{
+        [key: string]: unknown;
+    }>;
+};
+
+/**
+ * One Collection in an export, naming its entries by key.
+ */
+export type ExportedCollection = {
+    name: string;
+    description: string;
+    entries: Array<string>;
+};
+
+/**
+ * An export to import. Parts of it Grimoire cannot take are reported, not refused.
+ */
+export type LibraryImport = {
+    format: 'grimoire-library';
+    version: number;
+    entries: Array<ImportedEntry>;
+    collections?: Array<ExportedCollection>;
+};
+
+/**
+ * One entry to import; its kind, fields and parts are checked by Grimoire, not refused by shape.
+ */
+export type ImportedEntry = {
+    key: string;
+    kind: string;
+    name: string;
+    fields?: {
+        [key: string]: unknown;
+    };
+    parts?: Array<{
+        [key: string]: unknown;
+    }>;
+};
+
+/**
+ * What an import added, and what needs doing by hand.
+ */
+export type ImportReport = {
+    entries: Array<LibraryEntry>;
+    collections: Array<LibraryCollection>;
+    manual: Array<ManualPart>;
+};
+
+/**
+ * A part of an import Grimoire could not take, and why.
+ */
+export type ManualPart = {
+    where: string;
+    reason: string;
+};
+
+/**
  * A Character's Inventory, the Party Stash, a drop of loot, or a bag inside another container, with what it weighs including its bags. A Character's names its owner and how much they can carry.
  */
 export type LiveContainer = {
@@ -3472,6 +3825,26 @@ export type PoolId = Id;
  * Encounter Table id.
  */
 export type TableId = Id;
+
+/**
+ * Collection id.
+ */
+export type CollectionId = Id;
+
+/**
+ * Proposal id.
+ */
+export type ProposalId = Id;
+
+/**
+ * Shared Library request id.
+ */
+export type SubmissionId = Id;
+
+/**
+ * Library entry id.
+ */
+export type LibraryEntryId = Id;
 
 /**
  * NPC id.
@@ -7749,6 +8122,925 @@ export type PreviewSightResponses = {
 };
 
 export type PreviewSightResponse = PreviewSightResponses[keyof PreviewSightResponses];
+
+export type ListLibraryEntriesData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Only entries of this kind.
+         */
+        kind?: LibraryKind;
+    };
+    url: '/api/v1/library';
+};
+
+export type ListLibraryEntriesErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListLibraryEntriesError = ListLibraryEntriesErrors[keyof ListLibraryEntriesErrors];
+
+export type ListLibraryEntriesResponses = {
+    /**
+     * The entries.
+     */
+    200: Array<LibraryEntry>;
+};
+
+export type ListLibraryEntriesResponse = ListLibraryEntriesResponses[keyof ListLibraryEntriesResponses];
+
+export type CreateLibraryEntryData = {
+    body: LibraryEntryInput;
+    path?: never;
+    query?: never;
+    url: '/api/v1/library';
+};
+
+export type CreateLibraryEntryErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type CreateLibraryEntryError = CreateLibraryEntryErrors[keyof CreateLibraryEntryErrors];
+
+export type CreateLibraryEntryResponses = {
+    /**
+     * The new entry.
+     */
+    201: LibraryEntry;
+};
+
+export type CreateLibraryEntryResponse = CreateLibraryEntryResponses[keyof CreateLibraryEntryResponses];
+
+export type ListLibraryCollectionsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/library/collections';
+};
+
+export type ListLibraryCollectionsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListLibraryCollectionsError = ListLibraryCollectionsErrors[keyof ListLibraryCollectionsErrors];
+
+export type ListLibraryCollectionsResponses = {
+    /**
+     * The Collections.
+     */
+    200: Array<LibraryCollection>;
+};
+
+export type ListLibraryCollectionsResponse = ListLibraryCollectionsResponses[keyof ListLibraryCollectionsResponses];
+
+export type CreateLibraryCollectionData = {
+    body: LibraryCollectionInput;
+    path?: never;
+    query?: never;
+    url: '/api/v1/library/collections';
+};
+
+export type CreateLibraryCollectionErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type CreateLibraryCollectionError = CreateLibraryCollectionErrors[keyof CreateLibraryCollectionErrors];
+
+export type CreateLibraryCollectionResponses = {
+    /**
+     * The new Collection.
+     */
+    201: LibraryCollection;
+};
+
+export type CreateLibraryCollectionResponse = CreateLibraryCollectionResponses[keyof CreateLibraryCollectionResponses];
+
+export type UpdateLibraryCollectionData = {
+    body: LibraryCollectionUpdate;
+    path: {
+        /**
+         * Collection id.
+         */
+        collectionId: Id;
+    };
+    query?: never;
+    url: '/api/v1/library/collections/{collectionId}';
+};
+
+export type UpdateLibraryCollectionErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type UpdateLibraryCollectionError = UpdateLibraryCollectionErrors[keyof UpdateLibraryCollectionErrors];
+
+export type UpdateLibraryCollectionResponses = {
+    /**
+     * The Collection.
+     */
+    200: LibraryCollection;
+};
+
+export type UpdateLibraryCollectionResponse = UpdateLibraryCollectionResponses[keyof UpdateLibraryCollectionResponses];
+
+export type ListCampaignCollectionsData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/collections';
+};
+
+export type ListCampaignCollectionsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListCampaignCollectionsError = ListCampaignCollectionsErrors[keyof ListCampaignCollectionsErrors];
+
+export type ListCampaignCollectionsResponses = {
+    /**
+     * The Collections.
+     */
+    200: Array<LibraryCollection>;
+};
+
+export type ListCampaignCollectionsResponse = ListCampaignCollectionsResponses[keyof ListCampaignCollectionsResponses];
+
+export type SwitchLibraryCollectionData = {
+    body: LibrarySwitchInput;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Collection id.
+         */
+        collectionId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/collections/{collectionId}';
+};
+
+export type SwitchLibraryCollectionErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SwitchLibraryCollectionError = SwitchLibraryCollectionErrors[keyof SwitchLibraryCollectionErrors];
+
+export type SwitchLibraryCollectionResponses = {
+    /**
+     * The Campaign's Collections.
+     */
+    200: Array<LibraryCollection>;
+};
+
+export type SwitchLibraryCollectionResponse = SwitchLibraryCollectionResponses[keyof SwitchLibraryCollectionResponses];
+
+export type ExportLibraryData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Only this Collection and its entries.
+         */
+        collectionId?: Id;
+        /**
+         * Only this entry.
+         */
+        entryId?: Id;
+    };
+    url: '/api/v1/library/export';
+};
+
+export type ExportLibraryErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ExportLibraryError = ExportLibraryErrors[keyof ExportLibraryErrors];
+
+export type ExportLibraryResponses = {
+    /**
+     * The export.
+     */
+    200: LibraryExport;
+};
+
+export type ExportLibraryResponse = ExportLibraryResponses[keyof ExportLibraryResponses];
+
+export type ImportLibraryData = {
+    body: LibraryImport;
+    path?: never;
+    query?: never;
+    url: '/api/v1/library/import';
+};
+
+export type ImportLibraryErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ImportLibraryError = ImportLibraryErrors[keyof ImportLibraryErrors];
+
+export type ImportLibraryResponses = {
+    /**
+     * What was imported, and what needs doing by hand.
+     */
+    200: ImportReport;
+};
+
+export type ImportLibraryResponse = ImportLibraryResponses[keyof ImportLibraryResponses];
+
+export type GetLibraryEntryData = {
+    body?: never;
+    path: {
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/library/{entryId}';
+};
+
+export type GetLibraryEntryErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetLibraryEntryError = GetLibraryEntryErrors[keyof GetLibraryEntryErrors];
+
+export type GetLibraryEntryResponses = {
+    /**
+     * The entry.
+     */
+    200: LibraryEntryDetail;
+};
+
+export type GetLibraryEntryResponse = GetLibraryEntryResponses[keyof GetLibraryEntryResponses];
+
+export type UpdateLibraryEntryData = {
+    body: LibraryEntryUpdate;
+    path: {
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/library/{entryId}';
+};
+
+export type UpdateLibraryEntryErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type UpdateLibraryEntryError = UpdateLibraryEntryErrors[keyof UpdateLibraryEntryErrors];
+
+export type UpdateLibraryEntryResponses = {
+    /**
+     * The entry.
+     */
+    200: LibraryEntryDetail;
+};
+
+export type UpdateLibraryEntryResponse = UpdateLibraryEntryResponses[keyof UpdateLibraryEntryResponses];
+
+export type ListLinkedEntriesData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/library';
+};
+
+export type ListLinkedEntriesErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListLinkedEntriesError = ListLinkedEntriesErrors[keyof ListLinkedEntriesErrors];
+
+export type ListLinkedEntriesResponses = {
+    /**
+     * The linked entries.
+     */
+    200: Array<LinkedEntry>;
+};
+
+export type ListLinkedEntriesResponse = ListLinkedEntriesResponses[keyof ListLinkedEntriesResponses];
+
+export type LinkLibraryEntryData = {
+    body: LibraryLinkInput;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/library';
+};
+
+export type LinkLibraryEntryErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type LinkLibraryEntryError = LinkLibraryEntryErrors[keyof LinkLibraryEntryErrors];
+
+export type LinkLibraryEntryResponses = {
+    /**
+     * The linked entry.
+     */
+    200: LinkedEntry;
+};
+
+export type LinkLibraryEntryResponse = LinkLibraryEntryResponses[keyof LinkLibraryEntryResponses];
+
+export type UnlinkLibraryEntryData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/library/{entryId}';
+};
+
+export type UnlinkLibraryEntryErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type UnlinkLibraryEntryError = UnlinkLibraryEntryErrors[keyof UnlinkLibraryEntryErrors];
+
+export type UnlinkLibraryEntryResponses = {
+    /**
+     * Unlinked.
+     */
+    204: void;
+};
+
+export type UnlinkLibraryEntryResponse = UnlinkLibraryEntryResponses[keyof UnlinkLibraryEntryResponses];
+
+export type SetCampaignOverrideData = {
+    body: CampaignOverrideInput;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/library/{entryId}/override';
+};
+
+export type SetCampaignOverrideErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SetCampaignOverrideError = SetCampaignOverrideErrors[keyof SetCampaignOverrideErrors];
+
+export type SetCampaignOverrideResponses = {
+    /**
+     * The linked entry.
+     */
+    200: LinkedEntry;
+};
+
+export type SetCampaignOverrideResponse = SetCampaignOverrideResponses[keyof SetCampaignOverrideResponses];
+
+export type UnpinLibraryRevisionData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/library/{entryId}/pin';
+};
+
+export type UnpinLibraryRevisionErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type UnpinLibraryRevisionError = UnpinLibraryRevisionErrors[keyof UnpinLibraryRevisionErrors];
+
+export type UnpinLibraryRevisionResponses = {
+    /**
+     * The linked entry.
+     */
+    200: LinkedEntry;
+};
+
+export type UnpinLibraryRevisionResponse = UnpinLibraryRevisionResponses[keyof UnpinLibraryRevisionResponses];
+
+export type PinLibraryRevisionData = {
+    body: LibraryPinInput;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/library/{entryId}/pin';
+};
+
+export type PinLibraryRevisionErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type PinLibraryRevisionError = PinLibraryRevisionErrors[keyof PinLibraryRevisionErrors];
+
+export type PinLibraryRevisionResponses = {
+    /**
+     * The linked entry.
+     */
+    200: LinkedEntry;
+};
+
+export type PinLibraryRevisionResponse = PinLibraryRevisionResponses[keyof PinLibraryRevisionResponses];
+
+export type ListProposalsData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/proposals';
+};
+
+export type ListProposalsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListProposalsError = ListProposalsErrors[keyof ListProposalsErrors];
+
+export type ListProposalsResponses = {
+    /**
+     * The Proposals.
+     */
+    200: Array<Proposal>;
+};
+
+export type ListProposalsResponse = ListProposalsResponses[keyof ListProposalsResponses];
+
+export type CreateProposalData = {
+    body: ProposalInput;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/proposals';
+};
+
+export type CreateProposalErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type CreateProposalError = CreateProposalErrors[keyof CreateProposalErrors];
+
+export type CreateProposalResponses = {
+    /**
+     * The Proposal.
+     */
+    201: Proposal;
+};
+
+export type CreateProposalResponse = CreateProposalResponses[keyof CreateProposalResponses];
+
+export type GetProposalData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Proposal id.
+         */
+        proposalId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/proposals/{proposalId}';
+};
+
+export type GetProposalErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetProposalError = GetProposalErrors[keyof GetProposalErrors];
+
+export type GetProposalResponses = {
+    /**
+     * The Proposal.
+     */
+    200: ProposalDetail;
+};
+
+export type GetProposalResponse = GetProposalResponses[keyof GetProposalResponses];
+
+export type ResubmitProposalData = {
+    body: ProposalUpdate;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Proposal id.
+         */
+        proposalId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/proposals/{proposalId}';
+};
+
+export type ResubmitProposalErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ResubmitProposalError = ResubmitProposalErrors[keyof ResubmitProposalErrors];
+
+export type ResubmitProposalResponses = {
+    /**
+     * The Proposal.
+     */
+    200: ProposalDetail;
+};
+
+export type ResubmitProposalResponse = ResubmitProposalResponses[keyof ResubmitProposalResponses];
+
+export type ReviewProposalData = {
+    body: ProposalReviewInput;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Proposal id.
+         */
+        proposalId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/proposals/{proposalId}/review';
+};
+
+export type ReviewProposalErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ReviewProposalError = ReviewProposalErrors[keyof ReviewProposalErrors];
+
+export type ReviewProposalResponses = {
+    /**
+     * The Proposal.
+     */
+    200: ProposalDetail;
+};
+
+export type ReviewProposalResponse = ReviewProposalResponses[keyof ReviewProposalResponses];
+
+export type ListSharedEntriesData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Only entries of this kind.
+         */
+        kind?: LibraryKind;
+    };
+    url: '/api/v1/shared-library';
+};
+
+export type ListSharedEntriesErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListSharedEntriesError = ListSharedEntriesErrors[keyof ListSharedEntriesErrors];
+
+export type ListSharedEntriesResponses = {
+    /**
+     * The shared entries.
+     */
+    200: Array<LibraryEntry>;
+};
+
+export type ListSharedEntriesResponse = ListSharedEntriesResponses[keyof ListSharedEntriesResponses];
+
+export type ListMySubmissionsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/shared-library/submissions';
+};
+
+export type ListMySubmissionsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListMySubmissionsError = ListMySubmissionsErrors[keyof ListMySubmissionsErrors];
+
+export type ListMySubmissionsResponses = {
+    /**
+     * The requests.
+     */
+    200: Array<SharedSubmission>;
+};
+
+export type ListMySubmissionsResponse = ListMySubmissionsResponses[keyof ListMySubmissionsResponses];
+
+export type ShareLibraryEntryData = {
+    body: ShareInput;
+    path?: never;
+    query?: never;
+    url: '/api/v1/shared-library/submissions';
+};
+
+export type ShareLibraryEntryErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ShareLibraryEntryError = ShareLibraryEntryErrors[keyof ShareLibraryEntryErrors];
+
+export type ShareLibraryEntryResponses = {
+    /**
+     * The request.
+     */
+    201: SharedSubmission;
+};
+
+export type ShareLibraryEntryResponse = ShareLibraryEntryResponses[keyof ShareLibraryEntryResponses];
+
+export type ListSharedSubmissionsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/shared-library';
+};
+
+export type ListSharedSubmissionsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListSharedSubmissionsError = ListSharedSubmissionsErrors[keyof ListSharedSubmissionsErrors];
+
+export type ListSharedSubmissionsResponses = {
+    /**
+     * The requests.
+     */
+    200: Array<SharedSubmission>;
+};
+
+export type ListSharedSubmissionsResponse = ListSharedSubmissionsResponses[keyof ListSharedSubmissionsResponses];
+
+export type ReviewSharedSubmissionData = {
+    body: SharedReviewInput;
+    path: {
+        /**
+         * Shared Library request id.
+         */
+        submissionId: Id;
+    };
+    query?: never;
+    url: '/api/v1/admin/shared-library/{submissionId}/review';
+};
+
+export type ReviewSharedSubmissionErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ReviewSharedSubmissionError = ReviewSharedSubmissionErrors[keyof ReviewSharedSubmissionErrors];
+
+export type ReviewSharedSubmissionResponses = {
+    /**
+     * The request.
+     */
+    200: SharedSubmission;
+};
+
+export type ReviewSharedSubmissionResponse = ReviewSharedSubmissionResponses[keyof ReviewSharedSubmissionResponses];
 
 export type GetMeData = {
     body?: never;

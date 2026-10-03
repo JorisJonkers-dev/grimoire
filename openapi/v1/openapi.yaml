@@ -33,6 +33,8 @@ tags:
     description: The signed-in account.
   - name: Social
     description: Friends, Conversations and Notifications between Accounts.
+  - name: Library
+    description: An account's reusable entries, linked into Campaigns with Campaign Overrides and pinned Revisions.
   - name: Operations
     description: Liveness, readiness and service status.
 paths:
@@ -3689,6 +3691,841 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/library:
+    get:
+      operationId: listLibraryEntries
+      x-ogen-operation-group: Read
+      summary: List Library entries
+      description: "The caller's Library entries in kind and name order."
+      tags: [Library]
+      parameters:
+        - name: kind
+          in: query
+          description: Only entries of this kind.
+          schema: { $ref: "#/components/schemas/LibraryKind" }
+      responses:
+        "200":
+          description: The entries.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 1000
+                items:
+                  $ref: "#/components/schemas/LibraryEntry"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    post:
+      operationId: createLibraryEntry
+      x-ogen-operation-group: Build
+      summary: Create a Library entry
+      description: "Adds an entry to the caller's Library as its first Revision."
+      tags: [Library]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LibraryEntryInput"
+      responses:
+        "201":
+          description: The new entry.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LibraryEntry"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/library/collections:
+    get:
+      operationId: listLibraryCollections
+      x-ogen-operation-group: Read
+      summary: List Collections
+      description: "The caller's Collections."
+      tags: [Library]
+      responses:
+        "200":
+          description: The Collections.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 1000
+                items:
+                  $ref: "#/components/schemas/LibraryCollection"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    post:
+      operationId: createLibraryCollection
+      x-ogen-operation-group: Build
+      summary: Create a Collection
+      description: "Starts an empty Collection in the caller's Library."
+      tags: [Library]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LibraryCollectionInput"
+      responses:
+        "201":
+          description: The new Collection.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LibraryCollection"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/library/collections/{collectionId}:
+    put:
+      operationId: updateLibraryCollection
+      x-ogen-operation-group: Build
+      summary: Edit a Collection
+      description: "Renames one of the caller's Collections and sets which of their entries it holds; every Campaign it is switched on in sees the new set."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/CollectionId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LibraryCollectionUpdate"
+      responses:
+        "200":
+          description: The Collection.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LibraryCollection"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/collections:
+    get:
+      operationId: listCampaignCollections
+      x-ogen-operation-group: Read
+      summary: List a Campaign's Collections
+      description: "The caller's Collections and any other switched on in the Campaign, each saying whether it is on there. DM only."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      responses:
+        "200":
+          description: The Collections.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 1000
+                items:
+                  $ref: "#/components/schemas/LibraryCollection"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/collections/{collectionId}:
+    put:
+      operationId: switchLibraryCollection
+      x-ogen-operation-group: Build
+      summary: Switch a Collection on or off
+      description: "On brings the Collection's entries into the Campaign; off hides those not linked otherwise. Only its owner switches it on; any DM of the Campaign switches it off."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/CollectionId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LibrarySwitchInput"
+      responses:
+        "200":
+          description: The Campaign's Collections.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 1000
+                items:
+                  $ref: "#/components/schemas/LibraryCollection"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/library/export:
+    get:
+      operationId: exportLibrary
+      x-ogen-operation-group: Read
+      summary: Export Homebrew
+      description: "The caller's Library in Grimoire's own JSON schema: every entry and Collection, one Collection with its entries, or one entry."
+      tags: [Library]
+      parameters:
+        - name: collectionId
+          in: query
+          description: Only this Collection and its entries.
+          schema: { $ref: "#/components/schemas/Id" }
+        - name: entryId
+          in: query
+          description: Only this entry.
+          schema: { $ref: "#/components/schemas/Id" }
+      responses:
+        "200":
+          description: The export.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LibraryExport"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/library/import:
+    post:
+      operationId: importLibrary
+      x-ogen-operation-group: Build
+      summary: Import Homebrew
+      description: "Adds the entries and Collections of an export to the caller's Library as new ones. Whatever Grimoire cannot take (an unknown kind, a field that is not text, a part no builder runs yet) is reported as Manual, to redo by hand."
+      tags: [Library]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LibraryImport"
+      responses:
+        "200":
+          description: What was imported, and what needs doing by hand.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportReport"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/library/{entryId}:
+    get:
+      operationId: getLibraryEntry
+      x-ogen-operation-group: Read
+      summary: Get a Library entry
+      description: "One of the caller's entries with its Revisions and the Campaigns it is linked into."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/LibraryEntryId"
+      responses:
+        "200":
+          description: The entry.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LibraryEntryDetail"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    put:
+      operationId: updateLibraryEntry
+      x-ogen-operation-group: Build
+      summary: Edit a Library entry
+      description: "Saves a new base as the entry's next Revision. Every Campaign that follows the latest Revision sees it; a pinned Campaign does not."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/LibraryEntryId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LibraryEntryUpdate"
+      responses:
+        "200":
+          description: The entry.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LibraryEntryDetail"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/library:
+    get:
+      operationId: listLinkedEntries
+      x-ogen-operation-group: Read
+      summary: List linked Library entries
+      description: "The Library entries linked into the Campaign, each with its Campaign Override and pinned Revision resolved. DM only."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      responses:
+        "200":
+          description: The linked entries.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 1000
+                items:
+                  $ref: "#/components/schemas/LinkedEntry"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    post:
+      operationId: linkLibraryEntry
+      x-ogen-operation-group: Build
+      summary: Link a Library entry
+      description: "Links one of the caller's entries into a Campaign they run; linking it again changes nothing. DM only."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LibraryLinkInput"
+      responses:
+        "200":
+          description: The linked entry.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LinkedEntry"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/library/{entryId}:
+    delete:
+      operationId: unlinkLibraryEntry
+      x-ogen-operation-group: Build
+      summary: Unlink a Library entry
+      description: "Takes the entry out of the Campaign with its Campaign Override; the entry stays in the Library. DM only."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/LibraryEntryId"
+      responses:
+        "204":
+          description: Unlinked.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/library/{entryId}/override:
+    put:
+      operationId: setCampaignOverride
+      x-ogen-operation-group: Build
+      summary: Set a Campaign Override
+      description: "Replaces the fields this Campaign sees differently from the entry's base. DM only."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/LibraryEntryId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CampaignOverrideInput"
+      responses:
+        "200":
+          description: The linked entry.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LinkedEntry"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/library/{entryId}/pin:
+    put:
+      operationId: pinLibraryRevision
+      x-ogen-operation-group: Build
+      summary: Pin a Revision
+      description: "Holds the Campaign to one Revision of the entry, so later edits to its base pass the Campaign by. DM only."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/LibraryEntryId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LibraryPinInput"
+      responses:
+        "200":
+          description: The linked entry.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LinkedEntry"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    delete:
+      operationId: unpinLibraryRevision
+      x-ogen-operation-group: Build
+      summary: Follow the latest Revision
+      description: "The Campaign follows the entry's latest Revision again. DM only."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/LibraryEntryId"
+      responses:
+        "200":
+          description: The linked entry.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LinkedEntry"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/proposals:
+    get:
+      operationId: listProposals
+      x-ogen-operation-group: Read
+      summary: List Proposals
+      description: "The Campaign's Proposals, newest first: every one for a DM, a Player's own otherwise."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      responses:
+        "200":
+          description: The Proposals.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 1000
+                items:
+                  $ref: "#/components/schemas/Proposal"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    post:
+      operationId: createProposal
+      x-ogen-operation-group: Build
+      summary: Propose an entry
+      description: "Sends the DM a new entry for the Campaign, or a change to one it sees. The DMs hear of it."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProposalInput"
+      responses:
+        "201":
+          description: The Proposal.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Proposal"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/proposals/{proposalId}:
+    get:
+      operationId: getProposal
+      x-ogen-operation-group: Read
+      summary: Get a Proposal
+      description: "One Proposal with its history and, for a change, the entry as the Campaign sees it now. Its author or a DM."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/ProposalId"
+      responses:
+        "200":
+          description: The Proposal.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProposalDetail"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    put:
+      operationId: resubmitProposal
+      x-ogen-operation-group: Build
+      summary: Send a Proposal again
+      description: "Its author sends a Proposal the DM asked changes to again, changed."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/ProposalId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProposalUpdate"
+      responses:
+        "200":
+          description: The Proposal.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProposalDetail"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/proposals/{proposalId}/review:
+    post:
+      operationId: reviewProposal
+      x-ogen-operation-group: Build
+      summary: Review a Proposal
+      description: "A DM approves a pending Proposal (copied once into their Library and linked into the Campaign Collection, edited first if they like), asks for changes with a message, or declines it. The author hears either way."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/ProposalId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProposalReviewInput"
+      responses:
+        "200":
+          description: The Proposal.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProposalDetail"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/shared-library:
+    get:
+      operationId: listSharedEntries
+      x-ogen-operation-group: Read
+      summary: List the Shared Library
+      description: "Read-only entries every DM can link into their Campaigns, approved by an Admin with an IP check."
+      tags: [Library]
+      parameters:
+        - name: kind
+          in: query
+          description: Only entries of this kind.
+          schema: { $ref: "#/components/schemas/LibraryKind" }
+      responses:
+        "200":
+          description: The shared entries.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 1000
+                items:
+                  $ref: "#/components/schemas/LibraryEntry"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/shared-library/submissions:
+    get:
+      operationId: listMySubmissions
+      x-ogen-operation-group: Read
+      summary: List my requests to share
+      description: "The caller's requests to put entries in the Shared Library, pending first."
+      tags: [Library]
+      responses:
+        "200":
+          description: The requests.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 1000
+                items:
+                  $ref: "#/components/schemas/SharedSubmission"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    post:
+      operationId: shareLibraryEntry
+      x-ogen-operation-group: Build
+      summary: Ask to share an entry
+      description: "Asks the Admins to put the latest Revision of one of the caller's entries in the Shared Library."
+      tags: [Library]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ShareInput"
+      responses:
+        "201":
+          description: The request.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SharedSubmission"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/admin/shared-library:
+    get:
+      operationId: listSharedSubmissions
+      x-ogen-operation-group: Read
+      summary: List requests to share
+      description: "Every request to put an entry in the Shared Library, pending first. Admins only."
+      tags: [Library]
+      responses:
+        "200":
+          description: The requests.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 1000
+                items:
+                  $ref: "#/components/schemas/SharedSubmission"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/admin/shared-library/{submissionId}/review:
+    post:
+      operationId: reviewSharedSubmission
+      x-ogen-operation-group: Account
+      summary: Review a request to share
+      description: "Approves or declines a request with the IP check recorded either way; approval needs the Admin's check that the entry carries no non-SRD text and puts a read-only copy in the Shared Library. Admins only."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/SubmissionId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SharedReviewInput"
+      responses:
+        "200":
+          description: The request.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SharedSubmission"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /api/v1/me:
     get:
       operationId: getMe
@@ -5844,6 +6681,30 @@ components:
       in: path
       required: true
       description: Encounter Table id.
+      schema: { $ref: "#/components/schemas/Id" }
+    CollectionId:
+      name: collectionId
+      in: path
+      required: true
+      description: Collection id.
+      schema: { $ref: "#/components/schemas/Id" }
+    ProposalId:
+      name: proposalId
+      in: path
+      required: true
+      description: Proposal id.
+      schema: { $ref: "#/components/schemas/Id" }
+    SubmissionId:
+      name: submissionId
+      in: path
+      required: true
+      description: Shared Library request id.
+      schema: { $ref: "#/components/schemas/Id" }
+    LibraryEntryId:
+      name: entryId
+      in: path
+      required: true
+      description: Library entry id.
       schema: { $ref: "#/components/schemas/Id" }
     NpcId:
       name: npcId
@@ -8548,6 +9409,388 @@ components:
         label: { type: string, maxLength: 2000 }
         undoable: { type: boolean }
         createdAt: { type: string, format: date-time, maxLength: 40 }
+    LibraryKind:
+      type: string
+      description: What a Library entry is.
+      enum: [creature, npc, location, shop, item, spell, table]
+    LibraryField:
+      type: object
+      description: One named value of a Library entry.
+      additionalProperties: false
+      required: [name, value]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 60 }
+        value: { type: string, maxLength: 4000 }
+    LibraryFields:
+      type: array
+      description: Named values, in name order.
+      maxItems: 100
+      items: { $ref: "#/components/schemas/LibraryField" }
+    LibraryEntry:
+      type: object
+      description: A Library entry's base at its latest Revision.
+      additionalProperties: false
+      required: [id, kind, name, fields, revision, createdAt, updatedAt]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        kind: { $ref: "#/components/schemas/LibraryKind" }
+        name: { type: string, maxLength: 80 }
+        fields: { $ref: "#/components/schemas/LibraryFields" }
+        revision: { type: integer, format: int32, minimum: 1, maximum: 1000000 }
+        shared: { type: boolean, description: "A read-only copy in the Shared Library." }
+        createdAt: { type: string, format: date-time, maxLength: 40 }
+        updatedAt: { type: string, format: date-time, maxLength: 40 }
+    LibraryEntryInput:
+      type: object
+      description: A new Library entry.
+      additionalProperties: false
+      required: [kind, name, fields]
+      properties:
+        kind: { $ref: "#/components/schemas/LibraryKind" }
+        name: { type: string, minLength: 1, maxLength: 80 }
+        fields: { $ref: "#/components/schemas/LibraryFields" }
+    LibraryEntryUpdate:
+      type: object
+      description: A Library entry's new base; its kind stays.
+      additionalProperties: false
+      required: [name, fields]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        fields: { $ref: "#/components/schemas/LibraryFields" }
+    LibraryRevision:
+      type: object
+      description: One saved version of an entry's base.
+      additionalProperties: false
+      required: [no, name, fields, createdAt]
+      properties:
+        no: { type: integer, format: int32, minimum: 1, maximum: 1000000 }
+        name: { type: string, maxLength: 80 }
+        fields: { $ref: "#/components/schemas/LibraryFields" }
+        createdAt: { type: string, format: date-time, maxLength: 40 }
+    LibraryUse:
+      type: object
+      description: A Campaign an entry is linked into, and the Revision it is pinned to there.
+      additionalProperties: false
+      required: [campaignId, campaign]
+      properties:
+        campaignId: { $ref: "#/components/schemas/Id" }
+        campaign: { type: string, maxLength: 80 }
+        pinnedRevision: { type: integer, format: int32, minimum: 1, maximum: 1000000 }
+    LibraryEntryDetail:
+      type: object
+      description: A Library entry with its Revisions, newest first, and the Campaigns it is linked into.
+      additionalProperties: false
+      required: [entry, revisions, uses]
+      properties:
+        entry: { $ref: "#/components/schemas/LibraryEntry" }
+        revisions:
+          type: array
+          maxItems: 10000
+          items: { $ref: "#/components/schemas/LibraryRevision" }
+        uses:
+          type: array
+          maxItems: 1000
+          items: { $ref: "#/components/schemas/LibraryUse" }
+    LinkedEntry:
+      type: object
+      description: A Library entry as one Campaign sees it. The base is the pinned Revision, or the latest; the Campaign Override sits on top; fields are the two resolved together.
+      additionalProperties: false
+      required: [entry, baseName, base, override, fields, direct, via]
+      properties:
+        entry: { $ref: "#/components/schemas/LibraryEntry" }
+        direct: { type: boolean, description: "The DM linked it themselves, rather than only through a Collection." }
+        via:
+          type: array
+          description: The switched-on Collections that bring it in.
+          maxItems: 100
+          items: { type: string, maxLength: 80 }
+        pinnedRevision: { type: integer, format: int32, minimum: 1, maximum: 1000000 }
+        baseName: { type: string, maxLength: 80 }
+        base: { $ref: "#/components/schemas/LibraryFields" }
+        override: { $ref: "#/components/schemas/LibraryFields" }
+        fields: { $ref: "#/components/schemas/LibraryFields" }
+    LibraryCollection:
+      type: object
+      description: A named group of Library entries, switched on per Campaign. switchedOn says whether it is on in the Campaign it was listed for; mine whether the caller owns it.
+      additionalProperties: false
+      required: [id, name, description, entryIds, mine]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        name: { type: string, maxLength: 80 }
+        description: { type: string, maxLength: 2000 }
+        entryIds:
+          type: array
+          maxItems: 10000
+          items: { $ref: "#/components/schemas/Id" }
+        mine: { type: boolean }
+        switchedOn: { type: boolean }
+    LibraryCollectionInput:
+      type: object
+      description: A new Collection.
+      additionalProperties: false
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        description: { type: string, maxLength: 2000 }
+    LibraryCollectionUpdate:
+      type: object
+      description: A Collection's name, description and the entries it holds.
+      additionalProperties: false
+      required: [name, entryIds]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        description: { type: string, maxLength: 2000 }
+        entryIds:
+          type: array
+          maxItems: 10000
+          uniqueItems: true
+          items: { $ref: "#/components/schemas/Id" }
+    LibrarySwitchInput:
+      type: object
+      description: Whether the Collection is on in the Campaign.
+      additionalProperties: false
+      required: ["on"]
+      properties:
+        "on": { type: boolean }
+    LibraryLinkInput:
+      type: object
+      description: The entry to link.
+      additionalProperties: false
+      required: [entryId]
+      properties:
+        entryId: { $ref: "#/components/schemas/Id" }
+    CampaignOverrideInput:
+      type: object
+      description: Every field this Campaign sees differently; an empty list follows the base again.
+      additionalProperties: false
+      required: [fields]
+      properties:
+        fields: { $ref: "#/components/schemas/LibraryFields" }
+    LibraryPinInput:
+      type: object
+      description: The Revision to pin.
+      additionalProperties: false
+      required: [revision]
+      properties:
+        revision: { type: integer, format: int32, minimum: 1, maximum: 1000000 }
+    ProposalStatus:
+      type: string
+      description: Where a Proposal stands.
+      enum: [pending, changes_requested, approved, declined]
+    Proposal:
+      type: object
+      description: A Player's request that the DM accept a new entry into a Campaign, or a change to one it sees (baseEntryId). entryId is the Library entry an approval made or changed.
+      additionalProperties: false
+      required: [id, kind, name, fields, note, authorName, status, message, createdAt, updatedAt]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        kind: { $ref: "#/components/schemas/LibraryKind" }
+        name: { type: string, maxLength: 80 }
+        fields: { $ref: "#/components/schemas/LibraryFields" }
+        note: { type: string, maxLength: 2000 }
+        authorName: { type: string, maxLength: 80 }
+        status: { $ref: "#/components/schemas/ProposalStatus" }
+        message: { type: string, maxLength: 2000, description: "The DM's latest message." }
+        baseEntryId: { $ref: "#/components/schemas/Id" }
+        entryId: { $ref: "#/components/schemas/Id" }
+        createdAt: { type: string, format: date-time, maxLength: 40 }
+        updatedAt: { type: string, format: date-time, maxLength: 40 }
+    ProposalStep:
+      type: object
+      description: One step of a Proposal's history.
+      additionalProperties: false
+      required: [no, action, message, by, createdAt]
+      properties:
+        no: { type: integer, format: int32, minimum: 1, maximum: 100000 }
+        action: { type: string, enum: [submitted, resubmitted, changes_requested, approved, declined] }
+        message: { type: string, maxLength: 2000 }
+        by: { type: string, maxLength: 80 }
+        createdAt: { type: string, format: date-time, maxLength: 40 }
+    ProposalDetail:
+      type: object
+      description: A Proposal with its history and, for a change, the entry as the Campaign sees it now, for a side-by-side review.
+      additionalProperties: false
+      required: [proposal, steps]
+      properties:
+        proposal: { $ref: "#/components/schemas/Proposal" }
+        steps:
+          type: array
+          maxItems: 1000
+          items: { $ref: "#/components/schemas/ProposalStep" }
+        current: { $ref: "#/components/schemas/LinkedEntry" }
+    ProposalInput:
+      type: object
+      description: A new entry to propose, or a change to the entry baseEntryId.
+      additionalProperties: false
+      required: [kind, name, fields]
+      properties:
+        kind: { $ref: "#/components/schemas/LibraryKind" }
+        name: { type: string, minLength: 1, maxLength: 80 }
+        fields: { $ref: "#/components/schemas/LibraryFields" }
+        note: { type: string, maxLength: 2000 }
+        baseEntryId: { $ref: "#/components/schemas/Id" }
+    ProposalUpdate:
+      type: object
+      description: A Proposal changed as the DM asked.
+      additionalProperties: false
+      required: [name, fields]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        fields: { $ref: "#/components/schemas/LibraryFields" }
+        note: { type: string, maxLength: 2000 }
+    ProposalReviewInput:
+      type: object
+      description: A DM's decision; an approval may edit the name and fields first.
+      additionalProperties: false
+      required: [action]
+      properties:
+        action: { type: string, enum: [approve, request_changes, decline] }
+        message: { type: string, maxLength: 2000 }
+        name: { type: string, minLength: 1, maxLength: 80 }
+        fields: { $ref: "#/components/schemas/LibraryFields" }
+    SharedSubmission:
+      type: object
+      description: A request to put one Revision of an entry in the Shared Library, and the Admin's review. ipClear is the Admin's check that it carries no non-SRD text, absent until reviewed.
+      additionalProperties: false
+      required: [id, entryId, revision, kind, name, fields, note, status, ipNote, message, createdAt]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        entryId: { $ref: "#/components/schemas/Id" }
+        revision: { type: integer, format: int32, minimum: 1, maximum: 1000000 }
+        kind: { $ref: "#/components/schemas/LibraryKind" }
+        name: { type: string, maxLength: 80 }
+        fields: { $ref: "#/components/schemas/LibraryFields" }
+        note: { type: string, maxLength: 2000 }
+        status: { type: string, enum: [pending, approved, declined] }
+        ipClear: { type: boolean }
+        ipNote: { type: string, maxLength: 2000 }
+        message: { type: string, maxLength: 2000 }
+        sharedEntryId: { $ref: "#/components/schemas/Id" }
+        createdAt: { type: string, format: date-time, maxLength: 40 }
+        decidedAt: { type: string, format: date-time, maxLength: 40 }
+    ShareInput:
+      type: object
+      description: The entry to share, with a note for the Admins.
+      additionalProperties: false
+      required: [entryId]
+      properties:
+        entryId: { $ref: "#/components/schemas/Id" }
+        note: { type: string, maxLength: 2000 }
+    SharedReviewInput:
+      type: object
+      description: An Admin's decision on a request to share, with the IP check.
+      additionalProperties: false
+      required: [decision, ipClear]
+      properties:
+        decision: { type: string, enum: [approve, decline] }
+        ipClear: { type: boolean, description: "The entry carries no non-SRD text." }
+        ipNote: { type: string, maxLength: 2000 }
+        message: { type: string, maxLength: 2000 }
+    LibraryExport:
+      type: object
+      description: Homebrew in Grimoire's own JSON schema. Entries are keyed so Collections can name them.
+      additionalProperties: false
+      required: [format, version, entries, collections]
+      properties:
+        format: { type: string, enum: [grimoire-library] }
+        version: { type: integer, format: int32, minimum: 1, maximum: 1 }
+        entries:
+          type: array
+          maxItems: 10000
+          items: { $ref: "#/components/schemas/ExportedEntry" }
+        collections:
+          type: array
+          maxItems: 1000
+          items: { $ref: "#/components/schemas/ExportedCollection" }
+    ExportedEntry:
+      type: object
+      description: One entry in an export.
+      additionalProperties: false
+      required: [key, kind, name, fields, parts]
+      properties:
+        key: { type: string, minLength: 1, maxLength: 80 }
+        kind: { $ref: "#/components/schemas/LibraryKind" }
+        name: { type: string, maxLength: 80 }
+        fields:
+          type: object
+          maxProperties: 100
+          additionalProperties: { type: string, maxLength: 4000 }
+        parts:
+          type: array
+          description: Typed parts such as Effects; none are exported yet.
+          maxItems: 100
+          items: { type: object, additionalProperties: true }
+    ExportedCollection:
+      type: object
+      description: One Collection in an export, naming its entries by key.
+      additionalProperties: false
+      required: [name, description, entries]
+      properties:
+        name: { type: string, maxLength: 80 }
+        description: { type: string, maxLength: 2000 }
+        entries:
+          type: array
+          maxItems: 10000
+          items: { type: string, maxLength: 80 }
+    LibraryImport:
+      type: object
+      description: An export to import. Parts of it Grimoire cannot take are reported, not refused.
+      additionalProperties: false
+      required: [format, version, entries]
+      properties:
+        format: { type: string, enum: [grimoire-library] }
+        version: { type: integer, format: int32, minimum: 1, maximum: 1 }
+        entries:
+          type: array
+          maxItems: 10000
+          items: { $ref: "#/components/schemas/ImportedEntry" }
+        collections:
+          type: array
+          maxItems: 1000
+          items: { $ref: "#/components/schemas/ExportedCollection" }
+    ImportedEntry:
+      type: object
+      description: One entry to import; its kind, fields and parts are checked by Grimoire, not refused by shape.
+      additionalProperties: false
+      required: [key, kind, name]
+      properties:
+        key: { type: string, minLength: 1, maxLength: 80 }
+        kind: { type: string, maxLength: 40 }
+        name: { type: string, maxLength: 200 }
+        fields:
+          type: object
+          maxProperties: 200
+          additionalProperties: true
+        parts:
+          type: array
+          maxItems: 200
+          items: { type: object, additionalProperties: true }
+    ImportReport:
+      type: object
+      description: What an import added, and what needs doing by hand.
+      additionalProperties: false
+      required: [entries, collections, manual]
+      properties:
+        entries:
+          type: array
+          maxItems: 10000
+          items: { $ref: "#/components/schemas/LibraryEntry" }
+        collections:
+          type: array
+          maxItems: 1000
+          items: { $ref: "#/components/schemas/LibraryCollection" }
+        manual:
+          type: array
+          maxItems: 100000
+          items: { $ref: "#/components/schemas/ManualPart" }
+    ManualPart:
+      type: object
+      description: A part of an import Grimoire could not take, and why.
+      additionalProperties: false
+      required: [where, reason]
+      properties:
+        where: { type: string, maxLength: 300 }
+        reason: { type: string, maxLength: 300 }
     LiveContainer:
       type: object
       description: A Character's Inventory, the Party Stash, a drop of loot, or a bag inside another container, with what it weighs including its bags. A Character's names its owner and how much they can carry.
