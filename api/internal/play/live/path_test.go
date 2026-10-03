@@ -90,3 +90,52 @@ func TestAPlannedWalkWarnsOfOpportunityAttacksAndShowsSightAndCover(t *testing.T
 		t.Fatalf("the reactions engine offers = %+v, the plan warned of %+v", u.View.Combat.Prompt, p.Threats)
 	}
 }
+
+// A plan tells its asker nothing they could not already see. A wall the party never saw does not show
+// in a line of sight, and a DM who connects as the party gets the party's plan.
+func TestAPlannedWalkKeepsWhatThePartyCannotSee(t *testing.T) {
+	t.Parallel()
+	w := setup(t)
+	m := w.dungeon(t)
+	w.hub.Stats = bestiary{owner: w.player.ID}
+	rolls := &app.Rolls{
+		Repo: pgstore.New(w.pool), Members: pgstore.CampaignMembers{Store: campaignpg.New(w.pool)}, Seed: func() uint64 { return 7 },
+		Source: func(seed uint64) dice.Source { return rng.New(seed) }, Now: time.Now, Resolved: w.hub.RollResolved,
+	}
+	tb := &table{t: t, w: w, rolls: rolls, dm: join(t, w, w.dm, dmCaller, live.AudienceDM), player: join(t, w, w.player, playerCaller, live.AudienceParty)}
+	tb.dmSays(live.Command{Kind: live.CmdSetMap, MapID: uuid.UUID(m.ID).String()})
+	tb.dmSays(live.Command{Kind: live.CmdSetAmbient, Ambient: domain.AmbientDark})
+	tb.dmSays(live.Command{Kind: live.CmdPlace, CharacterID: uuid.NewString(), Q: 1, R: 2, DarkvisionFt: 5})
+	tb.dmSays(live.Command{Kind: live.CmdPlace, MonsterSlug: "goblin", TokenKind: domain.TokenEnemy, Q: 5, R: 0})
+	tb.dmSays(live.Command{Kind: live.CmdPlaceLight, Q: 5, R: 0, BrightFt: 5, DimFt: 5})
+	tb.dmSays(live.Command{Kind: live.CmdSetWalls, Hexes: []live.Hex{{Q: 3, R: 0}}, On: true})
+	d, p := tb.dmSays(live.Command{Kind: live.CmdRevealHexes, Hexes: []live.Hex{{Q: 1, R: 0}}, On: true})
+	if token(p.View, "Goblin") == nil || has(p.View.Visible, 3, 0) {
+		t.Fatalf("the party should see the lit goblin and not the wall in the dark: %+v", p.View.Visible)
+	}
+	aria, goblin := token(d.View, "Aria").ID, token(d.View, "Goblin").ID
+	plan := func(sub *live.Subscriber) *live.PathView {
+		t.Helper()
+		barrier(t, w, tb)
+		w.hub.Submit(sub, live.Command{Kind: live.CmdPlanWalk, TokenID: aria, Q: 1, R: 0})
+		u := next(t, sub)
+		if u.Kind != live.UpdPath || u.Path == nil {
+			t.Fatalf("a planned walk = %+v", u)
+		}
+		return u.Path
+	}
+	if s := sightOf(plan(tb.dm), goblin); s == nil || s.Visible {
+		t.Fatalf("the DM knows the wall stands between them: %+v", s)
+	}
+	if s := sightOf(plan(tb.player), goblin); s == nil || !s.Visible {
+		t.Fatalf("the party's plan gives away a wall it never saw: %+v", s)
+	}
+
+	tb.dmSays(live.Command{Kind: live.CmdPlace, MonsterSlug: "goblin", Label: "Lurker", TokenKind: domain.TokenEnemy, Q: 2, R: 1})
+	lurker := token(look(t, w, tb.dm), "Lurker").ID
+	tb.dmSays(live.Command{Kind: live.CmdSetVisibility, TokenID: lurker, Qualities: []string{"invisible"}})
+	asParty := join(t, w, w.dm, dmCaller, live.AudienceParty)
+	if got := plan(asParty); sightOf(got, lurker) != nil || sightOf(plan(tb.dm), lurker) == nil {
+		t.Fatalf("a DM connected as the party is told of a creature the party cannot see: %+v", got.Sight)
+	}
+}

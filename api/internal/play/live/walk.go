@@ -49,23 +49,36 @@ func (r *runtime) previewWalk(req request) {
 		r.reject(req, reason)
 		return
 	}
-	seen := r.st.vision()
-	known := func(o domain.Token) bool { return req.from.Member.DM || r.st.shows(o, seen) }
+	k := r.st.knownTo(req.from.Audience)
 	r.send(req.from, Update{
 		Kind: UpdPath, Seq: r.st.session.Seq, Nonce: req.cmd.Nonce,
 		Path: &PathView{
 			TokenID: req.cmd.TokenID, Hexes: wireHexes(path), CostFt: cost,
-			Threats: r.st.threats(t, path, known), Sight: r.st.sightAt(t, path[len(path)-1], known),
+			Threats: r.st.threats(t, path, k), Sight: r.st.sightAt(t, path[len(path)-1], k),
 		},
 	})
 }
 
+// knownTo is what an audience may be told of the board: all of it for the DM's own screen, and for any
+// other the hexes the party has seen and the creatures it sees now. It goes by the screen, not by who
+// is signed in, so a DM's Table Display learns no more than the table.
+func (s *state) knownTo(a Audience) knowledge {
+	if a == AudienceDM {
+		return everything
+	}
+	seen := s.vision()
+	return knowledge{
+		hex:   func(c hex.Coord) bool { return s.board == nil || seen[c] || s.board.Reveals[c] },
+		token: func(o domain.Token) bool { return s.shows(o, seen) },
+	}
+}
+
 // threats are the opportunity attacks a walk would draw from creatures the asker knows of, each at the
 // step the reactions engine would offer it.
-func (s *state) threats(mover domain.Token, path []hex.Coord, known func(domain.Token) bool) []PathThreat {
+func (s *state) threats(mover domain.Token, path []hex.Coord, k knowledge) []PathThreat {
 	out := []PathThreat{}
 	for _, o := range s.opportunities(mover, path, 0) {
-		if known(o.reactor) {
+		if k.token(o.reactor) {
 			out = append(out, PathThreat{TokenID: uuid.UUID(o.reactor.ID).String(), Label: o.reactor.Label, Q: path[o.step].Q, R: path[o.step].R})
 		}
 	}
@@ -73,13 +86,13 @@ func (s *state) threats(mover domain.Token, path []hex.Coord, known func(domain.
 }
 
 // sightAt is how each standing creature of the other side that the asker knows of would see the mover at a hex.
-func (s *state) sightAt(mover domain.Token, at hex.Coord, known func(domain.Token) bool) []PathSight {
+func (s *state) sightAt(mover domain.Token, at hex.Coord, k knowledge) []PathSight {
 	out := []PathSight{}
 	for _, o := range s.ordered() {
-		if o.Stats == nil || !standing(o) || (o.Kind == domain.TokenParty) == (mover.Kind == domain.TokenParty) || !known(o) {
+		if o.Stats == nil || !standing(o) || (o.Kind == domain.TokenParty) == (mover.Kind == domain.TokenParty) || !k.token(o) {
 			continue
 		}
-		sight := hex.LineOfSight(s.coverGrid(known, mover.ID, o.ID), hex.Coord{Q: o.Q, R: o.R}, at)
+		sight := hex.LineOfSight(s.coverGrid(k, mover.ID, o.ID), hex.Coord{Q: o.Q, R: o.R}, at)
 		out = append(out, PathSight{TokenID: uuid.UUID(o.ID).String(), Label: o.Label, Visible: sight.Visible, Cover: coverName(sight.Cover)})
 	}
 	return out
