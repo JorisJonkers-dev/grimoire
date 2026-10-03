@@ -181,10 +181,24 @@ func TestDiceSetsAndWhoTheyAreSharedWith(t *testing.T) {
 	if rec := send(trusted, http.MethodGet, one+"/image", "", "root", ""); rec.Code != http.StatusOK || rec.Header().Get("Content-Type") != "image/png" {
 		t.Fatalf("the Admin looks at the picture: %d", rec.Code)
 	}
-	if rec := send(public, http.MethodPost, "/api/v1/admin/dice-sets/"+id+"/review", aria, "", `{"approve":true}`); rec.Code != http.StatusForbidden {
+	// An Admin's decision names the picture they looked at.
+	seen := func() string {
+		t.Helper()
+		items, _ := decode(t, send(trusted, http.MethodGet, "/api/v1/admin/dice-sets", "", "root", ""))["items"].([]any)
+		if len(items) != 1 {
+			t.Fatalf("the review queue = %v", items)
+		}
+		version, _ := items[0].(map[string]any)["imageVersion"].(string)
+		if len(version) != 12 {
+			t.Fatalf("the picture's version = %q", version)
+		}
+		return version
+	}
+	first := seen()
+	if rec := send(public, http.MethodPost, "/api/v1/admin/dice-sets/"+id+"/review", aria, "", `{"approve":true,"picture":"`+first+`"}`); rec.Code != http.StatusForbidden {
 		t.Fatalf("approving your own set: %d", rec.Code)
 	}
-	if rec := send(trusted, http.MethodPost, "/api/v1/admin/dice-sets/"+id+"/review", "", "root", `{"approve":false}`); rec.Code != http.StatusOK || decode(t, rec)["review"] != "rejected" {
+	if rec := send(trusted, http.MethodPost, "/api/v1/admin/dice-sets/"+id+"/review", "", "root", `{"approve":false,"picture":"`+first+`"}`); rec.Code != http.StatusOK || decode(t, rec)["review"] != "rejected" {
 		t.Fatalf("reject: %d", rec.Code)
 	}
 	if got := setNames(t, send(public, http.MethodGet, "/api/v1/dice-sets/shared", cara, "", "")); got != "" {
@@ -194,13 +208,24 @@ func TestDiceSetsAndWhoTheyAreSharedWith(t *testing.T) {
 	if rec := sendImage(public, one+"/image", aria, jpegBytes); rec.Code != http.StatusOK || decode(t, rec)["review"] != "pending" {
 		t.Fatalf("a new picture: %d", rec.Code)
 	}
-	if rec := send(trusted, http.MethodPost, "/api/v1/admin/dice-sets/"+id+"/review", "", "root", `{"approve":true}`); rec.Code != http.StatusOK || decode(t, rec)["review"] != "approved" {
+	// The owner swapped the picture after the Admin looked: approving the old one approves nothing.
+	if rec := send(trusted, http.MethodPost, "/api/v1/admin/dice-sets/"+id+"/review", "", "root", `{"approve":true,"picture":"`+first+`"}`); rec.Code != http.StatusConflict {
+		t.Fatalf("approving a picture that is no longer on the set: %d", rec.Code)
+	}
+	if got := setNames(t, send(public, http.MethodGet, "/api/v1/dice-sets/shared", cara, "", "")); got != "" {
+		t.Fatalf("after approving a swapped picture everyone sees: %s", got)
+	}
+	second := seen()
+	if second == first {
+		t.Fatal("a new picture keeps the old version")
+	}
+	if rec := send(trusted, http.MethodPost, "/api/v1/admin/dice-sets/"+id+"/review", "", "root", `{"approve":true,"picture":"`+second+`"}`); rec.Code != http.StatusOK || decode(t, rec)["review"] != "approved" {
 		t.Fatalf("approve: %d", rec.Code)
 	}
 	if got := setNames(t, send(trusted, http.MethodGet, "/api/v1/admin/dice-sets", "", "root", "")); got != "" {
 		t.Fatalf("the queue after the review = %s", got)
 	}
-	if rec := send(trusted, http.MethodPost, "/api/v1/admin/dice-sets/"+id+"/review", "", "root", `{"approve":false}`); rec.Code != http.StatusConflict {
+	if rec := send(trusted, http.MethodPost, "/api/v1/admin/dice-sets/"+id+"/review", "", "root", `{"approve":false,"picture":"`+second+`"}`); rec.Code != http.StatusConflict {
 		t.Fatalf("reviewing a set that no longer waits: %d", rec.Code)
 	}
 	rec = send(public, http.MethodPost, one+"/copy", cara, "", "")

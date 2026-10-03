@@ -6679,7 +6679,7 @@ paths:
           $ref: "#/components/responses/Problem"
     post:
       operationId: createDiceSet
-      x-ogen-operation-group: Build
+      x-ogen-operation-group: Account
       summary: Make a Dice Set
       description: A private Dice Set with a look for each die type it dresses, from a preset pattern and two colours.
       tags: [Social]
@@ -6735,7 +6735,7 @@ paths:
   /api/v1/dice-sets/chosen:
     put:
       operationId: chooseDiceSet
-      x-ogen-operation-group: Build
+      x-ogen-operation-group: Account
       summary: Choose the Dice Set to roll with
       description: One of the sets or copies of the signed-in Account; without a set the dice roll plain.
       tags: [Social]
@@ -6762,7 +6762,7 @@ paths:
   /api/v1/dice-sets/{diceSetId}:
     put:
       operationId: editDiceSet
-      x-ogen-operation-group: Build
+      x-ogen-operation-group: Account
       summary: Change a Dice Set
       description: Sets its name and looks. A copy cannot be changed.
       tags: [Social]
@@ -6798,7 +6798,7 @@ paths:
           $ref: "#/components/responses/Problem"
     delete:
       operationId: deleteDiceSet
-      x-ogen-operation-group: Build
+      x-ogen-operation-group: Account
       summary: Delete a Dice Set
       description: Removes one of the sets of the signed-in Account, a copy too. Copies others took of it stay.
       tags: [Social]
@@ -6825,7 +6825,7 @@ paths:
   /api/v1/dice-sets/{diceSetId}/sharing:
     put:
       operationId: shareDiceSet
-      x-ogen-operation-group: Build
+      x-ogen-operation-group: Account
       summary: Share a Dice Set
       description: Private, with Friends, or with everyone. A set with an uploaded picture that is shared with everyone waits for an Admin; until then only Friends see it. A copy cannot be shared on.
       tags: [Social]
@@ -6862,7 +6862,7 @@ paths:
   /api/v1/dice-sets/{diceSetId}/copy:
     post:
       operationId: copyDiceSet
-      x-ogen-operation-group: Build
+      x-ogen-operation-group: Account
       summary: Take a copy of a shared Dice Set
       description: A read-only copy of a set shared with the signed-in Account. It stays as it was when the original changes or stops being shared. One copy of a set per Account.
       tags: [Social]
@@ -6929,7 +6929,7 @@ paths:
           $ref: "#/components/responses/Problem"
     put:
       operationId: setDiceSetImage
-      x-ogen-operation-group: Build
+      x-ogen-operation-group: Account
       summary: Upload the picture for a Dice Set
       description: A PNG, JPEG or WebP picture of at most 10 MB, placed on each die by the design. A set shared with everyone goes back before the Admins.
       tags: [Social]
@@ -6967,7 +6967,7 @@ paths:
           $ref: "#/components/responses/Problem"
     delete:
       operationId: clearDiceSetImage
-      x-ogen-operation-group: Build
+      x-ogen-operation-group: Account
       summary: Take the picture off a Dice Set
       description: The set goes back to its preset patterns and needs no review.
       tags: [Social]
@@ -7023,7 +7023,7 @@ paths:
   /api/v1/admin/dice-sets/{diceSetId}/review:
     post:
       operationId: reviewDiceSet
-      x-ogen-operation-group: Build
+      x-ogen-operation-group: Account
       summary: Approve or reject a Dice Set
       description: Decides whether everyone may see a set that waits. Admins only.
       tags: [Social]
@@ -9285,6 +9285,7 @@ components:
         design: { $ref: "#/components/schemas/DiceDesign" }
         hasImage: { type: boolean }
         imageUrl: { $ref: "#/components/schemas/AssetUrl" }
+        imageVersion: { type: string, pattern: "^[0-9a-f]{12}$", maxLength: 12, description: Names the uploaded picture. It changes whenever the picture does. }
         sharing: { type: string, enum: [private, friends, everyone] }
         review: { type: string, enum: [none, pending, approved, rejected] }
         mine: { type: boolean, description: Whether the signed-in Account owns it. }
@@ -9325,11 +9326,12 @@ components:
         diceSetId: { $ref: "#/components/schemas/Id" }
     DiceSetVerdict:
       type: object
-      description: The decision of an Admin on a Dice Set that waits.
+      description: The decision of an Admin on a Dice Set that waits, bound to the picture they looked at.
       additionalProperties: false
-      required: [approve]
+      required: [approve, picture]
       properties:
         approve: { type: boolean }
+        picture: { type: string, pattern: "^[0-9a-f]{12}$", maxLength: 12, description: The version of the picture the Admin looked at. A decision on a picture that is no longer on the set is refused. }
     OwnedCharacterChange:
       type: object
       description: A Character's new name and Backstory.

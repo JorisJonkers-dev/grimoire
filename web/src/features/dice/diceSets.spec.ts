@@ -252,12 +252,12 @@ describe('the Dice Sets page', () => {
 describe('the Dice Set review page', () => {
   it('shows an Admin each picture that waits, to approve or turn down', async () => {
     const calls: string[] = []
-    const waiting = [set(1, 'Ember', { mine: false, sharing: 'everyone', review: 'pending', hasImage: true, imageUrl: picture })]
-    let fail = false
+    const waiting = [set(1, 'Ember', { mine: false, sharing: 'everyone', review: 'pending', hasImage: true, imageUrl: picture, imageVersion: '0123456789ab' })]
+    let fail = 0
     const { wrapper } = await mountApp('/admin/dice-sets', {
       '/api/v1/admin/dice-sets/': async (url, req) => {
         calls.push(`${url.pathname.split('/').at(-2)?.slice(-2) ?? ''} ${await req.text()}`)
-        if (fail) return jsonResponse({ status: 500, title: 'Down' }, 500)
+        if (fail) return jsonResponse({ status: fail, title: 'No' }, fail)
         const [done] = waiting.splice(0, 1)
         return done
       },
@@ -268,14 +268,22 @@ describe('the Dice Set review page', () => {
     expect(card.text()).toContain('by aria')
     expect(card.get('[data-testid="review-picture"]').attributes()).toMatchObject({ src: picture, alt: 'The picture on Ember' })
     await expectAccessible(wrapper.element as Element)
-    fail = true
+    fail = 500
     await card.get('[data-testid="review-reject"]').trigger('click')
     await flushPromises()
     expect(wrapper.get('[data-testid="dice-review-problem"]').text()).toContain('not saved')
-    fail = false
-    await card.get('[data-testid="review-approve"]').trigger('click')
+    // The owner swapped the picture meanwhile: the decision is refused and the Admin looks again.
+    fail = 409
+    const [first] = waiting
+    if (first) Object.assign(first, { imageVersion: 'ba9876543210' })
+    await wrapper.get('[data-testid="review-approve"]').trigger('click')
     await flushPromises()
-    expect(calls).toEqual(['41 {"approve":false}', '41 {"approve":true}'])
+    expect(wrapper.get('[data-testid="dice-review-problem"]').text()).toContain('changed while you were looking')
+    fail = 0
+    await wrapper.get('[data-testid="review-approve"]').trigger('click')
+    await flushPromises()
+    // Each decision names the picture that was on screen when it was made.
+    expect(calls).toEqual(['41 {"approve":false,"picture":"0123456789ab"}', '41 {"approve":true,"picture":"0123456789ab"}', '41 {"approve":true,"picture":"ba9876543210"}'])
     expect(wrapper.get('[data-testid="dice-review-none"]').text()).toBe('No pictures wait to be checked.')
   })
 

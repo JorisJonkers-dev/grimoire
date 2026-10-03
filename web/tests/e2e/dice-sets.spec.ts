@@ -54,9 +54,11 @@ test('a Dice Set is designed, shared with a Friend who takes a copy, checked by 
   await page.getByTestId(`sharing-${name}`).selectOption('everyone')
   await expect(page.getByTestId(`review-${name}`)).toContainText('Waiting for an Admin')
   const admin = { 'X-User-Id': 'e2e-admin' }
-  const waiting = (await (await request.get('/api/v1/admin/dice-sets', { headers: admin })).json()) as { items: { id: string; name: string }[] }
-  const id = waiting.items.find((s) => s.name === name)?.id ?? ''
-  expect((await request.post(`/api/v1/admin/dice-sets/${id}/review`, { headers: admin, data: { approve: true } })).status()).toBe(200)
+  const waiting = (await (await request.get('/api/v1/admin/dice-sets', { headers: admin })).json()) as { items: { id: string; name: string; imageVersion: string }[] }
+  const seen = waiting.items.find((s) => s.name === name)
+  // A decision on a picture the Admin did not look at is refused.
+  expect((await request.post(`/api/v1/admin/dice-sets/${seen?.id ?? ''}/review`, { headers: admin, data: { approve: true, picture: '0123456789ab' } })).status()).toBe(409)
+  expect((await request.post(`/api/v1/admin/dice-sets/${seen?.id ?? ''}/review`, { headers: admin, data: { approve: true, picture: seen?.imageVersion } })).status()).toBe(200)
   await page.reload()
   await expect(page.getByTestId(`review-${name}`)).toContainText('approved')
 

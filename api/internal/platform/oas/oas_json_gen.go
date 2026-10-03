@@ -15119,6 +15119,12 @@ func (s *DiceSet) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.ImageVersion.Set {
+			e.FieldStart("imageVersion")
+			s.ImageVersion.Encode(e)
+		}
+	}
+	{
 		e.FieldStart("sharing")
 		s.Sharing.Encode(e)
 	}
@@ -15144,18 +15150,19 @@ func (s *DiceSet) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfDiceSet = [11]string{
+var jsonFieldsNameOfDiceSet = [12]string{
 	0:  "id",
 	1:  "name",
 	2:  "design",
 	3:  "hasImage",
 	4:  "imageUrl",
-	5:  "sharing",
-	6:  "review",
-	7:  "mine",
-	8:  "copy",
-	9:  "by",
-	10: "updatedAt",
+	5:  "imageVersion",
+	6:  "sharing",
+	7:  "review",
+	8:  "mine",
+	9:  "copy",
+	10: "by",
+	11: "updatedAt",
 }
 
 // Decode decodes DiceSet from json.
@@ -15221,8 +15228,18 @@ func (s *DiceSet) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"imageUrl\"")
 			}
+		case "imageVersion":
+			if err := func() error {
+				s.ImageVersion.Reset()
+				if err := s.ImageVersion.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"imageVersion\"")
+			}
 		case "sharing":
-			requiredBitSet[0] |= 1 << 5
+			requiredBitSet[0] |= 1 << 6
 			if err := func() error {
 				if err := s.Sharing.Decode(d); err != nil {
 					return err
@@ -15232,7 +15249,7 @@ func (s *DiceSet) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"sharing\"")
 			}
 		case "review":
-			requiredBitSet[0] |= 1 << 6
+			requiredBitSet[0] |= 1 << 7
 			if err := func() error {
 				if err := s.Review.Decode(d); err != nil {
 					return err
@@ -15242,7 +15259,7 @@ func (s *DiceSet) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"review\"")
 			}
 		case "mine":
-			requiredBitSet[0] |= 1 << 7
+			requiredBitSet[1] |= 1 << 0
 			if err := func() error {
 				v, err := d.Bool()
 				s.Mine = bool(v)
@@ -15254,7 +15271,7 @@ func (s *DiceSet) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"mine\"")
 			}
 		case "copy":
-			requiredBitSet[1] |= 1 << 0
+			requiredBitSet[1] |= 1 << 1
 			if err := func() error {
 				v, err := d.Bool()
 				s.Copy = bool(v)
@@ -15266,7 +15283,7 @@ func (s *DiceSet) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"copy\"")
 			}
 		case "by":
-			requiredBitSet[1] |= 1 << 1
+			requiredBitSet[1] |= 1 << 2
 			if err := func() error {
 				v, err := d.Str()
 				s.By = string(v)
@@ -15278,7 +15295,7 @@ func (s *DiceSet) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"by\"")
 			}
 		case "updatedAt":
-			requiredBitSet[1] |= 1 << 2
+			requiredBitSet[1] |= 1 << 3
 			if err := func() error {
 				v, err := json.DecodeDateTime(d)
 				s.UpdatedAt = v
@@ -15299,8 +15316,8 @@ func (s *DiceSet) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [2]uint8{
-		0b11101111,
-		0b00000111,
+		0b11001111,
+		0b00001111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -15878,10 +15895,15 @@ func (s *DiceSetVerdict) encodeFields(e *jx.Encoder) {
 		e.FieldStart("approve")
 		e.Bool(s.Approve)
 	}
+	{
+		e.FieldStart("picture")
+		e.Str(s.Picture)
+	}
 }
 
-var jsonFieldsNameOfDiceSetVerdict = [1]string{
+var jsonFieldsNameOfDiceSetVerdict = [2]string{
 	0: "approve",
+	1: "picture",
 }
 
 // Decode decodes DiceSetVerdict from json.
@@ -15905,6 +15927,18 @@ func (s *DiceSetVerdict) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"approve\"")
 			}
+		case "picture":
+			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				v, err := d.Str()
+				s.Picture = string(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"picture\"")
+			}
 		default:
 			return errors.Errorf("unexpected field %q", k)
 		}
@@ -15915,7 +15949,7 @@ func (s *DiceSetVerdict) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00000001,
+		0b00000011,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.

@@ -92,7 +92,7 @@ func (brokenDice) ChooseDiceSet(context.Context, string, *domain.DiceSetID) erro
 
 func (brokenDice) DiceSetsToReview(context.Context) ([]domain.DiceSet, error) { return nil, errFriends }
 
-func (brokenDice) ReviewDiceSet(context.Context, domain.DiceSetID, bool) (domain.DiceSet, error) {
+func (brokenDice) ReviewDiceSet(context.Context, domain.DiceSetID, bool, string) (domain.DiceSet, error) {
 	return domain.DiceSet{}, errFriends
 }
 func (brokenDice) OwnsDiceSet(context.Context, string, domain.DiceSet) bool { return false }

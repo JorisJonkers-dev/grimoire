@@ -27,7 +27,7 @@ type DiceSetService interface {
 	DiceSetPicture(ctx context.Context, subject string, id domain.DiceSetID, admin bool) (domain.Picture, []byte, error)
 	ChooseDiceSet(ctx context.Context, subject string, id *domain.DiceSetID) error
 	DiceSetsToReview(ctx context.Context) ([]domain.DiceSet, error)
-	ReviewDiceSet(ctx context.Context, id domain.DiceSetID, approve bool) (domain.DiceSet, error)
+	ReviewDiceSet(ctx context.Context, id domain.DiceSetID, approve bool, seen string) (domain.DiceSet, error)
 	OwnsDiceSet(ctx context.Context, subject string, d domain.DiceSet) bool
 }
 
@@ -42,6 +42,7 @@ func (h *Handler) diceSetOut(ctx context.Context, subject string, d domain.DiceS
 	convert(d.Design, &out.Design)
 	if d.Image != nil {
 		out.ImageUrl = oas.NewOptAssetUrl(oas.AssetUrl(diceImageURL(d)))
+		out.ImageVersion = oas.NewOptString(d.Image.Version())
 	}
 	return out
 }
@@ -252,7 +253,7 @@ func (h *Handler) ReviewDiceSet(ctx context.Context, req *oas.DiceSetVerdict, p 
 	if bad != nil {
 		return bad, nil
 	}
-	d, err := h.DiceSets.ReviewDiceSet(ctx, uuid.UUID(p.DiceSetId), req.Approve)
+	d, err := h.DiceSets.ReviewDiceSet(ctx, uuid.UUID(p.DiceSetId), req.Approve, req.Picture)
 	if err != nil {
 		return h.diceError(ctx, "review dice set", err), nil
 	}

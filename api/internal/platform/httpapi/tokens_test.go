@@ -61,6 +61,7 @@ func TestAccessTokensOnREST(t *testing.T) {
 	if rec := bearer(public, http.MethodPost, "/api/v1/campaigns", reader, `{"name":"Morvain","displayName":"Aria"}`); rec.Code != http.StatusForbidden {
 		t.Fatalf("a write with a read token: %d", rec.Code)
 	}
+	const aSet = "0190c7a8-0000-7000-8000-000000000041"
 	builder, _ := mint(t, public, aria, `{"name":"Agent","scopes":["read","build"],"days":7}`)
 	if rec := bearer(public, http.MethodPost, "/api/v1/campaigns", builder, `{"name":"Morvain","displayName":"Aria"}`); rec.Code != http.StatusCreated {
 		t.Fatalf("a write with a build token: %d %s", rec.Code, rec.Body.String())
@@ -69,6 +70,16 @@ func TestAccessTokensOnREST(t *testing.T) {
 		{http.MethodPost, "/api/v1/account/access-tokens", `{"name":"More","scopes":["read"],"days":1}`},
 		{http.MethodPut, "/api/v1/account/password", `{"password":"a new long password"}`},
 		{http.MethodPost, "/api/v1/account/two-step", ""},
+		// Dice Sets are an Account's own, and sharing or approving one is a person's act: no token does it.
+		{http.MethodPost, "/api/v1/dice-sets", `{"name":"Ember","design":{"dice":{}}}`},
+		{http.MethodPut, "/api/v1/dice-sets/chosen", `{}`},
+		{http.MethodPut, "/api/v1/dice-sets/" + aSet, `{"name":"Ember","design":{"dice":{}}}`},
+		{http.MethodDelete, "/api/v1/dice-sets/" + aSet, ""},
+		{http.MethodPut, "/api/v1/dice-sets/" + aSet + "/sharing", `{"sharing":"everyone"}`},
+		{http.MethodPost, "/api/v1/dice-sets/" + aSet + "/copy", ""},
+		{http.MethodPut, "/api/v1/dice-sets/" + aSet + "/image", "x"},
+		{http.MethodDelete, "/api/v1/dice-sets/" + aSet + "/image", ""},
+		{http.MethodPost, "/api/v1/admin/dice-sets/" + aSet + "/review", `{"approve":true,"picture":"0123456789ab"}`},
 	} {
 		if rec := bearer(public, c.method, c.path, builder, c.body); rec.Code != http.StatusForbidden {
 			t.Errorf("%s %s with a token: %d", c.method, c.path, rec.Code)

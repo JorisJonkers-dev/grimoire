@@ -8332,13 +8332,15 @@ func (s *DiceGroupKeep) UnmarshalText(data []byte) error {
 // edited. Review says where a set shared with everyone stands with the Admins.
 // Ref: #/components/schemas/DiceSet
 type DiceSet struct {
-	ID       ID             `json:"id"`
-	Name     string         `json:"name"`
-	Design   DiceDesign     `json:"design"`
-	HasImage bool           `json:"hasImage"`
-	ImageUrl OptAssetUrl    `json:"imageUrl"`
-	Sharing  DiceSetSharing `json:"sharing"`
-	Review   DiceSetReview  `json:"review"`
+	ID       ID          `json:"id"`
+	Name     string      `json:"name"`
+	Design   DiceDesign  `json:"design"`
+	HasImage bool        `json:"hasImage"`
+	ImageUrl OptAssetUrl `json:"imageUrl"`
+	// Names the uploaded picture. It changes whenever the picture does.
+	ImageVersion OptString      `json:"imageVersion"`
+	Sharing      DiceSetSharing `json:"sharing"`
+	Review       DiceSetReview  `json:"review"`
 	// Whether the signed-in Account owns it.
 	Mine bool `json:"mine"`
 	Copy bool `json:"copy"`
@@ -8370,6 +8372,11 @@ func (s *DiceSet) GetHasImage() bool {
 // GetImageUrl returns the value of ImageUrl.
 func (s *DiceSet) GetImageUrl() OptAssetUrl {
 	return s.ImageUrl
+}
+
+// GetImageVersion returns the value of ImageVersion.
+func (s *DiceSet) GetImageVersion() OptString {
+	return s.ImageVersion
 }
 
 // GetSharing returns the value of Sharing.
@@ -8425,6 +8432,11 @@ func (s *DiceSet) SetHasImage(val bool) {
 // SetImageUrl sets the value of ImageUrl.
 func (s *DiceSet) SetImageUrl(val OptAssetUrl) {
 	s.ImageUrl = val
+}
+
+// SetImageVersion sets the value of ImageVersion.
+func (s *DiceSet) SetImageVersion(val OptString) {
+	s.ImageVersion = val
 }
 
 // SetSharing sets the value of Sharing.
@@ -8802,10 +8814,13 @@ func (s *DiceSetSharingChangeSharing) UnmarshalText(data []byte) error {
 	}
 }
 
-// The decision of an Admin on a Dice Set that waits.
+// The decision of an Admin on a Dice Set that waits, bound to the picture they looked at.
 // Ref: #/components/schemas/DiceSetVerdict
 type DiceSetVerdict struct {
 	Approve bool `json:"approve"`
+	// The version of the picture the Admin looked at. A decision on a picture that is no longer on the set
+	// is refused.
+	Picture string `json:"picture"`
 }
 
 // GetApprove returns the value of Approve.
@@ -8813,9 +8828,19 @@ func (s *DiceSetVerdict) GetApprove() bool {
 	return s.Approve
 }
 
+// GetPicture returns the value of Picture.
+func (s *DiceSetVerdict) GetPicture() string {
+	return s.Picture
+}
+
 // SetApprove sets the value of Approve.
 func (s *DiceSetVerdict) SetApprove(val bool) {
 	s.Approve = val
+}
+
+// SetPicture sets the value of Picture.
+func (s *DiceSetVerdict) SetPicture(val string) {
+	s.Picture = val
 }
 
 // Roll the die on the server, or enter the face of a physical die.

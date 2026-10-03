@@ -65,6 +65,11 @@ type Picture struct {
 	Type string
 }
 
+// Version names the picture: the start of its content hash, so it changes whenever the picture does.
+func (p Picture) Version() string {
+	return p.Key[len("sha256/") : len("sha256/")+12]
+}
+
 // DiceSet is the look an Account gives its dice. A copy was taken from a set shared with its owner: it
 // cannot be edited or shared on, and it stays when the sharing stops. MadeBy is the Username of whoever
 // designed it.
@@ -97,13 +102,4 @@ func (d DiceSet) Public() bool {
 // screen; a copy of the set carries the approval with it.
 func (d DiceSet) Cleared() bool {
 	return d.Image != nil && d.Review == ReviewApproved
-}
-
-// ReviewFor is where a set stands with the Admins after its sharing or its picture changed: only a
-// pictured set shared with everyone needs a review, and a new picture or a new sharing asks again.
-func ReviewFor(sharing string, pictured bool) string {
-	if sharing == SharingEveryone && pictured {
-		return ReviewPending
-	}
-	return ReviewNone
 }

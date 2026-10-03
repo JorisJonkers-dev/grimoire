@@ -32,13 +32,19 @@ FROM social.dice_sets WHERE review = 'pending' ORDER BY updated_at, id LIMIT 200
 UPDATE social.dice_sets SET name = @name, design = @design, updated_at = @now WHERE id = @id;
 
 -- name: SetDiceSetSharing :exec
-UPDATE social.dice_sets SET sharing = @sharing, review = @review, updated_at = @now WHERE id = @id;
+-- The review follows from the row as it is now, so a picture uploaded meanwhile is never missed.
+UPDATE social.dice_sets SET sharing = @sharing,
+    review = CASE WHEN @sharing::text = 'everyone' AND image_key IS NOT NULL THEN 'pending' ELSE 'none' END, updated_at = @now
+WHERE id = @id;
 
 -- name: SetDiceSetImage :exec
-UPDATE social.dice_sets SET image_key = sqlc.narg(image_key), image_type = sqlc.narg(image_type), review = @review, updated_at = @now WHERE id = @id;
+UPDATE social.dice_sets SET image_key = sqlc.narg(image_key), image_type = sqlc.narg(image_type),
+    review = CASE WHEN sharing = 'everyone' AND sqlc.narg(image_key)::text IS NOT NULL THEN 'pending' ELSE 'none' END, updated_at = @now
+WHERE id = @id;
 
--- name: SetDiceSetReview :exec
-UPDATE social.dice_sets SET review = @review, updated_at = @now WHERE id = @id;
+-- name: SetDiceSetReview :execrows
+-- Decides on a set that waits, and only on the picture the Admin looked at.
+UPDATE social.dice_sets SET review = @review, updated_at = @now WHERE id = @id AND review = 'pending' AND image_key = @image_key::text;
 
 -- name: DeleteDiceSet :exec
 DELETE FROM social.dice_sets WHERE id = @id;

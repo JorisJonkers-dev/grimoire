@@ -65,12 +65,31 @@ type AccountInvoker interface {
 	//
 	// DELETE /api/v1/friend-requests/{requestId}
 	CancelFriendRequest(ctx context.Context, params CancelFriendRequestParams) (CancelFriendRequestRes, error)
+	// ChooseDiceSet invokes chooseDiceSet operation.
+	//
+	// One of the sets or copies of the signed-in Account; without a set the dice roll plain.
+	//
+	// PUT /api/v1/dice-sets/chosen
+	ChooseDiceSet(ctx context.Context, request *DiceSetChoice) (ChooseDiceSetRes, error)
+	// ClearDiceSetImage invokes clearDiceSetImage operation.
+	//
+	// The set goes back to its preset patterns and needs no review.
+	//
+	// DELETE /api/v1/dice-sets/{diceSetId}/image
+	ClearDiceSetImage(ctx context.Context, params ClearDiceSetImageParams) (ClearDiceSetImageRes, error)
 	// ConfirmTwoStep invokes confirmTwoStep operation.
 	//
 	// Checks a first code from the app and returns the recovery codes, shown only now.
 	//
 	// POST /api/v1/account/two-step/confirm
 	ConfirmTwoStep(ctx context.Context, request *TwoStepCode, params ConfirmTwoStepParams) (ConfirmTwoStepRes, error)
+	// CopyDiceSet invokes copyDiceSet operation.
+	//
+	// A read-only copy of a set shared with the signed-in Account. It stays as it was when the original
+	// changes or stops being shared. One copy of a set per Account.
+	//
+	// POST /api/v1/dice-sets/{diceSetId}/copy
+	CopyDiceSet(ctx context.Context, params CopyDiceSetParams) (CopyDiceSetRes, error)
 	// CreateAccessToken invokes createAccessToken operation.
 	//
 	// A token for MCP clients and scripts that acts as this Account within its scopes; it is shown only
@@ -85,6 +104,12 @@ type AccountInvoker interface {
 	//
 	// POST /api/v1/admin/account-invites
 	CreateAccountInvite(ctx context.Context, request *AccountInviteRequest) (CreateAccountInviteRes, error)
+	// CreateDiceSet invokes createDiceSet operation.
+	//
+	// A private Dice Set with a look for each die type it dresses, from a preset pattern and two colours.
+	//
+	// POST /api/v1/dice-sets
+	CreateDiceSet(ctx context.Context, request *DiceSetChange) (CreateDiceSetRes, error)
 	// CreateOidcAccount invokes createOidcAccount operation.
 	//
 	// Sets up an Account for a login no Account has yet, and signs it in.
@@ -104,6 +129,12 @@ type AccountInvoker interface {
 	//
 	// POST /api/v1/friend-requests/{requestId}/decline
 	DeclineFriendRequest(ctx context.Context, request *FriendRequestDecline, params DeclineFriendRequestParams) (DeclineFriendRequestRes, error)
+	// DeleteDiceSet invokes deleteDiceSet operation.
+	//
+	// Removes one of the sets of the signed-in Account, a copy too. Copies others took of it stay.
+	//
+	// DELETE /api/v1/dice-sets/{diceSetId}
+	DeleteDiceSet(ctx context.Context, params DeleteDiceSetParams) (DeleteDiceSetRes, error)
 	// DeletePushSubscription invokes deletePushSubscription operation.
 	//
 	// Stops notifications to one of the caller's devices.
@@ -123,6 +154,12 @@ type AccountInvoker interface {
 	//
 	// POST /api/v1/admin/release-notes
 	DraftReleaseNote(ctx context.Context, request *ReleaseNoteDraft) (DraftReleaseNoteRes, error)
+	// EditDiceSet invokes editDiceSet operation.
+	//
+	// Sets its name and looks. A copy cannot be changed.
+	//
+	// PUT /api/v1/dice-sets/{diceSetId}
+	EditDiceSet(ctx context.Context, request *DiceSetChange, params EditDiceSetParams) (EditDiceSetRes, error)
 	// EditReleaseNote invokes editReleaseNote operation.
 	//
 	// Changes its words until it has been announced. For Admins.
@@ -191,6 +228,12 @@ type AccountInvoker interface {
 	//
 	// POST /api/v1/account/two-step/recovery-codes
 	ResetRecoveryCodes(ctx context.Context, request *TwoStepCode) (ResetRecoveryCodesRes, error)
+	// ReviewDiceSet invokes reviewDiceSet operation.
+	//
+	// Decides whether everyone may see a set that waits. Admins only.
+	//
+	// POST /api/v1/admin/dice-sets/{diceSetId}/review
+	ReviewDiceSet(ctx context.Context, request *DiceSetVerdict, params ReviewDiceSetParams) (ReviewDiceSetRes, error)
 	// ReviewSharedSubmission invokes reviewSharedSubmission operation.
 	//
 	// Approves or declines a request with the IP check recorded either way; approval needs the Admin's
@@ -248,12 +291,26 @@ type AccountInvoker interface {
 	//
 	// PUT /api/v1/admin/accounts/{accountId}/admin
 	SetAdminRole(ctx context.Context, request *Toggle, params SetAdminRoleParams) (SetAdminRoleRes, error)
+	// SetDiceSetImage invokes setDiceSetImage operation.
+	//
+	// A PNG, JPEG or WebP picture of at most 10 MB, placed on each die by the design. A set shared with
+	// everyone goes back before the Admins.
+	//
+	// PUT /api/v1/dice-sets/{diceSetId}/image
+	SetDiceSetImage(ctx context.Context, request SetDiceSetImageReq, params SetDiceSetImageParams) (SetDiceSetImageRes, error)
 	// SetNotificationPreferences invokes setNotificationPreferences operation.
 	//
 	// Sets the channels for each kind given; security Notifications always show in app.
 	//
 	// PUT /api/v1/notification-preferences
 	SetNotificationPreferences(ctx context.Context, request *NotificationPreferences) (SetNotificationPreferencesRes, error)
+	// ShareDiceSet invokes shareDiceSet operation.
+	//
+	// Private, with Friends, or with everyone. A set with an uploaded picture that is shared with everyone
+	// waits for an Admin; until then only Friends see it. A copy cannot be shared on.
+	//
+	// PUT /api/v1/dice-sets/{diceSetId}/sharing
+	ShareDiceSet(ctx context.Context, request *DiceSetSharingChange, params ShareDiceSetParams) (ShareDiceSetRes, error)
 	// SignIn invokes signIn operation.
 	//
 	// Signs the Account in on this device. Every failure answers the same.
@@ -334,31 +391,12 @@ type BuildInvoker interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/retrains/{retrainId}/approve
 	ApproveRetrain(ctx context.Context, params ApproveRetrainParams) (ApproveRetrainRes, error)
-	// ChooseDiceSet invokes chooseDiceSet operation.
-	//
-	// One of the sets or copies of the signed-in Account; without a set the dice roll plain.
-	//
-	// PUT /api/v1/dice-sets/chosen
-	ChooseDiceSet(ctx context.Context, request *DiceSetChoice) (ChooseDiceSetRes, error)
-	// ClearDiceSetImage invokes clearDiceSetImage operation.
-	//
-	// The set goes back to its preset patterns and needs no review.
-	//
-	// DELETE /api/v1/dice-sets/{diceSetId}/image
-	ClearDiceSetImage(ctx context.Context, params ClearDiceSetImageParams) (ClearDiceSetImageRes, error)
 	// ClearTokenIcon invokes clearTokenIcon operation.
 	//
 	// Removes the token icon so the token shows initials. The owner or a DM, never during Combat.
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/characters/{characterId}/token
 	ClearTokenIcon(ctx context.Context, params ClearTokenIconParams) (ClearTokenIconRes, error)
-	// CopyDiceSet invokes copyDiceSet operation.
-	//
-	// A read-only copy of a set shared with the signed-in Account. It stays as it was when the original
-	// changes or stops being shared. One copy of a set per Account.
-	//
-	// POST /api/v1/dice-sets/{diceSetId}/copy
-	CopyDiceSet(ctx context.Context, params CopyDiceSetParams) (CopyDiceSetRes, error)
 	// CopySpell invokes copySpell operation.
 	//
 	// Writes a wizard spell into the spellbook, free up to the book's allotment, otherwise for 50 gp and 2
@@ -378,12 +416,6 @@ type BuildInvoker interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/characters
 	CreateCharacter(ctx context.Context, request *CharacterBuild, params CreateCharacterParams) (CreateCharacterRes, error)
-	// CreateDiceSet invokes createDiceSet operation.
-	//
-	// A private Dice Set with a look for each die type it dresses, from a preset pattern and two colours.
-	//
-	// POST /api/v1/dice-sets
-	CreateDiceSet(ctx context.Context, request *DiceSetChange) (CreateDiceSetRes, error)
 	// CreateEncounterPool invokes createEncounterPool operation.
 	//
 	// Adds an Encounter Pool and records its first Revision. DM only.
@@ -456,12 +488,6 @@ type BuildInvoker interface {
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/characters/{characterId}
 	DeleteCharacter(ctx context.Context, params DeleteCharacterParams) (DeleteCharacterRes, error)
-	// DeleteDiceSet invokes deleteDiceSet operation.
-	//
-	// Removes one of the sets of the signed-in Account, a copy too. Copies others took of it stay.
-	//
-	// DELETE /api/v1/dice-sets/{diceSetId}
-	DeleteDiceSet(ctx context.Context, params DeleteDiceSetParams) (DeleteDiceSetRes, error)
 	// DeleteEncounterPool invokes deleteEncounterPool operation.
 	//
 	// Removes the Encounter Pool; its Revisions keep it restorable. DM only.
@@ -504,12 +530,6 @@ type BuildInvoker interface {
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/character-draft
 	DiscardCharacterDraft(ctx context.Context, params DiscardCharacterDraftParams) (DiscardCharacterDraftRes, error)
-	// EditDiceSet invokes editDiceSet operation.
-	//
-	// Sets its name and looks. A copy cannot be changed.
-	//
-	// PUT /api/v1/dice-sets/{diceSetId}
-	EditDiceSet(ctx context.Context, request *DiceSetChange, params EditDiceSetParams) (EditDiceSetRes, error)
 	// ImportLibrary invokes importLibrary operation.
 	//
 	// Adds the entries and Collections of an export to the caller's Library as new ones. Whatever Grimoire
@@ -643,12 +663,6 @@ type BuildInvoker interface {
 	//
 	// PUT /api/v1/campaigns/{campaignId}/proposals/{proposalId}
 	ResubmitProposal(ctx context.Context, request *ProposalUpdate, params ResubmitProposalParams) (ResubmitProposalRes, error)
-	// ReviewDiceSet invokes reviewDiceSet operation.
-	//
-	// Decides whether everyone may see a set that waits. Admins only.
-	//
-	// POST /api/v1/admin/dice-sets/{diceSetId}/review
-	ReviewDiceSet(ctx context.Context, request *DiceSetVerdict, params ReviewDiceSetParams) (ReviewDiceSetRes, error)
 	// ReviewProposal invokes reviewProposal operation.
 	//
 	// A DM approves a pending Proposal (copied once into their Library and linked into the Campaign
@@ -752,13 +766,6 @@ type BuildInvoker interface {
 	//
 	// PUT /api/v1/campaigns/{campaignId}/library/{entryId}/override
 	SetCampaignOverride(ctx context.Context, request *CampaignOverrideInput, params SetCampaignOverrideParams) (SetCampaignOverrideRes, error)
-	// SetDiceSetImage invokes setDiceSetImage operation.
-	//
-	// A PNG, JPEG or WebP picture of at most 10 MB, placed on each die by the design. A set shared with
-	// everyone goes back before the Admins.
-	//
-	// PUT /api/v1/dice-sets/{diceSetId}/image
-	SetDiceSetImage(ctx context.Context, request SetDiceSetImageReq, params SetDiceSetImageParams) (SetDiceSetImageRes, error)
 	// SetPortrait invokes setPortrait operation.
 	//
 	// A PNG, JPEG or WebP picture of at most 10 MB. The owner or a DM, never during Combat.
@@ -771,13 +778,6 @@ type BuildInvoker interface {
 	//
 	// PUT /api/v1/campaigns/{campaignId}/characters/{characterId}/token
 	SetTokenIcon(ctx context.Context, request SetTokenIconReq, params SetTokenIconParams) (SetTokenIconRes, error)
-	// ShareDiceSet invokes shareDiceSet operation.
-	//
-	// Private, with Friends, or with everyone. A set with an uploaded picture that is shared with everyone
-	// waits for an Admin; until then only Friends see it. A copy cannot be shared on.
-	//
-	// PUT /api/v1/dice-sets/{diceSetId}/sharing
-	ShareDiceSet(ctx context.Context, request *DiceSetSharingChange, params ShareDiceSetParams) (ShareDiceSetRes, error)
 	// ShareLibraryEntry invokes shareLibraryEntry operation.
 	//
 	// Asks the Admins to put the latest Revision of one of the caller's entries in the Shared Library.

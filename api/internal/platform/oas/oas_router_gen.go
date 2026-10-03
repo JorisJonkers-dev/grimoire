@@ -8367,7 +8367,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 											r.name = ReviewDiceSetOperation
 											r.summary = "Approve or reject a Dice Set"
 											r.operationID = "reviewDiceSet"
-											r.operationGroup = "Build"
+											r.operationGroup = "Account"
 											r.pathPattern = "/api/v1/admin/dice-sets/{diceSetId}/review"
 											r.args = args
 											r.count = 1
@@ -12973,7 +12973,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							r.name = CreateDiceSetOperation
 							r.summary = "Make a Dice Set"
 							r.operationID = "createDiceSet"
-							r.operationGroup = "Build"
+							r.operationGroup = "Account"
 							r.pathPattern = "/api/v1/dice-sets"
 							r.args = args
 							r.count = 0
@@ -13010,7 +13010,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 									r.name = ChooseDiceSetOperation
 									r.summary = "Choose the Dice Set to roll with"
 									r.operationID = "chooseDiceSet"
-									r.operationGroup = "Build"
+									r.operationGroup = "Account"
 									r.pathPattern = "/api/v1/dice-sets/chosen"
 									r.args = args
 									r.count = 0
@@ -13063,7 +13063,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								r.name = DeleteDiceSetOperation
 								r.summary = "Delete a Dice Set"
 								r.operationID = "deleteDiceSet"
-								r.operationGroup = "Build"
+								r.operationGroup = "Account"
 								r.pathPattern = "/api/v1/dice-sets/{diceSetId}"
 								r.args = args
 								r.count = 1
@@ -13072,7 +13072,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								r.name = EditDiceSetOperation
 								r.summary = "Change a Dice Set"
 								r.operationID = "editDiceSet"
-								r.operationGroup = "Build"
+								r.operationGroup = "Account"
 								r.pathPattern = "/api/v1/dice-sets/{diceSetId}"
 								r.args = args
 								r.count = 1
@@ -13109,7 +13109,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 										r.name = CopyDiceSetOperation
 										r.summary = "Take a copy of a shared Dice Set"
 										r.operationID = "copyDiceSet"
-										r.operationGroup = "Build"
+										r.operationGroup = "Account"
 										r.pathPattern = "/api/v1/dice-sets/{diceSetId}/copy"
 										r.args = args
 										r.count = 1
@@ -13134,7 +13134,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 										r.name = ClearDiceSetImageOperation
 										r.summary = "Take the picture off a Dice Set"
 										r.operationID = "clearDiceSetImage"
-										r.operationGroup = "Build"
+										r.operationGroup = "Account"
 										r.pathPattern = "/api/v1/dice-sets/{diceSetId}/image"
 										r.args = args
 										r.count = 1
@@ -13152,7 +13152,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 										r.name = SetDiceSetImageOperation
 										r.summary = "Upload the picture for a Dice Set"
 										r.operationID = "setDiceSetImage"
-										r.operationGroup = "Build"
+										r.operationGroup = "Account"
 										r.pathPattern = "/api/v1/dice-sets/{diceSetId}/image"
 										r.args = args
 										r.count = 1
@@ -13177,7 +13177,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 										r.name = ShareDiceSetOperation
 										r.summary = "Share a Dice Set"
 										r.operationID = "shareDiceSet"
-										r.operationGroup = "Build"
+										r.operationGroup = "Account"
 										r.pathPattern = "/api/v1/dice-sets/{diceSetId}/sharing"
 										r.args = args
 										r.count = 1

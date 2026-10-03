@@ -246,13 +246,14 @@ func (q *Queries) InsertDiceSet(ctx context.Context, arg InsertDiceSetParams) er
 }
 
 const setDiceSetImage = `-- name: SetDiceSetImage :exec
-UPDATE social.dice_sets SET image_key = $1, image_type = $2, review = $3, updated_at = $4 WHERE id = $5
+UPDATE social.dice_sets SET image_key = $1, image_type = $2,
+    review = CASE WHEN sharing = 'everyone' AND $1::text IS NOT NULL THEN 'pending' ELSE 'none' END, updated_at = $3
+WHERE id = $4
 `
 
 type SetDiceSetImageParams struct {
 	ImageKey  pgtype.Text
 	ImageType pgtype.Text
-	Review    string
 	Now       time.Time
 	ID        uuid.UUID
 }
@@ -261,46 +262,52 @@ func (q *Queries) SetDiceSetImage(ctx context.Context, arg SetDiceSetImageParams
 	_, err := q.db.Exec(ctx, setDiceSetImage,
 		arg.ImageKey,
 		arg.ImageType,
-		arg.Review,
 		arg.Now,
 		arg.ID,
 	)
 	return err
 }
 
-const setDiceSetReview = `-- name: SetDiceSetReview :exec
-UPDATE social.dice_sets SET review = $1, updated_at = $2 WHERE id = $3
+const setDiceSetReview = `-- name: SetDiceSetReview :execrows
+UPDATE social.dice_sets SET review = $1, updated_at = $2 WHERE id = $3 AND review = 'pending' AND image_key = $4::text
 `
 
 type SetDiceSetReviewParams struct {
-	Review string
-	Now    time.Time
-	ID     uuid.UUID
+	Review   string
+	Now      time.Time
+	ID       uuid.UUID
+	ImageKey string
 }
 
-func (q *Queries) SetDiceSetReview(ctx context.Context, arg SetDiceSetReviewParams) error {
-	_, err := q.db.Exec(ctx, setDiceSetReview, arg.Review, arg.Now, arg.ID)
-	return err
+// Decides on a set that waits, and only on the picture the Admin looked at.
+func (q *Queries) SetDiceSetReview(ctx context.Context, arg SetDiceSetReviewParams) (int64, error) {
+	result, err := q.db.Exec(ctx, setDiceSetReview,
+		arg.Review,
+		arg.Now,
+		arg.ID,
+		arg.ImageKey,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 const setDiceSetSharing = `-- name: SetDiceSetSharing :exec
-UPDATE social.dice_sets SET sharing = $1, review = $2, updated_at = $3 WHERE id = $4
+UPDATE social.dice_sets SET sharing = $1,
+    review = CASE WHEN $1::text = 'everyone' AND image_key IS NOT NULL THEN 'pending' ELSE 'none' END, updated_at = $2
+WHERE id = $3
 `
 
 type SetDiceSetSharingParams struct {
 	Sharing string
-	Review  string
 	Now     time.Time
 	ID      uuid.UUID
 }
 
+// The review follows from the row as it is now, so a picture uploaded meanwhile is never missed.
 func (q *Queries) SetDiceSetSharing(ctx context.Context, arg SetDiceSetSharingParams) error {
-	_, err := q.db.Exec(ctx, setDiceSetSharing,
-		arg.Sharing,
-		arg.Review,
-		arg.Now,
-		arg.ID,
-	)
+	_, err := q.db.Exec(ctx, setDiceSetSharing, arg.Sharing, arg.Now, arg.ID)
 	return err
 }
 

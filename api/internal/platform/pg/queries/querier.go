@@ -628,7 +628,9 @@ type Querier interface {
 	SetCharacterToken(ctx context.Context, arg SetCharacterTokenParams) error
 	SetContainerCoins(ctx context.Context, arg SetContainerCoinsParams) error
 	SetDiceSetImage(ctx context.Context, arg SetDiceSetImageParams) error
-	SetDiceSetReview(ctx context.Context, arg SetDiceSetReviewParams) error
+	// Decides on a set that waits, and only on the picture the Admin looked at.
+	SetDiceSetReview(ctx context.Context, arg SetDiceSetReviewParams) (int64, error)
+	// The review follows from the row as it is now, so a picture uploaded meanwhile is never missed.
 	SetDiceSetSharing(ctx context.Context, arg SetDiceSetSharingParams) error
 	SetElevation(ctx context.Context, arg SetElevationParams) error
 	SetGameDay(ctx context.Context, arg SetGameDayParams) error

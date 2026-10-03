@@ -90,20 +90,25 @@ func (s *Store) UpdateDiceSet(ctx context.Context, id domain.DiceSetID, name str
 	return s.q.UpdateDiceSet(ctx, queries.UpdateDiceSetParams{Name: name, Design: raw, Now: now, ID: id})
 }
 
-// SetDiceSetSharing sets who a set is shared with and where that leaves its review.
-func (s *Store) SetDiceSetSharing(ctx context.Context, id domain.DiceSetID, sharing, review string, now time.Time) error {
-	return s.q.SetDiceSetSharing(ctx, queries.SetDiceSetSharingParams{Sharing: sharing, Review: review, Now: now, ID: id})
+// SetDiceSetSharing sets who a set is shared with; the review follows from the set as it then stands.
+func (s *Store) SetDiceSetSharing(ctx context.Context, id domain.DiceSetID, sharing string, now time.Time) error {
+	return s.q.SetDiceSetSharing(ctx, queries.SetDiceSetSharingParams{Sharing: sharing, Now: now, ID: id})
 }
 
-// SetDiceSetImage sets or clears a set's uploaded picture and where that leaves its review.
-func (s *Store) SetDiceSetImage(ctx context.Context, id domain.DiceSetID, img *domain.Picture, review string, now time.Time) error {
+// SetDiceSetImage sets or clears a set's uploaded picture; the review follows from the set as it then stands.
+func (s *Store) SetDiceSetImage(ctx context.Context, id domain.DiceSetID, img *domain.Picture, now time.Time) error {
 	key, kind := pictureColumns(img)
-	return s.q.SetDiceSetImage(ctx, queries.SetDiceSetImageParams{ImageKey: key, ImageType: kind, Review: review, Now: now, ID: id})
+	return s.q.SetDiceSetImage(ctx, queries.SetDiceSetImageParams{ImageKey: key, ImageType: kind, Now: now, ID: id})
 }
 
-// SetDiceSetReview records an Admin's decision.
-func (s *Store) SetDiceSetReview(ctx context.Context, id domain.DiceSetID, review string, now time.Time) error {
-	return s.q.SetDiceSetReview(ctx, queries.SetDiceSetReviewParams{Review: review, Now: now, ID: id})
+// SetDiceSetReview records an Admin's decision on a set that waits with this picture on it. A set that
+// stopped waiting, or carries another picture by now, is a conflict.
+func (s *Store) SetDiceSetReview(ctx context.Context, id domain.DiceSetID, review, imageKey string, now time.Time) error {
+	n, err := s.q.SetDiceSetReview(ctx, queries.SetDiceSetReviewParams{Review: review, Now: now, ID: id, ImageKey: imageKey})
+	if err == nil && n == 0 {
+		return domain.ErrConflict
+	}
+	return err
 }
 
 // DeleteDiceSet removes a set; whoever rolled with it goes back to the plain dice.

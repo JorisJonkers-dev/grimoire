@@ -1179,6 +1179,10 @@ export type DiceSet = {
     design: DiceDesign;
     hasImage: boolean;
     imageUrl?: AssetUrl;
+    /**
+     * Names the uploaded picture. It changes whenever the picture does.
+     */
+    imageVersion?: string;
     sharing: 'private' | 'friends' | 'everyone';
     review: 'none' | 'pending' | 'approved' | 'rejected';
     /**
@@ -1224,10 +1228,14 @@ export type DiceSetChoice = {
 };
 
 /**
- * The decision of an Admin on a Dice Set that waits.
+ * The decision of an Admin on a Dice Set that waits, bound to the picture they looked at.
  */
 export type DiceSetVerdict = {
     approve: boolean;
+    /**
+     * The version of the picture the Admin looked at. A decision on a picture that is no longer on the set is refused.
+     */
+    picture: string;
 };
 
 /**

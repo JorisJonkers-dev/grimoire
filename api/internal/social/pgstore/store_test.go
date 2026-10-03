@@ -409,7 +409,11 @@ func TestEveryDiceSetDatabaseFaultSurfaces(t *testing.T) {
 			if err := everyone(); err != nil {
 				return err
 			}
-			_, err := s.ReviewDiceSet(ctx, set.ID, true)
+			waiting, err := base.Repo.DiceSet(ctx, set.ID)
+			if err != nil {
+				return err
+			}
+			_, err = s.ReviewDiceSet(ctx, set.ID, true, waiting.Image.Version())
 			return err
 		},
 		"bare":   func(s *app.Service) error { _, err := s.ClearDiceSetPicture(ctx, "aria", set.ID); return err },
@@ -558,8 +562,22 @@ func TestTheDiceSetARollIsMadeWith(t *testing.T) {
 	if _, _, err := svc.DiceSetPicture(ctx, "cara", set.ID, false); !errors.Is(err, domain.ErrNotFound) {
 		t.Fatalf("a stranger fetches a picture that waits = %v", err)
 	}
-	if _, err := svc.ReviewDiceSet(ctx, set.ID, true); err != nil {
+	waiting, _ := svc.ChosenDiceSet(ctx, "aria")
+	// The store itself refuses a decision on any picture but the one on the set, whatever was read before.
+	if err := svc.Repo.SetDiceSetReview(ctx, set.ID, domain.ReviewApproved, "sha256/ffffffffffffffff.png", time.Now()); !errors.Is(err, domain.ErrConflict) {
+		t.Fatalf("approving a picture that is not on the set = %v", err)
+	}
+	if _, err := svc.ReviewDiceSet(ctx, set.ID, true, "ffffffffffff"); !errors.Is(err, domain.ErrConflict) {
+		t.Fatalf("approving a picture the Admin did not see = %v", err)
+	}
+	if got, _ := svc.ChosenDiceSet(ctx, "aria"); got == nil || got.Review != domain.ReviewPending {
+		t.Fatalf("after a refused decision = %+v", got)
+	}
+	if _, err := svc.ReviewDiceSet(ctx, set.ID, true, waiting.Image.Version()); err != nil {
 		t.Fatal(err)
+	}
+	if err := svc.Repo.SetDiceSetReview(ctx, set.ID, domain.ReviewRejected, waiting.Image.Key, time.Now()); !errors.Is(err, domain.ErrConflict) {
+		t.Fatalf("deciding again on a set that no longer waits = %v", err)
 	}
 	if got, _ := svc.ChosenDiceSet(ctx, "aria"); got == nil || !got.Cleared() {
 		t.Fatalf("an approved set = %+v", got)
@@ -606,5 +624,63 @@ func TestTheDiceSetARollIsMadeWith(t *testing.T) {
 	// A set without a picture has nothing to clear, whatever its review says.
 	if (domain.DiceSet{Review: domain.ReviewApproved}).Cleared() {
 		t.Fatal("a set without a picture is cleared")
+	}
+}
+
+// Where a set stands with the Admins follows from the set as it is when it changes, not from what was
+// read before: a picture and a sharing that arrive together cannot slip past the review.
+func TestTheReviewOfADiceSetFollowsTheSetItself(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	db, err := pg.Open(ctx, pgtest.URL(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(db.Close)
+	account(t, db.Pool(), "aria")
+	repo := pgstore.New(db.Pool())
+	svc := &app.Service{Repo: repo, Now: time.Now, Blobs: storage.Dir{Path: t.TempDir()}}
+	set, err := svc.CreateDiceSet(ctx, "aria", "Embers", domain.DiceDesign{Dice: map[string]domain.DieLook{}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	crest := &domain.Picture{Key: "sha256/0123456789abcdef.png", Type: "image/png"}
+	review := func() string {
+		t.Helper()
+		d, err := repo.DiceSet(ctx, set.ID)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return d.Sharing + " " + d.Review
+	}
+	steps := []struct {
+		what string
+		do   func() error
+		want string
+	}{
+		{"shared with everyone without a picture", func() error { return repo.SetDiceSetSharing(ctx, set.ID, domain.SharingEveryone, time.Now()) }, "everyone none"},
+		{"a picture on a set shared with everyone", func() error { return repo.SetDiceSetImage(ctx, set.ID, crest, time.Now()) }, "everyone pending"},
+		{"approved", func() error { return repo.SetDiceSetReview(ctx, set.ID, domain.ReviewApproved, crest.Key, time.Now()) }, "everyone approved"},
+		{"the same picture again", func() error { return repo.SetDiceSetImage(ctx, set.ID, crest, time.Now()) }, "everyone pending"},
+		{"back to Friends", func() error { return repo.SetDiceSetSharing(ctx, set.ID, domain.SharingFriends, time.Now()) }, "friends none"},
+		{"to everyone with the picture on", func() error { return repo.SetDiceSetSharing(ctx, set.ID, domain.SharingEveryone, time.Now()) }, "everyone pending"},
+		{"the picture off", func() error { return repo.SetDiceSetImage(ctx, set.ID, nil, time.Now()) }, "everyone none"},
+		{"private with a picture", func() error {
+			if err := repo.SetDiceSetSharing(ctx, set.ID, domain.SharingPrivate, time.Now()); err != nil {
+				return err
+			}
+			return repo.SetDiceSetImage(ctx, set.ID, crest, time.Now())
+		}, "private none"},
+	}
+	for _, step := range steps {
+		if err := step.do(); err != nil {
+			t.Fatalf("%s: %v", step.what, err)
+		}
+		if got := review(); got != step.want {
+			t.Fatalf("%s = %s, want %s", step.what, got, step.want)
+		}
+	}
+	if crest.Version() != "0123456789ab" {
+		t.Fatalf("version = %s", crest.Version())
 	}
 }

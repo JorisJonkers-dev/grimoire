@@ -949,10 +949,11 @@ export const zDiceSetChoice = z.object({
 });
 
 /**
- * The decision of an Admin on a Dice Set that waits.
+ * The decision of an Admin on a Dice Set that waits, bound to the picture they looked at.
  */
 export const zDiceSetVerdict = z.object({
-    approve: z.boolean()
+    approve: z.boolean(),
+    picture: z.string().max(12).regex(/^[0-9a-f]{12}$/)
 });
 
 /**
@@ -1032,6 +1033,7 @@ export const zDiceSet = z.object({
     design: zDiceDesign,
     hasImage: z.boolean(),
     imageUrl: zAssetUrl.optional(),
+    imageVersion: z.string().max(12).regex(/^[0-9a-f]{12}$/).optional(),
     sharing: z.enum([
         'private',
         'friends',

@@ -28,9 +28,12 @@ type DiceRepository interface {
 	DiceSetsSharedWith(ctx context.Context, me domain.AccountID) ([]domain.DiceSet, error)
 	DiceSetsAwaitingReview(ctx context.Context) ([]domain.DiceSet, error)
 	UpdateDiceSet(ctx context.Context, id domain.DiceSetID, name string, design domain.DiceDesign, now time.Time) error
-	SetDiceSetSharing(ctx context.Context, id domain.DiceSetID, sharing, review string, now time.Time) error
-	SetDiceSetImage(ctx context.Context, id domain.DiceSetID, img *domain.Picture, review string, now time.Time) error
-	SetDiceSetReview(ctx context.Context, id domain.DiceSetID, review string, now time.Time) error
+	// SetDiceSetSharing and SetDiceSetImage leave the review where the set then stands: waiting when it is
+	// shared with everyone and carries a picture, and needing none otherwise.
+	SetDiceSetSharing(ctx context.Context, id domain.DiceSetID, sharing string, now time.Time) error
+	SetDiceSetImage(ctx context.Context, id domain.DiceSetID, img *domain.Picture, now time.Time) error
+	// SetDiceSetReview decides on a set that waits with this picture on it; any other is a conflict.
+	SetDiceSetReview(ctx context.Context, id domain.DiceSetID, review, imageKey string, now time.Time) error
 	DeleteDiceSet(ctx context.Context, id domain.DiceSetID) error
 	ChooseDiceSet(ctx context.Context, account domain.AccountID, id domain.DiceSetID) error
 	UnchooseDiceSet(ctx context.Context, account domain.AccountID) error
@@ -107,29 +110,29 @@ func (s *Service) CreateDiceSet(ctx context.Context, subject, name string, desig
 	return d, s.Repo.InsertDiceSet(ctx, d)
 }
 
-// own reads a Dice Set the caller owns; anyone else's is not found. A copy cannot be changed, so
+// own checks that a Dice Set is the caller's; anyone else's is not found. A copy cannot be changed, so
 // asking to change one is a conflict.
-func (s *Service) own(ctx context.Context, subject string, id domain.DiceSetID, change bool) (domain.DiceSet, error) {
+func (s *Service) own(ctx context.Context, subject string, id domain.DiceSetID, change bool) error {
 	me, err := s.me(ctx, subject)
 	if err != nil {
-		return domain.DiceSet{}, err
+		return err
 	}
 	d, err := s.Repo.DiceSet(ctx, id)
 	if err != nil {
-		return domain.DiceSet{}, err
+		return err
 	}
 	if d.Owner != me.ID {
-		return domain.DiceSet{}, domain.ErrNotFound
+		return domain.ErrNotFound
 	}
 	if change && d.Copy() {
-		return domain.DiceSet{}, domain.ErrConflict
+		return domain.ErrConflict
 	}
-	return d, nil
+	return nil
 }
 
 // EditDiceSet changes a set's name and looks.
 func (s *Service) EditDiceSet(ctx context.Context, subject string, id domain.DiceSetID, name string, design domain.DiceDesign) (domain.DiceSet, error) {
-	if _, err := s.own(ctx, subject, id, true); err != nil {
+	if err := s.own(ctx, subject, id, true); err != nil {
 		return domain.DiceSet{}, err
 	}
 	name, ok := cleanSetName(name)
@@ -145,14 +148,13 @@ func (s *Service) EditDiceSet(ctx context.Context, subject string, id domain.Dic
 // ShareDiceSet sets who a set is shared with. Sharing a set that carries a picture with everyone puts
 // it before the Admins; until one approves it only its owner's Friends see it.
 func (s *Service) ShareDiceSet(ctx context.Context, subject string, id domain.DiceSetID, sharing string) (domain.DiceSet, error) {
-	d, err := s.own(ctx, subject, id, true)
-	if err != nil {
+	if err := s.own(ctx, subject, id, true); err != nil {
 		return domain.DiceSet{}, err
 	}
 	if !slices.Contains([]string{domain.SharingPrivate, domain.SharingFriends, domain.SharingEveryone}, sharing) {
 		return domain.DiceSet{}, domain.ErrInvalid
 	}
-	if err := s.Repo.SetDiceSetSharing(ctx, id, sharing, domain.ReviewFor(sharing, d.Image != nil), s.Now()); err != nil {
+	if err := s.Repo.SetDiceSetSharing(ctx, id, sharing, s.Now()); err != nil {
 		return domain.DiceSet{}, err
 	}
 	return s.Repo.DiceSet(ctx, id)
@@ -199,7 +201,7 @@ func (s *Service) CopyDiceSet(ctx context.Context, subject string, id domain.Dic
 
 // DeleteDiceSet removes one of the caller's sets, a copy too.
 func (s *Service) DeleteDiceSet(ctx context.Context, subject string, id domain.DiceSetID) error {
-	if _, err := s.own(ctx, subject, id, false); err != nil {
+	if err := s.own(ctx, subject, id, false); err != nil {
 		return err
 	}
 	return s.Repo.DeleteDiceSet(ctx, id)
@@ -208,8 +210,7 @@ func (s *Service) DeleteDiceSet(ctx context.Context, subject string, id domain.D
 // SetDiceSetPicture puts an uploaded picture on a set. A set shared with everyone goes back before the
 // Admins: the picture they approved is not the one it carries now.
 func (s *Service) SetDiceSetPicture(ctx context.Context, subject string, id domain.DiceSetID, data []byte) (domain.DiceSet, error) {
-	d, err := s.own(ctx, subject, id, true)
-	if err != nil {
+	if err := s.own(ctx, subject, id, true); err != nil {
 		return domain.DiceSet{}, err
 	}
 	contentType, ext, ok := picture.Sniff(data)
@@ -220,7 +221,7 @@ func (s *Service) SetDiceSetPicture(ctx context.Context, subject string, id doma
 	if err := s.Blobs.Put(ctx, img.Key, img.Type, data); err != nil {
 		return domain.DiceSet{}, err
 	}
-	if err := s.Repo.SetDiceSetImage(ctx, id, img, domain.ReviewFor(d.Sharing, true), s.Now()); err != nil {
+	if err := s.Repo.SetDiceSetImage(ctx, id, img, s.Now()); err != nil {
 		return domain.DiceSet{}, err
 	}
 	return s.Repo.DiceSet(ctx, id)
@@ -228,10 +229,10 @@ func (s *Service) SetDiceSetPicture(ctx context.Context, subject string, id doma
 
 // ClearDiceSetPicture takes the uploaded picture off a set; with nothing left to check, it needs no review.
 func (s *Service) ClearDiceSetPicture(ctx context.Context, subject string, id domain.DiceSetID) (domain.DiceSet, error) {
-	if _, err := s.own(ctx, subject, id, true); err != nil {
+	if err := s.own(ctx, subject, id, true); err != nil {
 		return domain.DiceSet{}, err
 	}
-	if err := s.Repo.SetDiceSetImage(ctx, id, nil, domain.ReviewNone, s.Now()); err != nil {
+	if err := s.Repo.SetDiceSetImage(ctx, id, nil, s.Now()); err != nil {
 		return domain.DiceSet{}, err
 	}
 	return s.Repo.DiceSet(ctx, id)
@@ -269,7 +270,7 @@ func (s *Service) ChooseDiceSet(ctx context.Context, subject string, id *domain.
 	if id == nil {
 		return s.Repo.UnchooseDiceSet(ctx, me.ID)
 	}
-	if _, err := s.own(ctx, subject, *id, false); err != nil {
+	if err := s.own(ctx, subject, *id, false); err != nil {
 		return err
 	}
 	return s.Repo.ChooseDiceSet(ctx, me.ID, *id)
@@ -295,20 +296,21 @@ func (s *Service) DiceSetsToReview(ctx context.Context) ([]domain.DiceSet, error
 	return s.Repo.DiceSetsAwaitingReview(ctx)
 }
 
-// ReviewDiceSet approves or rejects a set that waits; one that does not wait cannot be reviewed.
-func (s *Service) ReviewDiceSet(ctx context.Context, id domain.DiceSetID, approve bool) (domain.DiceSet, error) {
+// ReviewDiceSet approves or rejects a set that waits. The decision is for the picture the Admin looked
+// at: when the owner has put another on the set since, or the set no longer waits, it is a conflict.
+func (s *Service) ReviewDiceSet(ctx context.Context, id domain.DiceSetID, approve bool, seen string) (domain.DiceSet, error) {
 	d, err := s.Repo.DiceSet(ctx, id)
 	if err != nil {
 		return domain.DiceSet{}, err
 	}
-	if d.Review != domain.ReviewPending {
+	if d.Review != domain.ReviewPending || d.Image == nil || d.Image.Version() != seen {
 		return domain.DiceSet{}, domain.ErrConflict
 	}
 	review := domain.ReviewRejected
 	if approve {
 		review = domain.ReviewApproved
 	}
-	if err := s.Repo.SetDiceSetReview(ctx, id, review, s.Now()); err != nil {
+	if err := s.Repo.SetDiceSetReview(ctx, id, review, d.Image.Key, s.Now()); err != nil {
 		return domain.DiceSet{}, err
 	}
 	return s.Repo.DiceSet(ctx, id)

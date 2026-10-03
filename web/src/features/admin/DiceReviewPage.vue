@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
+import { computed } from 'vue'
 import { listDiceSetsToReviewOptions, reviewDiceSetMutation } from '@/infrastructure/api/@tanstack/vue-query.gen'
+import type { DiceSet } from '@/infrastructure/api/types.gen'
 import DiceSheet from '@/features/dice/DiceSheet.vue'
 import { PLAIN } from '@/features/dice/sets'
 import { GButton } from '@/shared/ui'
@@ -9,7 +11,17 @@ import { GButton } from '@/shared/ui'
 const client = useQueryClient()
 const waiting = useQuery({ ...listDiceSetsToReviewOptions(), retry: false })
 const review = useMutation(reviewDiceSetMutation())
-const decide = (id: string, approve: boolean) => { review.mutate({ path: { diceSetId: id }, body: { approve } }, { onSuccess: () => void client.invalidateQueries() }) }
+// A decision names the picture that was on screen: if the owner has swapped it since, it is refused and
+// the list is read again.
+function decide(s: DiceSet, approve: boolean) {
+  const reread = () => void client.invalidateQueries()
+  review.mutate({ path: { diceSetId: s.id }, body: { approve, picture: s.imageVersion ?? '' } }, { onSuccess: reread, onError: reread })
+}
+const problem = computed(() =>
+  (review.error.value as { status?: number } | null)?.status === 409
+    ? 'That set changed while you were looking. Look at it again before you decide.'
+    : 'That decision was not saved. Try again shortly.',
+)
 </script>
 
 <template>
@@ -18,7 +30,7 @@ const decide = (id: string, approve: boolean) => { review.mutate({ path: { diceS
     <h1>Dice Set pictures</h1>
     <p v-if="waiting.isError.value" role="alert" class="g-alert" data-testid="dice-review-forbidden">Only an Admin with two-step sign-in can check Dice Sets.</p>
     <template v-else-if="waiting.data.value">
-      <p v-if="review.isError.value" role="alert" class="g-alert" data-testid="dice-review-problem">That decision was not saved. Try again shortly.</p>
+      <p v-if="review.isError.value" role="alert" class="g-alert" data-testid="dice-review-problem">{{ problem }}</p>
       <p v-if="waiting.data.value.items.length === 0" data-testid="dice-review-none">No pictures wait to be checked.</p>
       <article v-for="s in waiting.data.value.items" :key="s.id" class="g-card stack" :data-testid="`review-set-${s.name}`">
         <h2>{{ s.name }} <span class="dim">by {{ s.by }}</span></h2>
@@ -27,8 +39,8 @@ const decide = (id: string, approve: boolean) => { review.mutate({ path: { diceS
           <DiceSheet type="d20" :look="s.design.dice.d20 ?? PLAIN" :image-url="s.imageUrl" :size="160" />
         </div>
         <div class="actions">
-          <GButton type="button" variant="primary" data-testid="review-approve" @click="decide(s.id, true)">Approve</GButton>
-          <GButton type="button" variant="danger" data-testid="review-reject" @click="decide(s.id, false)">Turn down</GButton>
+          <GButton type="button" variant="primary" data-testid="review-approve" @click="decide(s, true)">Approve</GButton>
+          <GButton type="button" variant="danger" data-testid="review-reject" @click="decide(s, false)">Turn down</GButton>
         </div>
       </article>
     </template>
