@@ -966,10 +966,10 @@ func (q *Queries) InsertSurface(ctx context.Context, arg InsertSurfaceParams) er
 
 const insertToken = `-- name: InsertToken :exec
 INSERT INTO play.tokens (id, session_id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class,
-    hp, hp_max, intelligence, can_shield, spell_dc, stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action, summon_effect_id, strength, creature_type)
+    hp, hp_max, intelligence, can_shield, spell_dc, stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action, summon_effect_id, strength, creature_type, legend)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
     $11, $12, $13, $14, $15, $16, $17,
-    $18, $19, $20, $21, $22, $23, $24, $25)
+    $18, $19, $20, $21, $22, $23, $24, $25, $26)
 `
 
 type InsertTokenParams struct {
@@ -998,6 +998,7 @@ type InsertTokenParams struct {
 	SummonEffectID     pgtype.UUID
 	Strength           int32
 	CreatureType       string
+	Legend             []byte
 }
 
 func (q *Queries) InsertToken(ctx context.Context, arg InsertTokenParams) error {
@@ -1027,6 +1028,7 @@ func (q *Queries) InsertToken(ctx context.Context, arg InsertTokenParams) error 
 		arg.SummonEffectID,
 		arg.Strength,
 		arg.CreatureType,
+		arg.Legend,
 	)
 	return err
 }
@@ -2553,7 +2555,7 @@ func (q *Queries) SessionTokenSenses(ctx context.Context, sessionID uuid.UUID) (
 
 const sessionTokens = `-- name: SessionTokens :many
 SELECT id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class, hp, hp_max, intelligence, tactics, can_shield, spell_dc,
-    stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action, temp_hp, summon_effect_id, disguise, strength, creature_type FROM play.tokens WHERE session_id = $1 ORDER BY label, id
+    stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action, temp_hp, summon_effect_id, disguise, strength, creature_type, legend FROM play.tokens WHERE session_id = $1 ORDER BY label, id
 `
 
 type SessionTokensRow struct {
@@ -2584,6 +2586,7 @@ type SessionTokensRow struct {
 	Disguise           pgtype.Text
 	Strength           int32
 	CreatureType       string
+	Legend             []byte
 }
 
 func (q *Queries) SessionTokens(ctx context.Context, sessionID uuid.UUID) ([]SessionTokensRow, error) {
@@ -2623,6 +2626,7 @@ func (q *Queries) SessionTokens(ctx context.Context, sessionID uuid.UUID) ([]Ses
 			&i.Disguise,
 			&i.Strength,
 			&i.CreatureType,
+			&i.Legend,
 		); err != nil {
 			return nil, err
 		}
@@ -2815,6 +2819,28 @@ type SetTokenHPParams struct {
 
 func (q *Queries) SetTokenHP(ctx context.Context, arg SetTokenHPParams) error {
 	_, err := q.db.Exec(ctx, setTokenHP, arg.Hp, arg.SessionID, arg.ID)
+	return err
+}
+
+const setTokenLegend = `-- name: SetTokenLegend :exec
+UPDATE play.tokens SET legend = $1, hp_max = coalesce($2::integer, hp_max) WHERE session_id = $3 AND id = $4
+`
+
+type SetTokenLegendParams struct {
+	Legend    []byte
+	HpMax     pgtype.Int4
+	SessionID uuid.UUID
+	ID        uuid.UUID
+}
+
+// A legendary creature's Legend as play leaves it, and its hit point maximum after a mythic phase.
+func (q *Queries) SetTokenLegend(ctx context.Context, arg SetTokenLegendParams) error {
+	_, err := q.db.Exec(ctx, setTokenLegend,
+		arg.Legend,
+		arg.HpMax,
+		arg.SessionID,
+		arg.ID,
+	)
 	return err
 }
 

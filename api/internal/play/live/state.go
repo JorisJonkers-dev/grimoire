@@ -179,6 +179,9 @@ func (s *state) project(a Audience) View {
 			if a == AudienceDM || t.Kind == domain.TokenParty {
 				tv.Dying = s.dyingView(t.ID)
 			}
+			if a == AudienceDM {
+				tv.Legend = s.legendView(t)
+			}
 			v.Tokens = append(v.Tokens, tv)
 		}
 	}

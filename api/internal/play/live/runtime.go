@@ -27,6 +27,8 @@ import (
 // Write is one change the runtime commits: the action kind plus what it touches. AutoReveal lists the
 // hexes the party sees for the first time because of it; they are remembered from then on.
 type Write struct {
+	// Legends are legendary creatures' Legends as the change leaves them.
+	Legends    []LegendChange
 	Kind       string
 	Token      domain.Token
 	Hexes      []hex.Coord
@@ -792,6 +794,9 @@ func apply(s *state, w *Write) {
 		round = s.combat.Round
 	}
 	change(s, w)
+	for _, c := range w.Legends {
+		s.setLegend(c)
+	}
 	if w.Day != nil {
 		s.day = *w.Day
 	}
@@ -807,6 +812,7 @@ func apply(s *state, w *Write) {
 	for id := range s.acting() {
 		started[id] = !before[id]
 	}
+	s.legends(w, started)
 	changed = s.tick(started) || changed
 	changed = s.hazards(started, w) || changed
 	settleTerrain(s, w, round)

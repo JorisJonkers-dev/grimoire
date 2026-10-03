@@ -668,6 +668,13 @@ type BuildInvoker interface {
 	//
 	// PUT /api/v1/builders/items/{entryId}
 	SaveItemBuild(ctx context.Context, request *ItemDesign, params SaveItemBuildParams) (SaveItemBuildRes, error)
+	// SaveMonsterBuild invokes saveMonsterBuild operation.
+	//
+	// Saves the design of one of the caller's creature entries as its next Revision; Campaigns that see it
+	// can place it by its slug, with its legendary and lair actions offered in the turn order.
+	//
+	// PUT /api/v1/builders/monsters/{entryId}
+	SaveMonsterBuild(ctx context.Context, request *MonsterDesign, params SaveMonsterBuildParams) (SaveMonsterBuildRes, error)
 	// SaveSpeciesBuild invokes saveSpeciesBuild operation.
 	//
 	// Saves the design of one of the caller's species entries as its next Revision; Campaigns that see it
@@ -1078,6 +1085,12 @@ type ReadInvoker interface {
 	//
 	// GET /api/v1/me
 	GetMe(ctx context.Context) (GetMeRes, error)
+	// GetMonsterBuild invokes getMonsterBuild operation.
+	//
+	// A homebrew creature's design, read back: one of the caller's, or a Shared Library copy.
+	//
+	// GET /api/v1/builders/monsters/{entryId}
+	GetMonsterBuild(ctx context.Context, params GetMonsterBuildParams) (GetMonsterBuildRes, error)
 	// GetMyCharacter invokes getMyCharacter operation.
 	//
 	// A Character the signed-in Account owns; anyone else's is not found.
@@ -1519,6 +1532,13 @@ type ReadInvoker interface {
 	//
 	// POST /api/v1/builders/items/preview
 	PreviewItem(ctx context.Context, request *ItemPreviewInput) (PreviewItemRes, error)
+	// PreviewMonster invokes previewMonster operation.
+	//
+	// Checks a design without saving it and reads it back. A design the rules refuse comes back with the
+	// reason.
+	//
+	// POST /api/v1/builders/monsters/preview
+	PreviewMonster(ctx context.Context, request *MonsterPreviewInput) (PreviewMonsterRes, error)
 	// PreviewSpecies invokes previewSpecies operation.
 	//
 	// Checks a design without saving it and reads it back. A design the rules refuse comes back with the
@@ -10644,6 +10664,140 @@ func (c *Client) sendGetMe(ctx context.Context) (res GetMeRes, err error) {
 
 	stage = "DecodeResponse"
 	result, err := decodeGetMeResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// GetMonsterBuild invokes getMonsterBuild operation.
+//
+// A homebrew creature's design, read back: one of the caller's, or a Shared Library copy.
+//
+// GET /api/v1/builders/monsters/{entryId}
+func (c *Client) GetMonsterBuild(ctx context.Context, params GetMonsterBuildParams) (GetMonsterBuildRes, error) {
+	res, err := c.sendGetMonsterBuild(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendGetMonsterBuild(ctx context.Context, params GetMonsterBuildParams) (res GetMonsterBuildRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getMonsterBuild"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.URLTemplateKey.String("/api/v1/builders/monsters/{entryId}"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, GetMonsterBuildOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [2]string
+	pathParts[0] = "/api/v1/builders/monsters/"
+	{
+		// Encode "entryId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "entryId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.EntryId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, GetMonsterBuildOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeGetMonsterBuildResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
@@ -22348,6 +22502,123 @@ func (c *Client) sendPreviewItem(ctx context.Context, request *ItemPreviewInput)
 	return result, nil
 }
 
+// PreviewMonster invokes previewMonster operation.
+//
+// Checks a design without saving it and reads it back. A design the rules refuse comes back with the
+// reason.
+//
+// POST /api/v1/builders/monsters/preview
+func (c *Client) PreviewMonster(ctx context.Context, request *MonsterPreviewInput) (PreviewMonsterRes, error) {
+	res, err := c.sendPreviewMonster(ctx, request)
+	return res, err
+}
+
+func (c *Client) sendPreviewMonster(ctx context.Context, request *MonsterPreviewInput) (res PreviewMonsterRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("previewMonster"),
+		semconv.HTTPRequestMethodKey.String("POST"),
+		semconv.URLTemplateKey.String("/api/v1/builders/monsters/preview"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, PreviewMonsterOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/api/v1/builders/monsters/preview"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "POST", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodePreviewMonsterRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, PreviewMonsterOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodePreviewMonsterResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
 // PreviewReach invokes previewReach operation.
 //
 // Every hex a mover can reach and, with a target, the cheapest path to it. Changes nothing.
@@ -27214,6 +27485,144 @@ func (c *Client) sendSaveItemBuild(ctx context.Context, request *ItemDesign, par
 
 	stage = "DecodeResponse"
 	result, err := decodeSaveItemBuildResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// SaveMonsterBuild invokes saveMonsterBuild operation.
+//
+// Saves the design of one of the caller's creature entries as its next Revision; Campaigns that see it
+// can place it by its slug, with its legendary and lair actions offered in the turn order.
+//
+// PUT /api/v1/builders/monsters/{entryId}
+func (c *Client) SaveMonsterBuild(ctx context.Context, request *MonsterDesign, params SaveMonsterBuildParams) (SaveMonsterBuildRes, error) {
+	res, err := c.sendSaveMonsterBuild(ctx, request, params)
+	return res, err
+}
+
+func (c *Client) sendSaveMonsterBuild(ctx context.Context, request *MonsterDesign, params SaveMonsterBuildParams) (res SaveMonsterBuildRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("saveMonsterBuild"),
+		semconv.HTTPRequestMethodKey.String("PUT"),
+		semconv.URLTemplateKey.String("/api/v1/builders/monsters/{entryId}"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, SaveMonsterBuildOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [2]string
+	pathParts[0] = "/api/v1/builders/monsters/"
+	{
+		// Encode "entryId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "entryId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.EntryId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "PUT", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodeSaveMonsterBuildRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, SaveMonsterBuildOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeSaveMonsterBuildResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}

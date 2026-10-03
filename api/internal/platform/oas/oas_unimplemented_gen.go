@@ -621,6 +621,15 @@ func (UnimplementedHandler) GetMe(ctx context.Context) (r GetMeRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
+// GetMonsterBuild implements getMonsterBuild operation.
+//
+// A homebrew creature's design, read back: one of the caller's, or a Shared Library copy.
+//
+// GET /api/v1/builders/monsters/{entryId}
+func (UnimplementedHandler) GetMonsterBuild(ctx context.Context, params GetMonsterBuildParams) (r GetMonsterBuildRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetMyCharacter implements getMyCharacter operation.
 //
 // A Character the signed-in Account owns; anyone else's is not found.
@@ -1409,6 +1418,16 @@ func (UnimplementedHandler) PreviewItem(ctx context.Context, req *ItemPreviewInp
 	return r, ht.ErrNotImplemented
 }
 
+// PreviewMonster implements previewMonster operation.
+//
+// Checks a design without saving it and reads it back. A design the rules refuse comes back with the
+// reason.
+//
+// POST /api/v1/builders/monsters/preview
+func (UnimplementedHandler) PreviewMonster(ctx context.Context, req *MonsterPreviewInput) (r PreviewMonsterRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // PreviewReach implements previewReach operation.
 //
 // Every hex a mover can reach and, with a target, the cheapest path to it. Changes nothing.
@@ -1734,6 +1753,16 @@ func (UnimplementedHandler) SaveFeatBuild(ctx context.Context, req *FeatDesign, 
 //
 // PUT /api/v1/builders/items/{entryId}
 func (UnimplementedHandler) SaveItemBuild(ctx context.Context, req *ItemDesign, params SaveItemBuildParams) (r SaveItemBuildRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// SaveMonsterBuild implements saveMonsterBuild operation.
+//
+// Saves the design of one of the caller's creature entries as its next Revision; Campaigns that see it
+// can place it by its slug, with its legendary and lair actions offered in the turn order.
+//
+// PUT /api/v1/builders/monsters/{entryId}
+func (UnimplementedHandler) SaveMonsterBuild(ctx context.Context, req *MonsterDesign, params SaveMonsterBuildParams) (r SaveMonsterBuildRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

@@ -626,6 +626,20 @@ func encodePreviewItemRequest(
 	return nil
 }
 
+func encodePreviewMonsterRequest(
+	req *MonsterPreviewInput,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodePreviewReachRequest(
 	req *ReachRequest,
 	r *http.Request,
@@ -880,6 +894,20 @@ func encodeSaveFeatBuildRequest(
 
 func encodeSaveItemBuildRequest(
 	req *ItemDesign,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeSaveMonsterBuildRequest(
+	req *MonsterDesign,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"

@@ -1629,6 +1629,7 @@ type PlayToken struct {
 	Disguise           pgtype.Text
 	Strength           int32
 	CreatureType       string
+	Legend             []byte
 }
 
 type PlayTokenAttack struct {

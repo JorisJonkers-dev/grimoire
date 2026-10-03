@@ -646,6 +646,13 @@ type BuildHandler interface {
 	//
 	// PUT /api/v1/builders/items/{entryId}
 	SaveItemBuild(ctx context.Context, req *ItemDesign, params SaveItemBuildParams) (SaveItemBuildRes, error)
+	// SaveMonsterBuild implements saveMonsterBuild operation.
+	//
+	// Saves the design of one of the caller's creature entries as its next Revision; Campaigns that see it
+	// can place it by its slug, with its legendary and lair actions offered in the turn order.
+	//
+	// PUT /api/v1/builders/monsters/{entryId}
+	SaveMonsterBuild(ctx context.Context, req *MonsterDesign, params SaveMonsterBuildParams) (SaveMonsterBuildRes, error)
 	// SaveSpeciesBuild implements saveSpeciesBuild operation.
 	//
 	// Saves the design of one of the caller's species entries as its next Revision; Campaigns that see it
@@ -1056,6 +1063,12 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/me
 	GetMe(ctx context.Context) (GetMeRes, error)
+	// GetMonsterBuild implements getMonsterBuild operation.
+	//
+	// A homebrew creature's design, read back: one of the caller's, or a Shared Library copy.
+	//
+	// GET /api/v1/builders/monsters/{entryId}
+	GetMonsterBuild(ctx context.Context, params GetMonsterBuildParams) (GetMonsterBuildRes, error)
 	// GetMyCharacter implements getMyCharacter operation.
 	//
 	// A Character the signed-in Account owns; anyone else's is not found.
@@ -1497,6 +1510,13 @@ type ReadHandler interface {
 	//
 	// POST /api/v1/builders/items/preview
 	PreviewItem(ctx context.Context, req *ItemPreviewInput) (PreviewItemRes, error)
+	// PreviewMonster implements previewMonster operation.
+	//
+	// Checks a design without saving it and reads it back. A design the rules refuse comes back with the
+	// reason.
+	//
+	// POST /api/v1/builders/monsters/preview
+	PreviewMonster(ctx context.Context, req *MonsterPreviewInput) (PreviewMonsterRes, error)
 	// PreviewSpecies implements previewSpecies operation.
 	//
 	// Checks a design without saving it and reads it back. A design the rules refuse comes back with the

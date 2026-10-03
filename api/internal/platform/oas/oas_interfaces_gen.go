@@ -265,6 +265,10 @@ type GetMeRes interface {
 	getMeRes()
 }
 
+type GetMonsterBuildRes interface {
+	getMonsterBuildRes()
+}
+
 type GetMyCharacterRes interface {
 	getMyCharacterRes()
 }
@@ -605,6 +609,10 @@ type PreviewItemRes interface {
 	previewItemRes()
 }
 
+type PreviewMonsterRes interface {
+	previewMonsterRes()
+}
+
 type PreviewReachRes interface {
 	previewReachRes()
 }
@@ -739,6 +747,10 @@ type SaveFeatBuildRes interface {
 
 type SaveItemBuildRes interface {
 	saveItemBuildRes()
+}
+
+type SaveMonsterBuildRes interface {
+	saveMonsterBuildRes()
 }
 
 type SaveSpeciesBuildRes interface {

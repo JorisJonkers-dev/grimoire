@@ -2272,6 +2272,7 @@ export type LiveToken = {
     effects?: Array<LiveEffect>;
     reactions?: Array<LiveReactionSetting>;
     dying?: LiveDying;
+    legend?: LiveLegend;
 };
 
 /**
@@ -2359,7 +2360,7 @@ export type LiveSessionView = {
  */
 export type LiveCommand = {
     nonce: string;
-    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'ping' | 'set_world' | 'add_node' | 'add_route' | 'remove_node' | 'remove_route' | 'place_party' | 'travel' | 'add_zone' | 'remove_zone' | 'hold_zone' | 'spring_zone' | 'rest' | 'encounter_check' | 'schedule_check' | 'roll_loot' | 'move_item' | 'move_coins' | 'claim_loot' | 'settle_loot' | 'trade' | 'open_shop' | 'close_shop' | 'buy' | 'sell' | 'haggle' | 'spawn_encounter' | 'adjust_hp' | 'undo' | 'propose_rest' | 'agree_rest' | 'spend_hit_die' | 'finish_rest' | 'interrupt_rest' | 'take_action' | 'unarmed' | 'interact' | 'swap_weapons' | 'set_reaction' | 'stabilise' | 'revive' | 'teleport' | 'summon' | 'command' | 'set_visibility' | 'place_object' | 'remove_object' | 'use_object' | 'damage_object' | 'find_object' | 'unlock' | 'disarm' | 'jump' | 'throw' | 'sneak' | 'explore' | 'pass_turn';
+    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'ping' | 'set_world' | 'add_node' | 'add_route' | 'remove_node' | 'remove_route' | 'place_party' | 'travel' | 'add_zone' | 'remove_zone' | 'hold_zone' | 'spring_zone' | 'rest' | 'encounter_check' | 'schedule_check' | 'roll_loot' | 'move_item' | 'move_coins' | 'claim_loot' | 'settle_loot' | 'trade' | 'open_shop' | 'close_shop' | 'buy' | 'sell' | 'haggle' | 'spawn_encounter' | 'adjust_hp' | 'undo' | 'propose_rest' | 'agree_rest' | 'spend_hit_die' | 'finish_rest' | 'interrupt_rest' | 'take_action' | 'unarmed' | 'interact' | 'swap_weapons' | 'set_reaction' | 'stabilise' | 'revive' | 'teleport' | 'summon' | 'command' | 'set_visibility' | 'place_object' | 'remove_object' | 'use_object' | 'damage_object' | 'find_object' | 'unlock' | 'disarm' | 'jump' | 'throw' | 'sneak' | 'explore' | 'pass_turn' | 'legendary_action' | 'lair_action' | 'legendary_resistance';
     tokenId?: Id;
     label?: string;
     tokenKind?: TokenKind;
@@ -2472,6 +2473,10 @@ export type LiveCommand = {
     sells?: Array<LiveTradeLine>;
     instanceId?: Id;
     action?: 'dash' | 'disengage' | 'dodge' | 'help' | 'hide' | 'influence' | 'magic' | 'ready' | 'search' | 'study' | 'utilize';
+    /**
+     * The legendary or lair action to take, by name.
+     */
+    legend?: string;
     detail?: string;
     trigger?: 'enters_reach';
     option?: 'grapple' | 'shove_push' | 'shove_prone' | 'medicine' | 'spell' | 'revivify' | 'raise_dead' | 'resurrection' | 'need' | 'greed' | 'pass';
@@ -3220,6 +3225,100 @@ export type ConditionDesign = {
 };
 
 /**
+ * A design to preview, with the creature's name.
+ */
+export type MonsterPreviewInput = {
+    name: string;
+    design: MonsterDesign;
+};
+
+/**
+ * A homebrew creature in its builder, the slug it is placed by, its stat block and an estimated Challenge.
+ */
+export type MonsterBuild = {
+    estimate: string;
+    entry?: LibraryEntry;
+    design: MonsterDesign;
+    slug?: string;
+    lines: Array<string>;
+};
+
+/**
+ * A homebrew creature as the monster builder makes it.
+ */
+export type MonsterDesign = {
+    size: string;
+    creatureType: string;
+    ac: number;
+    hp: number;
+    speedFt: number;
+    challenge: number;
+    abilities: {
+        [key: string]: number;
+    };
+    saves: Array<string>;
+    senses: Array<SpeciesMeasure>;
+    resistances: Array<string>;
+    immunities: Array<string>;
+    vulnerabilities: Array<string>;
+    threshold: number;
+    swarm?: boolean;
+    traits: Array<MonsterTrait>;
+    aura?: {
+        name: string;
+        feet: number;
+        text: string;
+    };
+    multiattack: number;
+    actions: Array<MonsterAction>;
+    legendary?: {
+        uses: number;
+        resistance: number;
+        actions: Array<{
+            name: string;
+            cost: number;
+            text: string;
+        }>;
+    };
+    lair?: {
+        actions: Array<MonsterTrait>;
+        regional: Array<string>;
+    };
+    phases: Array<{
+        name: string;
+        hp: number;
+        text: string;
+    }>;
+};
+
+/**
+ * A named rule of a creature's, or a lair action.
+ */
+export type MonsterTrait = {
+    name: string;
+    text: string;
+};
+
+/**
+ * Something a creature does with its action: a melee or ranged attack, a save it forces, or anything else as text.
+ */
+export type MonsterAction = {
+    name: string;
+    kind: string;
+    toHit?: number;
+    reachFt?: number;
+    rangeFt?: number;
+    longRangeFt?: number;
+    damage?: string;
+    damageBonus?: number;
+    damageType?: string;
+    saveAbility?: string;
+    dc?: number;
+    recharge?: number;
+    text?: string;
+};
+
+/**
  * A homebrew subclass as the subclass builder makes it, from level-gated Features, the Resources they spend and the choices they ask for.
  */
 export type SubclassDesign = {
@@ -3810,6 +3909,31 @@ export type LiveEffect = {
      * A homebrew condition's colour.
      */
     color?: string;
+};
+
+/**
+ * A legendary creature's actions and what it has left, for the DM only: legendary actions once another creature's turn ends (ready), the lair's once a round from initiative count 20 (lairReady), Legendary Resistance, and its mythic phases.
+ */
+export type LiveLegend = {
+    uses: number;
+    left: number;
+    ready: boolean;
+    actions: Array<LiveLegendAction>;
+    lair: Array<LiveLegendAction>;
+    lairReady: boolean;
+    resistLeft: number;
+    phase: number;
+    phases: number;
+    threshold: number;
+};
+
+/**
+ * A legendary or lair action.
+ */
+export type LiveLegendAction = {
+    name: string;
+    cost: number;
+    text: string;
 };
 
 /**
@@ -10360,6 +10484,103 @@ export type SaveConditionBuildResponses = {
 };
 
 export type SaveConditionBuildResponse = SaveConditionBuildResponses[keyof SaveConditionBuildResponses];
+
+export type PreviewMonsterData = {
+    body: MonsterPreviewInput;
+    path?: never;
+    query?: never;
+    url: '/api/v1/builders/monsters/preview';
+};
+
+export type PreviewMonsterErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type PreviewMonsterError = PreviewMonsterErrors[keyof PreviewMonsterErrors];
+
+export type PreviewMonsterResponses = {
+    /**
+     * The preview.
+     */
+    200: MonsterBuild;
+};
+
+export type PreviewMonsterResponse = PreviewMonsterResponses[keyof PreviewMonsterResponses];
+
+export type GetMonsterBuildData = {
+    body?: never;
+    path: {
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/builders/monsters/{entryId}';
+};
+
+export type GetMonsterBuildErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetMonsterBuildError = GetMonsterBuildErrors[keyof GetMonsterBuildErrors];
+
+export type GetMonsterBuildResponses = {
+    /**
+     * The creature.
+     */
+    200: MonsterBuild;
+};
+
+export type GetMonsterBuildResponse = GetMonsterBuildResponses[keyof GetMonsterBuildResponses];
+
+export type SaveMonsterBuildData = {
+    body: MonsterDesign;
+    path: {
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/builders/monsters/{entryId}';
+};
+
+export type SaveMonsterBuildErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SaveMonsterBuildError = SaveMonsterBuildErrors[keyof SaveMonsterBuildErrors];
+
+export type SaveMonsterBuildResponses = {
+    /**
+     * The creature.
+     */
+    200: MonsterBuild;
+};
+
+export type SaveMonsterBuildResponse = SaveMonsterBuildResponses[keyof SaveMonsterBuildResponses];
 
 export type GetMeData = {
     body?: never;

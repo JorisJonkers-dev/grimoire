@@ -113,6 +113,8 @@ type Stats struct {
 	// attacks one Attack action holds (Extra Attack).
 	UnarmedDC        int
 	AttacksPerAction int
+	// Legend is set for a legendary creature, a lair's master, a mythic one or one with a damage threshold.
+	Legend *Legend
 }
 
 // Attack is one attack on a token's hotbar. Damage is dice notation, empty for flat damage.

@@ -5256,6 +5256,96 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/builders/monsters/preview:
+    post:
+      operationId: previewMonster
+      x-ogen-operation-group: Read
+      summary: Preview a homebrew creature
+      description: "Checks a design without saving it and reads it back. A design the rules refuse comes back with the reason."
+      tags: [Library]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MonsterPreviewInput"
+      responses:
+        "200":
+          description: The preview.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MonsterBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/builders/monsters/{entryId}:
+    get:
+      operationId: getMonsterBuild
+      x-ogen-operation-group: Read
+      summary: Open a creature in the creature builder
+      description: "A homebrew creature's design, read back: one of the caller's, or a Shared Library copy."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/LibraryEntryId"
+      responses:
+        "200":
+          description: The creature.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MonsterBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    put:
+      operationId: saveMonsterBuild
+      x-ogen-operation-group: Build
+      summary: Save a creature design
+      description: "Saves the design of one of the caller's creature entries as its next Revision; Campaigns that see it can place it by its slug, with its legendary and lair actions offered in the turn order."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/LibraryEntryId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MonsterDesign"
+      responses:
+        "200":
+          description: The creature.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MonsterBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /api/v1/me:
     get:
       operationId: getMe
@@ -9932,6 +10022,7 @@ components:
           maxItems: 4
           items: { $ref: "#/components/schemas/LiveReactionSetting" }
         dying: { $ref: "#/components/schemas/LiveDying" }
+        legend: { $ref: "#/components/schemas/LiveLegend" }
     LiveDying:
       type: object
       description: A Character at 0 hit points, its death saves, and whether it is stable or dead. Shown to the DM and for the party's tokens.
@@ -10016,7 +10107,7 @@ components:
       required: [nonce, kind, q, r, hidden]
       properties:
         nonce: { type: string, minLength: 1, maxLength: 64 }
-        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual, preview_area, cast_area, paint_surface, set_elevation, table_camera, table_scene, table_blackout, ping, set_world, add_node, add_route, remove_node, remove_route, place_party, travel, add_zone, remove_zone, hold_zone, spring_zone, rest, encounter_check, schedule_check, roll_loot, move_item, move_coins, claim_loot, settle_loot, trade, open_shop, close_shop, buy, sell, haggle, spawn_encounter, adjust_hp, undo, propose_rest, agree_rest, spend_hit_die, finish_rest, interrupt_rest, take_action, unarmed, interact, swap_weapons, set_reaction, stabilise, revive, teleport, summon, command, set_visibility, place_object, remove_object, use_object, damage_object, find_object, unlock, disarm, jump, throw, sneak, explore, pass_turn] }
+        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual, preview_area, cast_area, paint_surface, set_elevation, table_camera, table_scene, table_blackout, ping, set_world, add_node, add_route, remove_node, remove_route, place_party, travel, add_zone, remove_zone, hold_zone, spring_zone, rest, encounter_check, schedule_check, roll_loot, move_item, move_coins, claim_loot, settle_loot, trade, open_shop, close_shop, buy, sell, haggle, spawn_encounter, adjust_hp, undo, propose_rest, agree_rest, spend_hit_die, finish_rest, interrupt_rest, take_action, unarmed, interact, swap_weapons, set_reaction, stabilise, revive, teleport, summon, command, set_visibility, place_object, remove_object, use_object, damage_object, find_object, unlock, disarm, jump, throw, sneak, explore, pass_turn, legendary_action, lair_action, legendary_resistance] }
         tokenId: { $ref: "#/components/schemas/Id" }
         label: { type: string, maxLength: 40 }
         tokenKind: { $ref: "#/components/schemas/TokenKind" }
@@ -10110,6 +10201,7 @@ components:
           items: { $ref: "#/components/schemas/LiveTradeLine" }
         instanceId: { $ref: "#/components/schemas/Id" }
         action: { type: string, enum: [dash, disengage, dodge, help, hide, influence, magic, ready, search, study, utilize] }
+        legend: { type: string, maxLength: 200, description: "The legendary or lair action to take, by name." }
         detail: { type: string, maxLength: 200 }
         trigger: { type: string, enum: [enters_reach] }
         option: { type: string, enum: [grapple, shove_push, shove_prone, medicine, spell, revivify, raise_dead, resurrection, need, greed, pass] }
@@ -11007,6 +11099,151 @@ components:
               ability: { type: string, maxLength: 40 }
               feet: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
               text: { type: string, maxLength: 2000 }
+    MonsterPreviewInput:
+      type: object
+      description: A design to preview, with the creature's name.
+      additionalProperties: false
+      required: [name, design]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        design: { $ref: "#/components/schemas/MonsterDesign" }
+    MonsterBuild:
+      type: object
+      description: A homebrew creature in its builder, the slug it is placed by, its stat block and an estimated Challenge.
+      additionalProperties: false
+      required: [design, lines, estimate]
+      properties:
+        estimate: { type: string, maxLength: 10 }
+        entry: { $ref: "#/components/schemas/LibraryEntry" }
+        design: { $ref: "#/components/schemas/MonsterDesign" }
+        slug: { type: string, maxLength: 40 }
+        lines:
+          type: array
+          maxItems: 400
+          items: { type: string, maxLength: 2400 }
+    MonsterDesign:
+      type: object
+      description: A homebrew creature as the monster builder makes it.
+      additionalProperties: false
+      required: [size, creatureType, ac, hp, speedFt, challenge, abilities, saves, senses, resistances, immunities, vulnerabilities, threshold, traits, multiattack, actions, phases]
+      properties:
+        size: { type: string, maxLength: 40 }
+        creatureType: { type: string, maxLength: 40 }
+        ac: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        hp: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        speedFt: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        challenge: { type: number, format: double, minimum: -100, maximum: 100 }
+        abilities:
+          type: object
+          additionalProperties: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        saves:
+          type: array
+          maxItems: 20
+          items: { type: string, maxLength: 40 }
+        senses:
+          type: array
+          maxItems: 20
+          items: { $ref: "#/components/schemas/SpeciesMeasure" }
+        resistances:
+          type: array
+          maxItems: 20
+          items: { type: string, maxLength: 40 }
+        immunities:
+          type: array
+          maxItems: 20
+          items: { type: string, maxLength: 40 }
+        vulnerabilities:
+          type: array
+          maxItems: 20
+          items: { type: string, maxLength: 40 }
+        threshold: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        swarm: { type: boolean }
+        traits:
+          type: array
+          maxItems: 40
+          items: { $ref: "#/components/schemas/MonsterTrait" }
+        aura:
+          type: object
+          additionalProperties: false
+          required: [name, feet, text]
+          properties:
+            name: { type: string, maxLength: 200 }
+            feet: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+            text: { type: string, maxLength: 8000 }
+        multiattack: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        actions:
+          type: array
+          maxItems: 40
+          items: { $ref: "#/components/schemas/MonsterAction" }
+        legendary:
+          type: object
+          additionalProperties: false
+          required: [uses, resistance, actions]
+          properties:
+            uses: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+            resistance: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+            actions:
+              type: array
+              maxItems: 20
+              items:
+                type: object
+                additionalProperties: false
+                required: [name, cost, text]
+                properties:
+                  name: { type: string, maxLength: 200 }
+                  cost: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+                  text: { type: string, maxLength: 8000 }
+        lair:
+          type: object
+          additionalProperties: false
+          required: [actions, regional]
+          properties:
+            actions:
+              type: array
+              maxItems: 40
+              items: { $ref: "#/components/schemas/MonsterTrait" }
+            regional:
+              type: array
+              maxItems: 20
+              items: { type: string, maxLength: 8000 }
+        phases:
+          type: array
+          maxItems: 10
+          items:
+            type: object
+            additionalProperties: false
+            required: [name, hp, text]
+            properties:
+              name: { type: string, maxLength: 200 }
+              hp: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+              text: { type: string, maxLength: 8000 }
+    MonsterTrait:
+      type: object
+      description: A named rule of a creature's, or a lair action.
+      additionalProperties: false
+      required: [name, text]
+      properties:
+        name: { type: string, maxLength: 200 }
+        text: { type: string, maxLength: 8000 }
+    MonsterAction:
+      type: object
+      description: "Something a creature does with its action: a melee or ranged attack, a save it forces, or anything else as text."
+      additionalProperties: false
+      required: [name, kind]
+      properties:
+        name: { type: string, maxLength: 200 }
+        kind: { type: string, maxLength: 40 }
+        toHit: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        reachFt: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        rangeFt: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        longRangeFt: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        damage: { type: string, maxLength: 40 }
+        damageBonus: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        damageType: { type: string, maxLength: 40 }
+        saveAbility: { type: string, maxLength: 40 }
+        dc: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        recharge: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        text: { type: string, maxLength: 8000 }
     SubclassDesign:
       type: object
       description: A homebrew subclass as the subclass builder makes it, from level-gated Features, the Resources they spend and the choices they ask for.
@@ -11673,6 +11910,31 @@ components:
           items: { $ref: "#/components/schemas/HexCoord" }
         icon: { type: string, maxLength: 40, description: "A homebrew condition's glyph." }
         color: { type: string, maxLength: 20, description: "A homebrew condition's colour." }
+    LiveLegend:
+      type: object
+      description: "A legendary creature's actions and what it has left, for the DM only: legendary actions once another creature's turn ends (ready), the lair's once a round from initiative count 20 (lairReady), Legendary Resistance, and its mythic phases."
+      additionalProperties: false
+      required: [uses, left, ready, actions, lair, lairReady, resistLeft, phase, phases, threshold]
+      properties:
+        uses: { type: integer, format: int32, minimum: 0, maximum: 10 }
+        left: { type: integer, format: int32, minimum: 0, maximum: 10 }
+        ready: { type: boolean }
+        actions: { type: array, maxItems: 20, items: { $ref: "#/components/schemas/LiveLegendAction" } }
+        lair: { type: array, maxItems: 20, items: { $ref: "#/components/schemas/LiveLegendAction" } }
+        lairReady: { type: boolean }
+        resistLeft: { type: integer, format: int32, minimum: 0, maximum: 10 }
+        phase: { type: integer, format: int32, minimum: 0, maximum: 10 }
+        phases: { type: integer, format: int32, minimum: 0, maximum: 10 }
+        threshold: { type: integer, format: int32, minimum: 0, maximum: 100 }
+    LiveLegendAction:
+      type: object
+      description: A legendary or lair action.
+      additionalProperties: false
+      required: [name, cost, text]
+      properties:
+        name: { type: string, maxLength: 200 }
+        cost: { type: integer, format: int32, minimum: 0, maximum: 3 }
+        text: { type: string, maxLength: 8000 }
     LiveManual:
       type: object
       description: Part of an Effect the engine cannot compute, for the DM to resolve by hand.

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"slices"
 	"strconv"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -33,6 +34,9 @@ type Statblocks struct {
 
 // Monster reads a monster's AC, hit points and attacks in the Campaign's ruleset.
 func (s Statblocks) Monster(ctx context.Context, campaign uuid.UUID, slug string) (string, domain.Stats, error) {
+	if strings.HasPrefix(slug, "hb-") {
+		return s.homebrewMonster(ctx, campaign, slug)
+	}
 	ruleset, err := s.Store.q.CampaignRuleset(ctx, campaign)
 	if err != nil {
 		return "", domain.Stats{}, notFound(err)

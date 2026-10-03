@@ -5507,6 +5507,79 @@ func decodeGetMapImageParams(args [2]string, argsEscaped bool, r *http.Request) 
 	return params, nil
 }
 
+// GetMonsterBuildParams is parameters of getMonsterBuild operation.
+type GetMonsterBuildParams struct {
+	// Library entry id.
+	EntryId ID
+}
+
+func unpackGetMonsterBuildParams(packed middleware.Parameters) (params GetMonsterBuildParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "entryId",
+			In:   "path",
+		}
+		params.EntryId = packed[key].(ID)
+	}
+	return params
+}
+
+func decodeGetMonsterBuildParams(args [1]string, argsEscaped bool, r *http.Request) (params GetMonsterBuildParams, _ error) {
+	// Decode path: entryId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "entryId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				var paramsDotEntryIdVal uuid.UUID
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUUID(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotEntryIdVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.EntryId = ID(paramsDotEntryIdVal)
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "entryId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
 // GetMyCharacterParams is parameters of getMyCharacter operation.
 type GetMyCharacterParams struct {
 	// Character id.
@@ -15979,6 +16052,79 @@ func unpackSaveItemBuildParams(packed middleware.Parameters) (params SaveItemBui
 }
 
 func decodeSaveItemBuildParams(args [1]string, argsEscaped bool, r *http.Request) (params SaveItemBuildParams, _ error) {
+	// Decode path: entryId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "entryId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				var paramsDotEntryIdVal uuid.UUID
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUUID(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotEntryIdVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.EntryId = ID(paramsDotEntryIdVal)
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "entryId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// SaveMonsterBuildParams is parameters of saveMonsterBuild operation.
+type SaveMonsterBuildParams struct {
+	// Library entry id.
+	EntryId ID
+}
+
+func unpackSaveMonsterBuildParams(packed middleware.Parameters) (params SaveMonsterBuildParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "entryId",
+			In:   "path",
+		}
+		params.EntryId = packed[key].(ID)
+	}
+	return params
+}
+
+func decodeSaveMonsterBuildParams(args [1]string, argsEscaped bool, r *http.Request) (params SaveMonsterBuildParams, _ error) {
 	// Decode path: entryId.
 	if err := func() error {
 		param := args[0]

@@ -2275,6 +2275,98 @@ export const zConditionBuild = z.object({
 });
 
 /**
+ * A named rule of a creature's, or a lair action.
+ */
+export const zMonsterTrait = z.object({
+    name: z.string().max(200),
+    text: z.string().max(8000)
+});
+
+/**
+ * Something a creature does with its action: a melee or ranged attack, a save it forces, or anything else as text.
+ */
+export const zMonsterAction = z.object({
+    name: z.string().max(200),
+    kind: z.string().max(40),
+    toHit: z.int().gte(-100000).lte(100000).optional(),
+    reachFt: z.int().gte(-100000).lte(100000).optional(),
+    rangeFt: z.int().gte(-100000).lte(100000).optional(),
+    longRangeFt: z.int().gte(-100000).lte(100000).optional(),
+    damage: z.string().max(40).optional(),
+    damageBonus: z.int().gte(-100000).lte(100000).optional(),
+    damageType: z.string().max(40).optional(),
+    saveAbility: z.string().max(40).optional(),
+    dc: z.int().gte(-100000).lte(100000).optional(),
+    recharge: z.int().gte(-100000).lte(100000).optional(),
+    text: z.string().max(8000).optional()
+});
+
+/**
+ * A homebrew creature as the monster builder makes it.
+ */
+export const zMonsterDesign = z.object({
+    size: z.string().max(40),
+    creatureType: z.string().max(40),
+    ac: z.int().gte(-100000).lte(100000),
+    hp: z.int().gte(-100000).lte(100000),
+    speedFt: z.int().gte(-100000).lte(100000),
+    challenge: z.number().gte(-100).lte(100),
+    abilities: z.record(z.string(), z.int().gte(-100000).lte(100000)),
+    saves: z.array(z.string().max(40)).max(20),
+    senses: z.array(zSpeciesMeasure).max(20),
+    resistances: z.array(z.string().max(40)).max(20),
+    immunities: z.array(z.string().max(40)).max(20),
+    vulnerabilities: z.array(z.string().max(40)).max(20),
+    threshold: z.int().gte(-100000).lte(100000),
+    swarm: z.boolean().optional(),
+    traits: z.array(zMonsterTrait).max(40),
+    aura: z.object({
+        name: z.string().max(200),
+        feet: z.int().gte(-100000).lte(100000),
+        text: z.string().max(8000)
+    }).optional(),
+    multiattack: z.int().gte(-100000).lte(100000),
+    actions: z.array(zMonsterAction).max(40),
+    legendary: z.object({
+        uses: z.int().gte(-100000).lte(100000),
+        resistance: z.int().gte(-100000).lte(100000),
+        actions: z.array(z.object({
+            name: z.string().max(200),
+            cost: z.int().gte(-100000).lte(100000),
+            text: z.string().max(8000)
+        })).max(20)
+    }).optional(),
+    lair: z.object({
+        actions: z.array(zMonsterTrait).max(40),
+        regional: z.array(z.string().max(8000)).max(20)
+    }).optional(),
+    phases: z.array(z.object({
+        name: z.string().max(200),
+        hp: z.int().gte(-100000).lte(100000),
+        text: z.string().max(8000)
+    })).max(10)
+});
+
+/**
+ * A design to preview, with the creature's name.
+ */
+export const zMonsterPreviewInput = z.object({
+    name: z.string().min(1).max(80),
+    design: zMonsterDesign
+});
+
+/**
+ * A homebrew creature in its builder, the slug it is placed by, its stat block and an estimated Challenge.
+ */
+export const zMonsterBuild = z.object({
+    estimate: z.string().max(10),
+    entry: zLibraryEntry.optional(),
+    design: zMonsterDesign,
+    slug: z.string().max(40).optional(),
+    lines: z.array(z.string().max(2400)).max(400)
+});
+
+/**
  * A Feature gained at a class level; it may spend a use of a Resource, by key, and let its bearer cast a spell.
  */
 export const zSubclassFeature = z.object({
@@ -2736,6 +2828,31 @@ export const zLiveEffect = z.object({
 });
 
 /**
+ * A legendary or lair action.
+ */
+export const zLiveLegendAction = z.object({
+    name: z.string().max(200),
+    cost: z.int().gte(0).lte(3),
+    text: z.string().max(8000)
+});
+
+/**
+ * A legendary creature's actions and what it has left, for the DM only: legendary actions once another creature's turn ends (ready), the lair's once a round from initiative count 20 (lairReady), Legendary Resistance, and its mythic phases.
+ */
+export const zLiveLegend = z.object({
+    uses: z.int().gte(0).lte(10),
+    left: z.int().gte(0).lte(10),
+    ready: z.boolean(),
+    actions: z.array(zLiveLegendAction).max(20),
+    lair: z.array(zLiveLegendAction).max(20),
+    lairReady: z.boolean(),
+    resistLeft: z.int().gte(0).lte(10),
+    phase: z.int().gte(0).lte(10),
+    phases: z.int().gte(0).lte(10),
+    threshold: z.int().gte(0).lte(100)
+});
+
+/**
  * A Token as a connection sees it.
  */
 export const zLiveToken = z.object({
@@ -2764,7 +2881,8 @@ export const zLiveToken = z.object({
     shield: z.boolean().optional(),
     effects: z.array(zLiveEffect).max(50).optional(),
     reactions: z.array(zLiveReactionSetting).max(4).optional(),
-    dying: zLiveDying.optional()
+    dying: zLiveDying.optional(),
+    legend: zLiveLegend.optional()
 });
 
 /**
@@ -3899,7 +4017,10 @@ export const zLiveCommand = z.object({
         'throw',
         'sneak',
         'explore',
-        'pass_turn'
+        'pass_turn',
+        'legendary_action',
+        'lair_action',
+        'legendary_resistance'
     ]),
     tokenId: zId.optional(),
     label: z.string().max(40).optional(),
@@ -4001,6 +4122,7 @@ export const zLiveCommand = z.object({
         'study',
         'utilize'
     ]).optional(),
+    legend: z.string().max(200).optional(),
     detail: z.string().max(200).optional(),
     trigger: z.enum(['enters_reach']).optional(),
     option: z.enum([
@@ -6321,6 +6443,33 @@ export const zSaveConditionBuildPath = z.object({
  * The condition.
  */
 export const zSaveConditionBuildResponse = zConditionBuild;
+
+export const zPreviewMonsterBody = zMonsterPreviewInput;
+
+/**
+ * The preview.
+ */
+export const zPreviewMonsterResponse = zMonsterBuild;
+
+export const zGetMonsterBuildPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The creature.
+ */
+export const zGetMonsterBuildResponse = zMonsterBuild;
+
+export const zSaveMonsterBuildBody = zMonsterDesign;
+
+export const zSaveMonsterBuildPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The creature.
+ */
+export const zSaveMonsterBuildResponse = zMonsterBuild;
 
 /**
  * The signed-in account.

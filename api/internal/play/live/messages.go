@@ -235,7 +235,9 @@ type Command struct {
 	InstanceID string      `json:"instanceId,omitempty"`
 	// Action is the 2024 action take_action takes, with Detail for what Help, Magic or Utilize does;
 	// Trigger sets off a readied attack; Option is a Grapple or Shove.
-	Action  string `json:"action,omitempty"`
+	Action string `json:"action,omitempty"`
+	// Legend names the legendary or lair action to take.
+	Legend  string `json:"legend,omitempty"`
 	Detail  string `json:"detail,omitempty"`
 	Trigger string `json:"trigger,omitempty"`
 	Option  string `json:"option,omitempty"`
@@ -306,6 +308,8 @@ type TokenView struct {
 	// Dying is a Character's death saves at 0 hit points.
 	Reactions []ReactionSettingView `json:"reactions,omitempty"`
 	Dying     *DyingView            `json:"dying,omitempty"`
+	// Legend is what a legendary creature has left, for the DM only.
+	Legend *LegendView `json:"legend,omitempty"`
 }
 
 // SurfaceKindView is one Surface the DM can paint.
@@ -336,6 +340,29 @@ type EffectView struct {
 	// Icon and Color are how a homebrew condition shows.
 	Icon  string `json:"icon,omitempty"`
 	Color string `json:"color,omitempty"`
+}
+
+// LegendView is a legendary creature's actions and what it has left: legendary actions once another
+// creature's turn ends (Ready), the lair's once a round on initiative count 20 (LairReady), Legendary
+// Resistance, and its mythic phases.
+type LegendView struct {
+	Uses       int                `json:"uses"`
+	Left       int                `json:"left"`
+	Ready      bool               `json:"ready"`
+	Actions    []LegendActionView `json:"actions"`
+	Lair       []LegendActionView `json:"lair"`
+	LairReady  bool               `json:"lairReady"`
+	ResistLeft int                `json:"resistLeft"`
+	Phase      int                `json:"phase"`
+	Phases     int                `json:"phases"`
+	Threshold  int                `json:"threshold"`
+}
+
+// LegendActionView is a legendary or lair action.
+type LegendActionView struct {
+	Name string `json:"name"`
+	Cost int    `json:"cost"`
+	Text string `json:"text"`
 }
 
 // ConditionKindView is one of the Campaign's homebrew conditions, for the DM's effect picker.

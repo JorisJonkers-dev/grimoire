@@ -206,6 +206,7 @@ func (s *Store) Commit(ctx context.Context, sess domain.Session, board *domain.M
 			func() error { return tx.saveCheck(ctx, sess, w, actor, c, now) },
 			func() error { return tx.saveInventory(ctx, sess, w, now) },
 			func() error { return tx.saveSwap(ctx, sid, w) },
+			func() error { return tx.saveLegends(ctx, sid, w.Legends) },
 			func() error { return tx.saveShop(ctx, sess, w, actor, c, now) },
 			func() error { return tx.saveRest(ctx, sess, w, actor, c, now) },
 			func() error { return tx.saveActions(ctx, sess, w, actor, c, now) },
@@ -343,6 +344,9 @@ func (s *Store) insertToken(ctx context.Context, sid uuid.UUID, t domain.Token) 
 		p.UnarmedDc = 10
 	}
 	p.AttacksPerAction = int32(max(1, min(4, st.AttacksPerAction)))
+	if st.Legend != nil {
+		p.Legend, _ = json.Marshal(st.Legend) //nolint:errchkjson // a Legend is plain data
+	}
 	p.CreatureType = st.CreatureType
 	if st.Strength > 0 {
 		p.Strength = int32(min(30, st.Strength))
@@ -1111,6 +1115,11 @@ func tokenFrom(t queries.SessionTokensRow) domain.Token {
 			Intelligence: int(t.Intelligence.Int32), SpellDC: int(t.SpellDc.Int32), Stealth: int(t.Stealth), Perception: int(t.Perception),
 			Initiative: int(t.Initiative), SpeedFt: int(t.SpeedFt), UnarmedDC: int(t.UnarmedDc), AttacksPerAction: int(t.AttacksPerAction), TempHP: int(t.TempHp),
 			Strength: int(t.Strength), CreatureType: t.CreatureType,
+		}
+		if t.Legend != nil {
+			var l domain.Legend
+			_ = json.Unmarshal(t.Legend, &l) // written by insertToken and saveLegends
+			tok.Stats.Legend = &l
 		}
 	}
 	return tok

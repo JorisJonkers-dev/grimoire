@@ -18761,12 +18761,14 @@ type LiveCommand struct {
 	// What a trade buys from the open Shop, made with its sales or not at all.
 	Buys []LiveTradeLine `json:"buys"`
 	// What a trade sells to the open Shop, before it buys.
-	Sells      []LiveTradeLine       `json:"sells"`
-	InstanceId OptID                 `json:"instanceId"`
-	Action     OptLiveCommandAction  `json:"action"`
-	Detail     OptString             `json:"detail"`
-	Trigger    OptLiveCommandTrigger `json:"trigger"`
-	Option     OptLiveCommandOption  `json:"option"`
+	Sells      []LiveTradeLine      `json:"sells"`
+	InstanceId OptID                `json:"instanceId"`
+	Action     OptLiveCommandAction `json:"action"`
+	// The legendary or lair action to take, by name.
+	Legend  OptString             `json:"legend"`
+	Detail  OptString             `json:"detail"`
+	Trigger OptLiveCommandTrigger `json:"trigger"`
+	Option  OptLiveCommandOption  `json:"option"`
 	// Makes the attack the off-hand attack of a Light weapon.
 	OffHand OptBool `json:"offHand"`
 	// Makes the attack the second attack a Cleave hit allows.
@@ -19189,6 +19191,11 @@ func (s *LiveCommand) GetInstanceId() OptID {
 // GetAction returns the value of Action.
 func (s *LiveCommand) GetAction() OptLiveCommandAction {
 	return s.Action
+}
+
+// GetLegend returns the value of Legend.
+func (s *LiveCommand) GetLegend() OptString {
+	return s.Legend
 }
 
 // GetDetail returns the value of Detail.
@@ -19676,6 +19683,11 @@ func (s *LiveCommand) SetAction(val OptLiveCommandAction) {
 	s.Action = val
 }
 
+// SetLegend sets the value of Legend.
+func (s *LiveCommand) SetLegend(val OptString) {
+	s.Legend = val
+}
+
 // SetDetail sets the value of Detail.
 func (s *LiveCommand) SetDetail(val OptString) {
 	s.Detail = val
@@ -19945,95 +19957,98 @@ func (s *LiveCommandDue) UnmarshalText(data []byte) error {
 type LiveCommandKind string
 
 const (
-	LiveCommandKindResync         LiveCommandKind = "resync"
-	LiveCommandKindPlaceToken     LiveCommandKind = "place_token"
-	LiveCommandKindMoveToken      LiveCommandKind = "move_token"
-	LiveCommandKindSetTokenHidden LiveCommandKind = "set_token_hidden"
-	LiveCommandKindRemoveToken    LiveCommandKind = "remove_token"
-	LiveCommandKindSetMap         LiveCommandKind = "set_map"
-	LiveCommandKindRevealHexes    LiveCommandKind = "reveal_hexes"
-	LiveCommandKindSetWalls       LiveCommandKind = "set_walls"
-	LiveCommandKindPlaceLight     LiveCommandKind = "place_light"
-	LiveCommandKindRemoveLight    LiveCommandKind = "remove_light"
-	LiveCommandKindSetAmbient     LiveCommandKind = "set_ambient"
-	LiveCommandKindPlanWalk       LiveCommandKind = "plan_walk"
-	LiveCommandKindWalk           LiveCommandKind = "walk"
-	LiveCommandKindStartCombat    LiveCommandKind = "start_combat"
-	LiveCommandKindEndTurn        LiveCommandKind = "end_turn"
-	LiveCommandKindSpend          LiveCommandKind = "spend"
-	LiveCommandKindEndCombat      LiveCommandKind = "end_combat"
-	LiveCommandKindPreviewAttack  LiveCommandKind = "preview_attack"
-	LiveCommandKindAttack         LiveCommandKind = "attack"
-	LiveCommandKindUndoDamage     LiveCommandKind = "undo_damage"
-	LiveCommandKindSetTactics     LiveCommandKind = "set_tactics"
-	LiveCommandKindReact          LiveCommandKind = "react"
-	LiveCommandKindApplyEffect    LiveCommandKind = "apply_effect"
-	LiveCommandKindEndEffect      LiveCommandKind = "end_effect"
-	LiveCommandKindResolveManual  LiveCommandKind = "resolve_manual"
-	LiveCommandKindPreviewArea    LiveCommandKind = "preview_area"
-	LiveCommandKindCastArea       LiveCommandKind = "cast_area"
-	LiveCommandKindPaintSurface   LiveCommandKind = "paint_surface"
-	LiveCommandKindSetElevation   LiveCommandKind = "set_elevation"
-	LiveCommandKindTableCamera    LiveCommandKind = "table_camera"
-	LiveCommandKindTableScene     LiveCommandKind = "table_scene"
-	LiveCommandKindTableBlackout  LiveCommandKind = "table_blackout"
-	LiveCommandKindPing           LiveCommandKind = "ping"
-	LiveCommandKindSetWorld       LiveCommandKind = "set_world"
-	LiveCommandKindAddNode        LiveCommandKind = "add_node"
-	LiveCommandKindAddRoute       LiveCommandKind = "add_route"
-	LiveCommandKindRemoveNode     LiveCommandKind = "remove_node"
-	LiveCommandKindRemoveRoute    LiveCommandKind = "remove_route"
-	LiveCommandKindPlaceParty     LiveCommandKind = "place_party"
-	LiveCommandKindTravel         LiveCommandKind = "travel"
-	LiveCommandKindAddZone        LiveCommandKind = "add_zone"
-	LiveCommandKindRemoveZone     LiveCommandKind = "remove_zone"
-	LiveCommandKindHoldZone       LiveCommandKind = "hold_zone"
-	LiveCommandKindSpringZone     LiveCommandKind = "spring_zone"
-	LiveCommandKindRest           LiveCommandKind = "rest"
-	LiveCommandKindEncounterCheck LiveCommandKind = "encounter_check"
-	LiveCommandKindScheduleCheck  LiveCommandKind = "schedule_check"
-	LiveCommandKindRollLoot       LiveCommandKind = "roll_loot"
-	LiveCommandKindMoveItem       LiveCommandKind = "move_item"
-	LiveCommandKindMoveCoins      LiveCommandKind = "move_coins"
-	LiveCommandKindClaimLoot      LiveCommandKind = "claim_loot"
-	LiveCommandKindSettleLoot     LiveCommandKind = "settle_loot"
-	LiveCommandKindTrade          LiveCommandKind = "trade"
-	LiveCommandKindOpenShop       LiveCommandKind = "open_shop"
-	LiveCommandKindCloseShop      LiveCommandKind = "close_shop"
-	LiveCommandKindBuy            LiveCommandKind = "buy"
-	LiveCommandKindSell           LiveCommandKind = "sell"
-	LiveCommandKindHaggle         LiveCommandKind = "haggle"
-	LiveCommandKindSpawnEncounter LiveCommandKind = "spawn_encounter"
-	LiveCommandKindAdjustHp       LiveCommandKind = "adjust_hp"
-	LiveCommandKindUndo           LiveCommandKind = "undo"
-	LiveCommandKindProposeRest    LiveCommandKind = "propose_rest"
-	LiveCommandKindAgreeRest      LiveCommandKind = "agree_rest"
-	LiveCommandKindSpendHitDie    LiveCommandKind = "spend_hit_die"
-	LiveCommandKindFinishRest     LiveCommandKind = "finish_rest"
-	LiveCommandKindInterruptRest  LiveCommandKind = "interrupt_rest"
-	LiveCommandKindTakeAction     LiveCommandKind = "take_action"
-	LiveCommandKindUnarmed        LiveCommandKind = "unarmed"
-	LiveCommandKindInteract       LiveCommandKind = "interact"
-	LiveCommandKindSwapWeapons    LiveCommandKind = "swap_weapons"
-	LiveCommandKindSetReaction    LiveCommandKind = "set_reaction"
-	LiveCommandKindStabilise      LiveCommandKind = "stabilise"
-	LiveCommandKindRevive         LiveCommandKind = "revive"
-	LiveCommandKindTeleport       LiveCommandKind = "teleport"
-	LiveCommandKindSummon         LiveCommandKind = "summon"
-	LiveCommandKindCommand        LiveCommandKind = "command"
-	LiveCommandKindSetVisibility  LiveCommandKind = "set_visibility"
-	LiveCommandKindPlaceObject    LiveCommandKind = "place_object"
-	LiveCommandKindRemoveObject   LiveCommandKind = "remove_object"
-	LiveCommandKindUseObject      LiveCommandKind = "use_object"
-	LiveCommandKindDamageObject   LiveCommandKind = "damage_object"
-	LiveCommandKindFindObject     LiveCommandKind = "find_object"
-	LiveCommandKindUnlock         LiveCommandKind = "unlock"
-	LiveCommandKindDisarm         LiveCommandKind = "disarm"
-	LiveCommandKindJump           LiveCommandKind = "jump"
-	LiveCommandKindThrow          LiveCommandKind = "throw"
-	LiveCommandKindSneak          LiveCommandKind = "sneak"
-	LiveCommandKindExplore        LiveCommandKind = "explore"
-	LiveCommandKindPassTurn       LiveCommandKind = "pass_turn"
+	LiveCommandKindResync              LiveCommandKind = "resync"
+	LiveCommandKindPlaceToken          LiveCommandKind = "place_token"
+	LiveCommandKindMoveToken           LiveCommandKind = "move_token"
+	LiveCommandKindSetTokenHidden      LiveCommandKind = "set_token_hidden"
+	LiveCommandKindRemoveToken         LiveCommandKind = "remove_token"
+	LiveCommandKindSetMap              LiveCommandKind = "set_map"
+	LiveCommandKindRevealHexes         LiveCommandKind = "reveal_hexes"
+	LiveCommandKindSetWalls            LiveCommandKind = "set_walls"
+	LiveCommandKindPlaceLight          LiveCommandKind = "place_light"
+	LiveCommandKindRemoveLight         LiveCommandKind = "remove_light"
+	LiveCommandKindSetAmbient          LiveCommandKind = "set_ambient"
+	LiveCommandKindPlanWalk            LiveCommandKind = "plan_walk"
+	LiveCommandKindWalk                LiveCommandKind = "walk"
+	LiveCommandKindStartCombat         LiveCommandKind = "start_combat"
+	LiveCommandKindEndTurn             LiveCommandKind = "end_turn"
+	LiveCommandKindSpend               LiveCommandKind = "spend"
+	LiveCommandKindEndCombat           LiveCommandKind = "end_combat"
+	LiveCommandKindPreviewAttack       LiveCommandKind = "preview_attack"
+	LiveCommandKindAttack              LiveCommandKind = "attack"
+	LiveCommandKindUndoDamage          LiveCommandKind = "undo_damage"
+	LiveCommandKindSetTactics          LiveCommandKind = "set_tactics"
+	LiveCommandKindReact               LiveCommandKind = "react"
+	LiveCommandKindApplyEffect         LiveCommandKind = "apply_effect"
+	LiveCommandKindEndEffect           LiveCommandKind = "end_effect"
+	LiveCommandKindResolveManual       LiveCommandKind = "resolve_manual"
+	LiveCommandKindPreviewArea         LiveCommandKind = "preview_area"
+	LiveCommandKindCastArea            LiveCommandKind = "cast_area"
+	LiveCommandKindPaintSurface        LiveCommandKind = "paint_surface"
+	LiveCommandKindSetElevation        LiveCommandKind = "set_elevation"
+	LiveCommandKindTableCamera         LiveCommandKind = "table_camera"
+	LiveCommandKindTableScene          LiveCommandKind = "table_scene"
+	LiveCommandKindTableBlackout       LiveCommandKind = "table_blackout"
+	LiveCommandKindPing                LiveCommandKind = "ping"
+	LiveCommandKindSetWorld            LiveCommandKind = "set_world"
+	LiveCommandKindAddNode             LiveCommandKind = "add_node"
+	LiveCommandKindAddRoute            LiveCommandKind = "add_route"
+	LiveCommandKindRemoveNode          LiveCommandKind = "remove_node"
+	LiveCommandKindRemoveRoute         LiveCommandKind = "remove_route"
+	LiveCommandKindPlaceParty          LiveCommandKind = "place_party"
+	LiveCommandKindTravel              LiveCommandKind = "travel"
+	LiveCommandKindAddZone             LiveCommandKind = "add_zone"
+	LiveCommandKindRemoveZone          LiveCommandKind = "remove_zone"
+	LiveCommandKindHoldZone            LiveCommandKind = "hold_zone"
+	LiveCommandKindSpringZone          LiveCommandKind = "spring_zone"
+	LiveCommandKindRest                LiveCommandKind = "rest"
+	LiveCommandKindEncounterCheck      LiveCommandKind = "encounter_check"
+	LiveCommandKindScheduleCheck       LiveCommandKind = "schedule_check"
+	LiveCommandKindRollLoot            LiveCommandKind = "roll_loot"
+	LiveCommandKindMoveItem            LiveCommandKind = "move_item"
+	LiveCommandKindMoveCoins           LiveCommandKind = "move_coins"
+	LiveCommandKindClaimLoot           LiveCommandKind = "claim_loot"
+	LiveCommandKindSettleLoot          LiveCommandKind = "settle_loot"
+	LiveCommandKindTrade               LiveCommandKind = "trade"
+	LiveCommandKindOpenShop            LiveCommandKind = "open_shop"
+	LiveCommandKindCloseShop           LiveCommandKind = "close_shop"
+	LiveCommandKindBuy                 LiveCommandKind = "buy"
+	LiveCommandKindSell                LiveCommandKind = "sell"
+	LiveCommandKindHaggle              LiveCommandKind = "haggle"
+	LiveCommandKindSpawnEncounter      LiveCommandKind = "spawn_encounter"
+	LiveCommandKindAdjustHp            LiveCommandKind = "adjust_hp"
+	LiveCommandKindUndo                LiveCommandKind = "undo"
+	LiveCommandKindProposeRest         LiveCommandKind = "propose_rest"
+	LiveCommandKindAgreeRest           LiveCommandKind = "agree_rest"
+	LiveCommandKindSpendHitDie         LiveCommandKind = "spend_hit_die"
+	LiveCommandKindFinishRest          LiveCommandKind = "finish_rest"
+	LiveCommandKindInterruptRest       LiveCommandKind = "interrupt_rest"
+	LiveCommandKindTakeAction          LiveCommandKind = "take_action"
+	LiveCommandKindUnarmed             LiveCommandKind = "unarmed"
+	LiveCommandKindInteract            LiveCommandKind = "interact"
+	LiveCommandKindSwapWeapons         LiveCommandKind = "swap_weapons"
+	LiveCommandKindSetReaction         LiveCommandKind = "set_reaction"
+	LiveCommandKindStabilise           LiveCommandKind = "stabilise"
+	LiveCommandKindRevive              LiveCommandKind = "revive"
+	LiveCommandKindTeleport            LiveCommandKind = "teleport"
+	LiveCommandKindSummon              LiveCommandKind = "summon"
+	LiveCommandKindCommand             LiveCommandKind = "command"
+	LiveCommandKindSetVisibility       LiveCommandKind = "set_visibility"
+	LiveCommandKindPlaceObject         LiveCommandKind = "place_object"
+	LiveCommandKindRemoveObject        LiveCommandKind = "remove_object"
+	LiveCommandKindUseObject           LiveCommandKind = "use_object"
+	LiveCommandKindDamageObject        LiveCommandKind = "damage_object"
+	LiveCommandKindFindObject          LiveCommandKind = "find_object"
+	LiveCommandKindUnlock              LiveCommandKind = "unlock"
+	LiveCommandKindDisarm              LiveCommandKind = "disarm"
+	LiveCommandKindJump                LiveCommandKind = "jump"
+	LiveCommandKindThrow               LiveCommandKind = "throw"
+	LiveCommandKindSneak               LiveCommandKind = "sneak"
+	LiveCommandKindExplore             LiveCommandKind = "explore"
+	LiveCommandKindPassTurn            LiveCommandKind = "pass_turn"
+	LiveCommandKindLegendaryAction     LiveCommandKind = "legendary_action"
+	LiveCommandKindLairAction          LiveCommandKind = "lair_action"
+	LiveCommandKindLegendaryResistance LiveCommandKind = "legendary_resistance"
 )
 
 // AllValues returns all LiveCommandKind values.
@@ -20128,6 +20143,9 @@ func (LiveCommandKind) AllValues() []LiveCommandKind {
 		LiveCommandKindSneak,
 		LiveCommandKindExplore,
 		LiveCommandKindPassTurn,
+		LiveCommandKindLegendaryAction,
+		LiveCommandKindLairAction,
+		LiveCommandKindLegendaryResistance,
 	}
 }
 
@@ -20311,6 +20329,12 @@ func (s LiveCommandKind) MarshalText() ([]byte, error) {
 	case LiveCommandKindExplore:
 		return []byte(s), nil
 	case LiveCommandKindPassTurn:
+		return []byte(s), nil
+	case LiveCommandKindLegendaryAction:
+		return []byte(s), nil
+	case LiveCommandKindLairAction:
+		return []byte(s), nil
+	case LiveCommandKindLegendaryResistance:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -20586,6 +20610,15 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 		return nil
 	case LiveCommandKindPassTurn:
 		*s = LiveCommandKindPassTurn
+		return nil
+	case LiveCommandKindLegendaryAction:
+		*s = LiveCommandKindLegendaryAction
+		return nil
+	case LiveCommandKindLairAction:
+		*s = LiveCommandKindLairAction
+		return nil
+	case LiveCommandKindLegendaryResistance:
+		*s = LiveCommandKindLegendaryResistance
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -21828,6 +21861,161 @@ func (s *LiveItemInstanceSlot) UnmarshalText(data []byte) error {
 	default:
 		return errors.Errorf("invalid value: %q", data)
 	}
+}
+
+// A legendary creature's actions and what it has left, for the DM only: legendary actions once another
+// creature's turn ends (ready), the lair's once a round from initiative count 20 (lairReady),
+// Legendary Resistance, and its mythic phases.
+// Ref: #/components/schemas/LiveLegend
+type LiveLegend struct {
+	Uses       int32              `json:"uses"`
+	Left       int32              `json:"left"`
+	Ready      bool               `json:"ready"`
+	Actions    []LiveLegendAction `json:"actions"`
+	Lair       []LiveLegendAction `json:"lair"`
+	LairReady  bool               `json:"lairReady"`
+	ResistLeft int32              `json:"resistLeft"`
+	Phase      int32              `json:"phase"`
+	Phases     int32              `json:"phases"`
+	Threshold  int32              `json:"threshold"`
+}
+
+// GetUses returns the value of Uses.
+func (s *LiveLegend) GetUses() int32 {
+	return s.Uses
+}
+
+// GetLeft returns the value of Left.
+func (s *LiveLegend) GetLeft() int32 {
+	return s.Left
+}
+
+// GetReady returns the value of Ready.
+func (s *LiveLegend) GetReady() bool {
+	return s.Ready
+}
+
+// GetActions returns the value of Actions.
+func (s *LiveLegend) GetActions() []LiveLegendAction {
+	return s.Actions
+}
+
+// GetLair returns the value of Lair.
+func (s *LiveLegend) GetLair() []LiveLegendAction {
+	return s.Lair
+}
+
+// GetLairReady returns the value of LairReady.
+func (s *LiveLegend) GetLairReady() bool {
+	return s.LairReady
+}
+
+// GetResistLeft returns the value of ResistLeft.
+func (s *LiveLegend) GetResistLeft() int32 {
+	return s.ResistLeft
+}
+
+// GetPhase returns the value of Phase.
+func (s *LiveLegend) GetPhase() int32 {
+	return s.Phase
+}
+
+// GetPhases returns the value of Phases.
+func (s *LiveLegend) GetPhases() int32 {
+	return s.Phases
+}
+
+// GetThreshold returns the value of Threshold.
+func (s *LiveLegend) GetThreshold() int32 {
+	return s.Threshold
+}
+
+// SetUses sets the value of Uses.
+func (s *LiveLegend) SetUses(val int32) {
+	s.Uses = val
+}
+
+// SetLeft sets the value of Left.
+func (s *LiveLegend) SetLeft(val int32) {
+	s.Left = val
+}
+
+// SetReady sets the value of Ready.
+func (s *LiveLegend) SetReady(val bool) {
+	s.Ready = val
+}
+
+// SetActions sets the value of Actions.
+func (s *LiveLegend) SetActions(val []LiveLegendAction) {
+	s.Actions = val
+}
+
+// SetLair sets the value of Lair.
+func (s *LiveLegend) SetLair(val []LiveLegendAction) {
+	s.Lair = val
+}
+
+// SetLairReady sets the value of LairReady.
+func (s *LiveLegend) SetLairReady(val bool) {
+	s.LairReady = val
+}
+
+// SetResistLeft sets the value of ResistLeft.
+func (s *LiveLegend) SetResistLeft(val int32) {
+	s.ResistLeft = val
+}
+
+// SetPhase sets the value of Phase.
+func (s *LiveLegend) SetPhase(val int32) {
+	s.Phase = val
+}
+
+// SetPhases sets the value of Phases.
+func (s *LiveLegend) SetPhases(val int32) {
+	s.Phases = val
+}
+
+// SetThreshold sets the value of Threshold.
+func (s *LiveLegend) SetThreshold(val int32) {
+	s.Threshold = val
+}
+
+// A legendary or lair action.
+// Ref: #/components/schemas/LiveLegendAction
+type LiveLegendAction struct {
+	Name string `json:"name"`
+	Cost int32  `json:"cost"`
+	Text string `json:"text"`
+}
+
+// GetName returns the value of Name.
+func (s *LiveLegendAction) GetName() string {
+	return s.Name
+}
+
+// GetCost returns the value of Cost.
+func (s *LiveLegendAction) GetCost() int32 {
+	return s.Cost
+}
+
+// GetText returns the value of Text.
+func (s *LiveLegendAction) GetText() string {
+	return s.Text
+}
+
+// SetName sets the value of Name.
+func (s *LiveLegendAction) SetName(val string) {
+	s.Name = val
+}
+
+// SetCost sets the value of Cost.
+func (s *LiveLegendAction) SetCost(val int32) {
+	s.Cost = val
+}
+
+// SetText sets the value of Text.
+func (s *LiveLegendAction) SetText(val string) {
+	s.Text = val
 }
 
 // A light on the Map, for the DM.
@@ -23624,6 +23812,7 @@ type LiveToken struct {
 	Effects   []LiveEffect          `json:"effects"`
 	Reactions []LiveReactionSetting `json:"reactions"`
 	Dying     OptLiveDying          `json:"dying"`
+	Legend    OptLiveLegend         `json:"legend"`
 }
 
 // GetID returns the value of ID.
@@ -23731,6 +23920,11 @@ func (s *LiveToken) GetDying() OptLiveDying {
 	return s.Dying
 }
 
+// GetLegend returns the value of Legend.
+func (s *LiveToken) GetLegend() OptLiveLegend {
+	return s.Legend
+}
+
 // SetID sets the value of ID.
 func (s *LiveToken) SetID(val ID) {
 	s.ID = val
@@ -23834,6 +24028,11 @@ func (s *LiveToken) SetReactions(val []LiveReactionSetting) {
 // SetDying sets the value of Dying.
 func (s *LiveToken) SetDying(val OptLiveDying) {
 	s.Dying = val
+}
+
+// SetLegend sets the value of Legend.
+func (s *LiveToken) SetLegend(val OptLiveLegend) {
+	s.Legend = val
 }
 
 // What anyone can tell by looking, for creatures whose hit points the audience may not see.
@@ -26569,6 +26768,738 @@ func (s *MessageSend) SetBody(val string) {
 // SetMentions sets the value of Mentions.
 func (s *MessageSend) SetMentions(val []MentionRef) {
 	s.Mentions = val
+}
+
+// Something a creature does with its action: a melee or ranged attack, a save it forces, or anything
+// else as text.
+// Ref: #/components/schemas/MonsterAction
+type MonsterAction struct {
+	Name        string    `json:"name"`
+	Kind        string    `json:"kind"`
+	ToHit       OptInt32  `json:"toHit"`
+	ReachFt     OptInt32  `json:"reachFt"`
+	RangeFt     OptInt32  `json:"rangeFt"`
+	LongRangeFt OptInt32  `json:"longRangeFt"`
+	Damage      OptString `json:"damage"`
+	DamageBonus OptInt32  `json:"damageBonus"`
+	DamageType  OptString `json:"damageType"`
+	SaveAbility OptString `json:"saveAbility"`
+	DC          OptInt32  `json:"dc"`
+	Recharge    OptInt32  `json:"recharge"`
+	Text        OptString `json:"text"`
+}
+
+// GetName returns the value of Name.
+func (s *MonsterAction) GetName() string {
+	return s.Name
+}
+
+// GetKind returns the value of Kind.
+func (s *MonsterAction) GetKind() string {
+	return s.Kind
+}
+
+// GetToHit returns the value of ToHit.
+func (s *MonsterAction) GetToHit() OptInt32 {
+	return s.ToHit
+}
+
+// GetReachFt returns the value of ReachFt.
+func (s *MonsterAction) GetReachFt() OptInt32 {
+	return s.ReachFt
+}
+
+// GetRangeFt returns the value of RangeFt.
+func (s *MonsterAction) GetRangeFt() OptInt32 {
+	return s.RangeFt
+}
+
+// GetLongRangeFt returns the value of LongRangeFt.
+func (s *MonsterAction) GetLongRangeFt() OptInt32 {
+	return s.LongRangeFt
+}
+
+// GetDamage returns the value of Damage.
+func (s *MonsterAction) GetDamage() OptString {
+	return s.Damage
+}
+
+// GetDamageBonus returns the value of DamageBonus.
+func (s *MonsterAction) GetDamageBonus() OptInt32 {
+	return s.DamageBonus
+}
+
+// GetDamageType returns the value of DamageType.
+func (s *MonsterAction) GetDamageType() OptString {
+	return s.DamageType
+}
+
+// GetSaveAbility returns the value of SaveAbility.
+func (s *MonsterAction) GetSaveAbility() OptString {
+	return s.SaveAbility
+}
+
+// GetDC returns the value of DC.
+func (s *MonsterAction) GetDC() OptInt32 {
+	return s.DC
+}
+
+// GetRecharge returns the value of Recharge.
+func (s *MonsterAction) GetRecharge() OptInt32 {
+	return s.Recharge
+}
+
+// GetText returns the value of Text.
+func (s *MonsterAction) GetText() OptString {
+	return s.Text
+}
+
+// SetName sets the value of Name.
+func (s *MonsterAction) SetName(val string) {
+	s.Name = val
+}
+
+// SetKind sets the value of Kind.
+func (s *MonsterAction) SetKind(val string) {
+	s.Kind = val
+}
+
+// SetToHit sets the value of ToHit.
+func (s *MonsterAction) SetToHit(val OptInt32) {
+	s.ToHit = val
+}
+
+// SetReachFt sets the value of ReachFt.
+func (s *MonsterAction) SetReachFt(val OptInt32) {
+	s.ReachFt = val
+}
+
+// SetRangeFt sets the value of RangeFt.
+func (s *MonsterAction) SetRangeFt(val OptInt32) {
+	s.RangeFt = val
+}
+
+// SetLongRangeFt sets the value of LongRangeFt.
+func (s *MonsterAction) SetLongRangeFt(val OptInt32) {
+	s.LongRangeFt = val
+}
+
+// SetDamage sets the value of Damage.
+func (s *MonsterAction) SetDamage(val OptString) {
+	s.Damage = val
+}
+
+// SetDamageBonus sets the value of DamageBonus.
+func (s *MonsterAction) SetDamageBonus(val OptInt32) {
+	s.DamageBonus = val
+}
+
+// SetDamageType sets the value of DamageType.
+func (s *MonsterAction) SetDamageType(val OptString) {
+	s.DamageType = val
+}
+
+// SetSaveAbility sets the value of SaveAbility.
+func (s *MonsterAction) SetSaveAbility(val OptString) {
+	s.SaveAbility = val
+}
+
+// SetDC sets the value of DC.
+func (s *MonsterAction) SetDC(val OptInt32) {
+	s.DC = val
+}
+
+// SetRecharge sets the value of Recharge.
+func (s *MonsterAction) SetRecharge(val OptInt32) {
+	s.Recharge = val
+}
+
+// SetText sets the value of Text.
+func (s *MonsterAction) SetText(val OptString) {
+	s.Text = val
+}
+
+// A homebrew creature in its builder, the slug it is placed by, its stat block and an estimated
+// Challenge.
+// Ref: #/components/schemas/MonsterBuild
+type MonsterBuild struct {
+	Estimate string          `json:"estimate"`
+	Entry    OptLibraryEntry `json:"entry"`
+	Design   MonsterDesign   `json:"design"`
+	Slug     OptString       `json:"slug"`
+	Lines    []string        `json:"lines"`
+}
+
+// GetEstimate returns the value of Estimate.
+func (s *MonsterBuild) GetEstimate() string {
+	return s.Estimate
+}
+
+// GetEntry returns the value of Entry.
+func (s *MonsterBuild) GetEntry() OptLibraryEntry {
+	return s.Entry
+}
+
+// GetDesign returns the value of Design.
+func (s *MonsterBuild) GetDesign() MonsterDesign {
+	return s.Design
+}
+
+// GetSlug returns the value of Slug.
+func (s *MonsterBuild) GetSlug() OptString {
+	return s.Slug
+}
+
+// GetLines returns the value of Lines.
+func (s *MonsterBuild) GetLines() []string {
+	return s.Lines
+}
+
+// SetEstimate sets the value of Estimate.
+func (s *MonsterBuild) SetEstimate(val string) {
+	s.Estimate = val
+}
+
+// SetEntry sets the value of Entry.
+func (s *MonsterBuild) SetEntry(val OptLibraryEntry) {
+	s.Entry = val
+}
+
+// SetDesign sets the value of Design.
+func (s *MonsterBuild) SetDesign(val MonsterDesign) {
+	s.Design = val
+}
+
+// SetSlug sets the value of Slug.
+func (s *MonsterBuild) SetSlug(val OptString) {
+	s.Slug = val
+}
+
+// SetLines sets the value of Lines.
+func (s *MonsterBuild) SetLines(val []string) {
+	s.Lines = val
+}
+
+// MonsterBuildHeaders wraps MonsterBuild with response headers.
+type MonsterBuildHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           MonsterBuild
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *MonsterBuildHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *MonsterBuildHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *MonsterBuildHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *MonsterBuildHeaders) GetResponse() MonsterBuild {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *MonsterBuildHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *MonsterBuildHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *MonsterBuildHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *MonsterBuildHeaders) SetResponse(val MonsterBuild) {
+	s.Response = val
+}
+
+func (*MonsterBuildHeaders) getMonsterBuildRes()  {}
+func (*MonsterBuildHeaders) previewMonsterRes()   {}
+func (*MonsterBuildHeaders) saveMonsterBuildRes() {}
+
+// A homebrew creature as the monster builder makes it.
+// Ref: #/components/schemas/MonsterDesign
+type MonsterDesign struct {
+	Size            string                    `json:"size"`
+	CreatureType    string                    `json:"creatureType"`
+	Ac              int32                     `json:"ac"`
+	Hp              int32                     `json:"hp"`
+	SpeedFt         int32                     `json:"speedFt"`
+	Challenge       float64                   `json:"challenge"`
+	Abilities       MonsterDesignAbilities    `json:"abilities"`
+	Saves           []string                  `json:"saves"`
+	Senses          []SpeciesMeasure          `json:"senses"`
+	Resistances     []string                  `json:"resistances"`
+	Immunities      []string                  `json:"immunities"`
+	Vulnerabilities []string                  `json:"vulnerabilities"`
+	Threshold       int32                     `json:"threshold"`
+	Swarm           OptBool                   `json:"swarm"`
+	Traits          []MonsterTrait            `json:"traits"`
+	Aura            OptMonsterDesignAura      `json:"aura"`
+	Multiattack     int32                     `json:"multiattack"`
+	Actions         []MonsterAction           `json:"actions"`
+	Legendary       OptMonsterDesignLegendary `json:"legendary"`
+	Lair            OptMonsterDesignLair      `json:"lair"`
+	Phases          []MonsterDesignPhasesItem `json:"phases"`
+}
+
+// GetSize returns the value of Size.
+func (s *MonsterDesign) GetSize() string {
+	return s.Size
+}
+
+// GetCreatureType returns the value of CreatureType.
+func (s *MonsterDesign) GetCreatureType() string {
+	return s.CreatureType
+}
+
+// GetAc returns the value of Ac.
+func (s *MonsterDesign) GetAc() int32 {
+	return s.Ac
+}
+
+// GetHp returns the value of Hp.
+func (s *MonsterDesign) GetHp() int32 {
+	return s.Hp
+}
+
+// GetSpeedFt returns the value of SpeedFt.
+func (s *MonsterDesign) GetSpeedFt() int32 {
+	return s.SpeedFt
+}
+
+// GetChallenge returns the value of Challenge.
+func (s *MonsterDesign) GetChallenge() float64 {
+	return s.Challenge
+}
+
+// GetAbilities returns the value of Abilities.
+func (s *MonsterDesign) GetAbilities() MonsterDesignAbilities {
+	return s.Abilities
+}
+
+// GetSaves returns the value of Saves.
+func (s *MonsterDesign) GetSaves() []string {
+	return s.Saves
+}
+
+// GetSenses returns the value of Senses.
+func (s *MonsterDesign) GetSenses() []SpeciesMeasure {
+	return s.Senses
+}
+
+// GetResistances returns the value of Resistances.
+func (s *MonsterDesign) GetResistances() []string {
+	return s.Resistances
+}
+
+// GetImmunities returns the value of Immunities.
+func (s *MonsterDesign) GetImmunities() []string {
+	return s.Immunities
+}
+
+// GetVulnerabilities returns the value of Vulnerabilities.
+func (s *MonsterDesign) GetVulnerabilities() []string {
+	return s.Vulnerabilities
+}
+
+// GetThreshold returns the value of Threshold.
+func (s *MonsterDesign) GetThreshold() int32 {
+	return s.Threshold
+}
+
+// GetSwarm returns the value of Swarm.
+func (s *MonsterDesign) GetSwarm() OptBool {
+	return s.Swarm
+}
+
+// GetTraits returns the value of Traits.
+func (s *MonsterDesign) GetTraits() []MonsterTrait {
+	return s.Traits
+}
+
+// GetAura returns the value of Aura.
+func (s *MonsterDesign) GetAura() OptMonsterDesignAura {
+	return s.Aura
+}
+
+// GetMultiattack returns the value of Multiattack.
+func (s *MonsterDesign) GetMultiattack() int32 {
+	return s.Multiattack
+}
+
+// GetActions returns the value of Actions.
+func (s *MonsterDesign) GetActions() []MonsterAction {
+	return s.Actions
+}
+
+// GetLegendary returns the value of Legendary.
+func (s *MonsterDesign) GetLegendary() OptMonsterDesignLegendary {
+	return s.Legendary
+}
+
+// GetLair returns the value of Lair.
+func (s *MonsterDesign) GetLair() OptMonsterDesignLair {
+	return s.Lair
+}
+
+// GetPhases returns the value of Phases.
+func (s *MonsterDesign) GetPhases() []MonsterDesignPhasesItem {
+	return s.Phases
+}
+
+// SetSize sets the value of Size.
+func (s *MonsterDesign) SetSize(val string) {
+	s.Size = val
+}
+
+// SetCreatureType sets the value of CreatureType.
+func (s *MonsterDesign) SetCreatureType(val string) {
+	s.CreatureType = val
+}
+
+// SetAc sets the value of Ac.
+func (s *MonsterDesign) SetAc(val int32) {
+	s.Ac = val
+}
+
+// SetHp sets the value of Hp.
+func (s *MonsterDesign) SetHp(val int32) {
+	s.Hp = val
+}
+
+// SetSpeedFt sets the value of SpeedFt.
+func (s *MonsterDesign) SetSpeedFt(val int32) {
+	s.SpeedFt = val
+}
+
+// SetChallenge sets the value of Challenge.
+func (s *MonsterDesign) SetChallenge(val float64) {
+	s.Challenge = val
+}
+
+// SetAbilities sets the value of Abilities.
+func (s *MonsterDesign) SetAbilities(val MonsterDesignAbilities) {
+	s.Abilities = val
+}
+
+// SetSaves sets the value of Saves.
+func (s *MonsterDesign) SetSaves(val []string) {
+	s.Saves = val
+}
+
+// SetSenses sets the value of Senses.
+func (s *MonsterDesign) SetSenses(val []SpeciesMeasure) {
+	s.Senses = val
+}
+
+// SetResistances sets the value of Resistances.
+func (s *MonsterDesign) SetResistances(val []string) {
+	s.Resistances = val
+}
+
+// SetImmunities sets the value of Immunities.
+func (s *MonsterDesign) SetImmunities(val []string) {
+	s.Immunities = val
+}
+
+// SetVulnerabilities sets the value of Vulnerabilities.
+func (s *MonsterDesign) SetVulnerabilities(val []string) {
+	s.Vulnerabilities = val
+}
+
+// SetThreshold sets the value of Threshold.
+func (s *MonsterDesign) SetThreshold(val int32) {
+	s.Threshold = val
+}
+
+// SetSwarm sets the value of Swarm.
+func (s *MonsterDesign) SetSwarm(val OptBool) {
+	s.Swarm = val
+}
+
+// SetTraits sets the value of Traits.
+func (s *MonsterDesign) SetTraits(val []MonsterTrait) {
+	s.Traits = val
+}
+
+// SetAura sets the value of Aura.
+func (s *MonsterDesign) SetAura(val OptMonsterDesignAura) {
+	s.Aura = val
+}
+
+// SetMultiattack sets the value of Multiattack.
+func (s *MonsterDesign) SetMultiattack(val int32) {
+	s.Multiattack = val
+}
+
+// SetActions sets the value of Actions.
+func (s *MonsterDesign) SetActions(val []MonsterAction) {
+	s.Actions = val
+}
+
+// SetLegendary sets the value of Legendary.
+func (s *MonsterDesign) SetLegendary(val OptMonsterDesignLegendary) {
+	s.Legendary = val
+}
+
+// SetLair sets the value of Lair.
+func (s *MonsterDesign) SetLair(val OptMonsterDesignLair) {
+	s.Lair = val
+}
+
+// SetPhases sets the value of Phases.
+func (s *MonsterDesign) SetPhases(val []MonsterDesignPhasesItem) {
+	s.Phases = val
+}
+
+type MonsterDesignAbilities map[string]int32
+
+func (s *MonsterDesignAbilities) init() MonsterDesignAbilities {
+	m := *s
+	if m == nil {
+		m = map[string]int32{}
+		*s = m
+	}
+	return m
+}
+
+type MonsterDesignAura struct {
+	Name string `json:"name"`
+	Feet int32  `json:"feet"`
+	Text string `json:"text"`
+}
+
+// GetName returns the value of Name.
+func (s *MonsterDesignAura) GetName() string {
+	return s.Name
+}
+
+// GetFeet returns the value of Feet.
+func (s *MonsterDesignAura) GetFeet() int32 {
+	return s.Feet
+}
+
+// GetText returns the value of Text.
+func (s *MonsterDesignAura) GetText() string {
+	return s.Text
+}
+
+// SetName sets the value of Name.
+func (s *MonsterDesignAura) SetName(val string) {
+	s.Name = val
+}
+
+// SetFeet sets the value of Feet.
+func (s *MonsterDesignAura) SetFeet(val int32) {
+	s.Feet = val
+}
+
+// SetText sets the value of Text.
+func (s *MonsterDesignAura) SetText(val string) {
+	s.Text = val
+}
+
+type MonsterDesignLair struct {
+	Actions  []MonsterTrait `json:"actions"`
+	Regional []string       `json:"regional"`
+}
+
+// GetActions returns the value of Actions.
+func (s *MonsterDesignLair) GetActions() []MonsterTrait {
+	return s.Actions
+}
+
+// GetRegional returns the value of Regional.
+func (s *MonsterDesignLair) GetRegional() []string {
+	return s.Regional
+}
+
+// SetActions sets the value of Actions.
+func (s *MonsterDesignLair) SetActions(val []MonsterTrait) {
+	s.Actions = val
+}
+
+// SetRegional sets the value of Regional.
+func (s *MonsterDesignLair) SetRegional(val []string) {
+	s.Regional = val
+}
+
+type MonsterDesignLegendary struct {
+	Uses       int32                               `json:"uses"`
+	Resistance int32                               `json:"resistance"`
+	Actions    []MonsterDesignLegendaryActionsItem `json:"actions"`
+}
+
+// GetUses returns the value of Uses.
+func (s *MonsterDesignLegendary) GetUses() int32 {
+	return s.Uses
+}
+
+// GetResistance returns the value of Resistance.
+func (s *MonsterDesignLegendary) GetResistance() int32 {
+	return s.Resistance
+}
+
+// GetActions returns the value of Actions.
+func (s *MonsterDesignLegendary) GetActions() []MonsterDesignLegendaryActionsItem {
+	return s.Actions
+}
+
+// SetUses sets the value of Uses.
+func (s *MonsterDesignLegendary) SetUses(val int32) {
+	s.Uses = val
+}
+
+// SetResistance sets the value of Resistance.
+func (s *MonsterDesignLegendary) SetResistance(val int32) {
+	s.Resistance = val
+}
+
+// SetActions sets the value of Actions.
+func (s *MonsterDesignLegendary) SetActions(val []MonsterDesignLegendaryActionsItem) {
+	s.Actions = val
+}
+
+type MonsterDesignLegendaryActionsItem struct {
+	Name string `json:"name"`
+	Cost int32  `json:"cost"`
+	Text string `json:"text"`
+}
+
+// GetName returns the value of Name.
+func (s *MonsterDesignLegendaryActionsItem) GetName() string {
+	return s.Name
+}
+
+// GetCost returns the value of Cost.
+func (s *MonsterDesignLegendaryActionsItem) GetCost() int32 {
+	return s.Cost
+}
+
+// GetText returns the value of Text.
+func (s *MonsterDesignLegendaryActionsItem) GetText() string {
+	return s.Text
+}
+
+// SetName sets the value of Name.
+func (s *MonsterDesignLegendaryActionsItem) SetName(val string) {
+	s.Name = val
+}
+
+// SetCost sets the value of Cost.
+func (s *MonsterDesignLegendaryActionsItem) SetCost(val int32) {
+	s.Cost = val
+}
+
+// SetText sets the value of Text.
+func (s *MonsterDesignLegendaryActionsItem) SetText(val string) {
+	s.Text = val
+}
+
+type MonsterDesignPhasesItem struct {
+	Name string `json:"name"`
+	Hp   int32  `json:"hp"`
+	Text string `json:"text"`
+}
+
+// GetName returns the value of Name.
+func (s *MonsterDesignPhasesItem) GetName() string {
+	return s.Name
+}
+
+// GetHp returns the value of Hp.
+func (s *MonsterDesignPhasesItem) GetHp() int32 {
+	return s.Hp
+}
+
+// GetText returns the value of Text.
+func (s *MonsterDesignPhasesItem) GetText() string {
+	return s.Text
+}
+
+// SetName sets the value of Name.
+func (s *MonsterDesignPhasesItem) SetName(val string) {
+	s.Name = val
+}
+
+// SetHp sets the value of Hp.
+func (s *MonsterDesignPhasesItem) SetHp(val int32) {
+	s.Hp = val
+}
+
+// SetText sets the value of Text.
+func (s *MonsterDesignPhasesItem) SetText(val string) {
+	s.Text = val
+}
+
+// A design to preview, with the creature's name.
+// Ref: #/components/schemas/MonsterPreviewInput
+type MonsterPreviewInput struct {
+	Name   string        `json:"name"`
+	Design MonsterDesign `json:"design"`
+}
+
+// GetName returns the value of Name.
+func (s *MonsterPreviewInput) GetName() string {
+	return s.Name
+}
+
+// GetDesign returns the value of Design.
+func (s *MonsterPreviewInput) GetDesign() MonsterDesign {
+	return s.Design
+}
+
+// SetName sets the value of Name.
+func (s *MonsterPreviewInput) SetName(val string) {
+	s.Name = val
+}
+
+// SetDesign sets the value of Design.
+func (s *MonsterPreviewInput) SetDesign(val MonsterDesign) {
+	s.Design = val
+}
+
+// A named rule of a creature's, or a lair action.
+// Ref: #/components/schemas/MonsterTrait
+type MonsterTrait struct {
+	Name string `json:"name"`
+	Text string `json:"text"`
+}
+
+// GetName returns the value of Name.
+func (s *MonsterTrait) GetName() string {
+	return s.Name
+}
+
+// GetText returns the value of Text.
+func (s *MonsterTrait) GetText() string {
+	return s.Text
+}
+
+// SetName sets the value of Name.
+func (s *MonsterTrait) SetName(val string) {
+	s.Name = val
+}
+
+// SetText sets the value of Text.
+func (s *MonsterTrait) SetText(val string) {
+	s.Text = val
 }
 
 // A compendium entry by slug and name.
@@ -30185,6 +31116,52 @@ func (o OptLiveItemInstanceSlot) Or(d LiveItemInstanceSlot) LiveItemInstanceSlot
 	return d
 }
 
+// NewOptLiveLegend returns new OptLiveLegend with value set to v.
+func NewOptLiveLegend(v LiveLegend) OptLiveLegend {
+	return OptLiveLegend{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveLegend is optional LiveLegend.
+type OptLiveLegend struct {
+	Value LiveLegend
+	Set   bool
+}
+
+// IsSet returns true if OptLiveLegend was set.
+func (o OptLiveLegend) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveLegend) Reset() {
+	var v LiveLegend
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveLegend) SetTo(v LiveLegend) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveLegend) Get() (v LiveLegend, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveLegend) Or(d LiveLegend) LiveLegend {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptLiveMap returns new OptLiveMap with value set to v.
 func NewOptLiveMap(v LiveMap) OptLiveMap {
 	return OptLiveMap{
@@ -31007,6 +31984,144 @@ func (o OptMapObjectKind) Get() (v MapObjectKind, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptMapObjectKind) Or(d MapObjectKind) MapObjectKind {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptMonsterDesignAura returns new OptMonsterDesignAura with value set to v.
+func NewOptMonsterDesignAura(v MonsterDesignAura) OptMonsterDesignAura {
+	return OptMonsterDesignAura{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptMonsterDesignAura is optional MonsterDesignAura.
+type OptMonsterDesignAura struct {
+	Value MonsterDesignAura
+	Set   bool
+}
+
+// IsSet returns true if OptMonsterDesignAura was set.
+func (o OptMonsterDesignAura) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptMonsterDesignAura) Reset() {
+	var v MonsterDesignAura
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptMonsterDesignAura) SetTo(v MonsterDesignAura) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptMonsterDesignAura) Get() (v MonsterDesignAura, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptMonsterDesignAura) Or(d MonsterDesignAura) MonsterDesignAura {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptMonsterDesignLair returns new OptMonsterDesignLair with value set to v.
+func NewOptMonsterDesignLair(v MonsterDesignLair) OptMonsterDesignLair {
+	return OptMonsterDesignLair{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptMonsterDesignLair is optional MonsterDesignLair.
+type OptMonsterDesignLair struct {
+	Value MonsterDesignLair
+	Set   bool
+}
+
+// IsSet returns true if OptMonsterDesignLair was set.
+func (o OptMonsterDesignLair) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptMonsterDesignLair) Reset() {
+	var v MonsterDesignLair
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptMonsterDesignLair) SetTo(v MonsterDesignLair) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptMonsterDesignLair) Get() (v MonsterDesignLair, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptMonsterDesignLair) Or(d MonsterDesignLair) MonsterDesignLair {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptMonsterDesignLegendary returns new OptMonsterDesignLegendary with value set to v.
+func NewOptMonsterDesignLegendary(v MonsterDesignLegendary) OptMonsterDesignLegendary {
+	return OptMonsterDesignLegendary{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptMonsterDesignLegendary is optional MonsterDesignLegendary.
+type OptMonsterDesignLegendary struct {
+	Value MonsterDesignLegendary
+	Set   bool
+}
+
+// IsSet returns true if OptMonsterDesignLegendary was set.
+func (o OptMonsterDesignLegendary) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptMonsterDesignLegendary) Reset() {
+	var v MonsterDesignLegendary
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptMonsterDesignLegendary) SetTo(v MonsterDesignLegendary) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptMonsterDesignLegendary) Get() (v MonsterDesignLegendary, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptMonsterDesignLegendary) Or(d MonsterDesignLegendary) MonsterDesignLegendary {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -32614,6 +33729,7 @@ func (*ProblemStatusCodeWithHeaders) getLibraryEntryRes()               {}
 func (*ProblemStatusCodeWithHeaders) getMapImageRes()                   {}
 func (*ProblemStatusCodeWithHeaders) getMapRes()                        {}
 func (*ProblemStatusCodeWithHeaders) getMeRes()                         {}
+func (*ProblemStatusCodeWithHeaders) getMonsterBuildRes()               {}
 func (*ProblemStatusCodeWithHeaders) getMyCharacterRes()                {}
 func (*ProblemStatusCodeWithHeaders) getNotificationPreferencesRes()    {}
 func (*ProblemStatusCodeWithHeaders) getNpcRes()                        {}
@@ -32699,6 +33815,7 @@ func (*ProblemStatusCodeWithHeaders) previewConditionRes()              {}
 func (*ProblemStatusCodeWithHeaders) previewFeatRes()                   {}
 func (*ProblemStatusCodeWithHeaders) previewInviteRes()                 {}
 func (*ProblemStatusCodeWithHeaders) previewItemRes()                   {}
+func (*ProblemStatusCodeWithHeaders) previewMonsterRes()                {}
 func (*ProblemStatusCodeWithHeaders) previewReachRes()                  {}
 func (*ProblemStatusCodeWithHeaders) previewSightRes()                  {}
 func (*ProblemStatusCodeWithHeaders) previewSpeciesRes()                {}
@@ -32733,6 +33850,7 @@ func (*ProblemStatusCodeWithHeaders) saveClassBuildRes()                {}
 func (*ProblemStatusCodeWithHeaders) saveConditionBuildRes()            {}
 func (*ProblemStatusCodeWithHeaders) saveFeatBuildRes()                 {}
 func (*ProblemStatusCodeWithHeaders) saveItemBuildRes()                 {}
+func (*ProblemStatusCodeWithHeaders) saveMonsterBuildRes()              {}
 func (*ProblemStatusCodeWithHeaders) saveSpeciesBuildRes()              {}
 func (*ProblemStatusCodeWithHeaders) saveSpellBuildRes()                {}
 func (*ProblemStatusCodeWithHeaders) saveSubclassBuildRes()             {}

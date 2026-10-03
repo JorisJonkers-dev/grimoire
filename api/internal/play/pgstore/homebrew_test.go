@@ -14,6 +14,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/conditionbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/itembuild"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/monsterbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/spellbuild"
 )
 
@@ -126,6 +127,67 @@ func TestHomebrewItemsReadInPlay(t *testing.T) {
 	}
 	pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
 		_, err := pgstore.NewFaulty(tb.pool, f).Items(ctx, tb.campaign, slugs)
+		if err != nil && !errors.Is(err, pgtest.ErrInjected) {
+			t.Fatal(err)
+		}
+		return err
+	})
+}
+
+// A Campaign's homebrew creature places by its slug with its stat block and its Legend; a creature it
+// does not see is not found.
+func TestHomebrewCreaturesPlaceInPlay(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	tb := setup(t)
+	store := pgstore.New(tb.pool)
+	lib := &libraryapp.Service{
+		Repo: librarypg.New(tb.pool), Members: pgstore.CampaignMembers{Store: campaignpg.New(tb.pool)}, Now: time.Now, Surfaces: store.SurfaceKinds,
+	}
+	design := monsterbuild.Design{
+		Size: "large", CreatureType: "monstrosity", AC: 16, HP: 120, SpeedFt: 30, Challenge: 8,
+		Abilities: map[string]int{"strength": 20, "dexterity": 12, "constitution": 18, "intelligence": 8, "wisdom": 14, "charisma": 16},
+		Saves:     []string{"constitution"}, Senses: []monsterbuild.Measure{{Kind: "darkvision", Feet: 60}, {Kind: "tremorsense", Feet: 30}}, Threshold: 5, Multiattack: 2,
+		Actions:   []monsterbuild.Action{{Name: "Claw", Kind: "melee", ToHit: 8, ReachFt: 10, Damage: "2d8", DamageBonus: 5, DamageType: "slashing"}},
+		Legendary: &monsterbuild.Legendary{Uses: 3, Resistance: 2, Actions: []monsterbuild.LegendaryAction{{Name: "Tail Sweep", Cost: 1, Text: "One Claw attack."}}},
+		Lair:      &monsterbuild.Lair{Actions: []monsterbuild.Trait{{Name: "Rising Water", Text: "The water rises."}}},
+		Phases:    []monsterbuild.Phase{{Name: "Drowned King", HP: 60, Text: "It rises."}},
+	}
+	plain := design
+	plain.Legendary, plain.Lair, plain.Phases, plain.Threshold = nil, nil, nil, 0
+	slugs := map[string]string{}
+	for name, d := range map[string]monsterbuild.Design{"Bog King": design, "Bog Rat": plain} {
+		e, err := lib.Create(ctx, dm, librarydomain.Draft{Kind: "creature", Name: name})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := lib.SaveMonster(ctx, dm, e.ID, d); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := lib.Link(ctx, dm, tb.campaign, e.ID); err != nil {
+			t.Fatal(err)
+		}
+		slugs[name] = spellbuild.Slug(e.ID.String())
+	}
+	blocks := pgstore.Statblocks{Store: store}
+	name, stats, err := blocks.Monster(ctx, tb.campaign, slugs["Bog King"])
+	if err != nil || name != "Bog King" || stats.AC != 16 || stats.HPMax != 120 || stats.AttacksPerAction != 2 || stats.Saves["constitution"] != 7 || stats.Senses["tremorsense"] != 30 {
+		t.Fatalf("the Bog King = %s %+v %v", name, stats, err)
+	}
+	if _, dark := stats.Senses["darkvision"]; dark || len(stats.Attacks) != 1 || stats.Attacks[0].LongRangeFt != 0 {
+		t.Fatalf("senses %v attacks %+v", stats.Senses, stats.Attacks)
+	}
+	if l := stats.Legend; l == nil || l.Uses != 3 || l.Left != 3 || l.ResistLeft != 2 || len(l.Lair) != 1 || len(l.Phases) != 1 || l.Threshold != 5 {
+		t.Fatalf("the Bog King's Legend = %+v", stats.Legend)
+	}
+	if _, rat, err := blocks.Monster(ctx, tb.campaign, slugs["Bog Rat"]); err != nil || rat.Legend != nil {
+		t.Fatalf("a plain creature = %+v %v", rat.Legend, err)
+	}
+	if _, _, err := blocks.Monster(ctx, tb.campaign, "hb-000000000000"); err == nil {
+		t.Fatal("a creature the Campaign does not see")
+	}
+	pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
+		_, _, err := pgstore.Statblocks{Store: pgstore.NewFaulty(tb.pool, f)}.Monster(ctx, tb.campaign, slugs["Bog King"])
 		if err != nil && !errors.Is(err, pgtest.ErrInjected) {
 			t.Fatal(err)
 		}

@@ -89,6 +89,7 @@ function linkInto() {
       <RouterLink v-if="d.entry.kind === 'feat'" :to="{ name: 'feat-builder', params: { entryId: d.entry.id } }" data-testid="open-feat-builder">Open in the feat builder</RouterLink>
       <RouterLink v-if="d.entry.kind === 'background'" :to="{ name: 'background-builder', params: { entryId: d.entry.id } }" data-testid="open-background-builder">Open in the background builder</RouterLink>
       <RouterLink v-if="d.entry.kind === 'condition'" :to="{ name: 'condition-builder', params: { entryId: d.entry.id } }" data-testid="open-condition-builder">Open in the condition builder</RouterLink>
+      <RouterLink v-if="d.entry.kind === 'creature'" :to="{ name: 'monster-builder', params: { entryId: d.entry.id } }" data-testid="open-monster-builder">Open in the monster builder</RouterLink>
       <p v-if="status" role="status" class="g-tag" data-testid="entry-status">{{ status }}</p>
       <p v-if="shared" class="g-card hint" data-testid="entry-shared">A read-only copy from the Shared Library. Link it into a Campaign, then override its fields there.</p>
       <dl v-if="shared" class="g-card fields" data-testid="entry-fields">

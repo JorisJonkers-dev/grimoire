@@ -33,6 +33,9 @@ type HPChange struct {
 // damage takes an amount off a token's temporary hit points first, then its hit points.
 func damage(t domain.Token, amount int, critical bool) HPChange {
 	amount = max(amount, 0)
+	if l := t.Stats.Legend; l != nil && amount < l.Threshold {
+		amount = 0
+	}
 	soaked := min(t.Stats.TempHP, amount)
 	h := HPChange{Token: t.ID, Before: t.Stats.HP, After: max(t.Stats.HP-amount+soaked, 0), Raw: amount - soaked, Critical: critical}
 	if soaked > 0 {
@@ -349,6 +352,7 @@ func (r *runtime) hurt(t domain.Token, amount int, w Write) Write {
 	ranged, critical := w.attack.Ranged, w.attack.Critical
 	w.Kind, w.attack = domain.ActionDamageDealt, nil
 	h := damage(t, amount, critical)
+	rise(&w, &h, t)
 	w.HP = &h
 	if ranged && w.HP.After < before {
 		w.Observers = r.st.witnesses(w.Token)
