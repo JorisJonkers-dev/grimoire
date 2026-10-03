@@ -3318,6 +3318,31 @@ export const zAmbientLight = z.enum([
 ]);
 
 /**
+ * A light on the Map, for the DM.
+ */
+export const zLiveLight = z.object({
+    id: zId,
+    q: z.int().gte(-500).lte(500),
+    r: z.int().gte(-500).lte(500),
+    brightFt: z.int().gte(0).lte(600),
+    dimFt: z.int().gte(0).lte(600)
+});
+
+/**
+ * How a Map's grid is drawn over its picture. A local Map is always hexes, each 5 feet across; squares are as wide as the hexes they stand for.
+ */
+export const zGridKind = z.enum([
+    'hexes',
+    'squares',
+    'off'
+]);
+
+/**
+ * How solid the grid is drawn over the picture, from 0 for unseen to 100 for opaque.
+ */
+export const zGridStrength = z.int().gte(0).lte(100);
+
+/**
  * The active Map's picture and hex calibration.
  */
 export const zLiveMap = z.object({
@@ -3329,7 +3354,9 @@ export const zLiveMap = z.object({
     hexSizePx: z.number().gte(8).lte(400),
     originX: z.number().gte(-100000).lte(100000),
     originY: z.number().gte(-100000).lte(100000),
-    imageVersion: z.int().gte(0).lte(1000000)
+    imageVersion: z.int().gte(0).lte(1000000),
+    gridKind: zGridKind,
+    gridStrength: zGridStrength
 });
 
 /**
@@ -3361,15 +3388,9 @@ export const zLiveTable = z.object({
 });
 
 /**
- * A light on the Map, for the DM.
+ * How many miles one cell of a world Map covers.
  */
-export const zLiveLight = z.object({
-    id: zId,
-    q: z.int().gte(-500).lte(500),
-    r: z.int().gte(-500).lte(500),
-    brightFt: z.int().gte(0).lte(600),
-    dimFt: z.int().gte(0).lte(600)
-});
+export const zScaleMiles = z.number().gte(0.1).lte(1000);
 
 /**
  * An uploaded Map and its hex calibration.
@@ -3384,18 +3405,35 @@ export const zLocalMap = z.object({
     originX: z.number().gte(-100000).lte(100000),
     originY: z.number().gte(-100000).lte(100000),
     ambient: zAmbientLight,
-    imageUrl: zAssetUrl
+    imageUrl: zAssetUrl,
+    gridKind: zGridKind,
+    gridStrength: zGridStrength,
+    scaleMiles: zScaleMiles
 });
 
 /**
- * A Map's name, calibration and ambient light.
+ * A Map's name, calibration and ambient light, and optionally its grid and scale; what is left out stays as it is. A local Map takes no grid but hexes and no scale.
  */
 export const zMapEdit = z.object({
     name: z.string().min(1).max(80),
     hexSizePx: z.number().gte(8).lte(400),
     originX: z.number().gte(-100000).lte(100000),
     originY: z.number().gte(-100000).lte(100000),
-    ambient: zAmbientLight
+    ambient: zAmbientLight,
+    gridKind: zGridKind.optional(),
+    gridStrength: zGridStrength.optional(),
+    scaleMiles: zScaleMiles.optional()
+});
+
+/**
+ * Two points on a Map's picture, in pixels, and how far apart they are in the world.
+ */
+export const zMapCalibration = z.object({
+    ax: z.number().gte(0).lte(100000),
+    ay: z.number().gte(0).lte(100000),
+    bx: z.number().gte(0).lte(100000),
+    by: z.number().gte(0).lte(100000),
+    distance: z.number().gte(0.01).lte(1000000)
 });
 
 /**
@@ -6295,6 +6333,27 @@ export const zUpdateMapPath = z.object({
  * The calibrated map.
  */
 export const zUpdateMapResponse = zLocalMap;
+
+export const zCalibrateMapBody = zMapCalibration;
+
+export const zCalibrateMapPath = z.object({
+    campaignId: zId,
+    mapId: zId
+});
+
+/**
+ * The calibrated map.
+ */
+export const zCalibrateMapResponse = zLocalMap;
+
+export const zUseDefaultWorldPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The new world map.
+ */
+export const zUseDefaultWorldResponse = zLocalMap;
 
 export const zGetMapImagePath = z.object({
     campaignId: zId,

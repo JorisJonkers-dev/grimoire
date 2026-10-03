@@ -76,7 +76,7 @@ func TestThePartyTravelsTheWorldMap(t *testing.T) {
 	refuse("choose a world map", live.Command{Kind: live.CmdSetWorld, MapID: uuid.UUID(w.dungeon(t).ID).String()})
 	refuse("no such map", live.Command{Kind: live.CmdSetMap, MapID: uuid.UUID(realm.ID).String()})
 	d, p := say(live.Command{Kind: live.CmdSetWorld, MapID: uuid.UUID(realm.ID).String()})
-	if d.View.World == nil || d.View.World.Map.Name != "Realm" || len(p.View.World.Nodes) != 0 || p.View.World.PartyNodeID != "" {
+	if d.View.World == nil || d.View.World.Map.Name != "Realm" || len(p.View.World.Nodes) != 0 || p.View.World.PartyNodeID != "" || p.View.World.Map.GridKind != domain.GridSquares || p.View.World.Map.GridStrength != 35 {
 		t.Fatalf("world set = dm %+v player %+v", d.View.World, p.View.World)
 	}
 	say(live.Command{Kind: live.CmdAddNode, Label: " Oakford ", Q: 0, R: 0})

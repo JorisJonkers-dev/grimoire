@@ -18,7 +18,7 @@ var _ app.MapRepository = (*Store)(nil)
 func (s *Store) InsertMap(ctx context.Context, m domain.Map, now time.Time) (domain.Map, error) {
 	row, err := s.q.InsertMap(ctx, queries.InsertMapParams{
 		CampaignID: m.CampaignID, Name: m.Name, Kind: m.Kind, ImageKey: m.ImageKey, ImageType: m.ImageType, WidthPx: int32(m.Width), HeightPx: int32(m.Height), //nolint:gosec // capped pixels
-		HexSizePx: m.HexSize, OriginX: m.OriginX, OriginY: m.OriginY, Now: now,
+		HexSizePx: m.HexSize, OriginX: m.OriginX, OriginY: m.OriginY, GridKind: m.Grid, GridStrength: int32(m.GridStrength), ScaleMiles: m.ScaleMiles, Now: now, //nolint:gosec // 0 to 100
 	})
 	if err != nil {
 		return domain.Map{}, err
@@ -52,7 +52,7 @@ func (s *Store) Maps(ctx context.Context, campaign uuid.UUID) ([]domain.Map, err
 func (s *Store) UpdateMap(ctx context.Context, m domain.Map, now time.Time) error {
 	n, err := s.q.UpdateMap(ctx, queries.UpdateMapParams{
 		CampaignID: m.CampaignID, ID: uuid.UUID(m.ID), Name: m.Name, HexSizePx: m.HexSize, OriginX: m.OriginX, OriginY: m.OriginY,
-		Ambient: m.Ambient, Now: now,
+		Ambient: m.Ambient, GridKind: m.Grid, GridStrength: int32(m.GridStrength), ScaleMiles: m.ScaleMiles, Now: now, //nolint:gosec // 0 to 100
 	})
 	if err == nil && n == 0 {
 		return apperr.ErrNotFound

@@ -21792,6 +21792,88 @@ func (s *GameClock) UnmarshalJSON(data []byte) error {
 	return s.Decode(d)
 }
 
+// Encode encodes GridKind as json.
+func (s GridKind) Encode(e *jx.Encoder) {
+	e.Str(string(s))
+}
+
+// Decode decodes GridKind from json.
+func (s *GridKind) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode GridKind to nil")
+	}
+	v, err := d.StrBytes()
+	if err != nil {
+		return err
+	}
+	// Try to use constant string.
+	switch GridKind(v) {
+	case GridKindHexes:
+		*s = GridKindHexes
+	case GridKindSquares:
+		*s = GridKindSquares
+	case GridKindOff:
+		*s = GridKindOff
+	default:
+		*s = GridKind(v)
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s GridKind) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *GridKind) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes GridStrength as json.
+func (s GridStrength) Encode(e *jx.Encoder) {
+	unwrapped := int32(s)
+
+	e.Int32(unwrapped)
+}
+
+// Decode decodes GridStrength from json.
+func (s *GridStrength) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode GridStrength to nil")
+	}
+	var unwrapped int32
+	if err := func() error {
+		v, err := d.Int32()
+		unwrapped = int32(v)
+		if err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		return errors.Wrap(err, "alias")
+	}
+	*s = GridStrength(unwrapped)
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s GridStrength) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *GridStrength) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
 // Encode implements json.Marshaler.
 func (s *GroupLabel) Encode(e *jx.Encoder) {
 	e.ObjStart()
@@ -39510,18 +39592,28 @@ func (s *LiveMap) encodeFields(e *jx.Encoder) {
 		e.FieldStart("imageVersion")
 		e.Int32(s.ImageVersion)
 	}
+	{
+		e.FieldStart("gridKind")
+		s.GridKind.Encode(e)
+	}
+	{
+		e.FieldStart("gridStrength")
+		s.GridStrength.Encode(e)
+	}
 }
 
-var jsonFieldsNameOfLiveMap = [9]string{
-	0: "id",
-	1: "name",
-	2: "imageUrl",
-	3: "width",
-	4: "height",
-	5: "hexSizePx",
-	6: "originX",
-	7: "originY",
-	8: "imageVersion",
+var jsonFieldsNameOfLiveMap = [11]string{
+	0:  "id",
+	1:  "name",
+	2:  "imageUrl",
+	3:  "width",
+	4:  "height",
+	5:  "hexSizePx",
+	6:  "originX",
+	7:  "originY",
+	8:  "imageVersion",
+	9:  "gridKind",
+	10: "gridStrength",
 }
 
 // Decode decodes LiveMap from json.
@@ -39637,6 +39729,26 @@ func (s *LiveMap) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"imageVersion\"")
 			}
+		case "gridKind":
+			requiredBitSet[1] |= 1 << 1
+			if err := func() error {
+				if err := s.GridKind.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"gridKind\"")
+			}
+		case "gridStrength":
+			requiredBitSet[1] |= 1 << 2
+			if err := func() error {
+				if err := s.GridStrength.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"gridStrength\"")
+			}
 		default:
 			return errors.Errorf("unexpected field %q", k)
 		}
@@ -39648,7 +39760,7 @@ func (s *LiveMap) Decode(d *jx.Decoder) error {
 	var failures []validate.FieldError
 	for i, mask := range [2]uint8{
 		0b11111111,
-		0b00000001,
+		0b00000111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -48101,19 +48213,34 @@ func (s *LocalMap) encodeFields(e *jx.Encoder) {
 		e.FieldStart("imageUrl")
 		s.ImageUrl.Encode(e)
 	}
+	{
+		e.FieldStart("gridKind")
+		s.GridKind.Encode(e)
+	}
+	{
+		e.FieldStart("gridStrength")
+		s.GridStrength.Encode(e)
+	}
+	{
+		e.FieldStart("scaleMiles")
+		s.ScaleMiles.Encode(e)
+	}
 }
 
-var jsonFieldsNameOfLocalMap = [10]string{
-	0: "id",
-	1: "name",
-	2: "kind",
-	3: "width",
-	4: "height",
-	5: "hexSizePx",
-	6: "originX",
-	7: "originY",
-	8: "ambient",
-	9: "imageUrl",
+var jsonFieldsNameOfLocalMap = [13]string{
+	0:  "id",
+	1:  "name",
+	2:  "kind",
+	3:  "width",
+	4:  "height",
+	5:  "hexSizePx",
+	6:  "originX",
+	7:  "originY",
+	8:  "ambient",
+	9:  "imageUrl",
+	10: "gridKind",
+	11: "gridStrength",
+	12: "scaleMiles",
 }
 
 // Decode decodes LocalMap from json.
@@ -48237,6 +48364,36 @@ func (s *LocalMap) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"imageUrl\"")
 			}
+		case "gridKind":
+			requiredBitSet[1] |= 1 << 2
+			if err := func() error {
+				if err := s.GridKind.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"gridKind\"")
+			}
+		case "gridStrength":
+			requiredBitSet[1] |= 1 << 3
+			if err := func() error {
+				if err := s.GridStrength.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"gridStrength\"")
+			}
+		case "scaleMiles":
+			requiredBitSet[1] |= 1 << 4
+			if err := func() error {
+				if err := s.ScaleMiles.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"scaleMiles\"")
+			}
 		default:
 			return errors.Errorf("unexpected field %q", k)
 		}
@@ -48248,7 +48405,7 @@ func (s *LocalMap) Decode(d *jx.Decoder) error {
 	var failures []validate.FieldError
 	for i, mask := range [2]uint8{
 		0b11111111,
-		0b00000011,
+		0b00011111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -49071,6 +49228,170 @@ func (s *ManualPart) UnmarshalJSON(data []byte) error {
 }
 
 // Encode implements json.Marshaler.
+func (s *MapCalibration) Encode(e *jx.Encoder) {
+	e.ObjStart()
+	s.encodeFields(e)
+	e.ObjEnd()
+}
+
+// encodeFields encodes fields.
+func (s *MapCalibration) encodeFields(e *jx.Encoder) {
+	{
+		e.FieldStart("ax")
+		e.Float64(s.Ax)
+	}
+	{
+		e.FieldStart("ay")
+		e.Float64(s.Ay)
+	}
+	{
+		e.FieldStart("bx")
+		e.Float64(s.Bx)
+	}
+	{
+		e.FieldStart("by")
+		e.Float64(s.By)
+	}
+	{
+		e.FieldStart("distance")
+		e.Float64(s.Distance)
+	}
+}
+
+var jsonFieldsNameOfMapCalibration = [5]string{
+	0: "ax",
+	1: "ay",
+	2: "bx",
+	3: "by",
+	4: "distance",
+}
+
+// Decode decodes MapCalibration from json.
+func (s *MapCalibration) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode MapCalibration to nil")
+	}
+	var requiredBitSet [1]uint8
+
+	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
+		switch string(k) {
+		case "ax":
+			requiredBitSet[0] |= 1 << 0
+			if err := func() error {
+				v, err := d.Float64()
+				s.Ax = float64(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"ax\"")
+			}
+		case "ay":
+			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				v, err := d.Float64()
+				s.Ay = float64(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"ay\"")
+			}
+		case "bx":
+			requiredBitSet[0] |= 1 << 2
+			if err := func() error {
+				v, err := d.Float64()
+				s.Bx = float64(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"bx\"")
+			}
+		case "by":
+			requiredBitSet[0] |= 1 << 3
+			if err := func() error {
+				v, err := d.Float64()
+				s.By = float64(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"by\"")
+			}
+		case "distance":
+			requiredBitSet[0] |= 1 << 4
+			if err := func() error {
+				v, err := d.Float64()
+				s.Distance = float64(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"distance\"")
+			}
+		default:
+			return errors.Errorf("unexpected field %q", k)
+		}
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "decode MapCalibration")
+	}
+	// Validate required fields.
+	var failures []validate.FieldError
+	for i, mask := range [1]uint8{
+		0b00011111,
+	} {
+		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
+			// Mask only required fields and check equality to mask using XOR.
+			//
+			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
+			// Bits of fields which would be set are actually bits of missed fields.
+			missed := bits.OnesCount8(result)
+			for bitN := 0; bitN < missed; bitN++ {
+				bitIdx := bits.TrailingZeros8(result)
+				fieldIdx := i*8 + bitIdx
+				var name string
+				if fieldIdx < len(jsonFieldsNameOfMapCalibration) {
+					name = jsonFieldsNameOfMapCalibration[fieldIdx]
+				} else {
+					name = strconv.Itoa(fieldIdx)
+				}
+				failures = append(failures, validate.FieldError{
+					Name:  name,
+					Error: validate.ErrFieldRequired,
+				})
+				// Reset bit.
+				result &^= 1 << bitIdx
+			}
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *MapCalibration) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *MapCalibration) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
 func (s *MapEdit) Encode(e *jx.Encoder) {
 	e.ObjStart()
 	s.encodeFields(e)
@@ -49099,14 +49420,35 @@ func (s *MapEdit) encodeFields(e *jx.Encoder) {
 		e.FieldStart("ambient")
 		s.Ambient.Encode(e)
 	}
+	{
+		if s.GridKind.Set {
+			e.FieldStart("gridKind")
+			s.GridKind.Encode(e)
+		}
+	}
+	{
+		if s.GridStrength.Set {
+			e.FieldStart("gridStrength")
+			s.GridStrength.Encode(e)
+		}
+	}
+	{
+		if s.ScaleMiles.Set {
+			e.FieldStart("scaleMiles")
+			s.ScaleMiles.Encode(e)
+		}
+	}
 }
 
-var jsonFieldsNameOfMapEdit = [5]string{
+var jsonFieldsNameOfMapEdit = [8]string{
 	0: "name",
 	1: "hexSizePx",
 	2: "originX",
 	3: "originY",
 	4: "ambient",
+	5: "gridKind",
+	6: "gridStrength",
+	7: "scaleMiles",
 }
 
 // Decode decodes MapEdit from json.
@@ -49175,6 +49517,36 @@ func (s *MapEdit) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"ambient\"")
+			}
+		case "gridKind":
+			if err := func() error {
+				s.GridKind.Reset()
+				if err := s.GridKind.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"gridKind\"")
+			}
+		case "gridStrength":
+			if err := func() error {
+				s.GridStrength.Reset()
+				if err := s.GridStrength.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"gridStrength\"")
+			}
+		case "scaleMiles":
+			if err := func() error {
+				s.ScaleMiles.Reset()
+				if err := s.ScaleMiles.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"scaleMiles\"")
 			}
 		default:
 			return errors.Errorf("unexpected field %q", k)
@@ -55752,6 +56124,72 @@ func (s *OptFloat64) UnmarshalJSON(data []byte) error {
 	return s.Decode(d)
 }
 
+// Encode encodes GridKind as json.
+func (o OptGridKind) Encode(e *jx.Encoder) {
+	if !o.Set {
+		return
+	}
+	e.Str(string(o.Value))
+}
+
+// Decode decodes GridKind from json.
+func (o *OptGridKind) Decode(d *jx.Decoder) error {
+	if o == nil {
+		return errors.New("invalid: unable to decode OptGridKind to nil")
+	}
+	o.Set = true
+	if err := o.Value.Decode(d); err != nil {
+		return err
+	}
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s OptGridKind) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *OptGridKind) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes GridStrength as json.
+func (o OptGridStrength) Encode(e *jx.Encoder) {
+	if !o.Set {
+		return
+	}
+	o.Value.Encode(e)
+}
+
+// Decode decodes GridStrength from json.
+func (o *OptGridStrength) Decode(d *jx.Decoder) error {
+	if o == nil {
+		return errors.New("invalid: unable to decode OptGridStrength to nil")
+	}
+	o.Set = true
+	if err := o.Value.Decode(d); err != nil {
+		return err
+	}
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s OptGridStrength) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *OptGridStrength) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
 // Encode encodes HexCoord as json.
 func (o OptHexCoord) Encode(e *jx.Encoder) {
 	if !o.Set {
@@ -57963,6 +58401,39 @@ func (s OptRuleset) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *OptRuleset) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes ScaleMiles as json.
+func (o OptScaleMiles) Encode(e *jx.Encoder) {
+	if !o.Set {
+		return
+	}
+	o.Value.Encode(e)
+}
+
+// Decode decodes ScaleMiles from json.
+func (o *OptScaleMiles) Decode(d *jx.Decoder) error {
+	if o == nil {
+		return errors.New("invalid: unable to decode OptScaleMiles to nil")
+	}
+	o.Set = true
+	if err := o.Value.Decode(d); err != nil {
+		return err
+	}
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s OptScaleMiles) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *OptScaleMiles) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -64841,6 +65312,46 @@ func (s Ruleset) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *Ruleset) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes ScaleMiles as json.
+func (s ScaleMiles) Encode(e *jx.Encoder) {
+	unwrapped := float64(s)
+
+	e.Float64(unwrapped)
+}
+
+// Decode decodes ScaleMiles from json.
+func (s *ScaleMiles) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode ScaleMiles to nil")
+	}
+	var unwrapped float64
+	if err := func() error {
+		v, err := d.Float64()
+		unwrapped = float64(v)
+		if err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		return errors.Wrap(err, "alias")
+	}
+	*s = ScaleMiles(unwrapped)
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s ScaleMiles) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *ScaleMiles) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }

@@ -13104,6 +13104,59 @@ func (s *GetTokenIconOKImageWEBPHeaders) SetResponse(val GetTokenIconOKImageWEBP
 
 func (*GetTokenIconOKImageWEBPHeaders) getTokenIconRes() {}
 
+// How a Map's grid is drawn over its picture. A local Map is always hexes, each 5 feet across; squares
+// are as wide as the hexes they stand for.
+// Ref: #/components/schemas/GridKind
+type GridKind string
+
+const (
+	GridKindHexes   GridKind = "hexes"
+	GridKindSquares GridKind = "squares"
+	GridKindOff     GridKind = "off"
+)
+
+// AllValues returns all GridKind values.
+func (GridKind) AllValues() []GridKind {
+	return []GridKind{
+		GridKindHexes,
+		GridKindSquares,
+		GridKindOff,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s GridKind) MarshalText() ([]byte, error) {
+	switch s {
+	case GridKindHexes:
+		return []byte(s), nil
+	case GridKindSquares:
+		return []byte(s), nil
+	case GridKindOff:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *GridKind) UnmarshalText(data []byte) error {
+	switch GridKind(data) {
+	case GridKindHexes:
+		*s = GridKindHexes
+		return nil
+	case GridKindSquares:
+		*s = GridKindSquares
+		return nil
+	case GridKindOff:
+		*s = GridKindOff
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type GridStrength int32
+
 // Why a group of dice is thrown, such as Bless.
 // Ref: #/components/schemas/GroupLabel
 type GroupLabel struct {
@@ -24194,15 +24247,17 @@ func (s *LiveManual) SetText(val string) {
 // The active Map's picture and hex calibration.
 // Ref: #/components/schemas/LiveMap
 type LiveMap struct {
-	ID           ID       `json:"id"`
-	Name         string   `json:"name"`
-	ImageUrl     AssetUrl `json:"imageUrl"`
-	Width        int32    `json:"width"`
-	Height       int32    `json:"height"`
-	HexSizePx    float64  `json:"hexSizePx"`
-	OriginX      float64  `json:"originX"`
-	OriginY      float64  `json:"originY"`
-	ImageVersion int32    `json:"imageVersion"`
+	ID           ID           `json:"id"`
+	Name         string       `json:"name"`
+	ImageUrl     AssetUrl     `json:"imageUrl"`
+	Width        int32        `json:"width"`
+	Height       int32        `json:"height"`
+	HexSizePx    float64      `json:"hexSizePx"`
+	OriginX      float64      `json:"originX"`
+	OriginY      float64      `json:"originY"`
+	ImageVersion int32        `json:"imageVersion"`
+	GridKind     GridKind     `json:"gridKind"`
+	GridStrength GridStrength `json:"gridStrength"`
 }
 
 // GetID returns the value of ID.
@@ -24250,6 +24305,16 @@ func (s *LiveMap) GetImageVersion() int32 {
 	return s.ImageVersion
 }
 
+// GetGridKind returns the value of GridKind.
+func (s *LiveMap) GetGridKind() GridKind {
+	return s.GridKind
+}
+
+// GetGridStrength returns the value of GridStrength.
+func (s *LiveMap) GetGridStrength() GridStrength {
+	return s.GridStrength
+}
+
 // SetID sets the value of ID.
 func (s *LiveMap) SetID(val ID) {
 	s.ID = val
@@ -24293,6 +24358,16 @@ func (s *LiveMap) SetOriginY(val float64) {
 // SetImageVersion sets the value of ImageVersion.
 func (s *LiveMap) SetImageVersion(val int32) {
 	s.ImageVersion = val
+}
+
+// SetGridKind sets the value of GridKind.
+func (s *LiveMap) SetGridKind(val GridKind) {
+	s.GridKind = val
+}
+
+// SetGridStrength sets the value of GridStrength.
+func (s *LiveMap) SetGridStrength(val GridStrength) {
+	s.GridStrength = val
 }
 
 // A Map Object; its numbers, trigger and secrecy go to the DM only.
@@ -28118,16 +28193,19 @@ func (s *LiveZoneStatus) UnmarshalText(data []byte) error {
 // An uploaded Map and its hex calibration.
 // Ref: #/components/schemas/LocalMap
 type LocalMap struct {
-	ID        ID           `json:"id"`
-	Name      string       `json:"name"`
-	Kind      MapKind      `json:"kind"`
-	Width     int32        `json:"width"`
-	Height    int32        `json:"height"`
-	HexSizePx float64      `json:"hexSizePx"`
-	OriginX   float64      `json:"originX"`
-	OriginY   float64      `json:"originY"`
-	Ambient   AmbientLight `json:"ambient"`
-	ImageUrl  AssetUrl     `json:"imageUrl"`
+	ID           ID           `json:"id"`
+	Name         string       `json:"name"`
+	Kind         MapKind      `json:"kind"`
+	Width        int32        `json:"width"`
+	Height       int32        `json:"height"`
+	HexSizePx    float64      `json:"hexSizePx"`
+	OriginX      float64      `json:"originX"`
+	OriginY      float64      `json:"originY"`
+	Ambient      AmbientLight `json:"ambient"`
+	ImageUrl     AssetUrl     `json:"imageUrl"`
+	GridKind     GridKind     `json:"gridKind"`
+	GridStrength GridStrength `json:"gridStrength"`
+	ScaleMiles   ScaleMiles   `json:"scaleMiles"`
 }
 
 // GetID returns the value of ID.
@@ -28180,6 +28258,21 @@ func (s *LocalMap) GetImageUrl() AssetUrl {
 	return s.ImageUrl
 }
 
+// GetGridKind returns the value of GridKind.
+func (s *LocalMap) GetGridKind() GridKind {
+	return s.GridKind
+}
+
+// GetGridStrength returns the value of GridStrength.
+func (s *LocalMap) GetGridStrength() GridStrength {
+	return s.GridStrength
+}
+
+// GetScaleMiles returns the value of ScaleMiles.
+func (s *LocalMap) GetScaleMiles() ScaleMiles {
+	return s.ScaleMiles
+}
+
 // SetID sets the value of ID.
 func (s *LocalMap) SetID(val ID) {
 	s.ID = val
@@ -28230,6 +28323,21 @@ func (s *LocalMap) SetImageUrl(val AssetUrl) {
 	s.ImageUrl = val
 }
 
+// SetGridKind sets the value of GridKind.
+func (s *LocalMap) SetGridKind(val GridKind) {
+	s.GridKind = val
+}
+
+// SetGridStrength sets the value of GridStrength.
+func (s *LocalMap) SetGridStrength(val GridStrength) {
+	s.GridStrength = val
+}
+
+// SetScaleMiles sets the value of ScaleMiles.
+func (s *LocalMap) SetScaleMiles(val ScaleMiles) {
+	s.ScaleMiles = val
+}
+
 // LocalMapHeaders wraps LocalMap with response headers.
 type LocalMapHeaders struct {
 	RateLimitLimit     OptInt32
@@ -28278,9 +28386,11 @@ func (s *LocalMapHeaders) SetResponse(val LocalMap) {
 	s.Response = val
 }
 
-func (*LocalMapHeaders) getMapRes()    {}
-func (*LocalMapHeaders) updateMapRes() {}
-func (*LocalMapHeaders) uploadMapRes() {}
+func (*LocalMapHeaders) calibrateMapRes()    {}
+func (*LocalMapHeaders) getMapRes()          {}
+func (*LocalMapHeaders) updateMapRes()       {}
+func (*LocalMapHeaders) uploadMapRes()       {}
+func (*LocalMapHeaders) useDefaultWorldRes() {}
 
 // A place on one of the Campaign's world maps.
 // Ref: #/components/schemas/Location
@@ -28624,14 +28734,78 @@ func (s *ManualPart) SetReason(val string) {
 	s.Reason = val
 }
 
-// A Map's name, calibration and ambient light.
+// Two points on a Map's picture, in pixels, and how far apart they are in the world.
+// Ref: #/components/schemas/MapCalibration
+type MapCalibration struct {
+	Ax       float64 `json:"ax"`
+	Ay       float64 `json:"ay"`
+	Bx       float64 `json:"bx"`
+	By       float64 `json:"by"`
+	Distance float64 `json:"distance"`
+}
+
+// GetAx returns the value of Ax.
+func (s *MapCalibration) GetAx() float64 {
+	return s.Ax
+}
+
+// GetAy returns the value of Ay.
+func (s *MapCalibration) GetAy() float64 {
+	return s.Ay
+}
+
+// GetBx returns the value of Bx.
+func (s *MapCalibration) GetBx() float64 {
+	return s.Bx
+}
+
+// GetBy returns the value of By.
+func (s *MapCalibration) GetBy() float64 {
+	return s.By
+}
+
+// GetDistance returns the value of Distance.
+func (s *MapCalibration) GetDistance() float64 {
+	return s.Distance
+}
+
+// SetAx sets the value of Ax.
+func (s *MapCalibration) SetAx(val float64) {
+	s.Ax = val
+}
+
+// SetAy sets the value of Ay.
+func (s *MapCalibration) SetAy(val float64) {
+	s.Ay = val
+}
+
+// SetBx sets the value of Bx.
+func (s *MapCalibration) SetBx(val float64) {
+	s.Bx = val
+}
+
+// SetBy sets the value of By.
+func (s *MapCalibration) SetBy(val float64) {
+	s.By = val
+}
+
+// SetDistance sets the value of Distance.
+func (s *MapCalibration) SetDistance(val float64) {
+	s.Distance = val
+}
+
+// A Map's name, calibration and ambient light, and optionally its grid and scale; what is left out
+// stays as it is. A local Map takes no grid but hexes and no scale.
 // Ref: #/components/schemas/MapEdit
 type MapEdit struct {
-	Name      string       `json:"name"`
-	HexSizePx float64      `json:"hexSizePx"`
-	OriginX   float64      `json:"originX"`
-	OriginY   float64      `json:"originY"`
-	Ambient   AmbientLight `json:"ambient"`
+	Name         string          `json:"name"`
+	HexSizePx    float64         `json:"hexSizePx"`
+	OriginX      float64         `json:"originX"`
+	OriginY      float64         `json:"originY"`
+	Ambient      AmbientLight    `json:"ambient"`
+	GridKind     OptGridKind     `json:"gridKind"`
+	GridStrength OptGridStrength `json:"gridStrength"`
+	ScaleMiles   OptScaleMiles   `json:"scaleMiles"`
 }
 
 // GetName returns the value of Name.
@@ -28659,6 +28833,21 @@ func (s *MapEdit) GetAmbient() AmbientLight {
 	return s.Ambient
 }
 
+// GetGridKind returns the value of GridKind.
+func (s *MapEdit) GetGridKind() OptGridKind {
+	return s.GridKind
+}
+
+// GetGridStrength returns the value of GridStrength.
+func (s *MapEdit) GetGridStrength() OptGridStrength {
+	return s.GridStrength
+}
+
+// GetScaleMiles returns the value of ScaleMiles.
+func (s *MapEdit) GetScaleMiles() OptScaleMiles {
+	return s.ScaleMiles
+}
+
 // SetName sets the value of Name.
 func (s *MapEdit) SetName(val string) {
 	s.Name = val
@@ -28682,6 +28871,21 @@ func (s *MapEdit) SetOriginY(val float64) {
 // SetAmbient sets the value of Ambient.
 func (s *MapEdit) SetAmbient(val AmbientLight) {
 	s.Ambient = val
+}
+
+// SetGridKind sets the value of GridKind.
+func (s *MapEdit) SetGridKind(val OptGridKind) {
+	s.GridKind = val
+}
+
+// SetGridStrength sets the value of GridStrength.
+func (s *MapEdit) SetGridStrength(val OptGridStrength) {
+	s.GridStrength = val
+}
+
+// SetScaleMiles sets the value of ScaleMiles.
+func (s *MapEdit) SetScaleMiles(val OptScaleMiles) {
+	s.ScaleMiles = val
 }
 
 // A local tactical map, or a world map of locations and routes.
@@ -32517,6 +32721,98 @@ func (o OptFloat64) Or(d float64) float64 {
 	return d
 }
 
+// NewOptGridKind returns new OptGridKind with value set to v.
+func NewOptGridKind(v GridKind) OptGridKind {
+	return OptGridKind{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptGridKind is optional GridKind.
+type OptGridKind struct {
+	Value GridKind
+	Set   bool
+}
+
+// IsSet returns true if OptGridKind was set.
+func (o OptGridKind) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptGridKind) Reset() {
+	var v GridKind
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptGridKind) SetTo(v GridKind) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptGridKind) Get() (v GridKind, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptGridKind) Or(d GridKind) GridKind {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptGridStrength returns new OptGridStrength with value set to v.
+func NewOptGridStrength(v GridStrength) OptGridStrength {
+	return OptGridStrength{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptGridStrength is optional GridStrength.
+type OptGridStrength struct {
+	Value GridStrength
+	Set   bool
+}
+
+// IsSet returns true if OptGridStrength was set.
+func (o OptGridStrength) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptGridStrength) Reset() {
+	var v GridStrength
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptGridStrength) SetTo(v GridStrength) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptGridStrength) Get() (v GridStrength, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptGridStrength) Or(d GridStrength) GridStrength {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptHexCoord returns new OptHexCoord with value set to v.
 func NewOptHexCoord(v HexCoord) OptHexCoord {
 	return OptHexCoord{
@@ -35599,6 +35895,52 @@ func (o OptRuleset) Or(d Ruleset) Ruleset {
 	return d
 }
 
+// NewOptScaleMiles returns new OptScaleMiles with value set to v.
+func NewOptScaleMiles(v ScaleMiles) OptScaleMiles {
+	return OptScaleMiles{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptScaleMiles is optional ScaleMiles.
+type OptScaleMiles struct {
+	Value ScaleMiles
+	Set   bool
+}
+
+// IsSet returns true if OptScaleMiles was set.
+func (o OptScaleMiles) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptScaleMiles) Reset() {
+	var v ScaleMiles
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptScaleMiles) SetTo(v ScaleMiles) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptScaleMiles) Get() (v ScaleMiles, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptScaleMiles) Or(d ScaleMiles) ScaleMiles {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptSlug returns new OptSlug with value set to v.
 func NewOptSlug(v Slug) OptSlug {
 	return OptSlug{
@@ -36771,6 +37113,7 @@ func (*ProblemStatusCodeWithHeaders) acceptFriendRequestRes()           {}
 func (*ProblemStatusCodeWithHeaders) acceptInviteRes()                  {}
 func (*ProblemStatusCodeWithHeaders) approveRetrainRes()                {}
 func (*ProblemStatusCodeWithHeaders) beginTwoStepRes()                  {}
+func (*ProblemStatusCodeWithHeaders) calibrateMapRes()                  {}
 func (*ProblemStatusCodeWithHeaders) cancelFriendRequestRes()           {}
 func (*ProblemStatusCodeWithHeaders) castRitualRes()                    {}
 func (*ProblemStatusCodeWithHeaders) chooseDiceSetRes()                 {}
@@ -37020,6 +37363,7 @@ func (*ProblemStatusCodeWithHeaders) updateNpcRes()                     {}
 func (*ProblemStatusCodeWithHeaders) updateSettlementRes()              {}
 func (*ProblemStatusCodeWithHeaders) updateShopRes()                    {}
 func (*ProblemStatusCodeWithHeaders) uploadMapRes()                     {}
+func (*ProblemStatusCodeWithHeaders) useDefaultWorldRes()               {}
 func (*ProblemStatusCodeWithHeaders) useItemRes()                       {}
 func (*ProblemStatusCodeWithHeaders) useSignInLinkRes()                 {}
 
@@ -39966,6 +40310,8 @@ func (s *Ruleset) UnmarshalText(data []byte) error {
 		return errors.Errorf("invalid value: %q", data)
 	}
 }
+
+type ScaleMiles float64
 
 // SeeReleaseNoteNoContent is response for SeeReleaseNote operation.
 type SeeReleaseNoteNoContent struct {

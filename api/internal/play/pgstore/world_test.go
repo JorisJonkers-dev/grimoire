@@ -21,7 +21,7 @@ func TestWorldMapsKeepTheirLocationsRoutesAndParty(t *testing.T) {
 	tb := setup(t)
 	s, _ := sessions(tb, pgstore.New(tb.pool), &closed{}).Start(ctx, dm, tb.campaign)
 	store := pgstore.New(tb.pool)
-	m, err := store.InsertMap(ctx, domain.Map{CampaignID: tb.campaign, Name: "Realm", Kind: domain.MapWorld, ImageKey: "k", ImageType: "image/png", Width: 400, Height: 300, HexSize: 40, OriginX: 35, OriginY: 40}, time.Now())
+	m, err := store.InsertMap(ctx, domain.Map{CampaignID: tb.campaign, Name: "Realm", Kind: domain.MapWorld, ImageKey: "k", ImageType: "image/png", Width: 400, Height: 300, Grid: "hexes", GridStrength: 20, ScaleMiles: 6, HexSize: 40, OriginX: 35, OriginY: 40}, time.Now())
 	if err != nil {
 		t.Fatal(err)
 	}

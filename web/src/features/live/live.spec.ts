@@ -28,8 +28,8 @@ const snapshot = (tokens: unknown[], audience = 'dm', extra: object = {}) => ({
   kind: 'snapshot', seq: 1, view: { tokens, fog: false, visible: [], remembered: [], ...extra }, session: { id: SID, number: 3, gridRadius: 2, audience },
 })
 const MID = '0190c7a8-0000-7000-8000-00000000000d'
-const liveMap = { id: MID, name: 'Crypt', imageUrl: `/api/v1/campaigns/${ID}/maps/${MID}/image?v=0`, width: 200, height: 160, hexSizePx: 40, originX: 34.64, originY: 40, imageVersion: 0 }
-const localMap = { id: MID, name: 'Crypt', imageUrl: `/api/v1/campaigns/${ID}/maps/${MID}/image`, width: 200, height: 160, hexSizePx: 40, originX: 34.64, originY: 40, ambient: 'dark', kind: 'local' as const }
+const liveMap = { id: MID, name: 'Crypt', imageUrl: `/api/v1/campaigns/${ID}/maps/${MID}/image?v=0`, width: 200, height: 160, hexSizePx: 40, originX: 34.64, originY: 40, imageVersion: 0, gridKind: 'hexes' as const, gridStrength: 20 }
+const localMap = { id: MID, name: 'Crypt', imageUrl: `/api/v1/campaigns/${ID}/maps/${MID}/image`, width: 200, height: 160, hexSizePx: 40, originX: 34.64, originY: 40, ambient: 'dark', kind: 'local' as const, gridKind: 'hexes' as const, gridStrength: 20, scaleMiles: 6 }
 const WID = '0190c7a8-0000-7000-8000-000000000020'
 const realmMap = { ...localMap, id: WID, name: 'Realm', kind: 'world' as const }
 const OAK = '0190c7a8-0000-7000-8000-000000000022'
@@ -1271,7 +1271,7 @@ describe('maps pages', () => {
     await wrapper.get('[data-testid="map-calibrate"] select').setValue('dim')
     await wrapper.get('[data-testid="map-calibrate"]').trigger('submit')
     await flushPromises()
-    expect(writes[1]).toBe('PUT {"name":"Crypt of Night","hexSizePx":50,"originX":20,"originY":25,"ambient":"dim"}')
+    expect(writes[1]).toBe('PUT {"name":"Crypt of Night","hexSizePx":50,"originX":20,"originY":25,"ambient":"dim","gridStrength":20}')
     expect(wrapper.get('[data-testid="calibration-saved"]').text()).toBe('Saved.')
     await expectAccessible(wrapper.element as Element)
   })

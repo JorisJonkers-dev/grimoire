@@ -59,6 +59,17 @@ func (UnimplementedHandler) BeginTwoStep(ctx context.Context) (r BeginTwoStepRes
 	return r, ht.ErrNotImplemented
 }
 
+// CalibrateMap implements calibrateMap operation.
+//
+// Sizes the Map's grid so that two points on its picture are a known distance apart, and centres a
+// cell on the first point. The distance is in feet on a local Map, whose hexes are 5 feet, and in
+// miles on a world Map. DM only.
+//
+// POST /api/v1/campaigns/{campaignId}/maps/{mapId}/calibration
+func (UnimplementedHandler) CalibrateMap(ctx context.Context, req *MapCalibration, params CalibrateMapParams) (r CalibrateMapRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // CancelFriendRequest implements cancelFriendRequest operation.
 //
 // Withdraws a request the signed-in Account sent.
@@ -2389,6 +2400,15 @@ func (UnimplementedHandler) UpdateShop(ctx context.Context, req *ShopInput, para
 //
 // POST /api/v1/campaigns/{campaignId}/maps
 func (UnimplementedHandler) UploadMap(ctx context.Context, req UploadMapReq, params UploadMapParams) (r UploadMapRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// UseDefaultWorld implements useDefaultWorld operation.
+//
+// Gives the Campaign the painted Default World as a world Map, with a default calibration. DM only.
+//
+// POST /api/v1/campaigns/{campaignId}/default-world
+func (UnimplementedHandler) UseDefaultWorld(ctx context.Context, params UseDefaultWorldParams) (r UseDefaultWorldRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

@@ -4463,6 +4463,8 @@ export type LiveMap = {
     originX: number;
     originY: number;
     imageVersion: number;
+    gridKind: GridKind;
+    gridStrength: GridStrength;
 };
 
 /**
@@ -4586,10 +4588,28 @@ export type LocalMap = {
     originY: number;
     ambient: AmbientLight;
     imageUrl: AssetUrl;
+    gridKind: GridKind;
+    gridStrength: GridStrength;
+    scaleMiles: ScaleMiles;
 };
 
 /**
- * A Map's name, calibration and ambient light.
+ * How a Map's grid is drawn over its picture. A local Map is always hexes, each 5 feet across; squares are as wide as the hexes they stand for.
+ */
+export type GridKind = 'hexes' | 'squares' | 'off';
+
+/**
+ * How solid the grid is drawn over the picture, from 0 for unseen to 100 for opaque.
+ */
+export type GridStrength = number;
+
+/**
+ * How many miles one cell of a world Map covers.
+ */
+export type ScaleMiles = number;
+
+/**
+ * A Map's name, calibration and ambient light, and optionally its grid and scale; what is left out stays as it is. A local Map takes no grid but hexes and no scale.
  */
 export type MapEdit = {
     name: string;
@@ -4597,6 +4617,20 @@ export type MapEdit = {
     originX: number;
     originY: number;
     ambient: AmbientLight;
+    gridKind?: GridKind;
+    gridStrength?: GridStrength;
+    scaleMiles?: ScaleMiles;
+};
+
+/**
+ * Two points on a Map's picture, in pixels, and how far apart they are in the world.
+ */
+export type MapCalibration = {
+    ax: number;
+    ay: number;
+    bx: number;
+    by: number;
+    distance: number;
 };
 
 /**
@@ -9147,6 +9181,78 @@ export type UpdateMapResponses = {
 };
 
 export type UpdateMapResponse = UpdateMapResponses[keyof UpdateMapResponses];
+
+export type CalibrateMapData = {
+    body: MapCalibration;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Map id.
+         */
+        mapId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/maps/{mapId}/calibration';
+};
+
+export type CalibrateMapErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type CalibrateMapError = CalibrateMapErrors[keyof CalibrateMapErrors];
+
+export type CalibrateMapResponses = {
+    /**
+     * The calibrated map.
+     */
+    200: LocalMap;
+};
+
+export type CalibrateMapResponse = CalibrateMapResponses[keyof CalibrateMapResponses];
+
+export type UseDefaultWorldData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/default-world';
+};
+
+export type UseDefaultWorldErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type UseDefaultWorldError = UseDefaultWorldErrors[keyof UseDefaultWorldErrors];
+
+export type UseDefaultWorldResponses = {
+    /**
+     * The new world map.
+     */
+    201: LocalMap;
+};
+
+export type UseDefaultWorldResponse = UseDefaultWorldResponses[keyof UseDefaultWorldResponses];
 
 export type GetMapImageData = {
     body?: never;

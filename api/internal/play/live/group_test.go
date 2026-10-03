@@ -357,7 +357,7 @@ func TestWhatSplittingThePartyRefuses(t *testing.T) {
 	// A closet of a map has no room for four.
 	closet, err := pgstore.New(w.pool).InsertMap(context.Background(), domain.Map{
 		CampaignID: w.session.CampaignID, Name: "Closet", Kind: domain.MapLocal, ImageKey: "sha256/x.png", ImageType: "image/png", Width: 90, Height: 80,
-		HexSize: 40, OriginX: 34.64, OriginY: 40,
+		Grid: "hexes", GridStrength: 20, ScaleMiles: 6, HexSize: 40, OriginX: 34.64, OriginY: 40,
 	}, time.Now())
 	if err != nil {
 		t.Fatal(err)

@@ -506,6 +506,9 @@ type MapView struct {
 	OriginX      float64 `json:"originX"`
 	OriginY      float64 `json:"originY"`
 	ImageVersion int     `json:"imageVersion"`
+	// GridKind and GridStrength are how the grid is drawn over the picture.
+	GridKind     string `json:"gridKind"`
+	GridStrength int    `json:"gridStrength"`
 }
 
 // LightView is a light, shown to the DM only.

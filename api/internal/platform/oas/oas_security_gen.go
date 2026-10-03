@@ -39,6 +39,7 @@ var operationRolesForwardAuth = map[string][]string{
 	AcceptInviteOperation:                  []string{},
 	ApproveRetrainOperation:                []string{},
 	BeginTwoStepOperation:                  []string{},
+	CalibrateMapOperation:                  []string{},
 	CancelFriendRequestOperation:           []string{},
 	CastRitualOperation:                    []string{},
 	ChooseDiceSetOperation:                 []string{},
@@ -276,6 +277,7 @@ var operationRolesForwardAuth = map[string][]string{
 	UpdateSettlementOperation:              []string{},
 	UpdateShopOperation:                    []string{},
 	UploadMapOperation:                     []string{},
+	UseDefaultWorldOperation:               []string{},
 	UseItemOperation:                       []string{},
 }
 

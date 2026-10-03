@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { listMapsOptions } from '@/infrastructure/api/@tanstack/vue-query.gen'
-import { uploadMap } from '@/infrastructure/api/sdk.gen'
+import { uploadMap, useDefaultWorld } from '@/infrastructure/api/sdk.gen'
 import type { MapKind } from '@/infrastructure/api/types.gen'
 import { GButton } from '@/shared/ui'
 
@@ -38,6 +38,20 @@ async function upload() {
     busy.value = false
   }
 }
+const worldFailed = ref(false)
+async function takeDefaultWorld() {
+  busy.value = true
+  worldFailed.value = false
+  try {
+    const { data } = await useDefaultWorld({ path: { campaignId }, throwOnError: true })
+    void client.invalidateQueries()
+    void router.push({ name: 'map', params: { id: campaignId, mapId: data.id } })
+  } catch {
+    worldFailed.value = true
+  } finally {
+    busy.value = false
+  }
+}
 </script>
 
 <template>
@@ -68,6 +82,12 @@ async function upload() {
         <p v-if="failed" role="alert" class="g-alert">{{ failed }}</p>
         <GButton type="submit" variant="primary" :disabled="!ready">Upload map</GButton>
       </form>
+      <section class="g-card upload" aria-labelledby="default-world-title">
+        <h2 id="default-world-title">The Default World</h2>
+        <p class="hint">A painted world map that comes with Grimoire: land in a sea, six miles to a hex. Set its grid and scale as you like.</p>
+        <p v-if="worldFailed" role="alert" class="g-alert" data-testid="default-world-failed">The Default World could not be added.</p>
+        <GButton :disabled="busy" data-testid="use-default-world" @click="takeDefaultWorld()">Use the Default World</GButton>
+      </section>
     </template>
   </main>
 </template>

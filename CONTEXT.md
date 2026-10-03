@@ -443,7 +443,7 @@ _Avoid_: Version, history entry
 ### Space
 
 **Map**:
-An image with a calibrated hex grid; either a world map or a local tactical map.
+An image with a calibrated hex grid; either a world map or a local tactical map. A local Map's hexes are always 5 feet across; a world Map has its own scale in miles to a cell, and its grid can be drawn as hexes, as squares or not at all.
 _Avoid_: Board (reserved), battlemap
 
 **Default World**:

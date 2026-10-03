@@ -936,7 +936,9 @@
           "hexSizePx": 40,
           "originX": 34.64,
           "originY": 40,
-          "imageVersion": 2
+          "imageVersion": 2,
+          "gridKind": "squares",
+          "gridStrength": 35
         },
         "fog": true,
         "visible": [
@@ -1058,7 +1060,9 @@
             "hexSizePx": 40,
             "originX": 34.64,
             "originY": 40,
-            "imageVersion": 2
+            "imageVersion": 2,
+            "gridKind": "squares",
+            "gridStrength": 35
           },
           "blackout": false,
           "caption": "The gate creaks open."
@@ -1073,7 +1077,9 @@
             "hexSizePx": 40,
             "originX": 34.64,
             "originY": 40,
-            "imageVersion": 2
+            "imageVersion": 2,
+            "gridKind": "squares",
+            "gridStrength": 35
           },
           "revealed": [
             {
@@ -1418,7 +1424,9 @@
           "hexSizePx": 40,
           "originX": 34.64,
           "originY": 40,
-          "imageVersion": 2
+          "imageVersion": 2,
+          "gridKind": "squares",
+          "gridStrength": 35
         },
         "fog": true,
         "visible": [
@@ -1561,7 +1569,9 @@
             "hexSizePx": 40,
             "originX": 34.64,
             "originY": 40,
-            "imageVersion": 2
+            "imageVersion": 2,
+            "gridKind": "squares",
+            "gridStrength": 35
           },
           "blackout": false,
           "caption": "The gate creaks open."
@@ -1576,7 +1586,9 @@
             "hexSizePx": 40,
             "originX": 34.64,
             "originY": 40,
-            "imageVersion": 2
+            "imageVersion": 2,
+            "gridKind": "squares",
+            "gridStrength": 35
           },
           "revealed": [
             {
@@ -2090,7 +2102,9 @@
           "hexSizePx": 40,
           "originX": 34.64,
           "originY": 40,
-          "imageVersion": 2
+          "imageVersion": 2,
+          "gridKind": "squares",
+          "gridStrength": 35
         },
         "fog": true,
         "visible": [
@@ -2212,7 +2226,9 @@
             "hexSizePx": 40,
             "originX": 34.64,
             "originY": 40,
-            "imageVersion": 2
+            "imageVersion": 2,
+            "gridKind": "squares",
+            "gridStrength": 35
           },
           "blackout": false,
           "caption": "The gate creaks open."
@@ -2227,7 +2243,9 @@
             "hexSizePx": 40,
             "originX": 34.64,
             "originY": 40,
-            "imageVersion": 2
+            "imageVersion": 2,
+            "gridKind": "squares",
+            "gridStrength": 35
           },
           "revealed": [
             {
@@ -2567,7 +2585,9 @@
             "hexSizePx": 40,
             "originX": 34.64,
             "originY": 40,
-            "imageVersion": 2
+            "imageVersion": 2,
+            "gridKind": "squares",
+            "gridStrength": 35
           },
           "fog": true,
           "visible": [
@@ -2689,7 +2709,9 @@
               "hexSizePx": 40,
               "originX": 34.64,
               "originY": 40,
-              "imageVersion": 2
+              "imageVersion": 2,
+              "gridKind": "squares",
+              "gridStrength": 35
             },
             "blackout": false,
             "caption": "The gate creaks open."
@@ -2704,7 +2726,9 @@
               "hexSizePx": 40,
               "originX": 34.64,
               "originY": 40,
-              "imageVersion": 2
+              "imageVersion": 2,
+              "gridKind": "squares",
+              "gridStrength": 35
             },
             "revealed": [
               {

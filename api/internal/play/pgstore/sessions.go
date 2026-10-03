@@ -1113,7 +1113,7 @@ func mapRow(m queries.CampaignMap) domain.Map {
 	return domain.Map{
 		ID: domain.MapID(m.ID), CampaignID: m.CampaignID, Name: m.Name, Kind: m.Kind, ImageKey: m.ImageKey, ImageType: m.ImageType,
 		Width: int(m.WidthPx), Height: int(m.HeightPx), HexSize: m.HexSizePx, OriginX: m.OriginX, OriginY: m.OriginY,
-		Ambient: m.Ambient, UpdatedAt: m.UpdatedAt,
+		Ambient: m.Ambient, Grid: m.GridKind, GridStrength: int(m.GridStrength), ScaleMiles: m.ScaleMiles, UpdatedAt: m.UpdatedAt,
 	}
 }
 

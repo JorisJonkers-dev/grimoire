@@ -162,6 +162,7 @@ func (s *state) tableView() *TableView {
 	if w := s.tableMap; w != nil && t.Scene == domain.SceneWorld {
 		v.WorldMap = &MapView{
 			ID: uuid.UUID(w.ID).String(), Name: w.Name, Width: w.Width, Height: w.Height, HexSizePx: w.HexSize, OriginX: w.OriginX, OriginY: w.OriginY,
+			GridKind: w.Grid, GridStrength: w.GridStrength,
 			ImageURL: "/api/v1/campaigns/" + w.CampaignID.String() + "/maps/" + uuid.UUID(w.ID).String() + "/image",
 		}
 	}
