@@ -83,6 +83,7 @@ watch(acting, async (id) => {
         <span v-if="rolled(e.tokenId) !== undefined" class="rolled" :data-testid="`rolled-${e.label}`">{{ rolled(e.tokenId) }}</span>
         <span class="badge" aria-hidden="true">{{ initials(e.label) }}</span>
         <span class="name">{{ e.label }}<span v-if="e.hidden" class="sr-only"> (hidden)</span></span>
+        <span v-if="e.companion" class="note" :data-testid="`companion-${e.label}`">Companion</span>
         <span class="bar" role="img" :aria-label="healthText(e)" :data-testid="`health-${e.label}`">
           <span :class="['fill', `fill--${e.health ?? 'known'}`]" :style="{ width: `${String(fill(e))}%` }" />
         </span>

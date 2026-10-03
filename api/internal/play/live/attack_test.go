@@ -16,11 +16,23 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/live"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/dice"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/apperr"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
 
 // bestiary hands out fixed statblocks: a goblin, and Aria for any Character, owned by owner.
-type bestiary struct{ owner uuid.UUID }
+type bestiary struct {
+	owner uuid.UUID
+	// companions reads the Campaign's Companions, for the tests that have some.
+	companions func(ctx context.Context, campaign, id uuid.UUID) (domain.CompanionRef, error)
+}
+
+func (b bestiary) Companion(ctx context.Context, campaign, id uuid.UUID) (domain.CompanionRef, error) {
+	if b.companions == nil {
+		return domain.CompanionRef{}, apperr.ErrNotFound
+	}
+	return b.companions(ctx, campaign, id)
+}
 
 func (bestiary) Monster(_ context.Context, _ uuid.UUID, slug string) (string, domain.Stats, error) {
 	switch slug {

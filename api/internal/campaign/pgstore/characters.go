@@ -120,7 +120,7 @@ func (s *Store) Character(ctx context.Context, id domain.CampaignID, ch domain.C
 		Owner:   domain.Member{ID: domain.MemberID(r.OwnerMemberID), CampaignID: domain.CampaignID(r.CampaignID), Subject: r.OwnerSubject, DisplayName: r.OwnerName},
 		Ruleset: r.Ruleset, Level: int(r.Level), BackgroundSkills: []string{}, HPMax: int(r.HpMax), HPCurrent: int(r.HpCurrent), TempHP: int(r.TempHp), UpdatedAt: r.UpdatedAt,
 		Portrait: image(r.PortraitKey, r.PortraitType), Token: image(r.TokenKey, r.TokenType),
-		Increase: map[string]int{}, LevelUpReady: r.LevelUpReady, CanPrepare: r.CanPrepare, HeroicInspiration: r.HeroicInspiration,
+		Increase: map[string]int{}, LevelUpReady: r.LevelUpReady, CanPrepare: r.CanPrepare, HeroicInspiration: r.HeroicInspiration, XP: int(r.Xp),
 	}
 	scores, err := s.q.CharacterAbilities(ctx, r.ID)
 	if err != nil {

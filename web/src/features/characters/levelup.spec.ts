@@ -186,11 +186,13 @@ describe('sheet level-up controls', () => {
     const { wrapper, router } = await mountApp(`/campaigns/${ID}/characters/${CH}`, {
       [`${base}/level-up`]: () => fighterPlan,
       [base]: () => sheet({
-        levelUpReady: true, level: 3,
+        levelUpReady: true, level: 3, xp: 925,
         classes: [{ slug: 'fighter', name: 'Fighter', level: 2, subclass: 'champion' }, { slug: 'wizard', name: 'Wizard', level: 1 }],
       }),
     })
     expect(wrapper.get('[data-testid="sheet-classes"]').text()).toContain('Fighter 2 (Champion) / Wizard 1')
+    // What it has earned shows beside its level.
+    expect(wrapper.get('[data-testid="sheet-xp"]').text()).toBe('925 XP')
     await wrapper.get('[data-testid="level-up"]').trigger('click')
     await vi.waitFor(() => { expect(router.currentRoute.value.name).toBe('level-up') })
   })

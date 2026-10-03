@@ -28,7 +28,7 @@ func (r *runtime) planCombat(m domain.Member, cmd Command) (Write, string) {
 	if cmd.Kind == CmdEndCombat {
 		ended := *c
 		ended.Status, ended.EndedAt, ended.Attack, ended.Prompt, ended.Resume = domain.CombatEnded, r.now(), nil, nil, nil
-		return Write{Kind: domain.ActionCombatEnded, Combat: &ended, lootTable: cmd.LootTableID}, ""
+		return Write{Kind: domain.ActionCombatEnded, Combat: &ended, lootTable: cmd.LootTableID, XP: r.awards(c)}, ""
 	}
 	x, t, reason := r.combatant(m, cmd.CombatantID)
 	if reason != "" {

@@ -145,6 +145,8 @@ type Write struct {
 	// Dying is a Character's death saves after the change; Undying the one that woke or was revived.
 	Dying   *domain.Dying
 	Undying *domain.TokenID
+	// XP is what a fight that ended gives each Character.
+	XP []domain.XPAward
 	// Spawned are the creatures an encounter_spawned places; Undoes is the Action an undo reverts.
 	Spawned []domain.Token
 	Undoes  uuid.UUID
@@ -330,6 +332,9 @@ type Store interface {
 	SaveCheckpoint(ctx context.Context, s domain.Session, c domain.Checkpoint, actor domain.Member, cl caller.Caller) (Committed, error)
 	// MarkRound keeps the latest keep rounds and lets the older go.
 	MarkRound(ctx context.Context, s domain.Session, c domain.Checkpoint, keep int) error
+	// CreatureXP is what a creature is worth; SharingCompanions how many of these Companions take a share.
+	CreatureXP(ctx context.Context, campaign uuid.UUID, slug string) (int, error)
+	SharingCompanions(ctx context.Context, campaign uuid.UUID, ids []uuid.UUID) (int, error)
 	// Groups lists the live Sessions a party is split over; Place is the one of them a member belongs in.
 	Groups(ctx context.Context, s domain.Session) ([]domain.PartyGroup, error)
 	Place(ctx context.Context, id domain.SessionID, m domain.Member, a Audience) (domain.SessionID, error)
@@ -354,6 +359,8 @@ type Committed struct {
 type Statblocks interface {
 	Monster(ctx context.Context, campaign uuid.UUID, slug string) (string, domain.Stats, error)
 	Character(ctx context.Context, c caller.Caller, campaign, id uuid.UUID) (string, uuid.UUID, domain.Stats, error)
+	// Companion is what a Companion of the Campaign brings to the map.
+	Companion(ctx context.Context, campaign, id uuid.UUID) (domain.CompanionRef, error)
 	// Holding is a Character's stats with these weapons and shield in hand.
 	Holding(ctx context.Context, c caller.Caller, campaign, id uuid.UUID, weapons []string, shield bool) (domain.Stats, error)
 }
@@ -1111,7 +1118,7 @@ func change(s *state, w *Write) {
 	case domain.ActionTokenRemoved:
 		delete(s.tokens, w.Token.ID)
 		dropCombatant(s, w)
-	case domain.ActionTokenPlaced, domain.ActionTokenMoved, domain.ActionTokenHidden, domain.ActionTokenRevealed, domain.ActionVisibilitySet:
+	case domain.ActionTokenPlaced, domain.ActionTokenMoved, domain.ActionTokenHidden, domain.ActionTokenRevealed, domain.ActionVisibilitySet, domain.ActionControlAssigned:
 		s.tokens[w.Token.ID] = w.Token
 	case domain.ActionMapSet:
 		s.session.MapID = w.MapID

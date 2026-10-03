@@ -65,6 +65,7 @@ type Querier interface {
 	AlwaysPreparedSpells(ctx context.Context, arg AlwaysPreparedSpellsParams) ([]AlwaysPreparedSpellsRow, error)
 	AnnounceReleaseNote(ctx context.Context, arg AnnounceReleaseNoteParams) error
 	AreFriends(ctx context.Context, arg AreFriendsParams) (bool, error)
+	AwardXP(ctx context.Context, arg AwardXPParams) error
 	BackgroundBenefits(ctx context.Context, backgroundID int64) ([]BackgroundBenefitsRow, error)
 	BuilderArmor(ctx context.Context, key string) ([]BuilderArmorRow, error)
 	BuilderBackgrounds(ctx context.Context, key string) ([]BuilderBackgroundsRow, error)
@@ -183,6 +184,7 @@ type Querier interface {
 	DeleteBlock(ctx context.Context, arg DeleteBlockParams) (int64, error)
 	DeleteCharacter(ctx context.Context, arg DeleteCharacterParams) error
 	DeleteCharacterDraft(ctx context.Context, arg DeleteCharacterDraftParams) error
+	DeleteCompanion(ctx context.Context, arg DeleteCompanionParams) (int64, error)
 	DeleteContainer(ctx context.Context, id uuid.UUID) error
 	DeleteContainerCoins(ctx context.Context, arg DeleteContainerCoinsParams) error
 	DeleteDiceSet(ctx context.Context, id uuid.UUID) error
@@ -248,6 +250,7 @@ type Querier interface {
 	GetCharacter(ctx context.Context, arg GetCharacterParams) (GetCharacterRow, error)
 	GetCharacterDraft(ctx context.Context, arg GetCharacterDraftParams) (GetCharacterDraftRow, error)
 	GetClassDetail(ctx context.Context, id int64) (GetClassDetailRow, error)
+	GetCompanion(ctx context.Context, arg GetCompanionParams) (CampaignCompanion, error)
 	GetConditionDetail(ctx context.Context, id int64) (string, error)
 	GetFeatDetail(ctx context.Context, id int64) (GetFeatDetailRow, error)
 	GetInstanceCreatedAt(ctx context.Context) (time.Time, error)
@@ -292,6 +295,7 @@ type Querier interface {
 	InsertCharacterRevision(ctx context.Context, arg InsertCharacterRevisionParams) error
 	InsertCharacterSpell(ctx context.Context, arg InsertCharacterSpellParams) error
 	InsertCheckMonster(ctx context.Context, arg InsertCheckMonsterParams) error
+	InsertCompanion(ctx context.Context, arg InsertCompanionParams) error
 	InsertContainer(ctx context.Context, arg InsertContainerParams) error
 	InsertConversation(ctx context.Context, arg InsertConversationParams) error
 	InsertDiceSet(ctx context.Context, arg InsertDiceSetParams) error
@@ -396,12 +400,18 @@ type Querier interface {
 	InsertTravelLeg(ctx context.Context, arg InsertTravelLegParams) error
 	InsertTwoStepChallenge(ctx context.Context, arg InsertTwoStepChallengeParams) error
 	InsertUndo(ctx context.Context, arg InsertUndoParams) error
+	// Recorded for a Character the Campaign still has; a token whose Character is gone earns nothing.
+	InsertXPAward(ctx context.Context, arg InsertXPAwardParams) error
 	InventoryCharacters(ctx context.Context, campaignID uuid.UUID) ([]InventoryCharactersRow, error)
 	InviteByToken(ctx context.Context, tokenHash []byte) (InviteByTokenRow, error)
 	IsBlocked(ctx context.Context, arg IsBlockedParams) (bool, error)
 	IsConversationMember(ctx context.Context, arg IsConversationMemberParams) (bool, error)
 	ItemPrices(ctx context.Context, arg ItemPricesParams) ([]ItemPricesRow, error)
 	ItemsBySlug(ctx context.Context, arg ItemsBySlugParams) ([]ItemsBySlugRow, error)
+	// A Companion keeps the hit points its token had when it left the map: one of the Session's own Campaign only.
+	KeepCompanionHP(ctx context.Context, arg KeepCompanionHPParams) error
+	// And those of every token still on the map when the Session ends.
+	KeepCompanionsHP(ctx context.Context, sessionID uuid.UUID) error
 	LastDamage(ctx context.Context, sessionID pgtype.UUID) (LastDamageRow, error)
 	LatestSnapshotHash(ctx context.Context) (string, error)
 	// Takes the next level once, only while it is unlocked.
@@ -426,6 +436,7 @@ type Querier interface {
 	ListCharacters(ctx context.Context, campaignID uuid.UUID) ([]ListCharactersRow, error)
 	ListCheckpoints(ctx context.Context, sessionID uuid.UUID) ([]ListCheckpointsRow, error)
 	ListChoices(ctx context.Context) ([]ListChoicesRow, error)
+	ListCompanions(ctx context.Context, campaignID uuid.UUID) ([]CampaignCompanion, error)
 	ListConversations(ctx context.Context, me uuid.UUID) ([]ListConversationsRow, error)
 	ListEffectAreas(ctx context.Context) ([]ListEffectAreasRow, error)
 	ListEffectBonusDice(ctx context.Context) ([]ListEffectBonusDiceRow, error)
@@ -652,6 +663,8 @@ type Querier interface {
 	SetCharacterArmor(ctx context.Context, arg SetCharacterArmorParams) error
 	SetCharacterPortrait(ctx context.Context, arg SetCharacterPortraitParams) error
 	SetCharacterToken(ctx context.Context, arg SetCharacterTokenParams) error
+	// Only a Companion of the Campaign the Session is played in changes hands there.
+	SetCompanionController(ctx context.Context, arg SetCompanionControllerParams) error
 	SetContainerCoins(ctx context.Context, arg SetContainerCoinsParams) error
 	SetDiceSetImage(ctx context.Context, arg SetDiceSetImageParams) error
 	// Decides on a set that waits, and only on the picture the Admin looked at.
@@ -682,6 +695,7 @@ type Querier interface {
 	SetStack(ctx context.Context, arg SetStackParams) error
 	SetTableSession(ctx context.Context, arg SetTableSessionParams) error
 	SetTokenArmorClass(ctx context.Context, arg SetTokenArmorClassParams) error
+	SetTokenController(ctx context.Context, arg SetTokenControllerParams) error
 	SetTokenDisguise(ctx context.Context, arg SetTokenDisguiseParams) error
 	SetTokenHP(ctx context.Context, arg SetTokenHPParams) error
 	// A legendary creature's Legend as play leaves it. A mythic phase brings a new hit point maximum and
@@ -693,6 +707,8 @@ type Querier interface {
 	SetWeaponSet(ctx context.Context, arg SetWeaponSetParams) error
 	SharedSubmission(ctx context.Context, id uuid.UUID) (LibrarySharedSubmission, error)
 	SharedSubmissions(ctx context.Context, submitterSubject pgtype.Text) ([]LibrarySharedSubmission, error)
+	// How many of these Companions take a share of the XP.
+	SharingCompanions(ctx context.Context, arg SharingCompanionsParams) (int32, error)
 	// A class's features up to a level, each at the first level it is gained.
 	SheetClassFeatures(ctx context.Context, arg SheetClassFeaturesParams) ([]SheetClassFeaturesRow, error)
 	SheetSpeciesTraits(ctx context.Context, arg SheetSpeciesTraitsParams) ([]SheetSpeciesTraitsRow, error)
@@ -732,6 +748,8 @@ type Querier interface {
 	UpdateAccountProfile(ctx context.Context, arg UpdateAccountProfileParams) error
 	UpdateCampaign(ctx context.Context, arg UpdateCampaignParams) (UpdateCampaignRow, error)
 	UpdateCharacter(ctx context.Context, arg UpdateCharacterParams) error
+	// A Companion whose creature changes starts again at that creature's full hit points.
+	UpdateCompanion(ctx context.Context, arg UpdateCompanionParams) (int64, error)
 	UpdateDiceSet(ctx context.Context, arg UpdateDiceSetParams) error
 	UpdateLibraryCollection(ctx context.Context, arg UpdateLibraryCollectionParams) error
 	UpdateLibraryEntry(ctx context.Context, arg UpdateLibraryEntryParams) (int32, error)

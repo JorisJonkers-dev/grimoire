@@ -542,7 +542,7 @@ func (q *Queries) GetAccountCharacter(ctx context.Context, id uuid.UUID) (GetAcc
 const getCharacter = `-- name: GetCharacter :one
 SELECT c.id, c.campaign_id, c.character_id, c.owner_member_id, m.display_name AS owner_name, m.auth_subject AS owner_subject, c.name,
        c.ruleset, c.species_slug, c.class_slug, c.background_slug, c.level, c.ability_method, c.hp_max, c.hp_current,
-       c.armor_slug, c.shield, c.created_at, c.updated_at, c.portrait_key, c.portrait_type, c.token_key, c.token_type, c.temp_hp, c.level_up_ready, c.can_prepare, c.heroic_inspiration
+       c.armor_slug, c.shield, c.created_at, c.updated_at, c.portrait_key, c.portrait_type, c.token_key, c.token_type, c.temp_hp, c.level_up_ready, c.can_prepare, c.heroic_inspiration, c.xp
 FROM campaign.characters c JOIN campaign.members m ON m.id = c.owner_member_id
 WHERE c.campaign_id = $1 AND c.id = $2
 `
@@ -580,6 +580,7 @@ type GetCharacterRow struct {
 	LevelUpReady      bool
 	CanPrepare        bool
 	HeroicInspiration bool
+	Xp                int32
 }
 
 func (q *Queries) GetCharacter(ctx context.Context, arg GetCharacterParams) (GetCharacterRow, error) {
@@ -613,6 +614,7 @@ func (q *Queries) GetCharacter(ctx context.Context, arg GetCharacterParams) (Get
 		&i.LevelUpReady,
 		&i.CanPrepare,
 		&i.HeroicInspiration,
+		&i.Xp,
 	)
 	return i, err
 }

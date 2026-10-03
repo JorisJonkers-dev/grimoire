@@ -115,6 +115,7 @@ const reach = (feet: number, range: number, long: number) => (range ? `${String(
           <p class="sub" data-testid="sheet-classes">
             Level {{ s.level }} {{ s.species.name }} {{ classLine }} · {{ s.background.name }} · {{ s.ownerName }}
           </p>
+          <p v-if="s.xp" class="sub" data-testid="sheet-xp">{{ s.xp }} XP</p>
           <p v-if="!s.editable" class="g-tag locked" data-testid="sheet-locked">Read only</p>
           <p v-if="s.editable" class="level-actions">
             <GButton v-if="s.levelUpReady" variant="primary" data-testid="level-up" @click="router.push({ name: 'level-up', params: { id: path.path.campaignId, characterId: path.path.characterId } })">

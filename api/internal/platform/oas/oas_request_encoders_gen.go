@@ -150,6 +150,20 @@ func encodeCreateCharacterRequest(
 	return nil
 }
 
+func encodeCreateCompanionRequest(
+	req *CompanionInput,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodeCreateDiceSetRequest(
 	req *DiceSetChange,
 	r *http.Request,
@@ -1302,6 +1316,20 @@ func encodeUpdateCampaignRequest(
 
 func encodeUpdateCharacterRequest(
 	req *CharacterEdit,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeUpdateCompanionRequest(
+	req *CompanionInput,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"

@@ -69,6 +69,10 @@ type CreateCharacterRes interface {
 	createCharacterRes()
 }
 
+type CreateCompanionRes interface {
+	createCompanionRes()
+}
+
 type CreateDiceSetRes interface {
 	createDiceSetRes()
 }
@@ -135,6 +139,10 @@ type DeclineRetrainRes interface {
 
 type DeleteCharacterRes interface {
 	deleteCharacterRes()
+}
+
+type DeleteCompanionRes interface {
+	deleteCompanionRes()
 }
 
 type DeleteDiceSetRes interface {
@@ -431,6 +439,10 @@ type ListCharacterRevisionsRes interface {
 
 type ListCharactersRes interface {
 	listCharactersRes()
+}
+
+type ListCompanionsRes interface {
+	listCompanionsRes()
 }
 
 type ListConversationsRes interface {
@@ -951,6 +963,10 @@ type UpdateCampaignRes interface {
 
 type UpdateCharacterRes interface {
 	updateCharacterRes()
+}
+
+type UpdateCompanionRes interface {
+	updateCompanionRes()
 }
 
 type UpdateEncounterPoolRes interface {

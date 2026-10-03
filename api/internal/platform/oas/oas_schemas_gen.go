@@ -5497,11 +5497,13 @@ type CharacterSheet struct {
 	Traits        []TraitLine      `json:"traits"`
 	Proficiencies OptProficiencies `json:"proficiencies"`
 	// The next level is unlocked.
-	LevelUpReady      OptBool            `json:"levelUpReady"`
-	HeroicInspiration OptBool            `json:"heroicInspiration"`
-	Increase          OptAbilityIncrease `json:"increase"`
-	Classes           []ClassLine        `json:"classes"`
-	Spells            []LearnedSpellLine `json:"spells"`
+	LevelUpReady      OptBool `json:"levelUpReady"`
+	HeroicInspiration OptBool `json:"heroicInspiration"`
+	// XP earned in this Campaign.
+	Xp       OptInt32           `json:"xp"`
+	Increase OptAbilityIncrease `json:"increase"`
+	Classes  []ClassLine        `json:"classes"`
+	Spells   []LearnedSpellLine `json:"spells"`
 }
 
 // GetID returns the value of ID.
@@ -5697,6 +5699,11 @@ func (s *CharacterSheet) GetLevelUpReady() OptBool {
 // GetHeroicInspiration returns the value of HeroicInspiration.
 func (s *CharacterSheet) GetHeroicInspiration() OptBool {
 	return s.HeroicInspiration
+}
+
+// GetXp returns the value of Xp.
+func (s *CharacterSheet) GetXp() OptInt32 {
+	return s.Xp
 }
 
 // GetIncrease returns the value of Increase.
@@ -5907,6 +5914,11 @@ func (s *CharacterSheet) SetLevelUpReady(val OptBool) {
 // SetHeroicInspiration sets the value of HeroicInspiration.
 func (s *CharacterSheet) SetHeroicInspiration(val OptBool) {
 	s.HeroicInspiration = val
+}
+
+// SetXp sets the value of Xp.
+func (s *CharacterSheet) SetXp(val OptInt32) {
+	s.Xp = val
 }
 
 // SetIncrease sets the value of Increase.
@@ -7109,6 +7121,317 @@ func (s *Coin) UnmarshalText(data []byte) error {
 	}
 }
 
+// An ally who travels with the party. A creature with a name of its own, run by a Player or by the DM.
+// Ref: #/components/schemas/Companion
+type Companion struct {
+	ID           ID            `json:"id"`
+	Name         string        `json:"name"`
+	Kind         CompanionKind `json:"kind"`
+	MonsterSlug  string        `json:"monsterSlug"`
+	ControllerId OptID         `json:"controllerId"`
+	// It takes a share of every XP Award, which nobody else gets.
+	SharesXp bool `json:"sharesXp"`
+	// The hit points it had when it last left the map. Left out while it has never been on one.
+	Hp OptInt32 `json:"hp"`
+	// The DM's notes. Empty for anyone else.
+	Notes     string    `json:"notes"`
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+// GetID returns the value of ID.
+func (s *Companion) GetID() ID {
+	return s.ID
+}
+
+// GetName returns the value of Name.
+func (s *Companion) GetName() string {
+	return s.Name
+}
+
+// GetKind returns the value of Kind.
+func (s *Companion) GetKind() CompanionKind {
+	return s.Kind
+}
+
+// GetMonsterSlug returns the value of MonsterSlug.
+func (s *Companion) GetMonsterSlug() string {
+	return s.MonsterSlug
+}
+
+// GetControllerId returns the value of ControllerId.
+func (s *Companion) GetControllerId() OptID {
+	return s.ControllerId
+}
+
+// GetSharesXp returns the value of SharesXp.
+func (s *Companion) GetSharesXp() bool {
+	return s.SharesXp
+}
+
+// GetHp returns the value of Hp.
+func (s *Companion) GetHp() OptInt32 {
+	return s.Hp
+}
+
+// GetNotes returns the value of Notes.
+func (s *Companion) GetNotes() string {
+	return s.Notes
+}
+
+// GetUpdatedAt returns the value of UpdatedAt.
+func (s *Companion) GetUpdatedAt() time.Time {
+	return s.UpdatedAt
+}
+
+// SetID sets the value of ID.
+func (s *Companion) SetID(val ID) {
+	s.ID = val
+}
+
+// SetName sets the value of Name.
+func (s *Companion) SetName(val string) {
+	s.Name = val
+}
+
+// SetKind sets the value of Kind.
+func (s *Companion) SetKind(val CompanionKind) {
+	s.Kind = val
+}
+
+// SetMonsterSlug sets the value of MonsterSlug.
+func (s *Companion) SetMonsterSlug(val string) {
+	s.MonsterSlug = val
+}
+
+// SetControllerId sets the value of ControllerId.
+func (s *Companion) SetControllerId(val OptID) {
+	s.ControllerId = val
+}
+
+// SetSharesXp sets the value of SharesXp.
+func (s *Companion) SetSharesXp(val bool) {
+	s.SharesXp = val
+}
+
+// SetHp sets the value of Hp.
+func (s *Companion) SetHp(val OptInt32) {
+	s.Hp = val
+}
+
+// SetNotes sets the value of Notes.
+func (s *Companion) SetNotes(val string) {
+	s.Notes = val
+}
+
+// SetUpdatedAt sets the value of UpdatedAt.
+func (s *Companion) SetUpdatedAt(val time.Time) {
+	s.UpdatedAt = val
+}
+
+// CompanionHeaders wraps Companion with response headers.
+type CompanionHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           Companion
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *CompanionHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *CompanionHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *CompanionHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *CompanionHeaders) GetResponse() Companion {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *CompanionHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *CompanionHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *CompanionHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *CompanionHeaders) SetResponse(val Companion) {
+	s.Response = val
+}
+
+func (*CompanionHeaders) createCompanionRes() {}
+func (*CompanionHeaders) updateCompanionRes() {}
+
+// The editable part of a Companion. Without a controllerId the DM runs it.
+// Ref: #/components/schemas/CompanionInput
+type CompanionInput struct {
+	Name         string             `json:"name"`
+	Kind         CompanionInputKind `json:"kind"`
+	MonsterSlug  string             `json:"monsterSlug"`
+	ControllerId OptID              `json:"controllerId"`
+	SharesXp     bool               `json:"sharesXp"`
+	Notes        OptString          `json:"notes"`
+}
+
+// GetName returns the value of Name.
+func (s *CompanionInput) GetName() string {
+	return s.Name
+}
+
+// GetKind returns the value of Kind.
+func (s *CompanionInput) GetKind() CompanionInputKind {
+	return s.Kind
+}
+
+// GetMonsterSlug returns the value of MonsterSlug.
+func (s *CompanionInput) GetMonsterSlug() string {
+	return s.MonsterSlug
+}
+
+// GetControllerId returns the value of ControllerId.
+func (s *CompanionInput) GetControllerId() OptID {
+	return s.ControllerId
+}
+
+// GetSharesXp returns the value of SharesXp.
+func (s *CompanionInput) GetSharesXp() bool {
+	return s.SharesXp
+}
+
+// GetNotes returns the value of Notes.
+func (s *CompanionInput) GetNotes() OptString {
+	return s.Notes
+}
+
+// SetName sets the value of Name.
+func (s *CompanionInput) SetName(val string) {
+	s.Name = val
+}
+
+// SetKind sets the value of Kind.
+func (s *CompanionInput) SetKind(val CompanionInputKind) {
+	s.Kind = val
+}
+
+// SetMonsterSlug sets the value of MonsterSlug.
+func (s *CompanionInput) SetMonsterSlug(val string) {
+	s.MonsterSlug = val
+}
+
+// SetControllerId sets the value of ControllerId.
+func (s *CompanionInput) SetControllerId(val OptID) {
+	s.ControllerId = val
+}
+
+// SetSharesXp sets the value of SharesXp.
+func (s *CompanionInput) SetSharesXp(val bool) {
+	s.SharesXp = val
+}
+
+// SetNotes sets the value of Notes.
+func (s *CompanionInput) SetNotes(val OptString) {
+	s.Notes = val
+}
+
+type CompanionInputKind string
+
+const (
+	CompanionInputKindCompanion CompanionInputKind = "companion"
+	CompanionInputKindHireling  CompanionInputKind = "hireling"
+)
+
+// AllValues returns all CompanionInputKind values.
+func (CompanionInputKind) AllValues() []CompanionInputKind {
+	return []CompanionInputKind{
+		CompanionInputKindCompanion,
+		CompanionInputKindHireling,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s CompanionInputKind) MarshalText() ([]byte, error) {
+	switch s {
+	case CompanionInputKindCompanion:
+		return []byte(s), nil
+	case CompanionInputKindHireling:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *CompanionInputKind) UnmarshalText(data []byte) error {
+	switch CompanionInputKind(data) {
+	case CompanionInputKindCompanion:
+		*s = CompanionInputKindCompanion
+		return nil
+	case CompanionInputKindHireling:
+		*s = CompanionInputKindHireling
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type CompanionKind string
+
+const (
+	CompanionKindCompanion CompanionKind = "companion"
+	CompanionKindHireling  CompanionKind = "hireling"
+)
+
+// AllValues returns all CompanionKind values.
+func (CompanionKind) AllValues() []CompanionKind {
+	return []CompanionKind{
+		CompanionKindCompanion,
+		CompanionKindHireling,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s CompanionKind) MarshalText() ([]byte, error) {
+	switch s {
+	case CompanionKindCompanion:
+		return []byte(s), nil
+	case CompanionKindHireling:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *CompanionKind) UnmarshalText(data []byte) error {
+	switch CompanionKind(data) {
+	case CompanionKindCompanion:
+		*s = CompanionKindCompanion
+		return nil
+	case CompanionKindHireling:
+		*s = CompanionKindHireling
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // A homebrew condition in its builder, the slug it is known by, and how it reads back.
 // Ref: #/components/schemas/ConditionBuild
 type ConditionBuild struct {
@@ -7877,6 +8200,45 @@ func (s *DeleteCharacterNoContent) SetRateLimitReset(val OptInt32) {
 }
 
 func (*DeleteCharacterNoContent) deleteCharacterRes() {}
+
+// DeleteCompanionNoContent is response for DeleteCompanion operation.
+type DeleteCompanionNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *DeleteCompanionNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *DeleteCompanionNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *DeleteCompanionNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *DeleteCompanionNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *DeleteCompanionNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *DeleteCompanionNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*DeleteCompanionNoContent) deleteCompanionRes() {}
 
 // DeleteDiceSetNoContent is response for DeleteDiceSet operation.
 type DeleteDiceSetNoContent struct {
@@ -17028,6 +17390,56 @@ func (s *ListCharactersOKHeaders) SetResponse(val []CharacterSummary) {
 
 func (*ListCharactersOKHeaders) listCharactersRes() {}
 
+// ListCompanionsOKHeaders wraps []Companion with response headers.
+type ListCompanionsOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []Companion
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ListCompanionsOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ListCompanionsOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ListCompanionsOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ListCompanionsOKHeaders) GetResponse() []Companion {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ListCompanionsOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ListCompanionsOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ListCompanionsOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ListCompanionsOKHeaders) SetResponse(val []Companion) {
+	s.Response = val
+}
+
+func (*ListCompanionsOKHeaders) listCompanionsRes() {}
+
 // ListDeletedNpcsOKHeaders wraps []DeletedNpc with response headers.
 type ListDeletedNpcsOKHeaders struct {
 	RateLimitLimit     OptInt32
@@ -20160,6 +20572,10 @@ type LiveCommand struct {
 	Name OptString `json:"name"`
 	// With rewind, the Checkpoint to go back to.
 	CheckpointId OptString `json:"checkpointId"`
+	// With place_token, the Companion to put on the map. It stands with the party under its own name, run
+	// by whoever it is given to, with the hit points it kept. With assign_control, controllerId is the
+	// Member who runs the token from now on; left out, the DM does.
+	CompanionId OptString `json:"companionId"`
 	// With split_party, the party tokens that go off as a group, to the map mapId around q and r.
 	TokenIds []ID `json:"tokenIds"`
 	// With rejoin_party, the group to bring back around q and r. With table_follow, the group the Table
@@ -20670,6 +21086,11 @@ func (s *LiveCommand) GetName() OptString {
 // GetCheckpointId returns the value of CheckpointId.
 func (s *LiveCommand) GetCheckpointId() OptString {
 	return s.CheckpointId
+}
+
+// GetCompanionId returns the value of CompanionId.
+func (s *LiveCommand) GetCompanionId() OptString {
+	return s.CompanionId
 }
 
 // GetTokenIds returns the value of TokenIds.
@@ -21187,6 +21608,11 @@ func (s *LiveCommand) SetCheckpointId(val OptString) {
 	s.CheckpointId = val
 }
 
+// SetCompanionId sets the value of CompanionId.
+func (s *LiveCommand) SetCompanionId(val OptString) {
+	s.CompanionId = val
+}
+
 // SetTokenIds sets the value of TokenIds.
 func (s *LiveCommand) SetTokenIds(val []ID) {
 	s.TokenIds = val
@@ -21484,6 +21910,7 @@ const (
 	LiveCommandKindSplitParty          LiveCommandKind = "split_party"
 	LiveCommandKindRejoinParty         LiveCommandKind = "rejoin_party"
 	LiveCommandKindTableFollow         LiveCommandKind = "table_follow"
+	LiveCommandKindAssignControl       LiveCommandKind = "assign_control"
 )
 
 // AllValues returns all LiveCommandKind values.
@@ -21587,6 +22014,7 @@ func (LiveCommandKind) AllValues() []LiveCommandKind {
 		LiveCommandKindSplitParty,
 		LiveCommandKindRejoinParty,
 		LiveCommandKindTableFollow,
+		LiveCommandKindAssignControl,
 	}
 }
 
@@ -21788,6 +22216,8 @@ func (s LiveCommandKind) MarshalText() ([]byte, error) {
 	case LiveCommandKindRejoinParty:
 		return []byte(s), nil
 	case LiveCommandKindTableFollow:
+		return []byte(s), nil
+	case LiveCommandKindAssignControl:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -22090,6 +22520,9 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 		return nil
 	case LiveCommandKindTableFollow:
 		*s = LiveCommandKindTableFollow
+		return nil
+	case LiveCommandKindAssignControl:
+		*s = LiveCommandKindAssignControl
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -25252,7 +25685,9 @@ type LiveRosterEntry struct {
 	Health  OptLiveRosterEntryHealth `json:"health"`
 	Hidden  OptBool                  `json:"hidden"`
 	Acting  bool                     `json:"acting"`
-	Effects []LiveEffect             `json:"effects"`
+	// An ally who travels with the party.
+	Companion OptBool      `json:"companion"`
+	Effects   []LiveEffect `json:"effects"`
 }
 
 // GetTokenId returns the value of TokenId.
@@ -25298,6 +25733,11 @@ func (s *LiveRosterEntry) GetHidden() OptBool {
 // GetActing returns the value of Acting.
 func (s *LiveRosterEntry) GetActing() bool {
 	return s.Acting
+}
+
+// GetCompanion returns the value of Companion.
+func (s *LiveRosterEntry) GetCompanion() OptBool {
+	return s.Companion
 }
 
 // GetEffects returns the value of Effects.
@@ -25348,6 +25788,11 @@ func (s *LiveRosterEntry) SetHidden(val OptBool) {
 // SetActing sets the value of Acting.
 func (s *LiveRosterEntry) SetActing(val bool) {
 	s.Acting = val
+}
+
+// SetCompanion sets the value of Companion.
+func (s *LiveRosterEntry) SetCompanion(val OptBool) {
+	s.Companion = val
 }
 
 // SetEffects sets the value of Effects.
@@ -25922,6 +26367,7 @@ type LiveToken struct {
 	Label        string    `json:"label"`
 	Kind         TokenKind `json:"kind"`
 	DarkvisionFt int32     `json:"darkvisionFt"`
+	CompanionId  OptID     `json:"companionId"`
 	Q            int32     `json:"q"`
 	R            int32     `json:"r"`
 	Hidden       bool      `json:"hidden"`
@@ -25966,6 +26412,11 @@ func (s *LiveToken) GetKind() TokenKind {
 // GetDarkvisionFt returns the value of DarkvisionFt.
 func (s *LiveToken) GetDarkvisionFt() int32 {
 	return s.DarkvisionFt
+}
+
+// GetCompanionId returns the value of CompanionId.
+func (s *LiveToken) GetCompanionId() OptID {
+	return s.CompanionId
 }
 
 // GetQ returns the value of Q.
@@ -26081,6 +26532,11 @@ func (s *LiveToken) SetKind(val TokenKind) {
 // SetDarkvisionFt sets the value of DarkvisionFt.
 func (s *LiveToken) SetDarkvisionFt(val int32) {
 	s.DarkvisionFt = val
+}
+
+// SetCompanionId sets the value of CompanionId.
+func (s *LiveToken) SetCompanionId(val OptID) {
+	s.CompanionId = val
 }
 
 // SetQ sets the value of Q.
@@ -36327,6 +36783,7 @@ func (*ProblemStatusCodeWithHeaders) createAccessTokenRes()             {}
 func (*ProblemStatusCodeWithHeaders) createAccountInviteRes()           {}
 func (*ProblemStatusCodeWithHeaders) createCampaignRes()                {}
 func (*ProblemStatusCodeWithHeaders) createCharacterRes()               {}
+func (*ProblemStatusCodeWithHeaders) createCompanionRes()               {}
 func (*ProblemStatusCodeWithHeaders) createDiceSetRes()                 {}
 func (*ProblemStatusCodeWithHeaders) createEncounterPoolRes()           {}
 func (*ProblemStatusCodeWithHeaders) createEncounterTableRes()          {}
@@ -36344,6 +36801,7 @@ func (*ProblemStatusCodeWithHeaders) createShopRes()                    {}
 func (*ProblemStatusCodeWithHeaders) declineFriendRequestRes()          {}
 func (*ProblemStatusCodeWithHeaders) declineRetrainRes()                {}
 func (*ProblemStatusCodeWithHeaders) deleteCharacterRes()               {}
+func (*ProblemStatusCodeWithHeaders) deleteCompanionRes()               {}
 func (*ProblemStatusCodeWithHeaders) deleteDiceSetRes()                 {}
 func (*ProblemStatusCodeWithHeaders) deleteEncounterPoolRes()           {}
 func (*ProblemStatusCodeWithHeaders) deleteEncounterTableRes()          {}
@@ -36418,6 +36876,7 @@ func (*ProblemStatusCodeWithHeaders) listCampaignCollectionsRes()       {}
 func (*ProblemStatusCodeWithHeaders) listCampaignsRes()                 {}
 func (*ProblemStatusCodeWithHeaders) listCharacterRevisionsRes()        {}
 func (*ProblemStatusCodeWithHeaders) listCharactersRes()                {}
+func (*ProblemStatusCodeWithHeaders) listCompanionsRes()                {}
 func (*ProblemStatusCodeWithHeaders) listConversationsRes()             {}
 func (*ProblemStatusCodeWithHeaders) listDeletedNpcsRes()               {}
 func (*ProblemStatusCodeWithHeaders) listDiceSetsRes()                  {}
@@ -36548,6 +37007,7 @@ func (*ProblemStatusCodeWithHeaders) unpinLibraryRevisionRes()          {}
 func (*ProblemStatusCodeWithHeaders) updateAccountRes()                 {}
 func (*ProblemStatusCodeWithHeaders) updateCampaignRes()                {}
 func (*ProblemStatusCodeWithHeaders) updateCharacterRes()               {}
+func (*ProblemStatusCodeWithHeaders) updateCompanionRes()               {}
 func (*ProblemStatusCodeWithHeaders) updateEncounterPoolRes()           {}
 func (*ProblemStatusCodeWithHeaders) updateEncounterTableRes()          {}
 func (*ProblemStatusCodeWithHeaders) updateLibraryCollectionRes()       {}

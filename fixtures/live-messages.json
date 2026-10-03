@@ -766,6 +766,31 @@
       "hidden": false
     },
     {
+      "nonce": "n96",
+      "kind": "place_token",
+      "q": 1,
+      "r": 0,
+      "hidden": false,
+      "companionId": "0190c7a8-0000-7000-8000-00000000000a"
+    },
+    {
+      "nonce": "n97",
+      "kind": "assign_control",
+      "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "controllerId": "0190c7a8-0000-7000-8000-00000000000a"
+    },
+    {
+      "nonce": "n98",
+      "kind": "assign_control",
+      "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+      "q": 0,
+      "r": 0,
+      "hidden": false
+    },
+    {
       "nonce": "n73b",
       "kind": "swap_weapons",
       "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
@@ -835,6 +860,7 @@
             "hidden": false,
             "darkvisionFt": 0,
             "controllerId": "0190c7a8-0000-7000-8000-00000000000f",
+            "companionId": "0190c7a8-0000-7000-8000-00000000000d",
             "effects": [
               {
                 "id": "0190c7a8-0000-7000-8000-000000000017",
@@ -1113,6 +1139,7 @@
             "kind": "enemy",
             "health": "hurt",
             "acting": true,
+            "companion": true,
             "effects": []
           }
         ],
@@ -1315,6 +1342,7 @@
             "hidden": false,
             "darkvisionFt": 0,
             "controllerId": "0190c7a8-0000-7000-8000-00000000000f",
+            "companionId": "0190c7a8-0000-7000-8000-00000000000d",
             "effects": [
               {
                 "id": "0190c7a8-0000-7000-8000-000000000017",
@@ -1637,6 +1665,7 @@
             "kind": "enemy",
             "health": "hurt",
             "acting": true,
+            "companion": true,
             "effects": []
           }
         ],
@@ -1904,7 +1933,8 @@
             "r": -1,
             "hidden": false,
             "darkvisionFt": 0,
-            "controllerId": "0190c7a8-0000-7000-8000-00000000000f"
+            "controllerId": "0190c7a8-0000-7000-8000-00000000000f",
+            "companionId": "0190c7a8-0000-7000-8000-00000000000d"
           }
         ],
         "fog": false,
@@ -1984,6 +2014,7 @@
             "hidden": false,
             "darkvisionFt": 0,
             "controllerId": "0190c7a8-0000-7000-8000-00000000000f",
+            "companionId": "0190c7a8-0000-7000-8000-00000000000d",
             "effects": [
               {
                 "id": "0190c7a8-0000-7000-8000-000000000017",
@@ -2262,6 +2293,7 @@
             "kind": "enemy",
             "health": "hurt",
             "acting": true,
+            "companion": true,
             "effects": []
           }
         ],
@@ -2459,6 +2491,7 @@
               "hidden": false,
               "darkvisionFt": 0,
               "controllerId": "0190c7a8-0000-7000-8000-00000000000f",
+              "companionId": "0190c7a8-0000-7000-8000-00000000000d",
               "effects": [
                 {
                   "id": "0190c7a8-0000-7000-8000-000000000017",
@@ -2737,6 +2770,7 @@
               "kind": "enemy",
               "health": "hurt",
               "acting": true,
+              "companion": true,
               "effects": []
             }
           ],
