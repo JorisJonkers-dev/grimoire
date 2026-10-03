@@ -510,6 +510,7 @@ type Querier interface {
 	MapEdges(ctx context.Context, mapID uuid.UUID) ([]MapEdgesRow, error)
 	MapElevations(ctx context.Context, mapID uuid.UUID) ([]MapElevationsRow, error)
 	MapLights(ctx context.Context, mapID uuid.UUID) ([]MapLightsRow, error)
+	// A world Map's locations, each with the local Map that lies there and whether the party has found it.
 	MapNodes(ctx context.Context, mapID uuid.UUID) ([]MapNodesRow, error)
 	MapObjectLinks(ctx context.Context, mapID uuid.UUID) ([]CampaignMapObjectLink, error)
 	MapObjects(ctx context.Context, mapID uuid.UUID) ([]MapObjectsRow, error)
@@ -680,6 +681,8 @@ type Querier interface {
 	SetLevelUpReady(ctx context.Context, arg SetLevelUpReadyParams) error
 	SetLibraryOverride(ctx context.Context, arg SetLibraryOverrideParams) error
 	SetMapAmbient(ctx context.Context, arg SetMapAmbientParams) error
+	// Only a Map of the Campaign the Session is played in is found or lost there.
+	SetMapFound(ctx context.Context, arg SetMapFoundParams) error
 	SetMapParty(ctx context.Context, arg SetMapPartyParams) error
 	SetMemberRole(ctx context.Context, arg SetMemberRoleParams) error
 	SetNotificationPreference(ctx context.Context, arg SetNotificationPreferenceParams) error

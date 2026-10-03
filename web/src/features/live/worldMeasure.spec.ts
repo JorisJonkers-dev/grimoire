@@ -17,6 +17,7 @@ const campaign = (as: 'dm' | 'player') => ({
 })
 const world: LiveWorld = {
   map: { id: WID, name: 'Realm', imageUrl: `/api/v1/campaigns/${ID}/maps/${WID}/image?v=0`, width: 200, height: 160, hexSizePx: 40, originX: 34.64, originY: 40, imageVersion: 0, gridKind: 'hexes', gridStrength: 20 },
+  found: false,
   revealed: [{ q: 0, r: 0 }, { q: 1, r: 0 }],
   nodes: [],
   routes: [],

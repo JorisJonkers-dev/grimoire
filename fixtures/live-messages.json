@@ -428,6 +428,25 @@
       "nodeId": "0190c7a8-0000-7000-8000-000000000022"
     },
     {
+      "nonce": "n44a",
+      "kind": "add_node",
+      "label": "Lair",
+      "q": 1,
+      "r": 1,
+      "hidden": false,
+      "mapId": "0190c7a8-0000-7000-8000-00000000000d",
+      "secret": true
+    },
+    {
+      "nonce": "n44b",
+      "kind": "find_map",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "mapId": "0190c7a8-0000-7000-8000-00000000000d",
+      "on": true
+    },
+    {
       "nonce": "n44",
       "kind": "travel",
       "q": 0,
@@ -1102,6 +1121,7 @@
             "gridKind": "squares",
             "gridStrength": 35
           },
+          "found": true,
           "revealed": [
             {
               "q": 0,
@@ -1113,13 +1133,16 @@
               "id": "0190c7a8-0000-7000-8000-000000000022",
               "name": "Oakford",
               "q": 0,
-              "r": 0
+              "r": 0,
+              "mapId": "0190c7a8-0000-7000-8000-00000000000d",
+              "found": true
             },
             {
               "id": "0190c7a8-0000-7000-8000-000000000023",
               "name": "Mill",
               "q": 5,
-              "r": 0
+              "r": 0,
+              "secret": true
             }
           ],
           "routes": [
@@ -1611,6 +1634,7 @@
             "gridKind": "squares",
             "gridStrength": 35
           },
+          "found": true,
           "revealed": [
             {
               "q": 0,
@@ -1622,13 +1646,16 @@
               "id": "0190c7a8-0000-7000-8000-000000000022",
               "name": "Oakford",
               "q": 0,
-              "r": 0
+              "r": 0,
+              "mapId": "0190c7a8-0000-7000-8000-00000000000d",
+              "found": true
             },
             {
               "id": "0190c7a8-0000-7000-8000-000000000023",
               "name": "Mill",
               "q": 5,
-              "r": 0
+              "r": 0,
+              "secret": true
             }
           ],
           "routes": [
@@ -2268,6 +2295,7 @@
             "gridKind": "squares",
             "gridStrength": 35
           },
+          "found": true,
           "revealed": [
             {
               "q": 0,
@@ -2279,13 +2307,16 @@
               "id": "0190c7a8-0000-7000-8000-000000000022",
               "name": "Oakford",
               "q": 0,
-              "r": 0
+              "r": 0,
+              "mapId": "0190c7a8-0000-7000-8000-00000000000d",
+              "found": true
             },
             {
               "id": "0190c7a8-0000-7000-8000-000000000023",
               "name": "Mill",
               "q": 5,
-              "r": 0
+              "r": 0,
+              "secret": true
             }
           ],
           "routes": [
@@ -2751,6 +2782,7 @@
               "gridKind": "squares",
               "gridStrength": 35
             },
+            "found": true,
             "revealed": [
               {
                 "q": 0,
@@ -2762,13 +2794,16 @@
                 "id": "0190c7a8-0000-7000-8000-000000000022",
                 "name": "Oakford",
                 "q": 0,
-                "r": 0
+                "r": 0,
+                "mapId": "0190c7a8-0000-7000-8000-00000000000d",
+                "found": true
               },
               {
                 "id": "0190c7a8-0000-7000-8000-000000000023",
                 "name": "Mill",
                 "q": 5,
-                "r": 0
+                "r": 0,
+                "secret": true
               }
             ],
             "routes": [

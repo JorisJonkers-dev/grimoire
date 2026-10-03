@@ -19,9 +19,9 @@ const aria = token(1, 'Aria', 'party', 0)
 const brom = token(2, 'Brom', 'party', 1)
 const goblin = token(3, 'Goblin', 'enemy', 2)
 const maps = [
-  { id: '0190c7a8-0000-7000-8000-0000000000a0', name: 'Crypt', kind: 'local', width: 400, height: 300, hexSizePx: 40, originX: 35, originY: 40, imageUrl: '/api/v1/x', ambient: 'bright', gridKind: 'hexes', gridStrength: 20, scaleMiles: 6 },
-  { id: TOWER, name: 'Tower', kind: 'local', width: 400, height: 300, hexSizePx: 40, originX: 35, originY: 40, imageUrl: '/api/v1/y', ambient: 'bright', gridKind: 'hexes', gridStrength: 20, scaleMiles: 6 },
-  { id: '0190c7a8-0000-7000-8000-0000000000a2', name: 'Realm', kind: 'world', width: 400, height: 300, hexSizePx: 40, originX: 35, originY: 40, imageUrl: '/api/v1/z', ambient: 'bright', gridKind: 'hexes', gridStrength: 20, scaleMiles: 6 },
+  { id: '0190c7a8-0000-7000-8000-0000000000a0', name: 'Crypt', kind: 'local', width: 400, height: 300, hexSizePx: 40, originX: 35, originY: 40, imageUrl: '/api/v1/x', ambient: 'bright', gridKind: 'hexes', gridStrength: 20, scaleMiles: 6, found: false },
+  { id: TOWER, name: 'Tower', kind: 'local', width: 400, height: 300, hexSizePx: 40, originX: 35, originY: 40, imageUrl: '/api/v1/y', ambient: 'bright', gridKind: 'hexes', gridStrength: 20, scaleMiles: 6, found: false },
+  { id: '0190c7a8-0000-7000-8000-0000000000a2', name: 'Realm', kind: 'world', width: 400, height: 300, hexSizePx: 40, originX: 35, originY: 40, imageUrl: '/api/v1/z', ambient: 'bright', gridKind: 'hexes', gridStrength: 20, scaleMiles: 6, found: false },
 ]
 const group = (sessionId: string, name: string, extra: Record<string, unknown>) => ({ sessionId, number: 1, name, home: false, here: false, table: false, tokens: [], ...extra })
 const view = (extra: Record<string, unknown> = {}) => ({ tokens: [aria, brom, goblin], fog: false, visible: [], remembered: [], roster: [], gameDay: 0, ...extra })

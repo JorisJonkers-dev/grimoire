@@ -3,14 +3,14 @@ INSERT INTO campaign.maps (campaign_id, name, kind, image_key, image_type, width
     grid_strength, scale_miles, created_at, updated_at)
 VALUES (@campaign_id, @name, @kind, @image_key, @image_type, @width_px, @height_px, @hex_size_px, @origin_x, @origin_y, @grid_kind,
     @grid_strength, @scale_miles, @now, @now)
-RETURNING id, campaign_id, name, image_key, image_type, width_px, height_px, hex_size_px, origin_x, origin_y, ambient, created_at, updated_at, kind, grid_kind, grid_strength, scale_miles;
+RETURNING id, campaign_id, name, image_key, image_type, width_px, height_px, hex_size_px, origin_x, origin_y, ambient, created_at, updated_at, kind, grid_kind, grid_strength, scale_miles, found;
 
 -- name: GetMap :one
-SELECT id, campaign_id, name, image_key, image_type, width_px, height_px, hex_size_px, origin_x, origin_y, ambient, created_at, updated_at, kind, grid_kind, grid_strength, scale_miles
+SELECT id, campaign_id, name, image_key, image_type, width_px, height_px, hex_size_px, origin_x, origin_y, ambient, created_at, updated_at, kind, grid_kind, grid_strength, scale_miles, found
 FROM campaign.maps WHERE campaign_id = @campaign_id AND id = @id;
 
 -- name: ListMaps :many
-SELECT id, campaign_id, name, image_key, image_type, width_px, height_px, hex_size_px, origin_x, origin_y, ambient, created_at, updated_at, kind, grid_kind, grid_strength, scale_miles
+SELECT id, campaign_id, name, image_key, image_type, width_px, height_px, hex_size_px, origin_x, origin_y, ambient, created_at, updated_at, kind, grid_kind, grid_strength, scale_miles, found
 FROM campaign.maps WHERE campaign_id = $1 ORDER BY name, id;
 
 -- name: UpdateMap :execrows
@@ -58,10 +58,19 @@ INSERT INTO play.action_hex_events (action_id, q, r) VALUES (@action_id, @q, @r)
 UPDATE play.sessions SET world_map_id = sqlc.narg(map_id) WHERE id = @id;
 
 -- name: MapNodes :many
-SELECT id, name, q, r FROM campaign.map_nodes WHERE map_id = $1 ORDER BY name, id;
+-- A world Map's locations, each with the local Map that lies there and whether the party has found it.
+SELECT n.id, n.name, n.q, n.r, n.secret, n.local_map_id, coalesce(m.found, false)::boolean AS local_found
+FROM campaign.map_nodes n LEFT JOIN campaign.maps m ON m.id = n.local_map_id
+WHERE n.map_id = $1 ORDER BY n.name, n.id;
 
 -- name: InsertNode :exec
-INSERT INTO campaign.map_nodes (id, map_id, name, q, r) VALUES (@id, @map_id, @name, @q, @r);
+INSERT INTO campaign.map_nodes (id, map_id, name, q, r, secret, local_map_id)
+VALUES (@id, @map_id, @name, @q, @r, @secret, sqlc.narg(local_map_id));
+
+-- name: SetMapFound :exec
+-- Only a Map of the Campaign the Session is played in is found or lost there.
+UPDATE campaign.maps m SET found = @found, updated_at = @now
+FROM play.sessions s WHERE m.id = @id AND s.id = @session_id AND m.campaign_id = s.campaign_id;
 
 -- name: DeleteNode :exec
 DELETE FROM campaign.map_nodes WHERE map_id = @map_id AND id = @id;

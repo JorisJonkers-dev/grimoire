@@ -29,7 +29,7 @@ func mapOut(m playdomain.Map) oas.LocalMap {
 	return oas.LocalMap{
 		ID: oas.ID(m.ID), Name: m.Name, Kind: oas.MapKind(m.Kind), Width: int32(m.Width), Height: int32(m.Height), HexSizePx: m.HexSize, //nolint:gosec // capped pixels
 		OriginX: m.OriginX, OriginY: m.OriginY, Ambient: oas.AmbientLight(m.Ambient),
-		GridKind: oas.GridKind(m.Grid), GridStrength: oas.GridStrength(m.GridStrength), ScaleMiles: oas.ScaleMiles(m.ScaleMiles), //nolint:gosec // 0 to 100
+		GridKind: oas.GridKind(m.Grid), GridStrength: oas.GridStrength(m.GridStrength), ScaleMiles: oas.ScaleMiles(m.ScaleMiles), Found: m.Found, //nolint:gosec // 0 to 100
 		ImageUrl: oas.AssetUrl("/api/v1/campaigns/" + m.CampaignID.String() + "/maps/" + uuid.UUID(m.ID).String() + "/image"),
 	}
 }

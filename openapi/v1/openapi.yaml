@@ -3739,8 +3739,8 @@ paths:
         - $ref: "#/components/parameters/MapId"
         - name: v
           in: query
-          description: Cache-busting version; the picture changes as the party explores.
-          schema: { type: integer, format: int32, minimum: 0, maximum: 1000000 }
+          description: Cache-busting version; the picture changes as the party explores, and when it finds or loses the world map.
+          schema: { type: integer, format: int32, minimum: 0, maximum: 2147483647 }
       responses:
         "200":
           description: The picture.
@@ -10925,7 +10925,7 @@ components:
       required: [nonce, kind, q, r, hidden]
       properties:
         nonce: { type: string, minLength: 1, maxLength: 64 }
-        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual, preview_area, cast_area, paint_surface, set_elevation, table_camera, table_scene, table_blackout, table_caption, ping, set_world, add_node, add_route, remove_node, remove_route, place_party, travel, add_zone, remove_zone, hold_zone, spring_zone, rest, encounter_check, schedule_check, roll_loot, move_item, move_coins, claim_loot, settle_loot, trade, open_shop, close_shop, buy, sell, haggle, spawn_encounter, adjust_hp, undo, propose_rest, agree_rest, spend_hit_die, finish_rest, interrupt_rest, take_action, unarmed, interact, swap_weapons, set_reaction, stabilise, revive, teleport, summon, command, set_visibility, place_object, remove_object, use_object, damage_object, find_object, unlock, disarm, jump, throw, sneak, explore, pass_turn, legendary_action, lair_action, legendary_resistance, checkpoint, rewind, split_party, rejoin_party, table_follow, assign_control, measure_route] }
+        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual, preview_area, cast_area, paint_surface, set_elevation, table_camera, table_scene, table_blackout, table_caption, ping, set_world, add_node, add_route, remove_node, remove_route, place_party, travel, add_zone, remove_zone, hold_zone, spring_zone, rest, encounter_check, schedule_check, roll_loot, move_item, move_coins, claim_loot, settle_loot, trade, open_shop, close_shop, buy, sell, haggle, spawn_encounter, adjust_hp, undo, propose_rest, agree_rest, spend_hit_die, finish_rest, interrupt_rest, take_action, unarmed, interact, swap_weapons, set_reaction, stabilise, revive, teleport, summon, command, set_visibility, place_object, remove_object, use_object, damage_object, find_object, unlock, disarm, jump, throw, sneak, explore, pass_turn, legendary_action, lair_action, legendary_resistance, checkpoint, rewind, split_party, rejoin_party, table_follow, assign_control, measure_route, find_map] }
         caption: { type: string, maxLength: 400 }
         tokenId: { $ref: "#/components/schemas/Id" }
         label: { type: string, maxLength: 40 }
@@ -12510,11 +12510,12 @@ components:
       enum: [slow, normal, fast]
     LiveWorld:
       type: object
-      description: The world map the party travels. The DM gets every location and route; players and the Table get the locations the party has seen or can reach from where it stands, and the routes between them.
+      description: The world map the party travels. The DM gets every location and route. Players and the Table get the locations the party has seen or can reach from where it stands, or every location when the party has found the world map, and the routes between them; a secret location is never among them. Revealed hexes are where the party has been, the roads it walked and the places of local Maps it found.
       additionalProperties: false
-      required: [map, revealed, nodes, routes, legs]
+      required: [map, found, revealed, nodes, routes, legs]
       properties:
         map: { $ref: "#/components/schemas/LiveMap" }
+        found: { type: boolean, description: Whether the party has found this world map. Its picture is then sent whole and shown dimmed where the party has not been; otherwise it is dark there. }
         revealed:
           type: array
           maxItems: 100000
@@ -12534,7 +12535,7 @@ components:
           items: { $ref: "#/components/schemas/LiveTravelLeg" }
     LiveWorldNode:
       type: object
-      description: A named location on the world map.
+      description: A named location on the world map. A secret one is sent to the DM only. The local Map that lies there is named to the DM, and to others once the party has found it.
       additionalProperties: false
       required: [id, name, q, r]
       properties:
@@ -12542,6 +12543,9 @@ components:
         name: { type: string, maxLength: 40 }
         q: { type: integer, format: int32, minimum: -500, maximum: 500 }
         r: { type: integer, format: int32, minimum: -500, maximum: 500 }
+        secret: { type: boolean }
+        mapId: { $ref: "#/components/schemas/Id" }
+        found: { type: boolean }
     LiveWorldRoute:
       type: object
       description: A route between two locations, travelled either way, with how long it takes at each pace.
@@ -13108,7 +13112,7 @@ components:
         hexSizePx: { type: number, format: double, minimum: 8, maximum: 400 }
         originX: { type: number, format: double, minimum: -100000, maximum: 100000 }
         originY: { type: number, format: double, minimum: -100000, maximum: 100000 }
-        imageVersion: { type: integer, format: int32, minimum: 0, maximum: 1000000 }
+        imageVersion: { type: integer, format: int32, minimum: 0, maximum: 2147483647 }
         gridKind: { $ref: "#/components/schemas/GridKind" }
         gridStrength: { $ref: "#/components/schemas/GridStrength" }
     LiveLight:
@@ -13265,7 +13269,7 @@ components:
       type: object
       description: An uploaded Map and its hex calibration.
       additionalProperties: false
-      required: [id, name, kind, width, height, hexSizePx, originX, originY, ambient, imageUrl, gridKind, gridStrength, scaleMiles]
+      required: [id, name, kind, width, height, hexSizePx, originX, originY, ambient, imageUrl, gridKind, gridStrength, scaleMiles, found]
       properties:
         id: { $ref: "#/components/schemas/Id" }
         name: { type: string, maxLength: 80 }
@@ -13280,6 +13284,7 @@ components:
         gridKind: { $ref: "#/components/schemas/GridKind" }
         gridStrength: { $ref: "#/components/schemas/GridStrength" }
         scaleMiles: { $ref: "#/components/schemas/ScaleMiles" }
+        found: { type: boolean, description: Whether the party has found this Map in play. }
     GridKind:
       type: string
       description: How a Map's grid is drawn over its picture. A local Map is always hexes, each 5 feet across; squares are as wide as the hexes they stand for.

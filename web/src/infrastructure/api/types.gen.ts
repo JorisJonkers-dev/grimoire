@@ -2516,7 +2516,7 @@ export type LiveSessionView = {
  */
 export type LiveCommand = {
     nonce: string;
-    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'table_caption' | 'ping' | 'set_world' | 'add_node' | 'add_route' | 'remove_node' | 'remove_route' | 'place_party' | 'travel' | 'add_zone' | 'remove_zone' | 'hold_zone' | 'spring_zone' | 'rest' | 'encounter_check' | 'schedule_check' | 'roll_loot' | 'move_item' | 'move_coins' | 'claim_loot' | 'settle_loot' | 'trade' | 'open_shop' | 'close_shop' | 'buy' | 'sell' | 'haggle' | 'spawn_encounter' | 'adjust_hp' | 'undo' | 'propose_rest' | 'agree_rest' | 'spend_hit_die' | 'finish_rest' | 'interrupt_rest' | 'take_action' | 'unarmed' | 'interact' | 'swap_weapons' | 'set_reaction' | 'stabilise' | 'revive' | 'teleport' | 'summon' | 'command' | 'set_visibility' | 'place_object' | 'remove_object' | 'use_object' | 'damage_object' | 'find_object' | 'unlock' | 'disarm' | 'jump' | 'throw' | 'sneak' | 'explore' | 'pass_turn' | 'legendary_action' | 'lair_action' | 'legendary_resistance' | 'checkpoint' | 'rewind' | 'split_party' | 'rejoin_party' | 'table_follow' | 'assign_control' | 'measure_route';
+    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'table_caption' | 'ping' | 'set_world' | 'add_node' | 'add_route' | 'remove_node' | 'remove_route' | 'place_party' | 'travel' | 'add_zone' | 'remove_zone' | 'hold_zone' | 'spring_zone' | 'rest' | 'encounter_check' | 'schedule_check' | 'roll_loot' | 'move_item' | 'move_coins' | 'claim_loot' | 'settle_loot' | 'trade' | 'open_shop' | 'close_shop' | 'buy' | 'sell' | 'haggle' | 'spawn_encounter' | 'adjust_hp' | 'undo' | 'propose_rest' | 'agree_rest' | 'spend_hit_die' | 'finish_rest' | 'interrupt_rest' | 'take_action' | 'unarmed' | 'interact' | 'swap_weapons' | 'set_reaction' | 'stabilise' | 'revive' | 'teleport' | 'summon' | 'command' | 'set_visibility' | 'place_object' | 'remove_object' | 'use_object' | 'damage_object' | 'find_object' | 'unlock' | 'disarm' | 'jump' | 'throw' | 'sneak' | 'explore' | 'pass_turn' | 'legendary_action' | 'lair_action' | 'legendary_resistance' | 'checkpoint' | 'rewind' | 'split_party' | 'rejoin_party' | 'table_follow' | 'assign_control' | 'measure_route' | 'find_map';
     caption?: string;
     tokenId?: Id;
     label?: string;
@@ -3868,10 +3868,14 @@ export type LivePerception = {
 export type TravelPace = 'slow' | 'normal' | 'fast';
 
 /**
- * The world map the party travels. The DM gets every location and route; players and the Table get the locations the party has seen or can reach from where it stands, and the routes between them.
+ * The world map the party travels. The DM gets every location and route. Players and the Table get the locations the party has seen or can reach from where it stands, or every location when the party has found the world map, and the routes between them; a secret location is never among them. Revealed hexes are where the party has been, the roads it walked and the places of local Maps it found.
  */
 export type LiveWorld = {
     map: LiveMap;
+    /**
+     * Whether the party has found this world map. Its picture is then sent whole and shown dimmed where the party has not been; otherwise it is dark there.
+     */
+    found: boolean;
     revealed: Array<HexCoord>;
     nodes: Array<LiveWorldNode>;
     routes: Array<LiveWorldRoute>;
@@ -3880,13 +3884,16 @@ export type LiveWorld = {
 };
 
 /**
- * A named location on the world map.
+ * A named location on the world map. A secret one is sent to the DM only. The local Map that lies there is named to the DM, and to others once the party has found it.
  */
 export type LiveWorldNode = {
     id: Id;
     name: string;
     q: number;
     r: number;
+    secret?: boolean;
+    mapId?: Id;
+    found?: boolean;
 };
 
 /**
@@ -4610,6 +4617,10 @@ export type LocalMap = {
     gridKind: GridKind;
     gridStrength: GridStrength;
     scaleMiles: ScaleMiles;
+    /**
+     * Whether the party has found this Map in play.
+     */
+    found: boolean;
 };
 
 /**
@@ -9287,7 +9298,7 @@ export type GetMapImageData = {
     };
     query?: {
         /**
-         * Cache-busting version; the picture changes as the party explores.
+         * Cache-busting version; the picture changes as the party explores, and when it finds or loses the world map.
          */
         v?: number;
     };

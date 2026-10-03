@@ -109,6 +109,13 @@ func TestMapsOverHTTP(t *testing.T) {
 	if rec.Code != http.StatusCreated || w["name"] != "Default World" || w["kind"] != "world" || w["width"] != float64(1600) {
 		t.Fatalf("the Default World: %d %s", rec.Code, rec.Body.String())
 	}
+	// A found world map's picture has a version past a thousand million, and is served at it.
+	if w["found"] != false {
+		t.Fatalf("a new world map is found: %s", rec.Body.String())
+	}
+	if rec := call(h, http.MethodGet, base+"/"+worldID+"/image?v=1000000007", "dm", ""); rec.Code != 200 {
+		t.Fatalf("the picture at a found map's version: %d %s", rec.Code, rec.Body.String())
+	}
 	edit = `{"name":"The Realm","hexSizePx":24,"originX":20,"originY":24,"ambient":"bright","gridKind":"squares","gridStrength":45,"scaleMiles":12}`
 	rec = call(h, http.MethodPut, base+"/"+worldID, "dm", edit)
 	if w = decode(t, rec); rec.Code != 200 || w["gridKind"] != "squares" || w["gridStrength"] != float64(45) || w["scaleMiles"] != float64(12) {

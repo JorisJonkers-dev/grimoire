@@ -21965,6 +21965,7 @@ const (
 	LiveCommandKindTableFollow         LiveCommandKind = "table_follow"
 	LiveCommandKindAssignControl       LiveCommandKind = "assign_control"
 	LiveCommandKindMeasureRoute        LiveCommandKind = "measure_route"
+	LiveCommandKindFindMap             LiveCommandKind = "find_map"
 )
 
 // AllValues returns all LiveCommandKind values.
@@ -22070,6 +22071,7 @@ func (LiveCommandKind) AllValues() []LiveCommandKind {
 		LiveCommandKindTableFollow,
 		LiveCommandKindAssignControl,
 		LiveCommandKindMeasureRoute,
+		LiveCommandKindFindMap,
 	}
 }
 
@@ -22275,6 +22277,8 @@ func (s LiveCommandKind) MarshalText() ([]byte, error) {
 	case LiveCommandKindAssignControl:
 		return []byte(s), nil
 	case LiveCommandKindMeasureRoute:
+		return []byte(s), nil
+	case LiveCommandKindFindMap:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -22583,6 +22587,9 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 		return nil
 	case LiveCommandKindMeasureRoute:
 		*s = LiveCommandKindMeasureRoute
+		return nil
+	case LiveCommandKindFindMap:
+		*s = LiveCommandKindFindMap
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -27910,11 +27917,16 @@ func (s *LiveViewSurfaceKindsItem) SetName(val string) {
 	s.Name = val
 }
 
-// The world map the party travels. The DM gets every location and route; players and the Table get the
-// locations the party has seen or can reach from where it stands, and the routes between them.
+// The world map the party travels. The DM gets every location and route. Players and the Table get the
+// locations the party has seen or can reach from where it stands, or every location when the party has
+// found the world map, and the routes between them; a secret location is never among them. Revealed
+// hexes are where the party has been, the roads it walked and the places of local Maps it found.
 // Ref: #/components/schemas/LiveWorld
 type LiveWorld struct {
-	Map         LiveMap          `json:"map"`
+	Map LiveMap `json:"map"`
+	// Whether the party has found this world map. Its picture is then sent whole and shown dimmed where
+	// the party has not been; otherwise it is dark there.
+	Found       bool             `json:"found"`
 	Revealed    []HexCoord       `json:"revealed"`
 	Nodes       []LiveWorldNode  `json:"nodes"`
 	Routes      []LiveWorldRoute `json:"routes"`
@@ -27925,6 +27937,11 @@ type LiveWorld struct {
 // GetMap returns the value of Map.
 func (s *LiveWorld) GetMap() LiveMap {
 	return s.Map
+}
+
+// GetFound returns the value of Found.
+func (s *LiveWorld) GetFound() bool {
+	return s.Found
 }
 
 // GetRevealed returns the value of Revealed.
@@ -27957,6 +27974,11 @@ func (s *LiveWorld) SetMap(val LiveMap) {
 	s.Map = val
 }
 
+// SetFound sets the value of Found.
+func (s *LiveWorld) SetFound(val bool) {
+	s.Found = val
+}
+
 // SetRevealed sets the value of Revealed.
 func (s *LiveWorld) SetRevealed(val []HexCoord) {
 	s.Revealed = val
@@ -27982,13 +28004,17 @@ func (s *LiveWorld) SetLegs(val []LiveTravelLeg) {
 	s.Legs = val
 }
 
-// A named location on the world map.
+// A named location on the world map. A secret one is sent to the DM only. The local Map that lies
+// there is named to the DM, and to others once the party has found it.
 // Ref: #/components/schemas/LiveWorldNode
 type LiveWorldNode struct {
-	ID   ID     `json:"id"`
-	Name string `json:"name"`
-	Q    int32  `json:"q"`
-	R    int32  `json:"r"`
+	ID     ID      `json:"id"`
+	Name   string  `json:"name"`
+	Q      int32   `json:"q"`
+	R      int32   `json:"r"`
+	Secret OptBool `json:"secret"`
+	MapId  OptID   `json:"mapId"`
+	Found  OptBool `json:"found"`
 }
 
 // GetID returns the value of ID.
@@ -28011,6 +28037,21 @@ func (s *LiveWorldNode) GetR() int32 {
 	return s.R
 }
 
+// GetSecret returns the value of Secret.
+func (s *LiveWorldNode) GetSecret() OptBool {
+	return s.Secret
+}
+
+// GetMapId returns the value of MapId.
+func (s *LiveWorldNode) GetMapId() OptID {
+	return s.MapId
+}
+
+// GetFound returns the value of Found.
+func (s *LiveWorldNode) GetFound() OptBool {
+	return s.Found
+}
+
 // SetID sets the value of ID.
 func (s *LiveWorldNode) SetID(val ID) {
 	s.ID = val
@@ -28029,6 +28070,21 @@ func (s *LiveWorldNode) SetQ(val int32) {
 // SetR sets the value of R.
 func (s *LiveWorldNode) SetR(val int32) {
 	s.R = val
+}
+
+// SetSecret sets the value of Secret.
+func (s *LiveWorldNode) SetSecret(val OptBool) {
+	s.Secret = val
+}
+
+// SetMapId sets the value of MapId.
+func (s *LiveWorldNode) SetMapId(val OptID) {
+	s.MapId = val
+}
+
+// SetFound sets the value of Found.
+func (s *LiveWorldNode) SetFound(val OptBool) {
+	s.Found = val
 }
 
 // A route between two locations, travelled either way, with how long it takes at each pace.
@@ -28309,6 +28365,8 @@ type LocalMap struct {
 	GridKind     GridKind     `json:"gridKind"`
 	GridStrength GridStrength `json:"gridStrength"`
 	ScaleMiles   ScaleMiles   `json:"scaleMiles"`
+	// Whether the party has found this Map in play.
+	Found bool `json:"found"`
 }
 
 // GetID returns the value of ID.
@@ -28376,6 +28434,11 @@ func (s *LocalMap) GetScaleMiles() ScaleMiles {
 	return s.ScaleMiles
 }
 
+// GetFound returns the value of Found.
+func (s *LocalMap) GetFound() bool {
+	return s.Found
+}
+
 // SetID sets the value of ID.
 func (s *LocalMap) SetID(val ID) {
 	s.ID = val
@@ -28439,6 +28502,11 @@ func (s *LocalMap) SetGridStrength(val GridStrength) {
 // SetScaleMiles sets the value of ScaleMiles.
 func (s *LocalMap) SetScaleMiles(val ScaleMiles) {
 	s.ScaleMiles = val
+}
+
+// SetFound sets the value of Found.
+func (s *LocalMap) SetFound(val bool) {
+	s.Found = val
 }
 
 // LocalMapHeaders wraps LocalMap with response headers.

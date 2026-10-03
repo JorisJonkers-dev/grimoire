@@ -35979,6 +35979,8 @@ func (s LiveCommandKind) Validate() error {
 		return nil
 	case "measure_route":
 		return nil
+	case "find_map":
+		return nil
 	default:
 		return errors.Errorf("invalid value: %v", s)
 	}
@@ -38057,7 +38059,7 @@ func (s *LiveMap) Validate() error {
 			MinSet:        true,
 			Min:           0,
 			MaxSet:        true,
-			Max:           1000000,
+			Max:           2147483647,
 			MinExclusive:  false,
 			MaxExclusive:  false,
 			MultipleOfSet: false,

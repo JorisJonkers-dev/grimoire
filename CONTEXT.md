@@ -454,6 +454,10 @@ _Avoid_: Standard world, official setting, Forgotten Realms
 A Map the party has obtained in play; Players see only Found Maps, and a Found local Map also shows its outline on the world Map.
 _Avoid_: Unlocked map, discovered map (Fog covers what was seen)
 
+**Secret place**:
+A location on a world Map that only the DM is shown, whatever the party has found or seen.
+_Avoid_: Hidden location, DM-only node
+
 **Fog**:
 The server-enforced split between what exists on a Map and what the party perceives: never seen, remembered, or visible now.
 _Avoid_: Hidden layer, mask

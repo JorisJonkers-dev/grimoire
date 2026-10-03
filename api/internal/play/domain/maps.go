@@ -46,7 +46,9 @@ type Map struct {
 	Grid         string
 	GridStrength int
 	ScaleMiles   float64
-	UpdatedAt    time.Time
+	// Found says the party has obtained this Map in play.
+	Found     bool
+	UpdatedAt time.Time
 }
 
 // CellSpan is the distance one cell covers: feet on a local Map, miles on a world Map.

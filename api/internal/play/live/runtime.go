@@ -94,7 +94,10 @@ type Write struct {
 	Node       domain.WorldNode
 	Route      domain.WorldRoute
 	Leg        *domain.TravelLeg
-	// WorldReveal lists the world hexes the party sees for the first time on arriving somewhere.
+	// Found is the Map the party finds or loses.
+	Found *domain.FoundMap
+	// WorldReveal lists the world hexes the party sees for the first time: around where it arrives,
+	// along the road it walked, and around a local Map it found.
 	WorldReveal []hex.Coord
 	world       *domain.World
 	// Zone is the Encounter Zone after the change; Revealed the hidden creatures it showed everyone.
@@ -1108,7 +1111,7 @@ func change(s *state, w *Write) {
 		applyShop(s, w)
 		return
 	case domain.ActionWorldSet, domain.ActionNodeAdded, domain.ActionNodeRemoved, domain.ActionRouteAdded, domain.ActionRouteRemoved,
-		domain.ActionPartyPlaced, domain.ActionTravelLeg:
+		domain.ActionPartyPlaced, domain.ActionTravelLeg, domain.ActionMapFound, domain.ActionMapLost:
 		applyWorld(s, w)
 		return
 	case domain.ActionHPAdjusted:

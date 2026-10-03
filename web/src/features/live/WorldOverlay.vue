@@ -23,8 +23,19 @@ const party = computed(() => (props.world.partyNodeId ? byId.value.get(props.wor
   <g class="overlay" aria-hidden="true">
     <line v-for="l in lines" :key="l.id" :x1="l.a.x" :y1="l.a.y" :x2="l.b.x" :y2="l.b.y" class="route" :data-route="l.id" />
     <g v-for="n in nodes" :key="n.id" :data-node="n.name">
-      <circle :cx="n.p.x" :cy="n.p.y" :r="layout.size * 0.3" :class="['node', { 'node--from': n.id === from }]" />
-      <text :x="n.p.x" :y="n.p.y - layout.size * 0.45" text-anchor="middle" class="name">{{ n.name }}</text>
+      <!-- The outline of the local Map that lies there: solid once the party has found it. -->
+      <rect
+        v-if="n.mapId"
+        :x="n.p.x - layout.size * 0.5"
+        :y="n.p.y - layout.size * 0.5"
+        :width="layout.size"
+        :height="layout.size"
+        :class="['local', { 'local--found': n.found }]"
+        :data-found-map="n.found ? n.name : undefined"
+        :data-local-map="n.found ? undefined : n.name"
+      />
+      <circle :cx="n.p.x" :cy="n.p.y" :r="layout.size * 0.3" :class="['node', { 'node--from': n.id === from, 'node--secret': n.secret }]" :data-secret="n.secret ? n.name : undefined" />
+      <text :x="n.p.x" :y="n.p.y - layout.size * 0.6" text-anchor="middle" class="name">{{ n.secret ? `${n.name} (secret)` : n.name }}</text>
     </g>
     <polyline v-if="waypoints.length > 1" :points="drawn" class="measure" data-testid="measure-line" />
     <circle v-for="(p, i) in waypoints" :key="i" :cx="p.x" :cy="p.y" :r="layout.size * 0.16" class="waypoint" :data-waypoint="i" />
@@ -45,6 +56,22 @@ const party = computed(() => (props.world.partyNodeId ? byId.value.get(props.wor
   fill: var(--color-gold-high);
   stroke: #000;
   stroke-width: 2;
+}
+.node--secret {
+  fill: var(--color-enemy);
+  stroke-dasharray: 3 2;
+}
+.local {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 2;
+  stroke-dasharray: 4 3;
+  opacity: 0.6;
+}
+.local--found {
+  stroke: var(--color-gold-high);
+  stroke-dasharray: none;
+  opacity: 1;
 }
 .node--from {
   fill: var(--color-party);

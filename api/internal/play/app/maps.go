@@ -242,7 +242,8 @@ func (s *Maps) Calibrate(ctx context.Context, c caller.Caller, campaign uuid.UUI
 }
 
 // Image returns the Map's picture: whole for the DM, and for everyone else with every hex the party has
-// never seen painted black on the server, so undiscovered areas never reach a player's device.
+// never seen painted black on the server, so undiscovered areas never reach a player's device. A world
+// Map the party has found is the exception: they hold the map, so they are sent all of it.
 func (s *Maps) Image(ctx context.Context, c caller.Caller, campaign uuid.UUID, id domain.MapID) (string, []byte, error) {
 	me, err := s.Members.Membership(ctx, campaign, c.Subject)
 	if err != nil {
@@ -256,7 +257,8 @@ func (s *Maps) Image(ctx context.Context, c caller.Caller, campaign uuid.UUID, i
 	if err != nil {
 		return "", nil, err
 	}
-	if me.DM {
+	// A world Map the party has found is theirs to look at, whole; the screen dims where they have not been.
+	if me.DM || (board.Map.Kind == domain.MapWorld && board.Map.Found) {
 		return board.Map.ImageType, data, nil
 	}
 	masked, err := imaging.Mask(data, board.Map.Layout(), board.Reveals)

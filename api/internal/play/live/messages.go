@@ -69,6 +69,7 @@ const (
 	CmdRemoveNode     = "remove_node"
 	CmdRemoveRoute    = "remove_route"
 	CmdPlaceParty     = "place_party"
+	CmdFindMap        = "find_map"
 	CmdTravel         = "travel"
 	CmdAddZone        = "add_zone"
 	CmdRemoveZone     = "remove_zone"
@@ -728,7 +729,9 @@ type PerceptionView struct {
 // WorldView is the world map the party travels: the DM sees it all, everyone else only the locations
 // the party has seen or can reach from where it stands, and the routes between them.
 type WorldView struct {
-	Map         MapView     `json:"map"`
+	Map MapView `json:"map"`
+	// Found says the party has this world map: every place on it shows, dimmed where they have not been.
+	Found       bool        `json:"found"`
 	Revealed    []Hex       `json:"revealed"`
 	Nodes       []NodeView  `json:"nodes"`
 	Routes      []RouteView `json:"routes"`
@@ -742,6 +745,12 @@ type NodeView struct {
 	Name string `json:"name"`
 	Q    int    `json:"q"`
 	R    int    `json:"r"`
+	// Secret marks a place only the DM knows of; it is never sent to anyone else.
+	Secret bool `json:"secret,omitempty"`
+	// MapID is the local Map that lies there and Found whether the party has it. A player is told of
+	// the local Map only once it is found.
+	MapID string `json:"mapId,omitempty"`
+	Found bool   `json:"found,omitempty"`
 }
 
 // RouteView is a route with how long it takes at each pace.
