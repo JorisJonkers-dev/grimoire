@@ -1,8 +1,8 @@
 import { devices, expect, type Browser, type Locator, type Page, test } from '@playwright/test'
 
 async function enter(card: Locator, face: string) {
-  await card.getByTestId('manual-0').click()
-  await card.getByTestId('pad-0').getByRole('button', { name: face, exact: true }).click()
+  await card.getByTestId('face-0').fill(face)
+  await card.getByTestId('face-0').press('Enter')
 }
 
 /** A session with Scout (the player's) and Grik (the DM's) waiting to roll initiative. */

@@ -1,4 +1,4 @@
-import type { DiceGroup, GroupLabel } from '@/infrastructure/api/types.gen'
+import type { DiceGroup, GroupLabel, RollRequest } from '@/infrastructure/api/types.gen'
 
 export const dieSizes = [4, 6, 8, 10, 12, 20, 100] as const
 export type DieSize = (typeof dieSizes)[number]
@@ -34,4 +34,21 @@ export function describeGroup(g: DiceGroup): string {
 
 export function signed(n: number): string {
   return n >= 0 ? `+${String(n)}` : `−${String(-n)}`
+}
+
+/**
+ * What a resolved roll's total is made of, a line for each part: every group of dice by its label
+ * (Advantage, Bless, Bane) with its dropped dice marked, each modifier, and Heroic Inspiration when it
+ * was spent on a reroll.
+ */
+export function rollBreakdown(roll: RollRequest): { label: string; value: string }[] {
+  const groups = roll.groups.map((g) => {
+    const dice = roll.dice.filter((d) => d.group === g.index)
+    const counted = dice.filter((d) => !g.keep || d.kept).reduce((sum, d) => sum + (d.value ?? 0), 0)
+    // A lone bonus die reads like a modifier: Bless +3. Dice that are chosen between show each face.
+    const value = g.label && !g.keep ? signed(g.sign * counted) : dice.map((d) => `${String(d.value ?? 0)}${g.keep && !d.kept ? ' dropped' : ''}`).join(g.keep ? ', ' : ' + ')
+    return { label: g.label ?? `d${String(g.faces)}`, value }
+  })
+  const modifiers = roll.modifiers.map((m) => ({ label: m.label, value: signed(m.value) }))
+  return [...groups, ...modifiers, ...(roll.rerolled ? [{ label: 'Heroic Inspiration', value: 'rerolled a die' }] : [])]
 }

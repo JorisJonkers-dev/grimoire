@@ -1,9 +1,12 @@
-import { flushPromises } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { expectAccessible } from '@/test/axe'
 import { fakeClock, mountApp } from '@/test/mountApp'
+import { configureApi } from '@/infrastructure/http'
 import { jsonResponse } from '@/test/mountWithQuery'
+import type { RollRequest } from '@/infrastructure/api/types.gen'
 import { describeGroup, notationFor, signed } from './notation'
+import RollCard from './RollCard.vue'
 
 const ID = '0190c7a8-0000-7000-8000-000000000001'
 const ROLL = '0190c7a8-0000-7000-8000-000000000005'
@@ -59,6 +62,74 @@ describe('notation', () => {
   })
 })
 
+describe('roll card', () => {
+  const plain = (value: number, extra: object = {}) => ({
+    ...roll(), notation: '1d20', groups: [{ index: 0, count: 1, faces: 20, sign: 1 }], dice: [{ no: 0, group: 0, faces: 20, value, mode: 'manual', kept: false }],
+    modifiers: [{ label: 'Longsword', value: 5 }], status: 'resolved', total: value + 5, canRoll: false, ...extra,
+  })
+  const show = (r: object) => mount(RollCard, { props: { roll: r as RollRequest, campaignId: ID } })
+
+  it('keeps every face typed, sending them one after another, even while the last is still being saved', async () => {
+    reducedMotion(true)
+    const sent: string[] = []
+    let release: () => void = () => undefined
+    const held = new Promise<void>((r) => { release = r })
+    configureApi({
+      baseUrl: 'http://localhost',
+      fetch: async (input) => {
+        const req = input as Request
+        const body = (await req.clone().json()) as { value: number }
+        sent.push(`${new URL(req.url).pathname.split('/').at(-1) ?? ''}=${String(body.value)}`)
+        if (sent.length === 1) await held
+        return jsonResponse(withDice(sent.length === 1 ? [3] : [3, 4]))
+      },
+    })
+    const w = mount(RollCard, { props: { roll: roll() as RollRequest, campaignId: ID } })
+    await w.get('[data-testid="face-0"]').setValue('3')
+    await w.get('[data-testid="enter-0"]').trigger('submit')
+    expect((w.get('[data-testid="face-0"]').element as HTMLInputElement).value).toBe('')
+    // The first is still on its way; the second is typed and entered all the same.
+    await w.get('[data-testid="face-1"]').setValue('4')
+    expect(w.get('[data-testid="set-1"]').attributes('disabled')).toBeUndefined()
+    await w.get('[data-testid="enter-1"]').trigger('submit')
+    await flushPromises()
+    expect(sent).toEqual(['0=3'])
+    release()
+    await flushPromises()
+    expect(sent).toEqual(['0=3', '1=4'])
+    expect(w.emitted('updated')).toHaveLength(2)
+  })
+
+  it('celebrates a natural 20 and a natural 1 on the d20 that counts', () => {
+    const hit = show(plain(20))
+    expect(hit.get('[data-testid="roll-natural"]').text()).toBe('Natural 20!')
+    expect(hit.classes()).toContain('roll-card--hit')
+    expect(hit.findAll('[data-testid="roll-breakdown"] li').map((li) => li.text())).toEqual(['d2020', 'Longsword+5'])
+    const miss = show(plain(1))
+    expect(miss.get('[data-testid="roll-natural"]').text()).toBe('Natural 1')
+    expect(miss.classes()).toContain('roll-card--miss')
+    const plainRoll = show(plain(12))
+    expect(plainRoll.find('[data-testid="roll-natural"]').exists()).toBe(false)
+    expect(plainRoll.classes()).toEqual(['roll-card'])
+    // A d20 dropped by disadvantage does not count, and nothing is celebrated before the roll is in.
+    const dropped = show({
+      ...plain(20), notation: '2d20kl1', groups: [{ index: 0, count: 2, faces: 20, sign: 1, keep: 'lowest', keepCount: 1, label: 'Disadvantage' }],
+      dice: [{ no: 0, group: 0, faces: 20, value: 20, kept: false }, { no: 1, group: 0, faces: 20, value: 9, kept: true }], total: 14,
+    })
+    expect(dropped.find('[data-testid="roll-natural"]').exists()).toBe(false)
+    expect(dropped.findAll('[data-testid="roll-breakdown"] li').map((li) => li.text())).toEqual(['Disadvantage20 dropped, 9', 'Longsword+5'])
+    const waiting = show(plain(20, { status: 'pending', total: undefined }))
+    expect(waiting.find('[data-testid="roll-natural"]').exists()).toBe(false)
+    expect(waiting.find('[data-testid="roll-breakdown"]').exists()).toBe(false)
+    // Bane is taken off, and says so.
+    const baned = show({
+      ...plain(10), notation: '1d20-1d4', groups: [{ index: 0, count: 1, faces: 20, sign: 1 }, { index: 1, count: 1, faces: 4, sign: -1, label: 'Bane' }],
+      dice: [{ no: 0, group: 0, faces: 20, value: 10, kept: false }, { no: 1, group: 1, faces: 4, value: 3, kept: false }], modifiers: [], total: 7,
+    })
+    expect(baned.findAll('[data-testid="roll-breakdown"] li').map((li) => li.text())).toEqual(['d2010', 'Bane−3'])
+  })
+})
+
 describe('dice tray', () => {
   it('requests a roll, fills dice by hand and by server, and shows the total', async () => {
     reducedMotion(true)
@@ -94,10 +165,22 @@ describe('dice tray', () => {
     })
     const card = () => wrapper.get('[data-testid="roll-card"]')
     expect(card().text()).toContain('2 × d20, keep highest — Advantage')
-    await card().get('[data-testid="manual-0"]').trigger('click')
-    expect(card().findAll('[data-testid="pad-0"] button')).toHaveLength(20)
+    // A physical die is typed into one numeric field: no button for every face.
+    const face = card().get('[data-testid="face-0"]')
+    expect(face.attributes()).toMatchObject({ inputmode: 'numeric', 'aria-label': 'What your d20 shows', placeholder: '1–20' })
+    expect(card().findAll('[data-testid="die-0"] button').map((b) => b.text())).toEqual(['Enter', 'Roll for me'])
+    expect(card().find('[data-testid="pad-0"]').exists()).toBe(false)
     await expectAccessible(wrapper.element as Element)
-    await card().findAll('[data-testid="pad-0"] button')[11]?.trigger('click')
+    // Only a face the die has can be entered.
+    for (const wrong of ['', '0', '21', '1.5', 'x', '-3']) {
+      await face.setValue(wrong)
+      expect(card().get('[data-testid="set-0"]').attributes('disabled'), wrong).toBeDefined()
+      await card().get('[data-testid="enter-0"]').trigger('submit')
+    }
+    expect(bodies.filter((b) => b.path.includes('/dice/'))).toEqual([])
+    await face.setValue('12')
+    expect(card().get('[data-testid="set-0"]').attributes('disabled')).toBeUndefined()
+    await card().get('[data-testid="enter-0"]').trigger('submit')
     await flushPromises()
     await card().get('[data-testid="auto-1"]').trigger('click')
     await flushPromises()
@@ -105,6 +188,9 @@ describe('dice tray', () => {
     await flushPromises()
     expect(card().get('[data-testid="roll-total"]').text()).toContain('23')
     expect(card().text()).toContain('rolled for you')
+    // The breakdown names every part of the total: the kept d20, the dropped one, Bless and the modifier.
+    expect(card().findAll('[data-testid="roll-breakdown"] li').map((li) => li.text())).toEqual(['Advantage12, 17 dropped', 'Bless+3', 'Dexterity+3'])
+    expect(card().find('[data-testid="roll-natural"]').exists()).toBe(false)
     expect(card().get('[data-testid="die-1"] [role="img"]').attributes('aria-label')).toContain('dropped')
     expect(bodies.map((b) => b.body)).toContainEqual({ mode: 'manual', value: 12 })
     expect(bodies.map((b) => b.body)).toContainEqual({ mode: 'auto' })
@@ -199,6 +285,7 @@ describe('dice tray', () => {
     await flushPromises()
     expect(card().get('[data-testid="rerolled"]').text()).toContain('spent on a reroll')
     expect(card().get('[data-testid="roll-total"]').text()).toContain('22')
+    expect(card().findAll('[data-testid="roll-breakdown"] li').map((li) => li.text())).toEqual(['Advantage15, 19 dropped', 'Bless+2', 'Dexterity+3', 'Heroic Inspirationrerolled a die'])
     expect(card().find('[data-testid="inspiration-choice"]').exists()).toBe(false)
     document.body.innerHTML = ''
     const again = await mountApp(`/campaigns/${ID}/dice`, {

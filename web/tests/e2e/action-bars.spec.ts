@@ -7,8 +7,8 @@ const saved = (page: Page) => page.waitForResponse((r) => r.url().includes('/act
 
 async function enter(page: Page, face: string) {
   const card = page.getByTestId('roll-card')
-  await card.getByTestId('manual-0').click()
-  await card.getByTestId('pad-0').getByRole('button', { name: face, exact: true }).click()
+  await card.getByTestId('face-0').fill(face)
+  await card.getByTestId('face-0').press('Enter')
 }
 
 test('a player arranges their Character\'s action bars, and finds them the same on a phone', async ({ page, browser }, info) => {

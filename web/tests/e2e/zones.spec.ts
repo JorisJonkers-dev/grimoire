@@ -4,8 +4,8 @@ import { expect, type Page, test } from '@playwright/test'
 async function enter(page: Page, faces: string[]) {
   const card = page.getByTestId('roll-card')
   for (const [i, face] of faces.entries()) {
-    await card.getByTestId(`manual-${String(i)}`).click()
-    await card.getByTestId(`pad-${String(i)}`).getByRole('button', { name: face, exact: true }).click()
+    await card.getByTestId(`face-${String(i)}`).fill(face)
+    await card.getByTestId(`face-${String(i)}`).press('Enter')
   }
 }
 

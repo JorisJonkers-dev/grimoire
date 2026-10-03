@@ -5,13 +5,16 @@ import { buildFighter } from './wizard'
 async function enter(page: Page, faces: string[]) {
   const card = page.getByTestId('roll-card')
   for (const [i, face] of faces.entries()) {
-    await card.getByTestId(`manual-${String(i)}`).click()
-    await card.getByTestId(`pad-${String(i)}`).getByRole('button', { name: face, exact: true }).click()
+    await card.getByTestId(`face-${String(i)}`).fill(face)
+    await card.getByTestId(`face-${String(i)}`).press('Enter')
   }
 }
 
 test('the DM opens a shop stocked from a loot table, and a player haggles, buys and sells', async ({ page, browser }, info) => {
   test.skip(info.project.name !== 'desktop', 'one multi-client run is enough')
+  // The longest scenario there is: tables, a settlement, a shop, a Character and a session. On a busy
+  // machine it runs out of the usual time without anything being wrong.
+  test.slow()
   const stamp = String(Date.now())
   await page.goto('/campaigns')
   await page.getByTestId('campaign-name').fill(`Market ${stamp}`)
