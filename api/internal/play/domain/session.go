@@ -171,6 +171,8 @@ type LoggedAction struct {
 	Origin string
 	Client string
 	Label  string
+	// Token is the one token the Action touched, when it touched one.
+	Token  *TokenID
 	Undone bool
 	At     time.Time
 }

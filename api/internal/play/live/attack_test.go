@@ -86,6 +86,9 @@ func TestAttacksFromPreviewToDamageAndUndo(t *testing.T) {
 	tb.dmSays(live.Command{Kind: live.CmdPlace, MonsterSlug: "goblin", TokenKind: domain.TokenEnemy, Label: "Archer", Q: 4})
 	d, p := tb.dmSays(live.Command{Kind: live.CmdPlace, Label: "Crate", TokenKind: domain.TokenObject, Q: 0, R: 1})
 	aria, gob := token(p.View, "Aria"), token(p.View, "Goblin")
+	if _, err := uuid.Parse(aria.CharacterID); err != nil || gob.CharacterID != "" {
+		t.Fatalf("a party token names its Character, a monster has none: %q %q", aria.CharacterID, gob.CharacterID)
+	}
 	if aria.Kind != domain.TokenParty || aria.ControllerID != w.player.ID.String() || *aria.HP != 12 || len(aria.Attacks) != 2 {
 		t.Fatalf("a character's token = %+v", aria)
 	}

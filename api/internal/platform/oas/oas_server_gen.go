@@ -674,6 +674,13 @@ type BuildHandler interface {
 	//
 	// PUT /api/v1/builders/subclasses/{entryId}
 	SaveSubclassBuild(ctx context.Context, req *SubclassDesign, params SaveSubclassBuildParams) (SaveSubclassBuildRes, error)
+	// SetActionBars implements setActionBars operation.
+	//
+	// Saves up to two bars of ten tiles and a quick bar of four. A tile is named kind:name. A tile the
+	// Character lacks is kept and shows greyed in its place.
+	//
+	// PUT /api/v1/characters/{characterId}/action-bars
+	SetActionBars(ctx context.Context, req *ActionBarsChange, params SetActionBarsParams) (SetActionBarsRes, error)
 	// SetCampaignOverride implements setCampaignOverride operation.
 	//
 	// Replaces the fields this Campaign sees differently from the entry's base. DM only.
@@ -944,6 +951,14 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/account/history
 	GetAccountHistory(ctx context.Context) (GetAccountHistoryRes, error)
+	// GetActionBars implements getActionBars operation.
+	//
+	// How the signed-in Account laid out one of its Characters' action bars for live play. The layout
+	// belongs to the Character, so it is the same in every Campaign and on every device. Anyone else's
+	// Character is not found.
+	//
+	// GET /api/v1/characters/{characterId}/action-bars
+	GetActionBars(ctx context.Context, params GetActionBarsParams) (GetActionBarsRes, error)
 	// GetActionLog implements getActionLog operation.
 	//
 	// The Campaign's recent Actions with their seeds. DM only.

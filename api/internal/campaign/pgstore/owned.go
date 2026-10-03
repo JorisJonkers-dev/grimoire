@@ -2,6 +2,7 @@ package pgstore
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"time"
 
@@ -84,4 +85,23 @@ func (s *Store) UpdateOwnedCharacter(ctx context.Context, id domain.OwnedID, nam
 		}
 		return q.RenameCampaignCharacters(ctx, queries.RenameCampaignCharactersParams{Name: name, CharacterID: pgtype.UUID{Bytes: id, Valid: true}})
 	})
+}
+
+// ActionBars reads a Character's action bar layout; one nobody arranged is empty.
+func (s *Store) ActionBars(ctx context.Context, id domain.OwnedID) (domain.ActionBars, error) {
+	raw, err := s.q.AccountCharacterActionBars(ctx, uuid.UUID(id))
+	if err != nil {
+		return domain.ActionBars{}, notFound(err)
+	}
+	out := domain.ActionBars{Bars: [][]string{}, Quick: []string{}, Stowed: []string{}, Arranged: raw != nil}
+	if raw != nil {
+		_ = json.Unmarshal(raw, &out) // written by SetActionBars
+	}
+	return out, nil
+}
+
+// SetActionBars saves a Character's action bar layout.
+func (s *Store) SetActionBars(ctx context.Context, id domain.OwnedID, bars domain.ActionBars, now time.Time) error {
+	raw, _ := json.Marshal(bars) //nolint:errchkjson // a layout is plain strings
+	return s.q.SetAccountCharacterActionBars(ctx, queries.SetAccountCharacterActionBarsParams{ActionBars: raw, Now: now, ID: uuid.UUID(id)})
 }

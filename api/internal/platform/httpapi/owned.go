@@ -90,3 +90,57 @@ func (h *Handler) JoinCampaign(ctx context.Context, req *oas.CharacterJoin, p oa
 	}
 	return &oas.CharacterSheetHeaders{Response: sheetOut(s)}, nil
 }
+
+func barsOut(b domain.ActionBars) *oas.ActionBarsHeaders {
+	out := oas.ActionBars{Bars: make([][]oas.ActionBarTile, 0, len(b.Bars)), Quick: tilesOut(b.Quick), Stowed: tilesOut(b.Stowed), Arranged: b.Arranged}
+	for _, bar := range b.Bars {
+		out.Bars = append(out.Bars, tilesOut(bar))
+	}
+	return &oas.ActionBarsHeaders{Response: out}
+}
+
+func tilesOut(tiles []string) []oas.ActionBarTile {
+	out := make([]oas.ActionBarTile, 0, len(tiles))
+	for _, t := range tiles {
+		out = append(out, oas.ActionBarTile(t))
+	}
+	return out
+}
+
+func tilesIn(tiles []oas.ActionBarTile) []string {
+	out := make([]string, 0, len(tiles))
+	for _, t := range tiles {
+		out = append(out, string(t))
+	}
+	return out
+}
+
+// GetActionBars reads how the caller laid out one of their Characters' action bars.
+func (h *Handler) GetActionBars(ctx context.Context, p oas.GetActionBarsParams) (oas.GetActionBarsRes, error) {
+	c, ok := uiCaller(ctx)
+	if !ok {
+		return unauthorized(), nil
+	}
+	b, err := h.Characters.ActionBars(ctx, c, domain.OwnedID(p.CharacterId))
+	if err != nil {
+		return h.ownedProblem(ctx, "get action bars", err), nil
+	}
+	return barsOut(b), nil
+}
+
+// SetActionBars saves the caller's layout for one of their Characters.
+func (h *Handler) SetActionBars(ctx context.Context, req *oas.ActionBarsChange, p oas.SetActionBarsParams) (oas.SetActionBarsRes, error) {
+	c, ok := uiCaller(ctx)
+	if !ok {
+		return unauthorized(), nil
+	}
+	in := domain.ActionBars{Bars: make([][]string, 0, len(req.Bars)), Quick: tilesIn(req.Quick), Stowed: tilesIn(req.Stowed), Arranged: true}
+	for _, bar := range req.Bars {
+		in.Bars = append(in.Bars, tilesIn(bar))
+	}
+	b, err := h.Characters.SetActionBars(ctx, c, domain.OwnedID(p.CharacterId), in)
+	if err != nil {
+		return h.ownedProblem(ctx, "set action bars", err), nil
+	}
+	return barsOut(b), nil
+}

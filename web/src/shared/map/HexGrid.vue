@@ -43,6 +43,7 @@ const box = computed(() => gridBox(props.cells, props.size))
       >
         <polygon :points="s.points" />
         <text v-if="s.mark" :x="s.centre.x" :y="s.centre.y + size * 0.18" text-anchor="middle" class="mark" aria-hidden="true">{{ s.mark }}</text>
+        <text v-if="s.caption" :x="s.centre.x" :y="s.centre.y + size * 0.82" text-anchor="middle" class="caption" aria-hidden="true" :data-testid="`caption-${s.captionKey ?? ''}`">{{ s.caption }}</text>
       </g>
     </svg>
   </div>
@@ -98,6 +99,14 @@ const box = computed(() => gridBox(props.cells, props.size))
 }
 .hex--reach polygon {
   fill: #2c4a38;
+}
+.caption {
+  font-size: 7px;
+  fill: var(--color-gold-high);
+  paint-order: stroke;
+  stroke: #000;
+  stroke-width: 2px;
+  pointer-events: none;
 }
 .hex--path polygon {
   fill: var(--color-gold);

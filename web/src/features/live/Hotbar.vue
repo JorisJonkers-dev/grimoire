@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import type { LiveSuggestion, LiveToken, Tactics } from '@/infrastructure/api/types.gen'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { GButton } from '@/shared/ui'
+import ActionBars from './ActionBars.vue'
+import { actions, areaSpells as spells, damageOf, defaultLayout, masteries, reachOf, signed, summonings, tilesOf, unarmed } from './actionBar'
+import { useActionBars } from './useActionBars'
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     token: LiveToken
     armed: number | null
@@ -16,8 +19,9 @@ withDefaults(
     interaction?: boolean
     cleave?: boolean
     summons?: { tokenId: string; label: string }[]
+    own?: boolean
   }>(),
-  { suggestion: undefined, target: 'its target', tactics: undefined, attacksLeft: 0, offHand: false, interaction: false, cleave: false, summons: () => [] },
+  { suggestion: undefined, target: 'its target', tactics: undefined, attacksLeft: 0, offHand: false, interaction: false, cleave: false, summons: () => [], own: false },
 )
 const emit = defineEmits<{
   arm: [attackNo: number]
@@ -39,67 +43,58 @@ const emit = defineEmits<{
 }>()
 const what = ref('')
 const slot = ref(0)
-// What each mastery does, for the hotbar's tooltips.
-const masteries: Record<string, string> = {
-  cleave: 'Cleave: on a hit, attack a second creature next to the first, once a turn.',
-  graze: 'Graze: on a miss, deal your ability modifier in damage.',
-  nick: 'Nick: the off-hand attack is part of the Attack action.',
-  push: 'Push: on a hit, push the target 10 ft away.',
-  sap: 'Sap: on a hit, the target has Disadvantage on its next attack.',
-  slow: 'Slow: on a damaging hit, the target loses 10 ft of Speed.',
-  topple: 'Topple: on a hit, the target saves (Constitution) or falls Prone.',
-  vex: 'Vex: on a damaging hit, your next attack against it has Advantage.',
-}
-// The 2024 actions besides Attack and Ready, in the order the rules list them.
-const actions = [
-  { key: 'dash', name: 'Dash', tip: 'Gain extra movement equal to your Speed this turn.' },
-  { key: 'disengage', name: 'Disengage', tip: 'Your movement provokes no Opportunity Attacks this turn.' },
-  { key: 'dodge', name: 'Dodge', tip: 'Attacks against you have Disadvantage until your next turn.' },
-  { key: 'help', name: 'Help', tip: 'Give an ally Advantage on their next check or attack.' },
-  { key: 'hide', name: 'Hide', tip: 'DC 15 Dexterity (Stealth); on a success you are Invisible.' },
-  { key: 'influence', name: 'Influence', tip: 'Sway a creature with a Charisma or Wisdom check.' },
-  { key: 'magic', name: 'Magic', tip: 'Cast a spell or use a magic item.' },
-  { key: 'search', name: 'Search', tip: 'Wisdom (Perception) to find what is hidden.' },
-  { key: 'study', name: 'Study', tip: 'Intelligence to recall or work something out.' },
-  { key: 'utilize', name: 'Utilize', tip: 'Use an object: open a door, pull a lever.' },
-]
-const unarmed = [
-  { key: 'grapple', name: 'Grapple' },
-  { key: 'shove_push', name: 'Shove away' },
-  { key: 'shove_prone', name: 'Shove down' },
-]
-const spells = [
-  { slug: 'burning-hands', name: 'Burning Hands' },
-  { slug: 'thunderwave', name: 'Thunderwave' },
-  { slug: 'shatter', name: 'Shatter' },
-  { slug: 'grease', name: 'Grease' },
-  { slug: 'fireball', name: 'Fireball' },
-  { slug: 'lightning-bolt', name: 'Lightning Bolt' },
-  { slug: 'cone-of-cold', name: 'Cone of Cold' },
-  { slug: 'spirit-guardians', name: 'Spirit Guardians' },
-  { slug: 'wall-of-fire', name: 'Wall of Fire' },
-]
-const summonings = [
-  { slug: 'find-familiar', name: 'Find Familiar' },
-  { slug: 'animate-dead', name: 'Animate Dead' },
-]
 const styles: { value: Tactics; label: string }[] = [
   { value: 'auto', label: 'From Intelligence' },
   { value: 'simple', label: 'Simple' },
   { value: 'cunning', label: 'Cunning' },
   { value: 'off', label: 'Off' },
 ]
-const signed = (n: number) => (n >= 0 ? `+${String(n)}` : String(n))
-const damage = (a: NonNullable<LiveToken['attacks']>[number]) =>
-  a.damage ? `${a.damage}${a.damageBonus ? signed(a.damageBonus) : ''}` : String(a.damageBonus)
-const reach = (a: NonNullable<LiveToken['attacks']>[number]) =>
-  [a.reachFt ? `reach ${String(a.reachFt)} ft` : '', a.rangeFt ? `range ${String(a.rangeFt)}/${String(a.longRangeFt)} ft` : ''].filter(Boolean).join(', ')
+const damage = damageOf
+const reach = reachOf
+
+// The owner's own layout for this token's Character, once they have arranged one.
+const bars = useActionBars(() => props.token.characterId, () => props.own)
+const armedKey = computed(() => (props.armed === null ? '' : `attack:${props.token.attacks?.[props.armed]?.name ?? ''}`))
+const arranging = ref(false)
+function arrangeBars() {
+  arranging.value = true
+  bars.save(defaultLayout(tilesOf(props.token)))
+}
+// A tile played from the bars does what its button on the plain hotbar does.
+const moves: Record<string, () => void> = {
+  swap: () => { emit('swap') },
+  jump: () => { emit('jump') },
+  throw: () => { emit('throw') },
+  'misty-step': () => { emit('teleport') },
+}
+function play(key: string) {
+  const name = key.slice(key.indexOf(':') + 1)
+  const plays: Record<string, () => void> = {
+    attack: () => { emit('arm', (props.token.attacks ?? []).findIndex((x) => x.name === name)) },
+    action: () => { emit('action', name) },
+    unarmed: () => { emit('unarmed', name) },
+    spell: () => { emit('area', name, slot.value) },
+    summon: () => { emit('summon', name) },
+    move: () => { moves[name]?.() },
+  }
+  plays[key.slice(0, key.indexOf(':'))]?.()
+}
 </script>
 
 <template>
   <section class="hotbar" :aria-label="`${token.label}'s attacks`" :data-testid="`hotbar-${token.label}`">
+    <ActionBars
+      v-if="bars.layout.value"
+      :token="token"
+      :layout="bars.layout.value"
+      :blocked="blocked"
+      :armed="armedKey"
+      :start-editing="arranging"
+      @use="play"
+      @change="bars.save"
+    />
     <GButton
-      v-for="(a, i) in token.attacks ?? []"
+      v-for="(a, i) in bars.layout.value ? [] : (token.attacks ?? [])"
       :key="a.name + String(i)"
       :class="['slot', { 'slot--armed': armed === i }]"
       :disabled="blocked !== ''"
@@ -144,7 +139,7 @@ const reach = (a: NonNullable<LiveToken['attacks']>[number]) =>
       </p>
       <GButton v-if="suggestion.attackNo !== undefined" variant="primary" data-testid="use-suggestion" @click="emit('use')">Use suggestion</GButton>
     </div>
-    <div class="actions" role="group" :aria-label="`${token.label}'s actions`">
+    <div v-if="!bars.layout.value" class="actions" role="group" :aria-label="`${token.label}'s actions`">
       <GButton
         v-for="a in actions"
         :key="a.key"
@@ -184,17 +179,19 @@ const reach = (a: NonNullable<LiveToken['attacks']>[number]) =>
         <option v-for="(a, i) in token.attacks ?? []" v-show="a.reachFt > 0" :key="a.name + String(i)" :value="i">{{ a.name }}</option>
       </select>
     </label>
-    <GButton data-testid="jump" title="Leap as far as your Strength score in feet with a run-up." @click="emit('jump')">Jump</GButton>
-    <GButton :disabled="blocked !== ''" data-testid="throw" title="Throw the creature you grapple, or a barrel or chest next to you." @click="emit('throw')">Throw</GButton>
-    <GButton :disabled="blocked !== ''" data-testid="misty-step" title="Bonus Action: teleport up to 30 feet to a free hex." @click="emit('teleport')">Misty Step</GButton>
-    <label class="g-field tactics">
+    <template v-if="!bars.layout.value">
+      <GButton data-testid="jump" title="Leap as far as your Strength score in feet with a run-up." @click="emit('jump')">Jump</GButton>
+      <GButton :disabled="blocked !== ''" data-testid="throw" title="Throw the creature you grapple, or a barrel or chest next to you." @click="emit('throw')">Throw</GButton>
+      <GButton :disabled="blocked !== ''" data-testid="misty-step" title="Bonus Action: teleport up to 30 feet to a free hex." @click="emit('teleport')">Misty Step</GButton>
+    </template>
+    <label v-if="!bars.layout.value" class="g-field tactics">
       <span>Area spell</span>
       <select :disabled="blocked !== ''" data-testid="area-spell" @change="emit('area', ($event.target as HTMLSelectElement).value, slot)">
         <option value="">Choose to aim…</option>
         <option v-for="s in spells" :key="s.slug" :value="s.slug">{{ s.name }}</option>
       </select>
     </label>
-    <label class="g-field tactics">
+    <label v-if="!bars.layout.value" class="g-field tactics">
       <span>Summon</span>
       <select :disabled="blocked !== ''" data-testid="summon" @change="emit('summon', ($event.target as HTMLSelectElement).value)">
         <option value="">Choose to place…</option>
@@ -223,6 +220,7 @@ const reach = (a: NonNullable<LiveToken['attacks']>[number]) =>
         <option v-for="s in styles" :key="s.value" :value="s.value">{{ s.label }}</option>
       </select>
     </label>
+    <GButton v-if="bars.available.value && !bars.layout.value" data-testid="arrange-bars" @click="arrangeBars">Arrange my bars</GButton>
     <p v-if="blocked" class="blocked" data-testid="hotbar-blocked">{{ blocked }}</p>
     <p v-else-if="armed !== null" class="hint" role="status">Tap a creature to aim.</p>
   </section>

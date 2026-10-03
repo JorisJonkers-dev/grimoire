@@ -19,6 +19,7 @@ type Querier interface {
 	AccountByID(ctx context.Context, id uuid.UUID) (AccountByIDRow, error)
 	AccountBySubject(ctx context.Context, subject string) (AccountBySubjectRow, error)
 	AccountByUsername(ctx context.Context, username string) (IdentityAccount, error)
+	AccountCharacterActionBars(ctx context.Context, id uuid.UUID) ([]byte, error)
 	AccountCharacterCampaigns(ctx context.Context, ids []uuid.UUID) ([]AccountCharacterCampaignsRow, error)
 	AccountHasPassword(ctx context.Context, id uuid.UUID) (bool, error)
 	ActionEffectEvent(ctx context.Context, actionID uuid.UUID) (uuid.UUID, error)
@@ -606,6 +607,7 @@ type Querier interface {
 	SessionZones(ctx context.Context, sessionID uuid.UUID) ([]SessionZonesRow, error)
 	SetAbilityIncrease(ctx context.Context, arg SetAbilityIncreaseParams) error
 	SetAccountAdmin(ctx context.Context, arg SetAccountAdminParams) error
+	SetAccountCharacterActionBars(ctx context.Context, arg SetAccountCharacterActionBarsParams) error
 	SetAccountDisabled(ctx context.Context, arg SetAccountDisabledParams) error
 	SetAccountPassword(ctx context.Context, arg SetAccountPasswordParams) error
 	SetCampaignClock(ctx context.Context, arg SetCampaignClockParams) error

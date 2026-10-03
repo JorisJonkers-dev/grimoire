@@ -2481,6 +2481,407 @@ func (s *AccountSetup) UnmarshalJSON(data []byte) error {
 	return s.Decode(d)
 }
 
+// Encode encodes ActionBarTile as json.
+func (s ActionBarTile) Encode(e *jx.Encoder) {
+	unwrapped := string(s)
+
+	e.Str(unwrapped)
+}
+
+// Decode decodes ActionBarTile from json.
+func (s *ActionBarTile) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode ActionBarTile to nil")
+	}
+	var unwrapped string
+	if err := func() error {
+		v, err := d.Str()
+		unwrapped = string(v)
+		if err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		return errors.Wrap(err, "alias")
+	}
+	*s = ActionBarTile(unwrapped)
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s ActionBarTile) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *ActionBarTile) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
+func (s *ActionBars) Encode(e *jx.Encoder) {
+	e.ObjStart()
+	s.encodeFields(e)
+	e.ObjEnd()
+}
+
+// encodeFields encodes fields.
+func (s *ActionBars) encodeFields(e *jx.Encoder) {
+	{
+		e.FieldStart("bars")
+		e.ArrStart()
+		for _, elem := range s.Bars {
+			e.ArrStart()
+			for _, elem := range elem {
+				elem.Encode(e)
+			}
+			e.ArrEnd()
+		}
+		e.ArrEnd()
+	}
+	{
+		e.FieldStart("quick")
+		e.ArrStart()
+		for _, elem := range s.Quick {
+			elem.Encode(e)
+		}
+		e.ArrEnd()
+	}
+	{
+		e.FieldStart("stowed")
+		e.ArrStart()
+		for _, elem := range s.Stowed {
+			elem.Encode(e)
+		}
+		e.ArrEnd()
+	}
+	{
+		e.FieldStart("arranged")
+		e.Bool(s.Arranged)
+	}
+}
+
+var jsonFieldsNameOfActionBars = [4]string{
+	0: "bars",
+	1: "quick",
+	2: "stowed",
+	3: "arranged",
+}
+
+// Decode decodes ActionBars from json.
+func (s *ActionBars) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode ActionBars to nil")
+	}
+	var requiredBitSet [1]uint8
+
+	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
+		switch string(k) {
+		case "bars":
+			requiredBitSet[0] |= 1 << 0
+			if err := func() error {
+				s.Bars = make([][]ActionBarTile, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem []ActionBarTile
+					elem = make([]ActionBarTile, 0)
+					if err := d.Arr(func(d *jx.Decoder) error {
+						var elemElem ActionBarTile
+						if err := elemElem.Decode(d); err != nil {
+							return err
+						}
+						elem = append(elem, elemElem)
+						return nil
+					}); err != nil {
+						return err
+					}
+					s.Bars = append(s.Bars, elem)
+					return nil
+				}); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"bars\"")
+			}
+		case "quick":
+			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				s.Quick = make([]ActionBarTile, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem ActionBarTile
+					if err := elem.Decode(d); err != nil {
+						return err
+					}
+					s.Quick = append(s.Quick, elem)
+					return nil
+				}); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"quick\"")
+			}
+		case "stowed":
+			requiredBitSet[0] |= 1 << 2
+			if err := func() error {
+				s.Stowed = make([]ActionBarTile, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem ActionBarTile
+					if err := elem.Decode(d); err != nil {
+						return err
+					}
+					s.Stowed = append(s.Stowed, elem)
+					return nil
+				}); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"stowed\"")
+			}
+		case "arranged":
+			requiredBitSet[0] |= 1 << 3
+			if err := func() error {
+				v, err := d.Bool()
+				s.Arranged = bool(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"arranged\"")
+			}
+		default:
+			return errors.Errorf("unexpected field %q", k)
+		}
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "decode ActionBars")
+	}
+	// Validate required fields.
+	var failures []validate.FieldError
+	for i, mask := range [1]uint8{
+		0b00001111,
+	} {
+		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
+			// Mask only required fields and check equality to mask using XOR.
+			//
+			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
+			// Bits of fields which would be set are actually bits of missed fields.
+			missed := bits.OnesCount8(result)
+			for bitN := 0; bitN < missed; bitN++ {
+				bitIdx := bits.TrailingZeros8(result)
+				fieldIdx := i*8 + bitIdx
+				var name string
+				if fieldIdx < len(jsonFieldsNameOfActionBars) {
+					name = jsonFieldsNameOfActionBars[fieldIdx]
+				} else {
+					name = strconv.Itoa(fieldIdx)
+				}
+				failures = append(failures, validate.FieldError{
+					Name:  name,
+					Error: validate.ErrFieldRequired,
+				})
+				// Reset bit.
+				result &^= 1 << bitIdx
+			}
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *ActionBars) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *ActionBars) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
+func (s *ActionBarsChange) Encode(e *jx.Encoder) {
+	e.ObjStart()
+	s.encodeFields(e)
+	e.ObjEnd()
+}
+
+// encodeFields encodes fields.
+func (s *ActionBarsChange) encodeFields(e *jx.Encoder) {
+	{
+		e.FieldStart("bars")
+		e.ArrStart()
+		for _, elem := range s.Bars {
+			e.ArrStart()
+			for _, elem := range elem {
+				elem.Encode(e)
+			}
+			e.ArrEnd()
+		}
+		e.ArrEnd()
+	}
+	{
+		e.FieldStart("quick")
+		e.ArrStart()
+		for _, elem := range s.Quick {
+			elem.Encode(e)
+		}
+		e.ArrEnd()
+	}
+	{
+		e.FieldStart("stowed")
+		e.ArrStart()
+		for _, elem := range s.Stowed {
+			elem.Encode(e)
+		}
+		e.ArrEnd()
+	}
+}
+
+var jsonFieldsNameOfActionBarsChange = [3]string{
+	0: "bars",
+	1: "quick",
+	2: "stowed",
+}
+
+// Decode decodes ActionBarsChange from json.
+func (s *ActionBarsChange) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode ActionBarsChange to nil")
+	}
+	var requiredBitSet [1]uint8
+
+	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
+		switch string(k) {
+		case "bars":
+			requiredBitSet[0] |= 1 << 0
+			if err := func() error {
+				s.Bars = make([][]ActionBarTile, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem []ActionBarTile
+					elem = make([]ActionBarTile, 0)
+					if err := d.Arr(func(d *jx.Decoder) error {
+						var elemElem ActionBarTile
+						if err := elemElem.Decode(d); err != nil {
+							return err
+						}
+						elem = append(elem, elemElem)
+						return nil
+					}); err != nil {
+						return err
+					}
+					s.Bars = append(s.Bars, elem)
+					return nil
+				}); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"bars\"")
+			}
+		case "quick":
+			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				s.Quick = make([]ActionBarTile, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem ActionBarTile
+					if err := elem.Decode(d); err != nil {
+						return err
+					}
+					s.Quick = append(s.Quick, elem)
+					return nil
+				}); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"quick\"")
+			}
+		case "stowed":
+			requiredBitSet[0] |= 1 << 2
+			if err := func() error {
+				s.Stowed = make([]ActionBarTile, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem ActionBarTile
+					if err := elem.Decode(d); err != nil {
+						return err
+					}
+					s.Stowed = append(s.Stowed, elem)
+					return nil
+				}); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"stowed\"")
+			}
+		default:
+			return errors.Errorf("unexpected field %q", k)
+		}
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "decode ActionBarsChange")
+	}
+	// Validate required fields.
+	var failures []validate.FieldError
+	for i, mask := range [1]uint8{
+		0b00000111,
+	} {
+		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
+			// Mask only required fields and check equality to mask using XOR.
+			//
+			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
+			// Bits of fields which would be set are actually bits of missed fields.
+			missed := bits.OnesCount8(result)
+			for bitN := 0; bitN < missed; bitN++ {
+				bitIdx := bits.TrailingZeros8(result)
+				fieldIdx := i*8 + bitIdx
+				var name string
+				if fieldIdx < len(jsonFieldsNameOfActionBarsChange) {
+					name = jsonFieldsNameOfActionBarsChange[fieldIdx]
+				} else {
+					name = strconv.Itoa(fieldIdx)
+				}
+				failures = append(failures, validate.FieldError{
+					Name:  name,
+					Error: validate.ErrFieldRequired,
+				})
+				// Reset bit.
+				result &^= 1 << bitIdx
+			}
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *ActionBarsChange) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *ActionBarsChange) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
 // Encode implements json.Marshaler.
 func (s *ActionEntry) Encode(e *jx.Encoder) {
 	e.ObjStart()
@@ -40661,6 +41062,12 @@ func (s *LiveToken) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.CharacterId.Set {
+			e.FieldStart("characterId")
+			s.CharacterId.Encode(e)
+		}
+	}
+	{
 		if s.Ac.Set {
 			e.FieldStart("ac")
 			s.Ac.Encode(e)
@@ -40762,7 +41169,7 @@ func (s *LiveToken) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfLiveToken = [22]string{
+var jsonFieldsNameOfLiveToken = [23]string{
 	0:  "id",
 	1:  "label",
 	2:  "kind",
@@ -40771,20 +41178,21 @@ var jsonFieldsNameOfLiveToken = [22]string{
 	5:  "r",
 	6:  "hidden",
 	7:  "controllerId",
-	8:  "ac",
-	9:  "hp",
-	10: "hpMax",
-	11: "tempHp",
-	12: "form",
-	13: "qualities",
-	14: "disguise",
-	15: "health",
-	16: "attacks",
-	17: "shield",
-	18: "effects",
-	19: "reactions",
-	20: "dying",
-	21: "legend",
+	8:  "characterId",
+	9:  "ac",
+	10: "hp",
+	11: "hpMax",
+	12: "tempHp",
+	13: "form",
+	14: "qualities",
+	15: "disguise",
+	16: "health",
+	17: "attacks",
+	18: "shield",
+	19: "effects",
+	20: "reactions",
+	21: "dying",
+	22: "legend",
 }
 
 // Decode decodes LiveToken from json.
@@ -40885,6 +41293,16 @@ func (s *LiveToken) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"controllerId\"")
+			}
+		case "characterId":
+			if err := func() error {
+				s.CharacterId.Reset()
+				if err := s.CharacterId.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"characterId\"")
 			}
 		case "ac":
 			if err := func() error {
@@ -61079,6 +61497,12 @@ func (s *SessionAction) encodeFields(e *jx.Encoder) {
 		e.Str(s.Label)
 	}
 	{
+		if s.TokenId.Set {
+			e.FieldStart("tokenId")
+			s.TokenId.Encode(e)
+		}
+	}
+	{
 		e.FieldStart("undoable")
 		e.Bool(s.Undoable)
 	}
@@ -61088,15 +61512,16 @@ func (s *SessionAction) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfSessionAction = [8]string{
+var jsonFieldsNameOfSessionAction = [9]string{
 	0: "seq",
 	1: "kind",
 	2: "actor",
 	3: "origin",
 	4: "client",
 	5: "label",
-	6: "undoable",
-	7: "createdAt",
+	6: "tokenId",
+	7: "undoable",
+	8: "createdAt",
 }
 
 // Decode decodes SessionAction from json.
@@ -61104,7 +61529,7 @@ func (s *SessionAction) Decode(d *jx.Decoder) error {
 	if s == nil {
 		return errors.New("invalid: unable to decode SessionAction to nil")
 	}
-	var requiredBitSet [1]uint8
+	var requiredBitSet [2]uint8
 
 	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
 		switch string(k) {
@@ -61174,8 +61599,18 @@ func (s *SessionAction) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"label\"")
 			}
+		case "tokenId":
+			if err := func() error {
+				s.TokenId.Reset()
+				if err := s.TokenId.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"tokenId\"")
+			}
 		case "undoable":
-			requiredBitSet[0] |= 1 << 6
+			requiredBitSet[0] |= 1 << 7
 			if err := func() error {
 				v, err := d.Bool()
 				s.Undoable = bool(v)
@@ -61187,7 +61622,7 @@ func (s *SessionAction) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"undoable\"")
 			}
 		case "createdAt":
-			requiredBitSet[0] |= 1 << 7
+			requiredBitSet[1] |= 1 << 0
 			if err := func() error {
 				v, err := json.DecodeDateTime(d)
 				s.CreatedAt = v
@@ -61207,8 +61642,9 @@ func (s *SessionAction) Decode(d *jx.Decoder) error {
 	}
 	// Validate required fields.
 	var failures []validate.FieldError
-	for i, mask := range [1]uint8{
-		0b11101111,
+	for i, mask := range [2]uint8{
+		0b10101111,
+		0b00000001,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.

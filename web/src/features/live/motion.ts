@@ -5,3 +5,5 @@ export const REVEAL_FADE_MS = 1600
 export const BANNER_MS = 2800
 
 export const reducedMotion = () => typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+/** How long a tile is held before its bars start editing. */
+export const HOLD_MS = 500

@@ -13,6 +13,17 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const accountCharacterActionBars = `-- name: AccountCharacterActionBars :one
+SELECT action_bars FROM campaign.account_characters WHERE id = $1
+`
+
+func (q *Queries) AccountCharacterActionBars(ctx context.Context, id uuid.UUID) ([]byte, error) {
+	row := q.db.QueryRow(ctx, accountCharacterActionBars, id)
+	var action_bars []byte
+	err := row.Scan(&action_bars)
+	return action_bars, err
+}
+
 const accountCharacterCampaigns = `-- name: AccountCharacterCampaigns :many
 SELECT c.character_id, c.id, c.campaign_id, cp.name AS campaign_name, c.level, c.hp_current, c.hp_max, c.updated_at
 FROM campaign.characters c JOIN campaign.campaigns cp ON cp.id = c.campaign_id
@@ -1016,6 +1027,21 @@ type SetAbilityIncreaseParams struct {
 
 func (q *Queries) SetAbilityIncrease(ctx context.Context, arg SetAbilityIncreaseParams) error {
 	_, err := q.db.Exec(ctx, setAbilityIncrease, arg.Increase, arg.CharacterID, arg.Ability)
+	return err
+}
+
+const setAccountCharacterActionBars = `-- name: SetAccountCharacterActionBars :exec
+UPDATE campaign.account_characters SET action_bars = $1, updated_at = $2 WHERE id = $3
+`
+
+type SetAccountCharacterActionBarsParams struct {
+	ActionBars []byte
+	Now        time.Time
+	ID         uuid.UUID
+}
+
+func (q *Queries) SetAccountCharacterActionBars(ctx context.Context, arg SetAccountCharacterActionBarsParams) error {
+	_, err := q.db.Exec(ctx, setAccountCharacterActionBars, arg.ActionBars, arg.Now, arg.ID)
 	return err
 }
 

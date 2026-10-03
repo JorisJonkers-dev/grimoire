@@ -54,6 +54,13 @@ test('a hidden goblin springs its zone on the party, and whoever missed it is su
   await page.getByTestId('zone-radius').fill('2')
   await page.locator('[data-hex="3,0"]').click()
   await expect(page.getByTestId('zone-Ambush')).toContainText('1 hidden · Armed')
+  // The zone is drawn as tinted hexes for the DM, two hexes out from its centre, and not at all for the party.
+  for (const hex of ['3,0', '1,0', '2,1']) {
+    await expect(page.locator(`[data-hex="${hex}"]`)).toHaveAttribute('aria-label', /in an encounter zone/)
+    await expect(page.locator(`[data-hex="${hex}"]`)).toHaveClass(/hex--zone|hex--hidden|cell--zone/)
+  }
+  await expect(page.locator('[data-hex="0,0"]')).not.toHaveAttribute('aria-label', /in an encounter zone/)
+  await expect(player.locator('[data-hex="1,0"]')).not.toHaveAttribute('aria-label', /in an encounter zone/)
 
   await player.locator('[data-hex="1,0"]').click()
   await expect(player.getByTestId('walk-preview')).toBeVisible()

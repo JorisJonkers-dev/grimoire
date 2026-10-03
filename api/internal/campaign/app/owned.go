@@ -135,3 +135,61 @@ func (s *Characters) RollScores(ctx context.Context, c caller.Caller, id domain.
 	}
 	return s.Repo.Draft(ctx, id, c.Subject)
 }
+
+// The most a layout holds: two bars of ten tiles, one for each of the keys 1 to 0, and a quick bar of four.
+const (
+	maxBars      = 2
+	maxBarTiles  = 10
+	maxQuick     = 4
+	maxStowed    = 100
+	maxTileRunes = 80
+)
+
+// ActionBars reads how the caller laid out one of their Characters' action bars.
+func (s *Characters) ActionBars(ctx context.Context, c caller.Caller, id domain.OwnedID) (domain.ActionBars, error) {
+	if _, err := s.Owned(ctx, c, id); err != nil {
+		return domain.ActionBars{}, err
+	}
+	return s.Repo.ActionBars(ctx, id)
+}
+
+// SetActionBars saves the caller's layout for one of their Characters. Tiles are kept as named, whether
+// or not the Character has them now: a tile it lacks shows greyed in its place.
+func (s *Characters) SetActionBars(ctx context.Context, c caller.Caller, id domain.OwnedID, bars domain.ActionBars) (domain.ActionBars, error) {
+	if _, err := s.Owned(ctx, c, id); err != nil {
+		return domain.ActionBars{}, err
+	}
+	if !validBars(bars) {
+		return domain.ActionBars{}, domain.ErrInvalid
+	}
+	if err := s.Repo.SetActionBars(ctx, id, bars, s.Now()); err != nil {
+		return domain.ActionBars{}, err
+	}
+	return s.Repo.ActionBars(ctx, id)
+}
+
+func validBars(b domain.ActionBars) bool {
+	placed, longest := slices.Clone(b.Stowed), 0
+	for _, bar := range b.Bars {
+		placed, longest = append(placed, bar...), max(longest, len(bar))
+	}
+	sized := len(b.Bars) <= maxBars && longest <= maxBarTiles && len(b.Quick) <= maxQuick && len(b.Stowed) <= maxStowed
+	return sized && distinctTiles(b.Quick) && distinctTiles(placed)
+}
+
+// distinctTiles reports whether every tile is well named and none is there twice.
+func distinctTiles(tiles []string) bool {
+	seen := map[string]bool{}
+	for _, t := range tiles {
+		kind, name, ok := strings.Cut(t, ":")
+		if !ok || !slices.Contains(tileKinds(), kind) || strings.TrimSpace(name) != name || name == "" || utf8.RuneCountInString(name) > maxTileRunes || seen[t] {
+			return false
+		}
+		seen[t] = true
+	}
+	return true
+}
+
+func tileKinds() []string {
+	return []string{"attack", "action", "unarmed", "spell", "summon", "move"}
+}

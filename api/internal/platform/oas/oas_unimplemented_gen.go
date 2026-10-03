@@ -445,6 +445,17 @@ func (UnimplementedHandler) GetAccountHistory(ctx context.Context) (r GetAccount
 	return r, ht.ErrNotImplemented
 }
 
+// GetActionBars implements getActionBars operation.
+//
+// How the signed-in Account laid out one of its Characters' action bars for live play. The layout
+// belongs to the Character, so it is the same in every Campaign and on every device. Anyone else's
+// Character is not found.
+//
+// GET /api/v1/characters/{characterId}/action-bars
+func (UnimplementedHandler) GetActionBars(ctx context.Context, params GetActionBarsParams) (r GetActionBarsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetActionLog implements getActionLog operation.
 //
 // The Campaign's recent Actions with their seeds. DM only.
@@ -1858,6 +1869,16 @@ func (UnimplementedHandler) SetAccountDisabled(ctx context.Context, req *Toggle,
 //
 // PUT /api/v1/account/password
 func (UnimplementedHandler) SetAccountPassword(ctx context.Context, req *PasswordChange) (r SetAccountPasswordRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// SetActionBars implements setActionBars operation.
+//
+// Saves up to two bars of ten tiles and a quick bar of four. A tile is named kind:name. A tile the
+// Character lacks is kept and shows greyed in its place.
+//
+// PUT /api/v1/characters/{characterId}/action-bars
+func (UnimplementedHandler) SetActionBars(ctx context.Context, req *ActionBarsChange, params SetActionBarsParams) (r SetActionBarsRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

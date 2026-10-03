@@ -6548,6 +6548,73 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/characters/{characterId}/action-bars:
+    get:
+      operationId: getActionBars
+      x-ogen-operation-group: Read
+      summary: Read a Character's action bars
+      description: How the signed-in Account laid out one of its Characters' action bars for live play. The layout belongs to the Character, so it is the same in every Campaign and on every device. Anyone else's Character is not found.
+      tags: [Campaign]
+      parameters:
+        - name: characterId
+          in: path
+          required: true
+          description: Character id.
+          schema: { $ref: "#/components/schemas/Id" }
+      responses:
+        "200":
+          description: The layout; empty and not arranged until first saved.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActionBars"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    put:
+      operationId: setActionBars
+      x-ogen-operation-group: Build
+      summary: Arrange a Character's action bars
+      description: Saves up to two bars of ten tiles and a quick bar of four. A tile is named kind:name. A tile the Character lacks is kept and shows greyed in its place.
+      tags: [Campaign]
+      parameters:
+        - name: characterId
+          in: path
+          required: true
+          description: Character id.
+          schema: { $ref: "#/components/schemas/Id" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ActionBarsChange"
+      responses:
+        "200":
+          description: The saved layout.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActionBars"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /api/v1/characters/{characterId}/campaigns:
     post:
       operationId: joinCampaign
@@ -8713,6 +8780,56 @@ components:
           type: array
           maxItems: 500
           items: { $ref: "#/components/schemas/OwnedCharacter" }
+    ActionBarTile:
+      type: string
+      description: "A tile on an action bar, named kind:name, such as attack:Longsword or action:dash."
+      minLength: 3
+      maxLength: 90
+    ActionBars:
+      type: object
+      description: How a player laid out a Character's action bars. Arranged is false until a layout is first saved; until then live play shows every action in its usual order.
+      additionalProperties: false
+      required: [bars, quick, stowed, arranged]
+      properties:
+        bars:
+          type: array
+          maxItems: 2
+          items:
+            type: array
+            maxItems: 10
+            items: { $ref: "#/components/schemas/ActionBarTile" }
+        quick:
+          type: array
+          maxItems: 4
+          items: { $ref: "#/components/schemas/ActionBarTile" }
+        stowed:
+          type: array
+          description: Tiles the player took off the bars. Any other tile the Character gains joins the end of the bars.
+          maxItems: 100
+          items: { $ref: "#/components/schemas/ActionBarTile" }
+        arranged: { type: boolean }
+    ActionBarsChange:
+      type: object
+      description: A layout to save. The first bar answers to the keys 1 to 0. No tile may be on the bars or stowed twice, or on the quick bar twice.
+      additionalProperties: false
+      required: [bars, quick, stowed]
+      properties:
+        bars:
+          type: array
+          maxItems: 2
+          items:
+            type: array
+            maxItems: 10
+            items: { $ref: "#/components/schemas/ActionBarTile" }
+        quick:
+          type: array
+          maxItems: 4
+          items: { $ref: "#/components/schemas/ActionBarTile" }
+        stowed:
+          type: array
+          description: Tiles the player took off the bars. Any other tile the Character gains joins the end of the bars.
+          maxItems: 100
+          items: { $ref: "#/components/schemas/ActionBarTile" }
     OwnedCharacterChange:
       type: object
       description: A Character's new name and Backstory.
@@ -9993,6 +10110,7 @@ components:
         r: { type: integer, format: int32, minimum: -500, maximum: 500 }
         hidden: { type: boolean }
         controllerId: { $ref: "#/components/schemas/Id" }
+        characterId: { $ref: "#/components/schemas/Id" }
         ac: { type: integer, format: int32, minimum: 0, maximum: 40 }
         hp: { type: integer, format: int32, minimum: 0, maximum: 10000 }
         hpMax: { type: integer, format: int32, minimum: 1, maximum: 10000 }
@@ -10242,7 +10360,7 @@ components:
         area: { $ref: "#/components/schemas/LiveAreaPreview" }
     SessionAction:
       type: object
-      description: One Action of a live Session, what it touched, and whether it can still be undone.
+      description: One Action of a live Session, what it touched (the one token, when there is one), and whether it can still be undone.
       additionalProperties: false
       required: [seq, kind, actor, origin, label, undoable, createdAt]
       properties:
@@ -10252,6 +10370,7 @@ components:
         origin: { type: string, enum: [ui, mcp, generator, system] }
         client: { type: string, maxLength: 80 }
         label: { type: string, maxLength: 2000 }
+        tokenId: { $ref: "#/components/schemas/Id" }
         undoable: { type: boolean }
         createdAt: { type: string, format: date-time, maxLength: 40 }
     LibraryKind:

@@ -164,7 +164,8 @@ func TestAnAgentRunsALiveSessionAndUndoesFromTheActionLog(t *testing.T) {
 	if rec := call(h, http.MethodGet, base+"/log?limit=2", "player", ""); rec.Code != http.StatusForbidden {
 		t.Fatalf("player log: %d", rec.Code)
 	}
-	if rec := call(h, http.MethodGet, base+"/log?limit=2", "dm", ""); rec.Code != 200 || strings.Count(rec.Body.String(), `"seq"`) != 2 {
+	if rec := call(h, http.MethodGet, base+"/log?limit=2", "dm", ""); rec.Code != 200 || strings.Count(rec.Body.String(), `"seq"`) != 2 ||
+		!strings.Contains(rec.Body.String(), `"tokenId":"`+party.Tokens[0].ID+`"`) {
 		t.Fatalf("log: %d %s", rec.Code, rec.Body.String())
 	}
 	if rec := call(h, http.MethodGet, "/api/v1/campaigns/"+id+"/sessions/"+uuid.NewString()+"/log", "dm", ""); rec.Code != http.StatusNotFound {

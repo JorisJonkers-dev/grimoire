@@ -1101,6 +1101,36 @@ export type OwnedCharacterList = {
 };
 
 /**
+ * A tile on an action bar, named kind:name, such as attack:Longsword or action:dash.
+ */
+export type ActionBarTile = string;
+
+/**
+ * How a player laid out a Character's action bars. Arranged is false until a layout is first saved; until then live play shows every action in its usual order.
+ */
+export type ActionBars = {
+    bars: Array<Array<ActionBarTile>>;
+    quick: Array<ActionBarTile>;
+    /**
+     * Tiles the player took off the bars. Any other tile the Character gains joins the end of the bars.
+     */
+    stowed: Array<ActionBarTile>;
+    arranged: boolean;
+};
+
+/**
+ * A layout to save. The first bar answers to the keys 1 to 0. No tile may be on the bars or stowed twice, or on the quick bar twice.
+ */
+export type ActionBarsChange = {
+    bars: Array<Array<ActionBarTile>>;
+    quick: Array<ActionBarTile>;
+    /**
+     * Tiles the player took off the bars. Any other tile the Character gains joins the end of the bars.
+     */
+    stowed: Array<ActionBarTile>;
+};
+
+/**
  * A Character's new name and Backstory.
  */
 export type OwnedCharacterChange = {
@@ -2244,6 +2274,7 @@ export type LiveToken = {
     r: number;
     hidden: boolean;
     controllerId?: Id;
+    characterId?: Id;
     ac?: number;
     hp?: number;
     hpMax?: number;
@@ -2527,7 +2558,7 @@ export type LiveCommandResult = {
 };
 
 /**
- * One Action of a live Session, what it touched, and whether it can still be undone.
+ * One Action of a live Session, what it touched (the one token, when there is one), and whether it can still be undone.
  */
 export type SessionAction = {
     seq: number;
@@ -2536,6 +2567,7 @@ export type SessionAction = {
     origin: 'ui' | 'mcp' | 'generator' | 'system';
     client?: string;
     label: string;
+    tokenId?: Id;
     undoable: boolean;
     createdAt: string;
 };
@@ -11859,6 +11891,74 @@ export type UpdateMyCharacterResponses = {
 };
 
 export type UpdateMyCharacterResponse = UpdateMyCharacterResponses[keyof UpdateMyCharacterResponses];
+
+export type GetActionBarsData = {
+    body?: never;
+    path: {
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/characters/{characterId}/action-bars';
+};
+
+export type GetActionBarsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetActionBarsError = GetActionBarsErrors[keyof GetActionBarsErrors];
+
+export type GetActionBarsResponses = {
+    /**
+     * The layout; empty and not arranged until first saved.
+     */
+    200: ActionBars;
+};
+
+export type GetActionBarsResponse = GetActionBarsResponses[keyof GetActionBarsResponses];
+
+export type SetActionBarsData = {
+    body: ActionBarsChange;
+    path: {
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/characters/{characterId}/action-bars';
+};
+
+export type SetActionBarsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SetActionBarsError = SetActionBarsErrors[keyof SetActionBarsErrors];
+
+export type SetActionBarsResponses = {
+    /**
+     * The saved layout.
+     */
+    200: ActionBars;
+};
+
+export type SetActionBarsResponse = SetActionBarsResponses[keyof SetActionBarsResponses];
 
 export type JoinCampaignData = {
     body: CharacterJoin;

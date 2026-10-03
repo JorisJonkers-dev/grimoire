@@ -140,6 +140,9 @@ func (h *Handler) GetSessionLog(ctx context.Context, p oas.GetSessionLogParams) 
 		if a.Client != "" {
 			x.Client = oas.NewOptString(a.Client)
 		}
+		if a.Token != nil {
+			x.TokenId = oas.NewOptID(oas.ID(*a.Token))
+		}
 		out = append(out, x)
 	}
 	return &oas.GetSessionLogOKHeaders{Response: out}, nil
