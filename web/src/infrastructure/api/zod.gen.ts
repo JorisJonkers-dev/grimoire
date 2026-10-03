@@ -2886,6 +2886,27 @@ export const zLiveToken = z.object({
 });
 
 /**
+ * One creature on the roster strip: hit points for the DM and the party's own, a rough health for anyone else, its Effects, and whether it acts now. Hidden is set for the DM only.
+ */
+export const zLiveRosterEntry = z.object({
+    tokenId: zId,
+    label: z.string().max(80),
+    kind: z.string().max(20),
+    hp: z.int().gte(0).lte(100000).optional(),
+    hpMax: z.int().gte(0).lte(100000).optional(),
+    tempHp: z.int().gte(0).lte(100000).optional(),
+    health: z.enum([
+        'unhurt',
+        'hurt',
+        'bloodied',
+        'down'
+    ]).optional(),
+    hidden: z.boolean().optional(),
+    acting: z.boolean(),
+    effects: z.array(zLiveEffect).max(100)
+});
+
+/**
  * Part of an Effect the engine cannot compute, for the DM to resolve by hand.
  */
 export const zLiveManual = z.object({
@@ -4246,6 +4267,7 @@ export const zLiveView = z.object({
         kind: z.string().max(40),
         name: z.string().max(40)
     })).max(500).optional(),
+    roster: z.array(zLiveRosterEntry).max(500).optional(),
     conditions: z.array(z.object({
         slug: z.string().max(80),
         name: z.string().max(80),

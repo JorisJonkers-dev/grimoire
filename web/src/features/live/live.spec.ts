@@ -258,7 +258,7 @@ describe('exploration', () => {
 
 describe('combat', () => {
   const fighter = (label: string, extra: Record<string, unknown> = {}) => ({
-    id: `0190c7a8-0000-7000-8000-0000000001${label.length.toString().padStart(2, '0')}`, tokenId: goblin.id, label, kind: 'enemy',
+    id: `0190c7a8-0000-7000-8000-0000000001${label.length.toString().padStart(2, '0')}`, tokenId: ({ Lurker: lurker.id } as Record<string, string>)[label] ?? goblin.id, label, kind: 'enemy',
     rollId: `0190c7a8-0000-7000-8000-0000000002${label.length.toString().padStart(2, '0')}`, acting: false, done: false,
     action: true, bonusAction: true, reaction: true, movementFt: 30, speedFt: 30, ...extra,
   })
@@ -2060,9 +2060,9 @@ describe('the fallen', () => {
     w.unmount()
   })
 
-  it('marks the fallen on the initiative rail', async () => {
+  it('marks the fallen on the roster strip', async () => {
     const { mount } = await import('@vue/test-utils')
-    const InitiativeRail = (await import('./InitiativeRail.vue')).default
+    const RosterStrip = (await import('./RosterStrip.vue')).default
     const tokens: LiveToken[] = [
       { ...goblin, id: '0190c7a8-0000-7000-8000-000000000091', dying: { successes: 1, failures: 2 } },
       { ...goblin, id: '0190c7a8-0000-7000-8000-000000000092', dying: { successes: 0, failures: 0, stable: true } },
@@ -2072,7 +2072,8 @@ describe('the fallen', () => {
       id: `0190c7a8-0000-7000-8000-00000000010${String(n)}`, tokenId: tokens[n]?.id ?? '', label, kind: 'party' as const, rollId: goblin.id,
       acting: false, done: false, action: true, bonusAction: true, reaction: true, movementFt: 30, speedFt: 30,
     })
-    const w = mount(InitiativeRail, { props: { combat: { status: 'active', round: 1, combatants: [c(0, 'A'), c(1, 'B'), c(2, 'C')] }, tokens } })
+    const roster = [0, 1, 2].map((n) => ({ tokenId: tokens[n]?.id ?? '', label: 'ABC'[n] ?? '', kind: 'party' as const, acting: false, effects: [] }))
+    const w = mount(RosterStrip, { props: { roster, combat: { status: 'active', round: 1, combatants: [c(0, 'A'), c(1, 'B'), c(2, 'C')] }, tokens } })
     expect(w.findAll('[data-testid="fallen"]').map((f) => f.text())).toEqual(['Dying 1✓ 2✗', 'Stable', 'Dead'])
   })
 })

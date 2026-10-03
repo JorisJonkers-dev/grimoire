@@ -11,7 +11,7 @@ import { checkLine } from './checks'
 import LiveRoll from './LiveRoll.vue'
 import { focus } from './camera'
 import { layoutOf } from './geometry'
-import InitiativeRail from './InitiativeRail.vue'
+import RosterStrip from './RosterStrip.vue'
 import MapBoard from './MapBoard.vue'
 import WorldOverlay from './WorldOverlay.vue'
 
@@ -63,7 +63,13 @@ const worldBoard = computed(() => ({ tokens: [], fog: world.value !== null, visi
       </MapBoard>
     </div>
     <div v-else class="stage">
-      <InitiativeRail v-if="state.view.combat" :combat="state.view.combat" :tokens="state.view.tokens" />
+      <RosterStrip
+        v-if="(state.view.roster?.length ?? 0) > 0 || state.view.combat"
+        class="table-roster"
+        :roster="state.view.roster ?? []"
+        :combat="state.view.combat"
+        :tokens="state.view.tokens"
+      />
       <CameraView :focus="centre" :zoom="(table?.zoomPct ?? 100) / 100" :ping="ping">
         <MapBoard v-if="state.view.map" :map="state.view.map" :view="state.view" :area="state.view.area?.hexes" title="The table" />
         <HexGrid v-else :cells="cells" :size="HEX" title="The table" />
@@ -81,6 +87,7 @@ const worldBoard = computed(() => ({ tokens: [], fog: world.value !== null, visi
   overflow: hidden;
 }
 .stage {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -88,6 +95,14 @@ const worldBoard = computed(() => ({ tokens: [], fog: world.value !== null, visi
   width: 100%;
   max-width: 100%;
   padding: 12px;
+}
+.table-roster {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  z-index: 2;
+  max-width: calc(100% - 24px);
+  transform: translateX(-50%);
 }
 .check {
   position: fixed;

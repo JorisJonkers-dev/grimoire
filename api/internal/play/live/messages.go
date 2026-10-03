@@ -342,6 +342,21 @@ type EffectView struct {
 	Color string `json:"color,omitempty"`
 }
 
+// RosterEntry is one creature on the roster strip: hit points for the DM and the party's own, a rough
+// health for anyone else, its Effects, and whether it acts now. Hidden is set for the DM only.
+type RosterEntry struct {
+	TokenID string       `json:"tokenId"`
+	Label   string       `json:"label"`
+	Kind    string       `json:"kind"`
+	HP      *int         `json:"hp,omitempty"`
+	HPMax   *int         `json:"hpMax,omitempty"`
+	TempHP  int          `json:"tempHp,omitempty"`
+	Health  string       `json:"health,omitempty"`
+	Hidden  bool         `json:"hidden,omitempty"`
+	Acting  bool         `json:"acting"`
+	Effects []EffectView `json:"effects"`
+}
+
 // LegendView is a legendary creature's actions and what it has left: legendary actions once another
 // creature's turn ends (Ready), the lair's once a round on initiative count 20 (LairReady), Legendary
 // Resistance, and its mythic phases.
@@ -477,6 +492,9 @@ type View struct {
 	Exploration *ExplorationView `json:"exploration,omitempty"`
 	// SurfaceKinds is the Surface catalogue, for the DM's paint tool.
 	SurfaceKinds []SurfaceKindView `json:"surfaceKinds,omitempty"`
+	// Roster is the shared roster strip as this audience may see it: the fight in initiative order, or
+	// every creature the audience can see.
+	Roster []RosterEntry `json:"roster"`
 	// Conditions are the Campaign's homebrew conditions, for the DM's effect picker.
 	Conditions []ConditionKindView `json:"conditions,omitempty"`
 	Perception []PerceptionView    `json:"perception,omitempty"`

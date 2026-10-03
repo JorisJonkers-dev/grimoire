@@ -23289,6 +23289,177 @@ func (s *LiveResterHitDie) UnmarshalText(data []byte) error {
 	}
 }
 
+// One creature on the roster strip: hit points for the DM and the party's own, a rough health for
+// anyone else, its Effects, and whether it acts now. Hidden is set for the DM only.
+// Ref: #/components/schemas/LiveRosterEntry
+type LiveRosterEntry struct {
+	TokenId ID                       `json:"tokenId"`
+	Label   string                   `json:"label"`
+	Kind    string                   `json:"kind"`
+	Hp      OptInt32                 `json:"hp"`
+	HpMax   OptInt32                 `json:"hpMax"`
+	TempHp  OptInt32                 `json:"tempHp"`
+	Health  OptLiveRosterEntryHealth `json:"health"`
+	Hidden  OptBool                  `json:"hidden"`
+	Acting  bool                     `json:"acting"`
+	Effects []LiveEffect             `json:"effects"`
+}
+
+// GetTokenId returns the value of TokenId.
+func (s *LiveRosterEntry) GetTokenId() ID {
+	return s.TokenId
+}
+
+// GetLabel returns the value of Label.
+func (s *LiveRosterEntry) GetLabel() string {
+	return s.Label
+}
+
+// GetKind returns the value of Kind.
+func (s *LiveRosterEntry) GetKind() string {
+	return s.Kind
+}
+
+// GetHp returns the value of Hp.
+func (s *LiveRosterEntry) GetHp() OptInt32 {
+	return s.Hp
+}
+
+// GetHpMax returns the value of HpMax.
+func (s *LiveRosterEntry) GetHpMax() OptInt32 {
+	return s.HpMax
+}
+
+// GetTempHp returns the value of TempHp.
+func (s *LiveRosterEntry) GetTempHp() OptInt32 {
+	return s.TempHp
+}
+
+// GetHealth returns the value of Health.
+func (s *LiveRosterEntry) GetHealth() OptLiveRosterEntryHealth {
+	return s.Health
+}
+
+// GetHidden returns the value of Hidden.
+func (s *LiveRosterEntry) GetHidden() OptBool {
+	return s.Hidden
+}
+
+// GetActing returns the value of Acting.
+func (s *LiveRosterEntry) GetActing() bool {
+	return s.Acting
+}
+
+// GetEffects returns the value of Effects.
+func (s *LiveRosterEntry) GetEffects() []LiveEffect {
+	return s.Effects
+}
+
+// SetTokenId sets the value of TokenId.
+func (s *LiveRosterEntry) SetTokenId(val ID) {
+	s.TokenId = val
+}
+
+// SetLabel sets the value of Label.
+func (s *LiveRosterEntry) SetLabel(val string) {
+	s.Label = val
+}
+
+// SetKind sets the value of Kind.
+func (s *LiveRosterEntry) SetKind(val string) {
+	s.Kind = val
+}
+
+// SetHp sets the value of Hp.
+func (s *LiveRosterEntry) SetHp(val OptInt32) {
+	s.Hp = val
+}
+
+// SetHpMax sets the value of HpMax.
+func (s *LiveRosterEntry) SetHpMax(val OptInt32) {
+	s.HpMax = val
+}
+
+// SetTempHp sets the value of TempHp.
+func (s *LiveRosterEntry) SetTempHp(val OptInt32) {
+	s.TempHp = val
+}
+
+// SetHealth sets the value of Health.
+func (s *LiveRosterEntry) SetHealth(val OptLiveRosterEntryHealth) {
+	s.Health = val
+}
+
+// SetHidden sets the value of Hidden.
+func (s *LiveRosterEntry) SetHidden(val OptBool) {
+	s.Hidden = val
+}
+
+// SetActing sets the value of Acting.
+func (s *LiveRosterEntry) SetActing(val bool) {
+	s.Acting = val
+}
+
+// SetEffects sets the value of Effects.
+func (s *LiveRosterEntry) SetEffects(val []LiveEffect) {
+	s.Effects = val
+}
+
+type LiveRosterEntryHealth string
+
+const (
+	LiveRosterEntryHealthUnhurt   LiveRosterEntryHealth = "unhurt"
+	LiveRosterEntryHealthHurt     LiveRosterEntryHealth = "hurt"
+	LiveRosterEntryHealthBloodied LiveRosterEntryHealth = "bloodied"
+	LiveRosterEntryHealthDown     LiveRosterEntryHealth = "down"
+)
+
+// AllValues returns all LiveRosterEntryHealth values.
+func (LiveRosterEntryHealth) AllValues() []LiveRosterEntryHealth {
+	return []LiveRosterEntryHealth{
+		LiveRosterEntryHealthUnhurt,
+		LiveRosterEntryHealthHurt,
+		LiveRosterEntryHealthBloodied,
+		LiveRosterEntryHealthDown,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveRosterEntryHealth) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveRosterEntryHealthUnhurt:
+		return []byte(s), nil
+	case LiveRosterEntryHealthHurt:
+		return []byte(s), nil
+	case LiveRosterEntryHealthBloodied:
+		return []byte(s), nil
+	case LiveRosterEntryHealthDown:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveRosterEntryHealth) UnmarshalText(data []byte) error {
+	switch LiveRosterEntryHealth(data) {
+	case LiveRosterEntryHealthUnhurt:
+		*s = LiveRosterEntryHealthUnhurt
+		return nil
+	case LiveRosterEntryHealthHurt:
+		*s = LiveRosterEntryHealthHurt
+		return nil
+	case LiveRosterEntryHealthBloodied:
+		*s = LiveRosterEntryHealthBloodied
+		return nil
+	case LiveRosterEntryHealthDown:
+		*s = LiveRosterEntryHealthDown
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // A saving throw waiting on its Roll Card to end an Effect.
 // Ref: #/components/schemas/LiveSave
 type LiveSave struct {
@@ -24478,6 +24649,9 @@ type LiveView struct {
 	Exploration OptLiveViewExploration `json:"exploration"`
 	// The Surface catalogue, for the DM's paint tool.
 	SurfaceKinds []LiveViewSurfaceKindsItem `json:"surfaceKinds"`
+	// The shared roster strip as this audience may see it, the fight in initiative order or every creature
+	// it can see.
+	Roster []LiveRosterEntry `json:"roster"`
 	// The Campaign's homebrew conditions, for the DM's effect picker.
 	Conditions []LiveViewConditionsItem `json:"conditions"`
 	// The Map Objects the audience knows; the party never gets secret ones or ones outside what it has
@@ -24579,6 +24753,11 @@ func (s *LiveView) GetExploration() OptLiveViewExploration {
 // GetSurfaceKinds returns the value of SurfaceKinds.
 func (s *LiveView) GetSurfaceKinds() []LiveViewSurfaceKindsItem {
 	return s.SurfaceKinds
+}
+
+// GetRoster returns the value of Roster.
+func (s *LiveView) GetRoster() []LiveRosterEntry {
+	return s.Roster
 }
 
 // GetConditions returns the value of Conditions.
@@ -24724,6 +24903,11 @@ func (s *LiveView) SetExploration(val OptLiveViewExploration) {
 // SetSurfaceKinds sets the value of SurfaceKinds.
 func (s *LiveView) SetSurfaceKinds(val []LiveViewSurfaceKindsItem) {
 	s.SurfaceKinds = val
+}
+
+// SetRoster sets the value of Roster.
+func (s *LiveView) SetRoster(val []LiveRosterEntry) {
+	s.Roster = val
 }
 
 // SetConditions sets the value of Conditions.
@@ -31432,6 +31616,52 @@ func (o OptLiveRest) Get() (v LiveRest, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptLiveRest) Or(d LiveRest) LiveRest {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptLiveRosterEntryHealth returns new OptLiveRosterEntryHealth with value set to v.
+func NewOptLiveRosterEntryHealth(v LiveRosterEntryHealth) OptLiveRosterEntryHealth {
+	return OptLiveRosterEntryHealth{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveRosterEntryHealth is optional LiveRosterEntryHealth.
+type OptLiveRosterEntryHealth struct {
+	Value LiveRosterEntryHealth
+	Set   bool
+}
+
+// IsSet returns true if OptLiveRosterEntryHealth was set.
+func (o OptLiveRosterEntryHealth) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveRosterEntryHealth) Reset() {
+	var v LiveRosterEntryHealth
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveRosterEntryHealth) SetTo(v LiveRosterEntryHealth) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveRosterEntryHealth) Get() (v LiveRosterEntryHealth, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveRosterEntryHealth) Or(d LiveRosterEntryHealth) LiveRosterEntryHealth {
 	if v, ok := o.Get(); ok {
 		return v
 	}

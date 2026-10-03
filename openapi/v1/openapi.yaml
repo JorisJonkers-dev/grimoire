@@ -11935,6 +11935,22 @@ components:
         name: { type: string, maxLength: 200 }
         cost: { type: integer, format: int32, minimum: 0, maximum: 3 }
         text: { type: string, maxLength: 8000 }
+    LiveRosterEntry:
+      type: object
+      description: "One creature on the roster strip: hit points for the DM and the party's own, a rough health for anyone else, its Effects, and whether it acts now. Hidden is set for the DM only."
+      additionalProperties: false
+      required: [tokenId, label, kind, acting, effects]
+      properties:
+        tokenId: { $ref: "#/components/schemas/Id" }
+        label: { type: string, maxLength: 80 }
+        kind: { type: string, maxLength: 20 }
+        hp: { type: integer, format: int32, minimum: 0, maximum: 100000 }
+        hpMax: { type: integer, format: int32, minimum: 0, maximum: 100000 }
+        tempHp: { type: integer, format: int32, minimum: 0, maximum: 100000 }
+        health: { type: string, enum: [unhurt, hurt, bloodied, down] }
+        hidden: { type: boolean }
+        acting: { type: boolean }
+        effects: { type: array, maxItems: 100, items: { $ref: "#/components/schemas/LiveEffect" } }
     LiveManual:
       type: object
       description: Part of an Effect the engine cannot compute, for the DM to resolve by hand.
@@ -12177,6 +12193,11 @@ components:
             properties:
               kind: { type: string, maxLength: 40 }
               name: { type: string, maxLength: 40 }
+        roster:
+          type: array
+          description: The shared roster strip as this audience may see it, the fight in initiative order or every creature it can see.
+          maxItems: 500
+          items: { $ref: "#/components/schemas/LiveRosterEntry" }
         conditions:
           type: array
           description: The Campaign's homebrew conditions, for the DM's effect picker.

@@ -3937,6 +3937,22 @@ export type LiveLegendAction = {
 };
 
 /**
+ * One creature on the roster strip: hit points for the DM and the party's own, a rough health for anyone else, its Effects, and whether it acts now. Hidden is set for the DM only.
+ */
+export type LiveRosterEntry = {
+    tokenId: Id;
+    label: string;
+    kind: string;
+    hp?: number;
+    hpMax?: number;
+    tempHp?: number;
+    health?: 'unhurt' | 'hurt' | 'bloodied' | 'down';
+    hidden?: boolean;
+    acting: boolean;
+    effects: Array<LiveEffect>;
+};
+
+/**
  * Part of an Effect the engine cannot compute, for the DM to resolve by hand.
  */
 export type LiveManual = {
@@ -4171,6 +4187,10 @@ export type LiveView = {
         kind: string;
         name: string;
     }>;
+    /**
+     * The shared roster strip as this audience may see it, the fight in initiative order or every creature it can see.
+     */
+    roster?: Array<LiveRosterEntry>;
     /**
      * The Campaign's homebrew conditions, for the DM's effect picker.
      */
