@@ -923,6 +923,8 @@ func change(s *state, w *Write) {
 		return
 	case domain.ActionEffectApplied, domain.ActionEffectEnded, domain.ActionSavePassed, domain.ActionSaveFailed, domain.ActionManualResolved:
 		return
+	case domain.ActionLegendaryAction, domain.ActionLairAction, domain.ActionLegendaryResistance:
+		return // the Legend changes with every write, after this
 	case domain.ActionAreaCast, domain.ActionAreaResolved, domain.ActionSurfacesSet, domain.ActionElevationSet:
 		applyTerrain(s, w)
 		return
