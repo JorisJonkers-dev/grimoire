@@ -48,8 +48,9 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: ['src/**/*.{ts,vue}'],
-      // The service worker runs in the browser alone; the offline E2E covers it.
-      exclude: ['src/infrastructure/api/**', 'src/test/**', 'src/main.ts', 'src/**/*.spec.ts', 'src/env.d.ts', 'src/sw/**'],
+      // The service worker and the dice worker run in the browser alone: one needs a registration, the
+      // other WebGL. The offline and the dice E2E cover them.
+      exclude: ['src/infrastructure/api/**', 'src/test/**', 'src/main.ts', 'src/**/*.spec.ts', 'src/env.d.ts', 'src/sw/**', 'src/features/dice/diceWorker.ts'],
       thresholds: { lines: 98, branches: 95, functions: 98, statements: 98 },
     },
   },

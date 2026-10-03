@@ -3,8 +3,8 @@ import { expect, type Page, test } from '@playwright/test'
 
 async function enter(page: Page, face: string) {
   const card = page.getByTestId('roll-card')
-  await card.getByTestId('manual-0').click()
-  await card.getByTestId('pad-0').getByRole('button', { name: face, exact: true }).click()
+  await card.getByTestId('face-0').fill(face)
+  await card.getByTestId('face-0').press('Enter')
 }
 
 test('initiative from Roll Cards, then turns with the action economy on every screen', async ({ page, browser }, info) => {

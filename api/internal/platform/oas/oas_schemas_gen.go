@@ -23699,11 +23699,17 @@ func (s *LiveResterHitDie) UnmarshalText(data []byte) error {
 // resolves and again with a snapshot. A DM's roll is never sent.
 // Ref: #/components/schemas/LiveRollShown
 type LiveRollShown struct {
+	ID       ID                      `json:"id"`
 	Roller   DisplayName             `json:"roller"`
 	Purpose  string                  `json:"purpose"`
 	Dice     []LiveRollShownDiceItem `json:"dice"`
 	Modifier int32                   `json:"modifier"`
 	Total    int32                   `json:"total"`
+}
+
+// GetID returns the value of ID.
+func (s *LiveRollShown) GetID() ID {
+	return s.ID
 }
 
 // GetRoller returns the value of Roller.
@@ -23729,6 +23735,11 @@ func (s *LiveRollShown) GetModifier() int32 {
 // GetTotal returns the value of Total.
 func (s *LiveRollShown) GetTotal() int32 {
 	return s.Total
+}
+
+// SetID sets the value of ID.
+func (s *LiveRollShown) SetID(val ID) {
+	s.ID = val
 }
 
 // SetRoller sets the value of Roller.

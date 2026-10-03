@@ -4131,6 +4131,7 @@ export type LiveUpdate = {
  * The last roll a player made, as every screen may show it. It arrives as a roll frame when it resolves and again with a snapshot. A DM's roll is never sent.
  */
 export type LiveRollShown = {
+    id: Id;
     roller: DisplayName;
     purpose: string;
     dice: Array<{

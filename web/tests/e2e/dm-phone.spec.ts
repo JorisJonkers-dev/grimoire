@@ -3,8 +3,8 @@ import { devices, expect, type Page, test } from '@playwright/test'
 
 async function enter(page: Page, face: string) {
   const card = page.getByTestId('roll-card')
-  await card.getByTestId('manual-0').click()
-  await card.getByTestId('pad-0').getByRole('button', { name: face, exact: true }).click()
+  await card.getByTestId('face-0').fill(face)
+  await card.getByTestId('face-0').press('Enter')
 }
 
 /** On the phone the DM sets a token up on Tools, then taps the map to place it. */

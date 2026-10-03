@@ -4,6 +4,8 @@ import { useRoute } from 'vue-router'
 import { useLiveSession } from '@/realtime/liveSession'
 import { type Coord, toPixel } from '@/shared/hex'
 import { gridBox } from '@/shared/map/grid'
+import DiceHost from '@/features/dice/DiceHost.vue'
+import { throwDice } from '@/features/dice/stage'
 import HexGrid from '@/shared/map/HexGrid.vue'
 import { board } from './board'
 import CameraView from './CameraView.vue'
@@ -53,6 +55,13 @@ watch(
   },
 )
 onBeforeUnmount(() => { clearTimeout(turnTimer) })
+// A player's roll is thrown on the table's dice stage as it resolves.
+watch(
+  () => state.rolls,
+  () => {
+    if (state.roll) throwDice(state.roll, state.roll.id)
+  },
+)
 const signed = (n: number) => `${n < 0 ? '−' : '+'} ${String(Math.abs(n))}`
 const worldBoard = computed(() => ({ tokens: [], fog: world.value !== null, visible: world.value?.revealed ?? [], remembered: [] }))
 </script>
@@ -108,6 +117,7 @@ const worldBoard = computed(() => ({ tokens: [], fog: world.value !== null, visi
         <HexGrid v-else :cells="cells" :size="HEX" title="The table" />
       </CameraView>
     </div>
+    <DiceHost v-if="!table?.blackout" />
   </main>
 </template>
 

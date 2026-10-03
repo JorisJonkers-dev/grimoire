@@ -1,8 +1,8 @@
 import { expect, type Locator, type Page, test } from '@playwright/test'
 
 async function enter(card: Locator, face: string) {
-  await card.getByTestId('manual-0').click()
-  await card.getByTestId('pad-0').getByRole('button', { name: face, exact: true }).click()
+  await card.getByTestId('face-0').fill(face)
+  await card.getByTestId('face-0').press('Enter')
 }
 
 async function place(page: Page, hex: string, label: string, kind = 'enemy') {
@@ -57,10 +57,10 @@ test('the DM attacks through the hotbar and hit points change on every screen', 
   await enter(page.getByTestId('roll-card').filter({ hasText: 'attack against Snag' }), '20')
   await expect(page.getByTestId('pending-attack')).toContainText('(critical): waiting for the damage roll')
   const damage = page.getByTestId('roll-card').filter({ hasText: 'damage to Snag (critical)' })
-  await damage.getByTestId('manual-0').click()
-  await damage.getByTestId('pad-0').getByRole('button', { name: '3', exact: true }).click()
-  await damage.getByTestId('manual-1').click()
-  await damage.getByTestId('pad-1').getByRole('button', { name: '4', exact: true }).click()
+  await damage.getByTestId('face-0').fill('3')
+  await damage.getByTestId('face-0').press('Enter')
+  await damage.getByTestId('face-1').fill('4')
+  await damage.getByTestId('face-1').press('Enter')
 
   await expect(page.locator('[data-hex="1,0"]')).toHaveAttribute('aria-label', /Snag \(1\/10 HP\)/)
   await expect(player.locator('[data-hex="1,0"]')).toHaveAttribute('aria-label', /Snag \(bloodied\)/)

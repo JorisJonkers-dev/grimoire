@@ -68,8 +68,8 @@ test('the DM prepares random encounters, and rests and checks roll them secretly
   await expect(table.getByTestId('table-check').getByTestId('roll-card')).toContainText('Encounter check')
   await expect(player.getByTestId('encounter-checks').getByRole('listitem').first()).toHaveText('The DM checks · rolling…')
   const card = page.getByTestId('roll-card')
-  await card.getByTestId('manual-0').click()
-  await card.getByTestId('pad-0').getByRole('button', { name: '99', exact: true }).click()
+  await card.getByTestId('face-0').fill('99')
+  await card.getByTestId('face-0').press('Enter')
   await expect(table.getByTestId('table-check')).toHaveText('The DM checks · rolled 99 against 50% · all quiet')
   await expect(checks.getByRole('listitem').first()).toContainText('The DM checks on Road · rolled 99 against 50% · all quiet')
 

@@ -20,7 +20,8 @@ const fighter = (t: LiveToken, acting: boolean) => ({
 })
 const view = (extra: object = {}) => ({ tokens: [aria, goblin], fog: false, visible: [], remembered: [], table: table(), ...extra })
 const session = { id: SID, number: 3, gridRadius: 2, audience: 'table' }
-const athletics = { roller: 'Aria', purpose: 'Athletics', dice: [{ faces: 20, value: 14, kept: true }, { faces: 20, value: 3, kept: false }], modifier: 3, total: 17 }
+const RID = '0190c7a8-0000-7000-8000-0000000000d1'
+const athletics = { id: RID, roller: 'Aria', purpose: 'Athletics', dice: [{ faces: 20, value: 14, kept: true }, { faces: 20, value: 3, kept: false }], modifier: 3, total: 17 }
 
 beforeEach(() => {
   FakeSocket.all = []
@@ -46,10 +47,13 @@ describe('table display', () => {
     const roll = wrapper.get('[data-testid="table-roll"]')
     expect(roll.text()).toBe('Aria · Athletics143+ 3= 17')
     expect(roll.findAll('.die').map((d) => [d.attributes('aria-label'), d.classes().includes('die--dropped')])).toEqual([['d20: 14', false], ['d20: 3, dropped', true]])
-    s.receive({ kind: 'roll', seq: 2, roll: { roller: 'Aria', purpose: 'Longsword damage', dice: [{ faces: 8, value: 6, kept: true }], modifier: 0, total: 6 } })
+    // As it resolves it is also thrown on the table's dice stage, total and all.
+    expect(wrapper.get('[data-testid="dice-total"]').text()).toBe('17')
+    expect(wrapper.get('[data-testid="dice-breakdown"]').text()).toBe('14, 3 dropped + 3')
+    s.receive({ kind: 'roll', seq: 2, roll: { id: RID.replace('d1', 'd2'), roller: 'Aria', purpose: 'Longsword damage', dice: [{ faces: 8, value: 6, kept: true }], modifier: 0, total: 6 } })
     await flushPromises()
     expect(wrapper.get('[data-testid="table-roll"]').text()).toBe('Aria · Longsword damage6= 6')
-    s.receive({ kind: 'roll', seq: 2, roll: { roller: 'Aria', purpose: 'Bane', dice: [{ faces: 4, value: 2, kept: true }], modifier: -1, total: 1 } })
+    s.receive({ kind: 'roll', seq: 2, roll: { id: RID.replace('d1', 'd3'), roller: 'Aria', purpose: 'Bane', dice: [{ faces: 4, value: 2, kept: true }], modifier: -1, total: 1 } })
     await flushPromises()
     expect(wrapper.get('[data-testid="table-roll"]').text()).toBe('Aria · Bane2− 1= 1')
 
@@ -74,6 +78,8 @@ describe('table display', () => {
     FakeSocket.last().receive({ kind: 'snapshot', seq: 9, view: view(), session, roll: athletics })
     await flushPromises()
     expect(late.wrapper.get('[data-testid="table-roll"]').text()).toContain('Athletics')
+    // A roll that came with the snapshot is old news: it is on the card, not thrown again.
+    expect(late.wrapper.find('[data-testid="dice-result"]').exists()).toBe(false)
   })
 
   it('lets the DM put a caption on the table and take it off', async () => {

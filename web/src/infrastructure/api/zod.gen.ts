@@ -3042,6 +3042,7 @@ export const zLiveCombat = z.object({
  * The last roll a player made, as every screen may show it. It arrives as a roll frame when it resolves and again with a snapshot. A DM's roll is never sent.
  */
 export const zLiveRollShown = z.object({
+    id: zId,
     roller: zDisplayName,
     purpose: z.string().max(120),
     dice: z.array(z.object({

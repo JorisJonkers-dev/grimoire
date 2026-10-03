@@ -805,6 +805,7 @@ type Update struct {
 
 // RollShown is a resolved roll as every screen may show it: who rolled, for what, each die and the total.
 type RollShown struct {
+	ID       string    `json:"id"`
 	Roller   string    `json:"roller"`
 	Purpose  string    `json:"purpose"`
 	Dice     []RollDie `json:"dice"`

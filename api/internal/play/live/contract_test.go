@@ -223,7 +223,7 @@ func samples() contract {
 				Turn:       &live.TurnStart{Round: 1, TokenIDs: []string{token.ID}},
 			},
 			{Kind: live.UpdRoll, Seq: 7, Roll: &live.RollShown{
-				Roller: "Aria", Purpose: "Athletics", Dice: []live.RollDie{{Faces: 20, Value: 14, Kept: true}, {Faces: 20, Value: 3, Kept: false}}, Modifier: 3, Total: 17,
+				ID: token.ID, Roller: "Aria", Purpose: "Athletics", Dice: []live.RollDie{{Faces: 20, Value: 14, Kept: true}, {Faces: 20, Value: 3, Kept: false}}, Modifier: 3, Total: 17,
 			}},
 			{Kind: live.UpdView, Seq: 7, Nonce: "n14", View: view, Steps: []live.View{*view}},
 			{Kind: live.UpdAttackPreview, Seq: 7, Nonce: "n21", Preview: &live.AttackPreview{

@@ -20,8 +20,8 @@ test('a roll card mixes a typed die with server rolls and lands on the total', a
 
   const card = page.getByTestId('roll-card')
   await expect(card).toContainText('2 × d20, keep highest — Advantage')
-  await card.getByTestId('manual-0').click()
-  await card.getByTestId('pad-0').getByRole('button', { name: '12', exact: true }).click()
+  await card.getByTestId('face-0').fill('12')
+  await card.getByTestId('face-0').press('Enter')
   await expect(card.getByTestId('die-0')).toContainText('your die')
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
   await card.getByTestId('roll-rest').click()
