@@ -10,10 +10,10 @@ import (
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules"
-	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/clock"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/dice"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/features"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/inventory"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/variants"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
 
@@ -67,6 +67,8 @@ func (r *runtime) proposeRest(m domain.Member, kind string) (Write, string) {
 		if reason := r.suppliesFor(resters); reason != "" {
 			return Write{}, reason
 		}
+	} else if reason := r.shortRestCapped(); reason != "" {
+		return Write{}, reason
 	}
 	rest := &domain.Rest{Kind: kind, Status: domain.RestProposed, ProposedBy: m.ID, Agreed: []uuid.UUID{m.ID}, Resters: resters}
 	return r.agreed(domain.ActionRestProposed, rest, m), ""
@@ -97,6 +99,34 @@ func (r *runtime) agreed(kind string, rest *domain.Rest, m domain.Member) Write 
 		w.Supplies = r.st.eat(rest.Resters)
 	}
 	return w
+}
+
+// unreadRules is what a rest is told when the Campaign's Rule Variants cannot be read: a cap or a
+// variant that may be on is never played past.
+const unreadRules = "The Campaign's rules could not be read."
+
+// ruleVariants reads what the Campaign has each Rule Variant at now. The DM switches them outside the
+// Session, so they are read whenever one is about to matter.
+func (r *runtime) ruleVariants() (variants.Set, bool) {
+	set, err := r.store.RuleVariants(context.Background(), r.campaign)
+	if err != nil {
+		r.log.Error("live: rule variants", "error", err)
+		return nil, false
+	}
+	return set, true
+}
+
+// shortRestCapped refuses a Short Rest the Campaign's cap leaves no room for.
+func (r *runtime) shortRestCapped() string {
+	set, ok := r.ruleVariants()
+	taken, err := r.store.ShortRests(context.Background(), r.campaign)
+	if !ok || err != nil {
+		return unreadRules
+	}
+	if !variants.ShortRestAllowed(set.Get(variants.ShortRestCap), taken) {
+		return "The party has taken its Short Rests: it needs a Long Rest first."
+	}
+	return ""
 }
 
 // waitingOn are the Players resting a Character who have not agreed yet.
@@ -200,10 +230,20 @@ func (s *state) eat(resters []domain.Rester) []domain.Supply {
 	return out
 }
 
-// spendHitDie opens a Hit Die roll for a resting Character during a Short Rest.
+// spendHitDie opens a Hit Die roll for a resting Character during a Short Rest, or during a Long Rest
+// when the Campaign plays with slow natural healing.
 func (r *runtime) spendHitDie(m domain.Member, rest *domain.Rest, tokenID string) (Write, string) {
-	if rest == nil || rest.Status != domain.RestResting || rest.Kind != RestShort {
+	if rest == nil || rest.Status != domain.RestResting {
 		return Write{}, "Hit Dice are spent once the rest has begun, in a Short Rest."
+	}
+	if rest.Kind != RestShort {
+		set, ok := r.ruleVariants()
+		if !ok {
+			return Write{}, unreadRules
+		}
+		if !set.On(variants.SlowNaturalHealing) {
+			return Write{}, "Hit Dice are spent once the rest has begun, in a Short Rest."
+		}
 	}
 	t, ok := r.st.tokenByID(tokenID)
 	i := slices.IndexFunc(rest.Resters, func(x domain.Rester) bool { return x.TokenID == t.ID })
@@ -252,28 +292,35 @@ func (r *runtime) hitDieRolled(i int, id domain.RollID) {
 
 // finishRest ends a rest with its benefits: a Short Rest gives back what recharges on one; a Long Rest
 // heals everyone, gives back every Hit Die and Resource and unlocks a level-up. Either moves the Game
-// Clock on: an hour, or eight.
+// Clock on by as long as the Campaign's rests take, and keeps the count of Short Rests since the last
+// Long Rest. With slow natural healing a Long Rest heals nobody.
 func (r *runtime) finishRest(rest *domain.Rest) (Write, string) {
 	if slices.ContainsFunc(rest.Resters, func(x domain.Rester) bool { return x.RollID != nil }) {
 		return Write{}, "Wait for the Hit Dice still rolling."
+	}
+	set, ok := r.ruleVariants()
+	taken, err := r.store.ShortRests(context.Background(), r.campaign)
+	if !ok || err != nil {
+		return Write{}, unreadRules
 	}
 	cat, err := r.store.Features(context.Background())
 	if err != nil {
 		r.log.Error("live: features", "error", err)
 		return Write{}, "The rest could not be finished."
 	}
-	w := Write{Kind: domain.ActionRestTaken, Rest: rest.Kind, RestOver: true}
-	event, took := features.ShortRest, clock.ShortRest
+	taken++
+	event := features.ShortRest
 	if rest.Kind == RestLong {
-		event, took = features.LongRest, clock.LongRest
+		event, taken = features.LongRest, 0
 	}
-	r.pass(&w, r.st.gameTime().Add(took))
+	w := Write{Kind: domain.ActionRestTaken, Rest: rest.Kind, RestOver: true, ShortRests: &taken}
+	r.pass(&w, r.st.gameTime().Add(variants.RestMinutes(set.Get(variants.Rests), rest.Kind == RestLong)))
 	for _, x := range rest.Resters {
 		t := r.st.tokens[x.TokenID]
 		res := domain.RestResult{CharacterID: x.CharacterID, HPCurrent: t.Stats.HP, HitDiceSpent: x.Level - x.HitDiceLeft, Used: map[string]int{}}
 		if rest.Kind == RestLong {
-			res.HPCurrent, res.HitDiceSpent, res.LevelUpReady = t.Stats.HPMax, 0, true
-			w.Healed = append(w.Healed, HPChange{Token: t.ID, Before: t.Stats.HP, After: t.Stats.HPMax})
+			res.HPCurrent, res.HitDiceSpent, res.LevelUpReady = set.LongRestHP(t.Stats.HP, t.Stats.HPMax), 0, true
+			w.Healed = append(w.Healed, HPChange{Token: t.ID, Before: t.Stats.HP, After: res.HPCurrent})
 		}
 		stats := features.Stats{Level: x.Level, AbilityMod: 0, Proficiency: rules.ProficiencyBonus(x.Level)}
 		for slug, used := range x.Used {

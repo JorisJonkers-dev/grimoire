@@ -86,8 +86,8 @@ func TestHowLongAJourneyTakes(t *testing.T) {
 	if got := at(2, 8, 0).Add(clock.Journey(3*480, 3)); got != at(4, 16, 0) {
 		t.Errorf("three days' march from eight = %+v", got)
 	}
-	if clock.DawnMinute != 360 || clock.ShortRest != 60 || clock.LongRest != 480 {
-		t.Errorf("constants %d %d %d", clock.DawnMinute, clock.ShortRest, clock.LongRest)
+	if clock.DawnMinute != 360 {
+		t.Errorf("dawn comes at minute %d", clock.DawnMinute)
 	}
 }
 

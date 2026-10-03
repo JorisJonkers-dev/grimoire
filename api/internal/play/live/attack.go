@@ -13,6 +13,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/dice"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/effects"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/variants"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
 
@@ -74,6 +75,8 @@ type aim struct {
 	prof             effects.AttackProfile
 	// bonus is added to the attack roll, from high ground.
 	bonus int
+	// advantages and disadvantages count the sources of each the attack has.
+	advantages, disadvantages int
 }
 
 // aimAt checks an attack a member asks for: in combat, on the attacker's turn with its action left,
@@ -112,8 +115,33 @@ func (r *runtime) aimAt(m domain.Member, cmd Command) (aim, string) {
 	p, reason := r.st.shape(aim{attacker: a, target: t, no: cmd.AttackNo, with: a.Stats.Attacks[cmd.AttackNo]})
 	if reason == "" {
 		r.highGround(&p)
+		r.flanking(&p)
 	}
 	return p, reason
+}
+
+// flanking gives a melee attack Advantage when the Campaign plays with flanking and an ally of the
+// attacker who can act stands on the hex straight across the target. When the Campaign's Rule
+// Variants cannot be read the attack plays as the rules do without them.
+func (r *runtime) flanking(p *aim) {
+	if p.ranged {
+		return
+	}
+	if set, _ := r.ruleVariants(); !set.On(variants.Flanking) {
+		return
+	}
+	from, to := hex.Coord{Q: p.attacker.Q, R: p.attacker.R}, hex.Coord{Q: p.target.Q, R: p.target.R}
+	for _, ally := range r.st.ordered() {
+		sameSide := (ally.Kind == domain.TokenParty) == (p.attacker.Kind == domain.TokenParty)
+		if ally.ID == p.attacker.ID || !sameSide || !standing(ally) || r.st.catalog.Incapacitated(r.st.actives(ally.ID)) {
+			continue
+		}
+		if variants.Flanks(from, hex.Coord{Q: ally.Q, R: ally.R}, to) {
+			p.advantages++
+			p.mode, p.reasons = attack.ModeOf(p.advantages, p.disadvantages), append(p.reasons, "Advantage: flanking with "+ally.Label)
+			return
+		}
+	}
 }
 
 // highGround gives +2 to hit from higher ground when the Campaign uses that optional rule.
@@ -199,7 +227,8 @@ func (s *state) shape(p aim) (aim, string) {
 	}
 	p.prof = s.catalog.ForAttack(s.actives(p.attacker.ID), s.actives(p.target.ID), uuid.UUID(p.attacker.ID).String(), hex.Distance(from, to) <= 1)
 	p.reasons = append(append(append(p.reasons, p.prof.Advantages...), p.prof.Disadvantages...), p.prof.Notes...)
-	p.mode = attack.ModeOf(len(p.prof.Advantages), disadvantages+len(p.prof.Disadvantages))
+	p.advantages, p.disadvantages = len(p.prof.Advantages), disadvantages+len(p.prof.Disadvantages)
+	p.mode = attack.ModeOf(p.advantages, p.disadvantages)
 	return p, ""
 }
 
@@ -320,7 +349,15 @@ func (s *state) closeCrit(a, t domain.Token) bool {
 	return s.catalog.ForAttack(nil, s.actives(t.ID), "", near).Crit
 }
 
-// hit opens the damage roll of an attack that hit, every die doubled on a critical; flat damage lands at once.
+// criticalHits is how the Campaign plays the dice of a Critical Hit: every die twice when its Rule
+// Variants cannot be read.
+func (r *runtime) criticalHits() string {
+	set, _ := r.ruleVariants()
+	return set.Get(variants.CriticalHits)
+}
+
+// hit opens the damage roll of an attack that hit, a critical with its dice as the Campaign plays
+// them; flat damage lands at once.
 func (r *runtime) hit(a, t domain.Token, p domain.PendingAttack, critical bool, roll domain.Roll) Write {
 	with := a.Stats.Attacks[p.AttackNo]
 	spec := joinDice(with.Damage, r.st.catalog.ForAttack(nil, r.st.actives(t.ID), uuid.UUID(a.ID).String(), false).DamageDice)
@@ -331,11 +368,12 @@ func (r *runtime) hit(a, t domain.Token, p domain.PendingAttack, critical bool, 
 	if len(spec.Groups) == 0 {
 		return r.hurt(t, bonus, Write{Token: a, attack: &p})
 	}
-	purpose := with.Name + " damage to " + t.Label
+	purpose, most := with.Name+" damage to "+t.Label, 0
 	if critical {
-		spec, purpose = attack.CriticalDice(spec), purpose+" (critical)"
+		spec, most = variants.CriticalDice(r.criticalHits(), spec)
+		purpose += " (critical)"
 	}
-	dmg := r.request(roll.Roller, a, purpose, spec.String(), domain.Modifier{Label: with.Name, Value: bonus})
+	dmg := r.request(roll.Roller, a, purpose, spec.String(), domain.Modifier{Label: with.Name, Value: bonus}, domain.Modifier{Label: "Critical Hit: the dice at their most", Value: most})
 	dmg.Roller, dmg.RequestedBy = roll.Roller, roll.RequestedBy
 	p.Stage, p.RollID, p.Critical = domain.StageDamage, dmg.ID, critical
 	return Write{Kind: domain.ActionAttackHit, Token: a, attack: &p, Rolls: []domain.Roll{dmg}}

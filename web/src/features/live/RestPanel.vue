@@ -4,7 +4,7 @@ import type { LiveRest, LiveToken } from '@/infrastructure/api/types.gen'
 import type { Outgoing } from '@/realtime/liveSession'
 import { GButton } from '@/shared/ui'
 
-const props = defineProps<{ rest?: LiveRest; dm: boolean; me: string; tokens: LiveToken[]; inCombat: boolean }>()
+const props = defineProps<{ rest?: LiveRest; dm: boolean; me: string; tokens: LiveToken[]; inCombat: boolean; hitDiceInLongRest?: boolean }>()
 const emit = defineEmits<{ send: [cmd: Outgoing] }>()
 
 const name = computed(() => (props.rest?.kind === 'long' ? 'Long Rest' : 'Short Rest'))
@@ -37,7 +37,7 @@ const mayRoll = (tokenId: string) => props.dm || props.tokens.some((t) => t.id =
         <strong>{{ name }}</strong> {{ rest.status === 'proposed' ? 'proposed' : 'under way' }}. {{ rest.status === 'proposed' ? waitingLine : '' }}
       </p>
       <GButton v-if="canAgree" variant="primary" data-testid="agree-rest" @click="emit('send', { kind: 'agree_rest' })">Agree to rest</GButton>
-      <ul v-if="rest.status === 'resting' && rest.kind === 'short'" class="g-list">
+      <ul v-if="rest.status === 'resting' && (rest.kind === 'short' || hitDiceInLongRest)" class="g-list">
         <li v-for="r in rest.resters" :key="r.characterId" class="rester" :data-testid="`rester-${r.name}`">
           <span>{{ r.name }} · {{ r.hitDiceLeft }} {{ r.hitDie }} left</span>
           <span v-if="r.rollId" class="hint">Rolling…</span>

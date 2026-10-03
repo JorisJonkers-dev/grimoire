@@ -28,12 +28,14 @@ type Handler struct {
 	Companions CompanionService
 	Factions   FactionService
 	Journal    JournalService
-	Rolls      RollService
-	Inventory  InventoryService
-	Sessions   SessionService
-	Maps       MapService
-	Prep       PrepService
-	Hub        LiveHub
+	// RuleVariants keeps the Campaign's Rule Variants.
+	RuleVariants RuleVariantService
+	Rolls        RollService
+	Inventory    InventoryService
+	Sessions     SessionService
+	Maps         MapService
+	Prep         PrepService
+	Hub          LiveHub
 	// LiveMembers answers membership for the live socket, which sits outside the generated router.
 	LiveMembers LiveMembers
 	// Push keeps devices' notification subscriptions; nil means the server sends none.

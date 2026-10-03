@@ -1438,6 +1438,16 @@ func (UnimplementedHandler) ListRolls(ctx context.Context, params ListRollsParam
 	return r, ht.ErrNotImplemented
 }
 
+// ListRuleVariants implements listRuleVariants operation.
+//
+// Every built-in Rule Variant with what the Campaign has it at, for every Member to see how the table
+// plays. Each says whether Grimoire applies it in play or the DM applies it by hand.
+//
+// GET /api/v1/campaigns/{campaignId}/rule-variants
+func (UnimplementedHandler) ListRuleVariants(ctx context.Context, params ListRuleVariantsParams) (r ListRuleVariantsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // ListSessions implements listSessions operation.
 //
 // The Campaign's Sessions, newest first. Members only.
@@ -2202,6 +2212,16 @@ func (UnimplementedHandler) SetNotificationPreferences(ctx context.Context, req 
 //
 // PUT /api/v1/campaigns/{campaignId}/characters/{characterId}/portrait
 func (UnimplementedHandler) SetPortrait(ctx context.Context, req SetPortraitReq, params SetPortraitParams) (r SetPortraitRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// SetRuleVariants implements setRuleVariants operation.
+//
+// Sets the Rule Variants named to what is chosen and leaves the others alone. Every choice must be one
+// its variant can be, or nothing changes. A Session under way follows the change at once. DM only.
+//
+// PUT /api/v1/campaigns/{campaignId}/rule-variants
+func (UnimplementedHandler) SetRuleVariants(ctx context.Context, req *RuleVariantChoices, params SetRuleVariantsParams) (r SetRuleVariantsRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

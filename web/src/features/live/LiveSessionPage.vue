@@ -2,7 +2,7 @@
 import { useMutation, useQuery } from '@tanstack/vue-query'
 import { computed, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { endSessionMutation, getCampaignOptions, getSessionLogOptions, listCharactersOptions, listCompanionsOptions, listFactionsOptions, listEncounterTablesOptions, listLootTablesOptions, listMapsOptions, listShopsOptions } from '@/infrastructure/api/@tanstack/vue-query.gen'
+import { endSessionMutation, getCampaignOptions, getSessionLogOptions, listCharactersOptions, listCompanionsOptions, listFactionsOptions, listEncounterTablesOptions, listRuleVariantsOptions, listLootTablesOptions, listMapsOptions, listShopsOptions } from '@/infrastructure/api/@tanstack/vue-query.gen'
 import { rollRest } from '@/infrastructure/api/sdk.gen'
 import type { AmbientLight, LiveCombatant, LiveCombatantSetup, LiveSuggestion, LiveToken, MapObjectKind, TokenKind } from '@/infrastructure/api/types.gen'
 import { useLiveSession } from '@/realtime/liveSession'
@@ -119,6 +119,10 @@ const companions = useQuery(computed(() => ({ ...listCompanionsOptions({ path: {
 // The DM places a creature as one of a Faction, openly: its Standing then shapes social checks with it.
 const factions = useQuery(computed(() => ({ ...listFactionsOptions({ path: { campaignId } }), retry: false })))
 const faction = ref('')
+// With slow natural healing a Long Rest spends Hit Dice too. The DM may switch it between rests, so it is asked again as each one starts.
+const ruleVariants = useQuery({ ...listRuleVariantsOptions({ path: { campaignId } }), retry: false })
+const slowHealing = computed(() => ruleVariants.data.value?.some((v) => v.slug === 'slow-natural-healing' && v.value === 'on') ?? false)
+watch(() => view.value?.rest?.status, (status) => { if (status === 'resting') void ruleVariants.refetch() })
 // How a creature takes to each Character an Influence check has moved it towards.
 const attitudeNames = { hostile: 'Hostile', indifferent: 'Indifferent', friendly: 'Friendly' }
 const characterName = (id: string) => characters.data.value?.find((c) => c.id === id)?.name ?? 'a Character'
@@ -927,6 +931,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
           :me="campaign.data.value?.me.id ?? ''"
           :tokens="view.tokens"
           :in-combat="Boolean(view.combat)"
+          :hit-dice-in-long-rest="slowHealing"
           @send="(cmd) => live?.send(cmd)"
         />
         <EncounterChecks

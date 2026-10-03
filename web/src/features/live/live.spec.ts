@@ -2044,6 +2044,36 @@ describe('rest', () => {
     await expectAccessible(wrapper.get('[data-testid="rest"]').element)
   })
 
+  it('offers Hit Dice in a Long Rest only when the Campaign plays with slow natural healing', async () => {
+    const variant = (value: string) => [{ slug: 'slow-natural-healing', name: 'Slow natural healing', description: 'x', automated: true, value, options: [{ value: 'off', label: 'Off' }, { value: 'on', label: 'On' }] }]
+    const asked = { times: 0, value: 'off' }
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, {
+      [`/api/v1/campaigns/${ID}/rule-variants`]: () => {
+        asked.times++
+        return variant(asked.value)
+      },
+      [`/api/v1/campaigns/${ID}`]: () => campaign('player'),
+    })
+    const s = FakeSocket.last()
+    const long = { kind: 'long', status: 'resting', proposedBy: player.id, agreed: [player.id, member.id], waiting: [], waitingOnDm: false, resters }
+    s.receive(snapshot(tokens, 'party', { rest: { ...long, status: 'proposed' } }))
+    await flushPromises()
+    const before = asked.times
+    // The DM switched it on since the page loaded: the rest starting asks again.
+    asked.value = 'on'
+    s.receive({ kind: 'view', seq: 2, view: { tokens, fog: false, visible: [], remembered: [], rest: long } })
+    await flushPromises()
+    expect(asked.times).toBeGreaterThan(before)
+    await wrapper.get('[aria-label="Spend a Hit Die for Aria"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'spend_hit_die', tokenId: ARIA })
+    asked.value = 'off'
+    s.receive({ kind: 'view', seq: 3, view: { tokens, fog: false, visible: [], remembered: [] } })
+    await flushPromises()
+    s.receive({ kind: 'view', seq: 4, view: { tokens, fog: false, visible: [], remembered: [], rest: long } })
+    await flushPromises()
+    expect(wrapper.find('[aria-label="Spend a Hit Die for Aria"]').exists()).toBe(false)
+  })
+
   it('lets the DM agree, finish, call off or interrupt, and never rest mid-fight', async () => {
     const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, { [`/api/v1/campaigns/${ID}`]: () => campaign() })
     const s = FakeSocket.last()

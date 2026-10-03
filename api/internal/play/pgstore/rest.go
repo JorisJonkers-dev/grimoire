@@ -15,6 +15,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/live"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/features"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/surface"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/variants"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
 
@@ -26,6 +27,25 @@ func (s *Store) Surfaces(ctx context.Context) (surface.Catalog, error) {
 // Features reads what classes, species and feats grant from the compendium.
 func (s *Store) Features(ctx context.Context) (features.Catalog, error) {
 	return comppg.New(s.pool).Features(ctx)
+}
+
+// RuleVariants reads what the Campaign has each Rule Variant at.
+func (s *Store) RuleVariants(ctx context.Context, campaign uuid.UUID) (variants.Set, error) {
+	rows, err := s.q.ListRuleVariants(ctx, campaign)
+	if err != nil {
+		return nil, err
+	}
+	out := make(variants.Set, len(rows))
+	for _, r := range rows {
+		out[r.Variant] = r.Value
+	}
+	return out, nil
+}
+
+// ShortRests reads how many Short Rests the party has taken since its last Long Rest.
+func (s *Store) ShortRests(ctx context.Context, campaign uuid.UUID) (int, error) {
+	n, err := s.q.CampaignShortRests(ctx, campaign)
+	return int(n), err
 }
 
 // RestSupplies reports whether a Long Rest costs each resting Character a day of Rations.

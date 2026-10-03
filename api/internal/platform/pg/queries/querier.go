@@ -105,6 +105,7 @@ type Querier interface {
 	CampaignRuleset(ctx context.Context, id uuid.UUID) (string, error)
 	CampaignShopStock(ctx context.Context, campaignID uuid.UUID) ([]PrepShopStock, error)
 	CampaignShops(ctx context.Context, campaignID uuid.UUID) ([]PrepShop, error)
+	CampaignShortRests(ctx context.Context, id uuid.UUID) (int32, error)
 	CampaignShowDCs(ctx context.Context, id uuid.UUID) (bool, error)
 	CampaignTableEntries(ctx context.Context, campaignID uuid.UUID) ([]PrepTableEntry, error)
 	// The items a Member can read: what their own Characters carry in the Campaign and what lies in its
@@ -516,6 +517,7 @@ type Querier interface {
 	ListRetrains(ctx context.Context, arg ListRetrainsParams) ([]ListRetrainsRow, error)
 	ListRevisions(ctx context.Context, arg ListRevisionsParams) ([]ListRevisionsRow, error)
 	ListRolls(ctx context.Context, arg ListRollsParams) ([]uuid.UUID, error)
+	ListRuleVariants(ctx context.Context, campaignID uuid.UUID) ([]ListRuleVariantsRow, error)
 	ListScaleSteps(ctx context.Context) ([]CompendiumScaleStep, error)
 	ListScales(ctx context.Context) ([]CompendiumScale, error)
 	ListSessions(ctx context.Context, campaignID uuid.UUID) ([]PlaySession, error)
@@ -694,6 +696,7 @@ type Querier interface {
 	// Only a creature of the Session takes an attitude, and only towards a Character of the Session's Campaign.
 	SetAttitude(ctx context.Context, arg SetAttitudeParams) error
 	SetCampaignClock(ctx context.Context, arg SetCampaignClockParams) error
+	SetCampaignShortRests(ctx context.Context, arg SetCampaignShortRestsParams) error
 	SetCanPrepare(ctx context.Context, arg SetCanPrepareParams) error
 	SetCharacterAbility(ctx context.Context, arg SetCharacterAbilityParams) error
 	SetCharacterArmor(ctx context.Context, arg SetCharacterArmorParams) error
@@ -726,6 +729,7 @@ type Querier interface {
 	SetResourceUsed(ctx context.Context, arg SetResourceUsedParams) error
 	SetRollChoice(ctx context.Context, arg SetRollChoiceParams) error
 	SetRollDie(ctx context.Context, arg SetRollDieParams) (int64, error)
+	SetRuleVariant(ctx context.Context, arg SetRuleVariantParams) error
 	SetSessionMap(ctx context.Context, arg SetSessionMapParams) error
 	SetSessionShop(ctx context.Context, arg SetSessionShopParams) error
 	SetSessionSneaking(ctx context.Context, arg SetSessionSneakingParams) error

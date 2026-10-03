@@ -847,6 +847,13 @@ type BuildInvoker interface {
 	//
 	// PUT /api/v1/campaigns/{campaignId}/characters/{characterId}/portrait
 	SetPortrait(ctx context.Context, request SetPortraitReq, params SetPortraitParams) (SetPortraitRes, error)
+	// SetRuleVariants invokes setRuleVariants operation.
+	//
+	// Sets the Rule Variants named to what is chosen and leaves the others alone. Every choice must be one
+	// its variant can be, or nothing changes. A Session under way follows the change at once. DM only.
+	//
+	// PUT /api/v1/campaigns/{campaignId}/rule-variants
+	SetRuleVariants(ctx context.Context, request *RuleVariantChoices, params SetRuleVariantsParams) (SetRuleVariantsRes, error)
 	// SetTokenIcon invokes setTokenIcon operation.
 	//
 	// A PNG, JPEG or WebP picture of at most 10 MB. The owner or a DM, never during Combat.
@@ -1675,6 +1682,13 @@ type ReadInvoker interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/rolls
 	ListRolls(ctx context.Context, params ListRollsParams) (ListRollsRes, error)
+	// ListRuleVariants invokes listRuleVariants operation.
+	//
+	// Every built-in Rule Variant with what the Campaign has it at, for every Member to see how the table
+	// plays. Each says whether Grimoire applies it in play or the DM applies it by hand.
+	//
+	// GET /api/v1/campaigns/{campaignId}/rule-variants
+	ListRuleVariants(ctx context.Context, params ListRuleVariantsParams) (ListRuleVariantsRes, error)
 	// ListSessions invokes listSessions operation.
 	//
 	// The Campaign's Sessions, newest first. Members only.
@@ -22885,6 +22899,142 @@ func (c *Client) sendListRolls(ctx context.Context, params ListRollsParams) (res
 	return result, nil
 }
 
+// ListRuleVariants invokes listRuleVariants operation.
+//
+// Every built-in Rule Variant with what the Campaign has it at, for every Member to see how the table
+// plays. Each says whether Grimoire applies it in play or the DM applies it by hand.
+//
+// GET /api/v1/campaigns/{campaignId}/rule-variants
+func (c *Client) ListRuleVariants(ctx context.Context, params ListRuleVariantsParams) (ListRuleVariantsRes, error) {
+	res, err := c.sendListRuleVariants(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendListRuleVariants(ctx context.Context, params ListRuleVariantsParams) (res ListRuleVariantsRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("listRuleVariants"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.URLTemplateKey.String("/api/v1/campaigns/{campaignId}/rule-variants"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, ListRuleVariantsOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [3]string
+	pathParts[0] = "/api/v1/campaigns/"
+	{
+		// Encode "campaignId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "campaignId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.CampaignId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	pathParts[2] = "/rule-variants"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, ListRuleVariantsOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeListRuleVariantsResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
 // ListSessions invokes listSessions operation.
 //
 // The Campaign's Sessions, newest first. Members only.
@@ -34134,6 +34284,145 @@ func (c *Client) sendSetPortrait(ctx context.Context, request SetPortraitReq, pa
 
 	stage = "DecodeResponse"
 	result, err := decodeSetPortraitResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// SetRuleVariants invokes setRuleVariants operation.
+//
+// Sets the Rule Variants named to what is chosen and leaves the others alone. Every choice must be one
+// its variant can be, or nothing changes. A Session under way follows the change at once. DM only.
+//
+// PUT /api/v1/campaigns/{campaignId}/rule-variants
+func (c *Client) SetRuleVariants(ctx context.Context, request *RuleVariantChoices, params SetRuleVariantsParams) (SetRuleVariantsRes, error) {
+	res, err := c.sendSetRuleVariants(ctx, request, params)
+	return res, err
+}
+
+func (c *Client) sendSetRuleVariants(ctx context.Context, request *RuleVariantChoices, params SetRuleVariantsParams) (res SetRuleVariantsRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("setRuleVariants"),
+		semconv.HTTPRequestMethodKey.String("PUT"),
+		semconv.URLTemplateKey.String("/api/v1/campaigns/{campaignId}/rule-variants"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, SetRuleVariantsOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [3]string
+	pathParts[0] = "/api/v1/campaigns/"
+	{
+		// Encode "campaignId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "campaignId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.CampaignId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	pathParts[2] = "/rule-variants"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "PUT", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodeSetRuleVariantsRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, SetRuleVariantsOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeSetRuleVariantsResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
