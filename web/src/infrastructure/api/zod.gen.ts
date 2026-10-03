@@ -3225,6 +3225,93 @@ export const zLiveShopStanding = z.object({
 });
 
 /**
+ * Where a Quest stands. A hidden Quest is the DM's alone.
+ */
+export const zQuestStatus = z.enum([
+    'hidden',
+    'active',
+    'completed',
+    'failed'
+]);
+
+/**
+ * One step of a Quest.
+ */
+export const zQuestStep = z.object({
+    text: z.string().min(1).max(400),
+    done: z.boolean()
+});
+
+/**
+ * A Quest of the Campaign with its steps in order.
+ */
+export const zQuest = z.object({
+    id: zId,
+    name: z.string().max(120),
+    summary: z.string().max(4000),
+    status: zQuestStatus,
+    steps: z.array(zQuestStep).max(50),
+    updatedAt: z.iso.datetime().max(40)
+});
+
+/**
+ * The editable part of a Quest. The steps given replace the ones it had.
+ */
+export const zQuestInput = z.object({
+    name: z.string().min(1).max(120),
+    summary: z.string().max(4000).optional(),
+    status: zQuestStatus,
+    steps: z.array(zQuestStep).max(50).optional()
+});
+
+/**
+ * A Lore entry. The item that holds it is there for the DM alone.
+ */
+export const zLore = z.object({
+    id: zId,
+    title: z.string().max(120),
+    body: z.string().max(8000),
+    unlocked: z.boolean(),
+    unlockedAt: z.iso.datetime().max(40).optional(),
+    itemSlug: z.string().max(80).optional(),
+    updatedAt: z.iso.datetime().max(40)
+});
+
+/**
+ * The Journal of a Campaign as the caller may see it.
+ */
+export const zJournal = z.object({
+    dm: z.boolean(),
+    quests: z.array(zQuest).max(2000),
+    lore: z.array(zLore).max(5000),
+    readable: z.array(z.string().max(80)).max(5000)
+});
+
+/**
+ * The editable part of a Lore entry.
+ */
+export const zLoreInput = z.object({
+    title: z.string().min(1).max(120),
+    body: z.string().max(8000).optional(),
+    itemSlug: z.string().max(80).optional(),
+    unlocked: z.boolean().optional()
+});
+
+/**
+ * A book or letter to read.
+ */
+export const zItemReading = z.object({
+    itemSlug: z.string().min(1).max(80)
+});
+
+/**
+ * What a reading did.
+ */
+export const zItemReadingResult = z.object({
+    unlocked: z.int().gte(1).lte(5000)
+});
+
+/**
  * What only the DM knows of a Faction.
  */
 export const zFactionSecrets = z.object({
@@ -6151,6 +6238,92 @@ export const zListEncounterChecksResponse = z.array(zEncounterCheck).max(1000);
  * The archetypes, by slug.
  */
 export const zListFactionArchetypesResponse = z.array(zFactionArchetype).max(100);
+
+export const zGetJournalPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The Journal.
+ */
+export const zGetJournalResponse = zJournal;
+
+export const zReadItemBody = zItemReading;
+
+export const zReadItemPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * How many Lore entries the reading unlocked.
+ */
+export const zReadItemResponse = zItemReadingResult;
+
+export const zCreateQuestBody = zQuestInput;
+
+export const zCreateQuestPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The new Quest.
+ */
+export const zCreateQuestResponse = zQuest;
+
+export const zDeleteQuestPath = z.object({
+    campaignId: zId,
+    questId: zId
+});
+
+/**
+ * The Quest is removed.
+ */
+export const zDeleteQuestResponse = z.void();
+
+export const zUpdateQuestBody = zQuestInput;
+
+export const zUpdateQuestPath = z.object({
+    campaignId: zId,
+    questId: zId
+});
+
+/**
+ * The Quest is changed.
+ */
+export const zUpdateQuestResponse = z.void();
+
+export const zCreateLoreBody = zLoreInput;
+
+export const zCreateLorePath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The new Lore entry.
+ */
+export const zCreateLoreResponse = zLore;
+
+export const zDeleteLorePath = z.object({
+    campaignId: zId,
+    loreId: zId
+});
+
+/**
+ * The Lore entry is removed.
+ */
+export const zDeleteLoreResponse = z.void();
+
+export const zUpdateLoreBody = zLoreInput;
+
+export const zUpdateLorePath = z.object({
+    campaignId: zId,
+    loreId: zId
+});
+
+/**
+ * The Lore entry is changed.
+ */
+export const zUpdateLoreResponse = z.void();
 
 export const zListFactionsPath = z.object({
     campaignId: zId

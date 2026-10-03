@@ -19371,6 +19371,727 @@ func decodeCreateLootTableResponse(resp *http.Response) (res CreateLootTableRes,
 	return res, validate.UnexpectedStatusCodeWithResponse(resp)
 }
 
+func decodeCreateLoreResponse(resp *http.Response) (res CreateLoreRes, _ error) {
+	switch resp.StatusCode {
+	case 201:
+		// Code 201.
+		ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
+		if err != nil {
+			return res, errors.Wrap(err, "parse media type")
+		}
+		switch {
+		case ct == "application/json":
+			buf, err := io.ReadAll(resp.Body)
+			if err != nil {
+				return res, err
+			}
+			d := jx.DecodeBytes(buf)
+
+			var response Lore
+			if err := func() error {
+				if err := response.Decode(d); err != nil {
+					return err
+				}
+				if err := d.Skip(); err != io.EOF {
+					return errors.New("unexpected trailing data")
+				}
+				return nil
+			}(); err != nil {
+				err = &ogenerrors.DecodeBodyError{
+					ContentType: ct,
+					Body:        buf,
+					Err:         err,
+				}
+				return res, err
+			}
+			// Validate response.
+			if err := func() error {
+				if err := response.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return res, errors.Wrap(err, "validate")
+			}
+			var wrapper LoreHeaders
+			wrapper.Response = response
+			h := uri.NewHeaderDecoder(resp.Header)
+			// Parse "RateLimit-Limit" header.
+			{
+				cfg := uri.HeaderParameterDecodingConfig{
+					Name:    "RateLimit-Limit",
+					Explode: false,
+				}
+				if err := func() error {
+					if err := h.HasParam(cfg); err == nil {
+						if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+							var wrapperDotRateLimitLimitVal int32
+							if err := func() error {
+								val, err := d.DecodeValue()
+								if err != nil {
+									return err
+								}
+
+								c, err := conv.ToInt32(val)
+								if err != nil {
+									return err
+								}
+
+								wrapperDotRateLimitLimitVal = c
+								return nil
+							}(); err != nil {
+								return err
+							}
+							wrapper.RateLimitLimit.SetTo(wrapperDotRateLimitLimitVal)
+							return nil
+						}); err != nil {
+							return err
+						}
+						if err := func() error {
+							if value, ok := wrapper.RateLimitLimit.Get(); ok {
+								if err := func() error {
+									if err := (validate.Int{
+										MinSet:        true,
+										Min:           0,
+										MaxSet:        true,
+										Max:           1000000,
+										MinExclusive:  false,
+										MaxExclusive:  false,
+										MultipleOfSet: false,
+										MultipleOf:    0,
+										Pattern:       nil,
+									}).Validate(int64(value)); err != nil {
+										return errors.Wrap(err, "int")
+									}
+									return nil
+								}(); err != nil {
+									return err
+								}
+							}
+							return nil
+						}(); err != nil {
+							return err
+						}
+					}
+					return nil
+				}(); err != nil {
+					return res, errors.Wrap(err, "parse RateLimit-Limit header")
+				}
+			}
+			// Parse "RateLimit-Remaining" header.
+			{
+				cfg := uri.HeaderParameterDecodingConfig{
+					Name:    "RateLimit-Remaining",
+					Explode: false,
+				}
+				if err := func() error {
+					if err := h.HasParam(cfg); err == nil {
+						if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+							var wrapperDotRateLimitRemainingVal int32
+							if err := func() error {
+								val, err := d.DecodeValue()
+								if err != nil {
+									return err
+								}
+
+								c, err := conv.ToInt32(val)
+								if err != nil {
+									return err
+								}
+
+								wrapperDotRateLimitRemainingVal = c
+								return nil
+							}(); err != nil {
+								return err
+							}
+							wrapper.RateLimitRemaining.SetTo(wrapperDotRateLimitRemainingVal)
+							return nil
+						}); err != nil {
+							return err
+						}
+						if err := func() error {
+							if value, ok := wrapper.RateLimitRemaining.Get(); ok {
+								if err := func() error {
+									if err := (validate.Int{
+										MinSet:        true,
+										Min:           0,
+										MaxSet:        true,
+										Max:           1000000,
+										MinExclusive:  false,
+										MaxExclusive:  false,
+										MultipleOfSet: false,
+										MultipleOf:    0,
+										Pattern:       nil,
+									}).Validate(int64(value)); err != nil {
+										return errors.Wrap(err, "int")
+									}
+									return nil
+								}(); err != nil {
+									return err
+								}
+							}
+							return nil
+						}(); err != nil {
+							return err
+						}
+					}
+					return nil
+				}(); err != nil {
+					return res, errors.Wrap(err, "parse RateLimit-Remaining header")
+				}
+			}
+			// Parse "RateLimit-Reset" header.
+			{
+				cfg := uri.HeaderParameterDecodingConfig{
+					Name:    "RateLimit-Reset",
+					Explode: false,
+				}
+				if err := func() error {
+					if err := h.HasParam(cfg); err == nil {
+						if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+							var wrapperDotRateLimitResetVal int32
+							if err := func() error {
+								val, err := d.DecodeValue()
+								if err != nil {
+									return err
+								}
+
+								c, err := conv.ToInt32(val)
+								if err != nil {
+									return err
+								}
+
+								wrapperDotRateLimitResetVal = c
+								return nil
+							}(); err != nil {
+								return err
+							}
+							wrapper.RateLimitReset.SetTo(wrapperDotRateLimitResetVal)
+							return nil
+						}); err != nil {
+							return err
+						}
+						if err := func() error {
+							if value, ok := wrapper.RateLimitReset.Get(); ok {
+								if err := func() error {
+									if err := (validate.Int{
+										MinSet:        true,
+										Min:           0,
+										MaxSet:        true,
+										Max:           86400,
+										MinExclusive:  false,
+										MaxExclusive:  false,
+										MultipleOfSet: false,
+										MultipleOf:    0,
+										Pattern:       nil,
+									}).Validate(int64(value)); err != nil {
+										return errors.Wrap(err, "int")
+									}
+									return nil
+								}(); err != nil {
+									return err
+								}
+							}
+							return nil
+						}(); err != nil {
+							return err
+						}
+					}
+					return nil
+				}(); err != nil {
+					return res, errors.Wrap(err, "parse RateLimit-Reset header")
+				}
+			}
+			return &wrapper, nil
+		default:
+			return res, validate.InvalidContentType(ct)
+		}
+	}
+	switch resp.StatusCode / 100 {
+	case 4:
+		// Pattern 4XX.
+		res, err := func() (res CreateLoreRes, err error) {
+			ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
+			if err != nil {
+				return res, errors.Wrap(err, "parse media type")
+			}
+			switch {
+			case ct == "application/problem+json":
+				buf, err := io.ReadAll(resp.Body)
+				if err != nil {
+					return res, err
+				}
+				d := jx.DecodeBytes(buf)
+
+				var response Problem
+				if err := func() error {
+					if err := response.Decode(d); err != nil {
+						return err
+					}
+					if err := d.Skip(); err != io.EOF {
+						return errors.New("unexpected trailing data")
+					}
+					return nil
+				}(); err != nil {
+					err = &ogenerrors.DecodeBodyError{
+						ContentType: ct,
+						Body:        buf,
+						Err:         err,
+					}
+					return res, err
+				}
+				// Validate response.
+				if err := func() error {
+					if err := response.Validate(); err != nil {
+						return err
+					}
+					return nil
+				}(); err != nil {
+					return res, errors.Wrap(err, "validate")
+				}
+				var wrapper ProblemStatusCodeWithHeaders
+				wrapper.Response = response
+				wrapper.StatusCode = resp.StatusCode
+				h := uri.NewHeaderDecoder(resp.Header)
+				// Parse "RateLimit-Limit" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Limit",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitLimitVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitLimitVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitLimit.SetTo(wrapperDotRateLimitLimitVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitLimit.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           1000000,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Limit header")
+					}
+				}
+				// Parse "RateLimit-Remaining" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Remaining",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitRemainingVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitRemainingVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitRemaining.SetTo(wrapperDotRateLimitRemainingVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitRemaining.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           1000000,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Remaining header")
+					}
+				}
+				// Parse "RateLimit-Reset" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Reset",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitResetVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitResetVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitReset.SetTo(wrapperDotRateLimitResetVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitReset.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           86400,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Reset header")
+					}
+				}
+				return &wrapper, nil
+			default:
+				return res, validate.InvalidContentType(ct)
+			}
+		}()
+		if err != nil {
+			return res, errors.Wrapf(err, "pattern 4XX (code %d)", resp.StatusCode)
+		}
+		return res, nil
+	case 5:
+		// Pattern 5XX.
+		res, err := func() (res CreateLoreRes, err error) {
+			ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
+			if err != nil {
+				return res, errors.Wrap(err, "parse media type")
+			}
+			switch {
+			case ct == "application/problem+json":
+				buf, err := io.ReadAll(resp.Body)
+				if err != nil {
+					return res, err
+				}
+				d := jx.DecodeBytes(buf)
+
+				var response Problem
+				if err := func() error {
+					if err := response.Decode(d); err != nil {
+						return err
+					}
+					if err := d.Skip(); err != io.EOF {
+						return errors.New("unexpected trailing data")
+					}
+					return nil
+				}(); err != nil {
+					err = &ogenerrors.DecodeBodyError{
+						ContentType: ct,
+						Body:        buf,
+						Err:         err,
+					}
+					return res, err
+				}
+				// Validate response.
+				if err := func() error {
+					if err := response.Validate(); err != nil {
+						return err
+					}
+					return nil
+				}(); err != nil {
+					return res, errors.Wrap(err, "validate")
+				}
+				var wrapper ProblemStatusCodeWithHeaders
+				wrapper.Response = response
+				wrapper.StatusCode = resp.StatusCode
+				h := uri.NewHeaderDecoder(resp.Header)
+				// Parse "RateLimit-Limit" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Limit",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitLimitVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitLimitVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitLimit.SetTo(wrapperDotRateLimitLimitVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitLimit.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           1000000,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Limit header")
+					}
+				}
+				// Parse "RateLimit-Remaining" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Remaining",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitRemainingVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitRemainingVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitRemaining.SetTo(wrapperDotRateLimitRemainingVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitRemaining.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           1000000,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Remaining header")
+					}
+				}
+				// Parse "RateLimit-Reset" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Reset",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitResetVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitResetVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitReset.SetTo(wrapperDotRateLimitResetVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitReset.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           86400,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Reset header")
+					}
+				}
+				return &wrapper, nil
+			default:
+				return res, validate.InvalidContentType(ct)
+			}
+		}()
+		if err != nil {
+			return res, errors.Wrapf(err, "pattern 5XX (code %d)", resp.StatusCode)
+		}
+		return res, nil
+	}
+	return res, validate.UnexpectedStatusCodeWithResponse(resp)
+}
+
 func decodeCreateNpcResponse(resp *http.Response) (res CreateNpcRes, _ error) {
 	switch resp.StatusCode {
 	case 201:
@@ -22069,6 +22790,727 @@ func decodeCreatePushSubscriptionResponse(resp *http.Response) (res CreatePushSu
 	case 5:
 		// Pattern 5XX.
 		res, err := func() (res CreatePushSubscriptionRes, err error) {
+			ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
+			if err != nil {
+				return res, errors.Wrap(err, "parse media type")
+			}
+			switch {
+			case ct == "application/problem+json":
+				buf, err := io.ReadAll(resp.Body)
+				if err != nil {
+					return res, err
+				}
+				d := jx.DecodeBytes(buf)
+
+				var response Problem
+				if err := func() error {
+					if err := response.Decode(d); err != nil {
+						return err
+					}
+					if err := d.Skip(); err != io.EOF {
+						return errors.New("unexpected trailing data")
+					}
+					return nil
+				}(); err != nil {
+					err = &ogenerrors.DecodeBodyError{
+						ContentType: ct,
+						Body:        buf,
+						Err:         err,
+					}
+					return res, err
+				}
+				// Validate response.
+				if err := func() error {
+					if err := response.Validate(); err != nil {
+						return err
+					}
+					return nil
+				}(); err != nil {
+					return res, errors.Wrap(err, "validate")
+				}
+				var wrapper ProblemStatusCodeWithHeaders
+				wrapper.Response = response
+				wrapper.StatusCode = resp.StatusCode
+				h := uri.NewHeaderDecoder(resp.Header)
+				// Parse "RateLimit-Limit" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Limit",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitLimitVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitLimitVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitLimit.SetTo(wrapperDotRateLimitLimitVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitLimit.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           1000000,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Limit header")
+					}
+				}
+				// Parse "RateLimit-Remaining" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Remaining",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitRemainingVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitRemainingVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitRemaining.SetTo(wrapperDotRateLimitRemainingVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitRemaining.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           1000000,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Remaining header")
+					}
+				}
+				// Parse "RateLimit-Reset" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Reset",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitResetVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitResetVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitReset.SetTo(wrapperDotRateLimitResetVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitReset.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           86400,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Reset header")
+					}
+				}
+				return &wrapper, nil
+			default:
+				return res, validate.InvalidContentType(ct)
+			}
+		}()
+		if err != nil {
+			return res, errors.Wrapf(err, "pattern 5XX (code %d)", resp.StatusCode)
+		}
+		return res, nil
+	}
+	return res, validate.UnexpectedStatusCodeWithResponse(resp)
+}
+
+func decodeCreateQuestResponse(resp *http.Response) (res CreateQuestRes, _ error) {
+	switch resp.StatusCode {
+	case 201:
+		// Code 201.
+		ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
+		if err != nil {
+			return res, errors.Wrap(err, "parse media type")
+		}
+		switch {
+		case ct == "application/json":
+			buf, err := io.ReadAll(resp.Body)
+			if err != nil {
+				return res, err
+			}
+			d := jx.DecodeBytes(buf)
+
+			var response Quest
+			if err := func() error {
+				if err := response.Decode(d); err != nil {
+					return err
+				}
+				if err := d.Skip(); err != io.EOF {
+					return errors.New("unexpected trailing data")
+				}
+				return nil
+			}(); err != nil {
+				err = &ogenerrors.DecodeBodyError{
+					ContentType: ct,
+					Body:        buf,
+					Err:         err,
+				}
+				return res, err
+			}
+			// Validate response.
+			if err := func() error {
+				if err := response.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return res, errors.Wrap(err, "validate")
+			}
+			var wrapper QuestHeaders
+			wrapper.Response = response
+			h := uri.NewHeaderDecoder(resp.Header)
+			// Parse "RateLimit-Limit" header.
+			{
+				cfg := uri.HeaderParameterDecodingConfig{
+					Name:    "RateLimit-Limit",
+					Explode: false,
+				}
+				if err := func() error {
+					if err := h.HasParam(cfg); err == nil {
+						if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+							var wrapperDotRateLimitLimitVal int32
+							if err := func() error {
+								val, err := d.DecodeValue()
+								if err != nil {
+									return err
+								}
+
+								c, err := conv.ToInt32(val)
+								if err != nil {
+									return err
+								}
+
+								wrapperDotRateLimitLimitVal = c
+								return nil
+							}(); err != nil {
+								return err
+							}
+							wrapper.RateLimitLimit.SetTo(wrapperDotRateLimitLimitVal)
+							return nil
+						}); err != nil {
+							return err
+						}
+						if err := func() error {
+							if value, ok := wrapper.RateLimitLimit.Get(); ok {
+								if err := func() error {
+									if err := (validate.Int{
+										MinSet:        true,
+										Min:           0,
+										MaxSet:        true,
+										Max:           1000000,
+										MinExclusive:  false,
+										MaxExclusive:  false,
+										MultipleOfSet: false,
+										MultipleOf:    0,
+										Pattern:       nil,
+									}).Validate(int64(value)); err != nil {
+										return errors.Wrap(err, "int")
+									}
+									return nil
+								}(); err != nil {
+									return err
+								}
+							}
+							return nil
+						}(); err != nil {
+							return err
+						}
+					}
+					return nil
+				}(); err != nil {
+					return res, errors.Wrap(err, "parse RateLimit-Limit header")
+				}
+			}
+			// Parse "RateLimit-Remaining" header.
+			{
+				cfg := uri.HeaderParameterDecodingConfig{
+					Name:    "RateLimit-Remaining",
+					Explode: false,
+				}
+				if err := func() error {
+					if err := h.HasParam(cfg); err == nil {
+						if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+							var wrapperDotRateLimitRemainingVal int32
+							if err := func() error {
+								val, err := d.DecodeValue()
+								if err != nil {
+									return err
+								}
+
+								c, err := conv.ToInt32(val)
+								if err != nil {
+									return err
+								}
+
+								wrapperDotRateLimitRemainingVal = c
+								return nil
+							}(); err != nil {
+								return err
+							}
+							wrapper.RateLimitRemaining.SetTo(wrapperDotRateLimitRemainingVal)
+							return nil
+						}); err != nil {
+							return err
+						}
+						if err := func() error {
+							if value, ok := wrapper.RateLimitRemaining.Get(); ok {
+								if err := func() error {
+									if err := (validate.Int{
+										MinSet:        true,
+										Min:           0,
+										MaxSet:        true,
+										Max:           1000000,
+										MinExclusive:  false,
+										MaxExclusive:  false,
+										MultipleOfSet: false,
+										MultipleOf:    0,
+										Pattern:       nil,
+									}).Validate(int64(value)); err != nil {
+										return errors.Wrap(err, "int")
+									}
+									return nil
+								}(); err != nil {
+									return err
+								}
+							}
+							return nil
+						}(); err != nil {
+							return err
+						}
+					}
+					return nil
+				}(); err != nil {
+					return res, errors.Wrap(err, "parse RateLimit-Remaining header")
+				}
+			}
+			// Parse "RateLimit-Reset" header.
+			{
+				cfg := uri.HeaderParameterDecodingConfig{
+					Name:    "RateLimit-Reset",
+					Explode: false,
+				}
+				if err := func() error {
+					if err := h.HasParam(cfg); err == nil {
+						if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+							var wrapperDotRateLimitResetVal int32
+							if err := func() error {
+								val, err := d.DecodeValue()
+								if err != nil {
+									return err
+								}
+
+								c, err := conv.ToInt32(val)
+								if err != nil {
+									return err
+								}
+
+								wrapperDotRateLimitResetVal = c
+								return nil
+							}(); err != nil {
+								return err
+							}
+							wrapper.RateLimitReset.SetTo(wrapperDotRateLimitResetVal)
+							return nil
+						}); err != nil {
+							return err
+						}
+						if err := func() error {
+							if value, ok := wrapper.RateLimitReset.Get(); ok {
+								if err := func() error {
+									if err := (validate.Int{
+										MinSet:        true,
+										Min:           0,
+										MaxSet:        true,
+										Max:           86400,
+										MinExclusive:  false,
+										MaxExclusive:  false,
+										MultipleOfSet: false,
+										MultipleOf:    0,
+										Pattern:       nil,
+									}).Validate(int64(value)); err != nil {
+										return errors.Wrap(err, "int")
+									}
+									return nil
+								}(); err != nil {
+									return err
+								}
+							}
+							return nil
+						}(); err != nil {
+							return err
+						}
+					}
+					return nil
+				}(); err != nil {
+					return res, errors.Wrap(err, "parse RateLimit-Reset header")
+				}
+			}
+			return &wrapper, nil
+		default:
+			return res, validate.InvalidContentType(ct)
+		}
+	}
+	switch resp.StatusCode / 100 {
+	case 4:
+		// Pattern 4XX.
+		res, err := func() (res CreateQuestRes, err error) {
+			ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
+			if err != nil {
+				return res, errors.Wrap(err, "parse media type")
+			}
+			switch {
+			case ct == "application/problem+json":
+				buf, err := io.ReadAll(resp.Body)
+				if err != nil {
+					return res, err
+				}
+				d := jx.DecodeBytes(buf)
+
+				var response Problem
+				if err := func() error {
+					if err := response.Decode(d); err != nil {
+						return err
+					}
+					if err := d.Skip(); err != io.EOF {
+						return errors.New("unexpected trailing data")
+					}
+					return nil
+				}(); err != nil {
+					err = &ogenerrors.DecodeBodyError{
+						ContentType: ct,
+						Body:        buf,
+						Err:         err,
+					}
+					return res, err
+				}
+				// Validate response.
+				if err := func() error {
+					if err := response.Validate(); err != nil {
+						return err
+					}
+					return nil
+				}(); err != nil {
+					return res, errors.Wrap(err, "validate")
+				}
+				var wrapper ProblemStatusCodeWithHeaders
+				wrapper.Response = response
+				wrapper.StatusCode = resp.StatusCode
+				h := uri.NewHeaderDecoder(resp.Header)
+				// Parse "RateLimit-Limit" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Limit",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitLimitVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitLimitVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitLimit.SetTo(wrapperDotRateLimitLimitVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitLimit.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           1000000,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Limit header")
+					}
+				}
+				// Parse "RateLimit-Remaining" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Remaining",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitRemainingVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitRemainingVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitRemaining.SetTo(wrapperDotRateLimitRemainingVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitRemaining.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           1000000,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Remaining header")
+					}
+				}
+				// Parse "RateLimit-Reset" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Reset",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitResetVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitResetVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitReset.SetTo(wrapperDotRateLimitResetVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitReset.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           86400,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Reset header")
+					}
+				}
+				return &wrapper, nil
+			default:
+				return res, validate.InvalidContentType(ct)
+			}
+		}()
+		if err != nil {
+			return res, errors.Wrapf(err, "pattern 4XX (code %d)", resp.StatusCode)
+		}
+		return res, nil
+	case 5:
+		// Pattern 5XX.
+		res, err := func() (res CreateQuestRes, err error) {
 			ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
 			if err != nil {
 				return res, errors.Wrap(err, "parse media type")
@@ -31305,6 +32747,685 @@ func decodeDeleteLootTableResponse(resp *http.Response) (res DeleteLootTableRes,
 	return res, validate.UnexpectedStatusCodeWithResponse(resp)
 }
 
+func decodeDeleteLoreResponse(resp *http.Response) (res DeleteLoreRes, _ error) {
+	switch resp.StatusCode {
+	case 204:
+		// Code 204.
+		var wrapper DeleteLoreNoContent
+		h := uri.NewHeaderDecoder(resp.Header)
+		// Parse "RateLimit-Limit" header.
+		{
+			cfg := uri.HeaderParameterDecodingConfig{
+				Name:    "RateLimit-Limit",
+				Explode: false,
+			}
+			if err := func() error {
+				if err := h.HasParam(cfg); err == nil {
+					if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+						var wrapperDotRateLimitLimitVal int32
+						if err := func() error {
+							val, err := d.DecodeValue()
+							if err != nil {
+								return err
+							}
+
+							c, err := conv.ToInt32(val)
+							if err != nil {
+								return err
+							}
+
+							wrapperDotRateLimitLimitVal = c
+							return nil
+						}(); err != nil {
+							return err
+						}
+						wrapper.RateLimitLimit.SetTo(wrapperDotRateLimitLimitVal)
+						return nil
+					}); err != nil {
+						return err
+					}
+					if err := func() error {
+						if value, ok := wrapper.RateLimitLimit.Get(); ok {
+							if err := func() error {
+								if err := (validate.Int{
+									MinSet:        true,
+									Min:           0,
+									MaxSet:        true,
+									Max:           1000000,
+									MinExclusive:  false,
+									MaxExclusive:  false,
+									MultipleOfSet: false,
+									MultipleOf:    0,
+									Pattern:       nil,
+								}).Validate(int64(value)); err != nil {
+									return errors.Wrap(err, "int")
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return err
+					}
+				}
+				return nil
+			}(); err != nil {
+				return res, errors.Wrap(err, "parse RateLimit-Limit header")
+			}
+		}
+		// Parse "RateLimit-Remaining" header.
+		{
+			cfg := uri.HeaderParameterDecodingConfig{
+				Name:    "RateLimit-Remaining",
+				Explode: false,
+			}
+			if err := func() error {
+				if err := h.HasParam(cfg); err == nil {
+					if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+						var wrapperDotRateLimitRemainingVal int32
+						if err := func() error {
+							val, err := d.DecodeValue()
+							if err != nil {
+								return err
+							}
+
+							c, err := conv.ToInt32(val)
+							if err != nil {
+								return err
+							}
+
+							wrapperDotRateLimitRemainingVal = c
+							return nil
+						}(); err != nil {
+							return err
+						}
+						wrapper.RateLimitRemaining.SetTo(wrapperDotRateLimitRemainingVal)
+						return nil
+					}); err != nil {
+						return err
+					}
+					if err := func() error {
+						if value, ok := wrapper.RateLimitRemaining.Get(); ok {
+							if err := func() error {
+								if err := (validate.Int{
+									MinSet:        true,
+									Min:           0,
+									MaxSet:        true,
+									Max:           1000000,
+									MinExclusive:  false,
+									MaxExclusive:  false,
+									MultipleOfSet: false,
+									MultipleOf:    0,
+									Pattern:       nil,
+								}).Validate(int64(value)); err != nil {
+									return errors.Wrap(err, "int")
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return err
+					}
+				}
+				return nil
+			}(); err != nil {
+				return res, errors.Wrap(err, "parse RateLimit-Remaining header")
+			}
+		}
+		// Parse "RateLimit-Reset" header.
+		{
+			cfg := uri.HeaderParameterDecodingConfig{
+				Name:    "RateLimit-Reset",
+				Explode: false,
+			}
+			if err := func() error {
+				if err := h.HasParam(cfg); err == nil {
+					if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+						var wrapperDotRateLimitResetVal int32
+						if err := func() error {
+							val, err := d.DecodeValue()
+							if err != nil {
+								return err
+							}
+
+							c, err := conv.ToInt32(val)
+							if err != nil {
+								return err
+							}
+
+							wrapperDotRateLimitResetVal = c
+							return nil
+						}(); err != nil {
+							return err
+						}
+						wrapper.RateLimitReset.SetTo(wrapperDotRateLimitResetVal)
+						return nil
+					}); err != nil {
+						return err
+					}
+					if err := func() error {
+						if value, ok := wrapper.RateLimitReset.Get(); ok {
+							if err := func() error {
+								if err := (validate.Int{
+									MinSet:        true,
+									Min:           0,
+									MaxSet:        true,
+									Max:           86400,
+									MinExclusive:  false,
+									MaxExclusive:  false,
+									MultipleOfSet: false,
+									MultipleOf:    0,
+									Pattern:       nil,
+								}).Validate(int64(value)); err != nil {
+									return errors.Wrap(err, "int")
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return err
+					}
+				}
+				return nil
+			}(); err != nil {
+				return res, errors.Wrap(err, "parse RateLimit-Reset header")
+			}
+		}
+		return &wrapper, nil
+	}
+	switch resp.StatusCode / 100 {
+	case 4:
+		// Pattern 4XX.
+		res, err := func() (res DeleteLoreRes, err error) {
+			ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
+			if err != nil {
+				return res, errors.Wrap(err, "parse media type")
+			}
+			switch {
+			case ct == "application/problem+json":
+				buf, err := io.ReadAll(resp.Body)
+				if err != nil {
+					return res, err
+				}
+				d := jx.DecodeBytes(buf)
+
+				var response Problem
+				if err := func() error {
+					if err := response.Decode(d); err != nil {
+						return err
+					}
+					if err := d.Skip(); err != io.EOF {
+						return errors.New("unexpected trailing data")
+					}
+					return nil
+				}(); err != nil {
+					err = &ogenerrors.DecodeBodyError{
+						ContentType: ct,
+						Body:        buf,
+						Err:         err,
+					}
+					return res, err
+				}
+				// Validate response.
+				if err := func() error {
+					if err := response.Validate(); err != nil {
+						return err
+					}
+					return nil
+				}(); err != nil {
+					return res, errors.Wrap(err, "validate")
+				}
+				var wrapper ProblemStatusCodeWithHeaders
+				wrapper.Response = response
+				wrapper.StatusCode = resp.StatusCode
+				h := uri.NewHeaderDecoder(resp.Header)
+				// Parse "RateLimit-Limit" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Limit",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitLimitVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitLimitVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitLimit.SetTo(wrapperDotRateLimitLimitVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitLimit.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           1000000,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Limit header")
+					}
+				}
+				// Parse "RateLimit-Remaining" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Remaining",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitRemainingVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitRemainingVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitRemaining.SetTo(wrapperDotRateLimitRemainingVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitRemaining.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           1000000,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Remaining header")
+					}
+				}
+				// Parse "RateLimit-Reset" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Reset",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitResetVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitResetVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitReset.SetTo(wrapperDotRateLimitResetVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitReset.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           86400,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Reset header")
+					}
+				}
+				return &wrapper, nil
+			default:
+				return res, validate.InvalidContentType(ct)
+			}
+		}()
+		if err != nil {
+			return res, errors.Wrapf(err, "pattern 4XX (code %d)", resp.StatusCode)
+		}
+		return res, nil
+	case 5:
+		// Pattern 5XX.
+		res, err := func() (res DeleteLoreRes, err error) {
+			ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
+			if err != nil {
+				return res, errors.Wrap(err, "parse media type")
+			}
+			switch {
+			case ct == "application/problem+json":
+				buf, err := io.ReadAll(resp.Body)
+				if err != nil {
+					return res, err
+				}
+				d := jx.DecodeBytes(buf)
+
+				var response Problem
+				if err := func() error {
+					if err := response.Decode(d); err != nil {
+						return err
+					}
+					if err := d.Skip(); err != io.EOF {
+						return errors.New("unexpected trailing data")
+					}
+					return nil
+				}(); err != nil {
+					err = &ogenerrors.DecodeBodyError{
+						ContentType: ct,
+						Body:        buf,
+						Err:         err,
+					}
+					return res, err
+				}
+				// Validate response.
+				if err := func() error {
+					if err := response.Validate(); err != nil {
+						return err
+					}
+					return nil
+				}(); err != nil {
+					return res, errors.Wrap(err, "validate")
+				}
+				var wrapper ProblemStatusCodeWithHeaders
+				wrapper.Response = response
+				wrapper.StatusCode = resp.StatusCode
+				h := uri.NewHeaderDecoder(resp.Header)
+				// Parse "RateLimit-Limit" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Limit",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitLimitVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitLimitVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitLimit.SetTo(wrapperDotRateLimitLimitVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitLimit.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           1000000,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Limit header")
+					}
+				}
+				// Parse "RateLimit-Remaining" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Remaining",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitRemainingVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitRemainingVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitRemaining.SetTo(wrapperDotRateLimitRemainingVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitRemaining.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           1000000,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Remaining header")
+					}
+				}
+				// Parse "RateLimit-Reset" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Reset",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitResetVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitResetVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitReset.SetTo(wrapperDotRateLimitResetVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitReset.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           86400,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Reset header")
+					}
+				}
+				return &wrapper, nil
+			default:
+				return res, validate.InvalidContentType(ct)
+			}
+		}()
+		if err != nil {
+			return res, errors.Wrapf(err, "pattern 5XX (code %d)", resp.StatusCode)
+		}
+		return res, nil
+	}
+	return res, validate.UnexpectedStatusCodeWithResponse(resp)
+}
+
 func decodeDeleteNpcResponse(resp *http.Response) (res DeleteNpcRes, _ error) {
 	switch resp.StatusCode {
 	case 204:
@@ -32422,6 +34543,685 @@ func decodeDeletePushSubscriptionResponse(resp *http.Response) (res DeletePushSu
 	case 5:
 		// Pattern 5XX.
 		res, err := func() (res DeletePushSubscriptionRes, err error) {
+			ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
+			if err != nil {
+				return res, errors.Wrap(err, "parse media type")
+			}
+			switch {
+			case ct == "application/problem+json":
+				buf, err := io.ReadAll(resp.Body)
+				if err != nil {
+					return res, err
+				}
+				d := jx.DecodeBytes(buf)
+
+				var response Problem
+				if err := func() error {
+					if err := response.Decode(d); err != nil {
+						return err
+					}
+					if err := d.Skip(); err != io.EOF {
+						return errors.New("unexpected trailing data")
+					}
+					return nil
+				}(); err != nil {
+					err = &ogenerrors.DecodeBodyError{
+						ContentType: ct,
+						Body:        buf,
+						Err:         err,
+					}
+					return res, err
+				}
+				// Validate response.
+				if err := func() error {
+					if err := response.Validate(); err != nil {
+						return err
+					}
+					return nil
+				}(); err != nil {
+					return res, errors.Wrap(err, "validate")
+				}
+				var wrapper ProblemStatusCodeWithHeaders
+				wrapper.Response = response
+				wrapper.StatusCode = resp.StatusCode
+				h := uri.NewHeaderDecoder(resp.Header)
+				// Parse "RateLimit-Limit" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Limit",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitLimitVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitLimitVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitLimit.SetTo(wrapperDotRateLimitLimitVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitLimit.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           1000000,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Limit header")
+					}
+				}
+				// Parse "RateLimit-Remaining" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Remaining",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitRemainingVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitRemainingVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitRemaining.SetTo(wrapperDotRateLimitRemainingVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitRemaining.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           1000000,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Remaining header")
+					}
+				}
+				// Parse "RateLimit-Reset" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Reset",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitResetVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitResetVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitReset.SetTo(wrapperDotRateLimitResetVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitReset.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           86400,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Reset header")
+					}
+				}
+				return &wrapper, nil
+			default:
+				return res, validate.InvalidContentType(ct)
+			}
+		}()
+		if err != nil {
+			return res, errors.Wrapf(err, "pattern 5XX (code %d)", resp.StatusCode)
+		}
+		return res, nil
+	}
+	return res, validate.UnexpectedStatusCodeWithResponse(resp)
+}
+
+func decodeDeleteQuestResponse(resp *http.Response) (res DeleteQuestRes, _ error) {
+	switch resp.StatusCode {
+	case 204:
+		// Code 204.
+		var wrapper DeleteQuestNoContent
+		h := uri.NewHeaderDecoder(resp.Header)
+		// Parse "RateLimit-Limit" header.
+		{
+			cfg := uri.HeaderParameterDecodingConfig{
+				Name:    "RateLimit-Limit",
+				Explode: false,
+			}
+			if err := func() error {
+				if err := h.HasParam(cfg); err == nil {
+					if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+						var wrapperDotRateLimitLimitVal int32
+						if err := func() error {
+							val, err := d.DecodeValue()
+							if err != nil {
+								return err
+							}
+
+							c, err := conv.ToInt32(val)
+							if err != nil {
+								return err
+							}
+
+							wrapperDotRateLimitLimitVal = c
+							return nil
+						}(); err != nil {
+							return err
+						}
+						wrapper.RateLimitLimit.SetTo(wrapperDotRateLimitLimitVal)
+						return nil
+					}); err != nil {
+						return err
+					}
+					if err := func() error {
+						if value, ok := wrapper.RateLimitLimit.Get(); ok {
+							if err := func() error {
+								if err := (validate.Int{
+									MinSet:        true,
+									Min:           0,
+									MaxSet:        true,
+									Max:           1000000,
+									MinExclusive:  false,
+									MaxExclusive:  false,
+									MultipleOfSet: false,
+									MultipleOf:    0,
+									Pattern:       nil,
+								}).Validate(int64(value)); err != nil {
+									return errors.Wrap(err, "int")
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return err
+					}
+				}
+				return nil
+			}(); err != nil {
+				return res, errors.Wrap(err, "parse RateLimit-Limit header")
+			}
+		}
+		// Parse "RateLimit-Remaining" header.
+		{
+			cfg := uri.HeaderParameterDecodingConfig{
+				Name:    "RateLimit-Remaining",
+				Explode: false,
+			}
+			if err := func() error {
+				if err := h.HasParam(cfg); err == nil {
+					if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+						var wrapperDotRateLimitRemainingVal int32
+						if err := func() error {
+							val, err := d.DecodeValue()
+							if err != nil {
+								return err
+							}
+
+							c, err := conv.ToInt32(val)
+							if err != nil {
+								return err
+							}
+
+							wrapperDotRateLimitRemainingVal = c
+							return nil
+						}(); err != nil {
+							return err
+						}
+						wrapper.RateLimitRemaining.SetTo(wrapperDotRateLimitRemainingVal)
+						return nil
+					}); err != nil {
+						return err
+					}
+					if err := func() error {
+						if value, ok := wrapper.RateLimitRemaining.Get(); ok {
+							if err := func() error {
+								if err := (validate.Int{
+									MinSet:        true,
+									Min:           0,
+									MaxSet:        true,
+									Max:           1000000,
+									MinExclusive:  false,
+									MaxExclusive:  false,
+									MultipleOfSet: false,
+									MultipleOf:    0,
+									Pattern:       nil,
+								}).Validate(int64(value)); err != nil {
+									return errors.Wrap(err, "int")
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return err
+					}
+				}
+				return nil
+			}(); err != nil {
+				return res, errors.Wrap(err, "parse RateLimit-Remaining header")
+			}
+		}
+		// Parse "RateLimit-Reset" header.
+		{
+			cfg := uri.HeaderParameterDecodingConfig{
+				Name:    "RateLimit-Reset",
+				Explode: false,
+			}
+			if err := func() error {
+				if err := h.HasParam(cfg); err == nil {
+					if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+						var wrapperDotRateLimitResetVal int32
+						if err := func() error {
+							val, err := d.DecodeValue()
+							if err != nil {
+								return err
+							}
+
+							c, err := conv.ToInt32(val)
+							if err != nil {
+								return err
+							}
+
+							wrapperDotRateLimitResetVal = c
+							return nil
+						}(); err != nil {
+							return err
+						}
+						wrapper.RateLimitReset.SetTo(wrapperDotRateLimitResetVal)
+						return nil
+					}); err != nil {
+						return err
+					}
+					if err := func() error {
+						if value, ok := wrapper.RateLimitReset.Get(); ok {
+							if err := func() error {
+								if err := (validate.Int{
+									MinSet:        true,
+									Min:           0,
+									MaxSet:        true,
+									Max:           86400,
+									MinExclusive:  false,
+									MaxExclusive:  false,
+									MultipleOfSet: false,
+									MultipleOf:    0,
+									Pattern:       nil,
+								}).Validate(int64(value)); err != nil {
+									return errors.Wrap(err, "int")
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return err
+					}
+				}
+				return nil
+			}(); err != nil {
+				return res, errors.Wrap(err, "parse RateLimit-Reset header")
+			}
+		}
+		return &wrapper, nil
+	}
+	switch resp.StatusCode / 100 {
+	case 4:
+		// Pattern 4XX.
+		res, err := func() (res DeleteQuestRes, err error) {
+			ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
+			if err != nil {
+				return res, errors.Wrap(err, "parse media type")
+			}
+			switch {
+			case ct == "application/problem+json":
+				buf, err := io.ReadAll(resp.Body)
+				if err != nil {
+					return res, err
+				}
+				d := jx.DecodeBytes(buf)
+
+				var response Problem
+				if err := func() error {
+					if err := response.Decode(d); err != nil {
+						return err
+					}
+					if err := d.Skip(); err != io.EOF {
+						return errors.New("unexpected trailing data")
+					}
+					return nil
+				}(); err != nil {
+					err = &ogenerrors.DecodeBodyError{
+						ContentType: ct,
+						Body:        buf,
+						Err:         err,
+					}
+					return res, err
+				}
+				// Validate response.
+				if err := func() error {
+					if err := response.Validate(); err != nil {
+						return err
+					}
+					return nil
+				}(); err != nil {
+					return res, errors.Wrap(err, "validate")
+				}
+				var wrapper ProblemStatusCodeWithHeaders
+				wrapper.Response = response
+				wrapper.StatusCode = resp.StatusCode
+				h := uri.NewHeaderDecoder(resp.Header)
+				// Parse "RateLimit-Limit" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Limit",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitLimitVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitLimitVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitLimit.SetTo(wrapperDotRateLimitLimitVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitLimit.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           1000000,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Limit header")
+					}
+				}
+				// Parse "RateLimit-Remaining" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Remaining",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitRemainingVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitRemainingVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitRemaining.SetTo(wrapperDotRateLimitRemainingVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitRemaining.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           1000000,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Remaining header")
+					}
+				}
+				// Parse "RateLimit-Reset" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Reset",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitResetVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitResetVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitReset.SetTo(wrapperDotRateLimitResetVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitReset.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           86400,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Reset header")
+					}
+				}
+				return &wrapper, nil
+			default:
+				return res, validate.InvalidContentType(ct)
+			}
+		}()
+		if err != nil {
+			return res, errors.Wrapf(err, "pattern 4XX (code %d)", resp.StatusCode)
+		}
+		return res, nil
+	case 5:
+		// Pattern 5XX.
+		res, err := func() (res DeleteQuestRes, err error) {
 			ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
 			if err != nil {
 				return res, errors.Wrap(err, "parse media type")
@@ -54571,6 +57371,727 @@ func decodeGetItemBuildResponse(resp *http.Response) (res GetItemBuildRes, _ err
 	case 5:
 		// Pattern 5XX.
 		res, err := func() (res GetItemBuildRes, err error) {
+			ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
+			if err != nil {
+				return res, errors.Wrap(err, "parse media type")
+			}
+			switch {
+			case ct == "application/problem+json":
+				buf, err := io.ReadAll(resp.Body)
+				if err != nil {
+					return res, err
+				}
+				d := jx.DecodeBytes(buf)
+
+				var response Problem
+				if err := func() error {
+					if err := response.Decode(d); err != nil {
+						return err
+					}
+					if err := d.Skip(); err != io.EOF {
+						return errors.New("unexpected trailing data")
+					}
+					return nil
+				}(); err != nil {
+					err = &ogenerrors.DecodeBodyError{
+						ContentType: ct,
+						Body:        buf,
+						Err:         err,
+					}
+					return res, err
+				}
+				// Validate response.
+				if err := func() error {
+					if err := response.Validate(); err != nil {
+						return err
+					}
+					return nil
+				}(); err != nil {
+					return res, errors.Wrap(err, "validate")
+				}
+				var wrapper ProblemStatusCodeWithHeaders
+				wrapper.Response = response
+				wrapper.StatusCode = resp.StatusCode
+				h := uri.NewHeaderDecoder(resp.Header)
+				// Parse "RateLimit-Limit" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Limit",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitLimitVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitLimitVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitLimit.SetTo(wrapperDotRateLimitLimitVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitLimit.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           1000000,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Limit header")
+					}
+				}
+				// Parse "RateLimit-Remaining" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Remaining",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitRemainingVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitRemainingVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitRemaining.SetTo(wrapperDotRateLimitRemainingVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitRemaining.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           1000000,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Remaining header")
+					}
+				}
+				// Parse "RateLimit-Reset" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Reset",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitResetVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitResetVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitReset.SetTo(wrapperDotRateLimitResetVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitReset.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           86400,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Reset header")
+					}
+				}
+				return &wrapper, nil
+			default:
+				return res, validate.InvalidContentType(ct)
+			}
+		}()
+		if err != nil {
+			return res, errors.Wrapf(err, "pattern 5XX (code %d)", resp.StatusCode)
+		}
+		return res, nil
+	}
+	return res, validate.UnexpectedStatusCodeWithResponse(resp)
+}
+
+func decodeGetJournalResponse(resp *http.Response) (res GetJournalRes, _ error) {
+	switch resp.StatusCode {
+	case 200:
+		// Code 200.
+		ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
+		if err != nil {
+			return res, errors.Wrap(err, "parse media type")
+		}
+		switch {
+		case ct == "application/json":
+			buf, err := io.ReadAll(resp.Body)
+			if err != nil {
+				return res, err
+			}
+			d := jx.DecodeBytes(buf)
+
+			var response Journal
+			if err := func() error {
+				if err := response.Decode(d); err != nil {
+					return err
+				}
+				if err := d.Skip(); err != io.EOF {
+					return errors.New("unexpected trailing data")
+				}
+				return nil
+			}(); err != nil {
+				err = &ogenerrors.DecodeBodyError{
+					ContentType: ct,
+					Body:        buf,
+					Err:         err,
+				}
+				return res, err
+			}
+			// Validate response.
+			if err := func() error {
+				if err := response.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return res, errors.Wrap(err, "validate")
+			}
+			var wrapper JournalHeaders
+			wrapper.Response = response
+			h := uri.NewHeaderDecoder(resp.Header)
+			// Parse "RateLimit-Limit" header.
+			{
+				cfg := uri.HeaderParameterDecodingConfig{
+					Name:    "RateLimit-Limit",
+					Explode: false,
+				}
+				if err := func() error {
+					if err := h.HasParam(cfg); err == nil {
+						if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+							var wrapperDotRateLimitLimitVal int32
+							if err := func() error {
+								val, err := d.DecodeValue()
+								if err != nil {
+									return err
+								}
+
+								c, err := conv.ToInt32(val)
+								if err != nil {
+									return err
+								}
+
+								wrapperDotRateLimitLimitVal = c
+								return nil
+							}(); err != nil {
+								return err
+							}
+							wrapper.RateLimitLimit.SetTo(wrapperDotRateLimitLimitVal)
+							return nil
+						}); err != nil {
+							return err
+						}
+						if err := func() error {
+							if value, ok := wrapper.RateLimitLimit.Get(); ok {
+								if err := func() error {
+									if err := (validate.Int{
+										MinSet:        true,
+										Min:           0,
+										MaxSet:        true,
+										Max:           1000000,
+										MinExclusive:  false,
+										MaxExclusive:  false,
+										MultipleOfSet: false,
+										MultipleOf:    0,
+										Pattern:       nil,
+									}).Validate(int64(value)); err != nil {
+										return errors.Wrap(err, "int")
+									}
+									return nil
+								}(); err != nil {
+									return err
+								}
+							}
+							return nil
+						}(); err != nil {
+							return err
+						}
+					}
+					return nil
+				}(); err != nil {
+					return res, errors.Wrap(err, "parse RateLimit-Limit header")
+				}
+			}
+			// Parse "RateLimit-Remaining" header.
+			{
+				cfg := uri.HeaderParameterDecodingConfig{
+					Name:    "RateLimit-Remaining",
+					Explode: false,
+				}
+				if err := func() error {
+					if err := h.HasParam(cfg); err == nil {
+						if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+							var wrapperDotRateLimitRemainingVal int32
+							if err := func() error {
+								val, err := d.DecodeValue()
+								if err != nil {
+									return err
+								}
+
+								c, err := conv.ToInt32(val)
+								if err != nil {
+									return err
+								}
+
+								wrapperDotRateLimitRemainingVal = c
+								return nil
+							}(); err != nil {
+								return err
+							}
+							wrapper.RateLimitRemaining.SetTo(wrapperDotRateLimitRemainingVal)
+							return nil
+						}); err != nil {
+							return err
+						}
+						if err := func() error {
+							if value, ok := wrapper.RateLimitRemaining.Get(); ok {
+								if err := func() error {
+									if err := (validate.Int{
+										MinSet:        true,
+										Min:           0,
+										MaxSet:        true,
+										Max:           1000000,
+										MinExclusive:  false,
+										MaxExclusive:  false,
+										MultipleOfSet: false,
+										MultipleOf:    0,
+										Pattern:       nil,
+									}).Validate(int64(value)); err != nil {
+										return errors.Wrap(err, "int")
+									}
+									return nil
+								}(); err != nil {
+									return err
+								}
+							}
+							return nil
+						}(); err != nil {
+							return err
+						}
+					}
+					return nil
+				}(); err != nil {
+					return res, errors.Wrap(err, "parse RateLimit-Remaining header")
+				}
+			}
+			// Parse "RateLimit-Reset" header.
+			{
+				cfg := uri.HeaderParameterDecodingConfig{
+					Name:    "RateLimit-Reset",
+					Explode: false,
+				}
+				if err := func() error {
+					if err := h.HasParam(cfg); err == nil {
+						if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+							var wrapperDotRateLimitResetVal int32
+							if err := func() error {
+								val, err := d.DecodeValue()
+								if err != nil {
+									return err
+								}
+
+								c, err := conv.ToInt32(val)
+								if err != nil {
+									return err
+								}
+
+								wrapperDotRateLimitResetVal = c
+								return nil
+							}(); err != nil {
+								return err
+							}
+							wrapper.RateLimitReset.SetTo(wrapperDotRateLimitResetVal)
+							return nil
+						}); err != nil {
+							return err
+						}
+						if err := func() error {
+							if value, ok := wrapper.RateLimitReset.Get(); ok {
+								if err := func() error {
+									if err := (validate.Int{
+										MinSet:        true,
+										Min:           0,
+										MaxSet:        true,
+										Max:           86400,
+										MinExclusive:  false,
+										MaxExclusive:  false,
+										MultipleOfSet: false,
+										MultipleOf:    0,
+										Pattern:       nil,
+									}).Validate(int64(value)); err != nil {
+										return errors.Wrap(err, "int")
+									}
+									return nil
+								}(); err != nil {
+									return err
+								}
+							}
+							return nil
+						}(); err != nil {
+							return err
+						}
+					}
+					return nil
+				}(); err != nil {
+					return res, errors.Wrap(err, "parse RateLimit-Reset header")
+				}
+			}
+			return &wrapper, nil
+		default:
+			return res, validate.InvalidContentType(ct)
+		}
+	}
+	switch resp.StatusCode / 100 {
+	case 4:
+		// Pattern 4XX.
+		res, err := func() (res GetJournalRes, err error) {
+			ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
+			if err != nil {
+				return res, errors.Wrap(err, "parse media type")
+			}
+			switch {
+			case ct == "application/problem+json":
+				buf, err := io.ReadAll(resp.Body)
+				if err != nil {
+					return res, err
+				}
+				d := jx.DecodeBytes(buf)
+
+				var response Problem
+				if err := func() error {
+					if err := response.Decode(d); err != nil {
+						return err
+					}
+					if err := d.Skip(); err != io.EOF {
+						return errors.New("unexpected trailing data")
+					}
+					return nil
+				}(); err != nil {
+					err = &ogenerrors.DecodeBodyError{
+						ContentType: ct,
+						Body:        buf,
+						Err:         err,
+					}
+					return res, err
+				}
+				// Validate response.
+				if err := func() error {
+					if err := response.Validate(); err != nil {
+						return err
+					}
+					return nil
+				}(); err != nil {
+					return res, errors.Wrap(err, "validate")
+				}
+				var wrapper ProblemStatusCodeWithHeaders
+				wrapper.Response = response
+				wrapper.StatusCode = resp.StatusCode
+				h := uri.NewHeaderDecoder(resp.Header)
+				// Parse "RateLimit-Limit" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Limit",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitLimitVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitLimitVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitLimit.SetTo(wrapperDotRateLimitLimitVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitLimit.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           1000000,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Limit header")
+					}
+				}
+				// Parse "RateLimit-Remaining" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Remaining",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitRemainingVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitRemainingVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitRemaining.SetTo(wrapperDotRateLimitRemainingVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitRemaining.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           1000000,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Remaining header")
+					}
+				}
+				// Parse "RateLimit-Reset" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Reset",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitResetVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitResetVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitReset.SetTo(wrapperDotRateLimitResetVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitReset.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           86400,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Reset header")
+					}
+				}
+				return &wrapper, nil
+			default:
+				return res, validate.InvalidContentType(ct)
+			}
+		}()
+		if err != nil {
+			return res, errors.Wrapf(err, "pattern 4XX (code %d)", resp.StatusCode)
+		}
+		return res, nil
+	case 5:
+		// Pattern 5XX.
+		res, err := func() (res GetJournalRes, err error) {
 			ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
 			if err != nil {
 				return res, errors.Wrap(err, "parse media type")
@@ -133705,6 +137226,727 @@ func decodeReadAllNotificationsResponse(resp *http.Response) (res ReadAllNotific
 	return res, validate.UnexpectedStatusCodeWithResponse(resp)
 }
 
+func decodeReadItemResponse(resp *http.Response) (res ReadItemRes, _ error) {
+	switch resp.StatusCode {
+	case 200:
+		// Code 200.
+		ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
+		if err != nil {
+			return res, errors.Wrap(err, "parse media type")
+		}
+		switch {
+		case ct == "application/json":
+			buf, err := io.ReadAll(resp.Body)
+			if err != nil {
+				return res, err
+			}
+			d := jx.DecodeBytes(buf)
+
+			var response ItemReadingResult
+			if err := func() error {
+				if err := response.Decode(d); err != nil {
+					return err
+				}
+				if err := d.Skip(); err != io.EOF {
+					return errors.New("unexpected trailing data")
+				}
+				return nil
+			}(); err != nil {
+				err = &ogenerrors.DecodeBodyError{
+					ContentType: ct,
+					Body:        buf,
+					Err:         err,
+				}
+				return res, err
+			}
+			// Validate response.
+			if err := func() error {
+				if err := response.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return res, errors.Wrap(err, "validate")
+			}
+			var wrapper ItemReadingResultHeaders
+			wrapper.Response = response
+			h := uri.NewHeaderDecoder(resp.Header)
+			// Parse "RateLimit-Limit" header.
+			{
+				cfg := uri.HeaderParameterDecodingConfig{
+					Name:    "RateLimit-Limit",
+					Explode: false,
+				}
+				if err := func() error {
+					if err := h.HasParam(cfg); err == nil {
+						if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+							var wrapperDotRateLimitLimitVal int32
+							if err := func() error {
+								val, err := d.DecodeValue()
+								if err != nil {
+									return err
+								}
+
+								c, err := conv.ToInt32(val)
+								if err != nil {
+									return err
+								}
+
+								wrapperDotRateLimitLimitVal = c
+								return nil
+							}(); err != nil {
+								return err
+							}
+							wrapper.RateLimitLimit.SetTo(wrapperDotRateLimitLimitVal)
+							return nil
+						}); err != nil {
+							return err
+						}
+						if err := func() error {
+							if value, ok := wrapper.RateLimitLimit.Get(); ok {
+								if err := func() error {
+									if err := (validate.Int{
+										MinSet:        true,
+										Min:           0,
+										MaxSet:        true,
+										Max:           1000000,
+										MinExclusive:  false,
+										MaxExclusive:  false,
+										MultipleOfSet: false,
+										MultipleOf:    0,
+										Pattern:       nil,
+									}).Validate(int64(value)); err != nil {
+										return errors.Wrap(err, "int")
+									}
+									return nil
+								}(); err != nil {
+									return err
+								}
+							}
+							return nil
+						}(); err != nil {
+							return err
+						}
+					}
+					return nil
+				}(); err != nil {
+					return res, errors.Wrap(err, "parse RateLimit-Limit header")
+				}
+			}
+			// Parse "RateLimit-Remaining" header.
+			{
+				cfg := uri.HeaderParameterDecodingConfig{
+					Name:    "RateLimit-Remaining",
+					Explode: false,
+				}
+				if err := func() error {
+					if err := h.HasParam(cfg); err == nil {
+						if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+							var wrapperDotRateLimitRemainingVal int32
+							if err := func() error {
+								val, err := d.DecodeValue()
+								if err != nil {
+									return err
+								}
+
+								c, err := conv.ToInt32(val)
+								if err != nil {
+									return err
+								}
+
+								wrapperDotRateLimitRemainingVal = c
+								return nil
+							}(); err != nil {
+								return err
+							}
+							wrapper.RateLimitRemaining.SetTo(wrapperDotRateLimitRemainingVal)
+							return nil
+						}); err != nil {
+							return err
+						}
+						if err := func() error {
+							if value, ok := wrapper.RateLimitRemaining.Get(); ok {
+								if err := func() error {
+									if err := (validate.Int{
+										MinSet:        true,
+										Min:           0,
+										MaxSet:        true,
+										Max:           1000000,
+										MinExclusive:  false,
+										MaxExclusive:  false,
+										MultipleOfSet: false,
+										MultipleOf:    0,
+										Pattern:       nil,
+									}).Validate(int64(value)); err != nil {
+										return errors.Wrap(err, "int")
+									}
+									return nil
+								}(); err != nil {
+									return err
+								}
+							}
+							return nil
+						}(); err != nil {
+							return err
+						}
+					}
+					return nil
+				}(); err != nil {
+					return res, errors.Wrap(err, "parse RateLimit-Remaining header")
+				}
+			}
+			// Parse "RateLimit-Reset" header.
+			{
+				cfg := uri.HeaderParameterDecodingConfig{
+					Name:    "RateLimit-Reset",
+					Explode: false,
+				}
+				if err := func() error {
+					if err := h.HasParam(cfg); err == nil {
+						if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+							var wrapperDotRateLimitResetVal int32
+							if err := func() error {
+								val, err := d.DecodeValue()
+								if err != nil {
+									return err
+								}
+
+								c, err := conv.ToInt32(val)
+								if err != nil {
+									return err
+								}
+
+								wrapperDotRateLimitResetVal = c
+								return nil
+							}(); err != nil {
+								return err
+							}
+							wrapper.RateLimitReset.SetTo(wrapperDotRateLimitResetVal)
+							return nil
+						}); err != nil {
+							return err
+						}
+						if err := func() error {
+							if value, ok := wrapper.RateLimitReset.Get(); ok {
+								if err := func() error {
+									if err := (validate.Int{
+										MinSet:        true,
+										Min:           0,
+										MaxSet:        true,
+										Max:           86400,
+										MinExclusive:  false,
+										MaxExclusive:  false,
+										MultipleOfSet: false,
+										MultipleOf:    0,
+										Pattern:       nil,
+									}).Validate(int64(value)); err != nil {
+										return errors.Wrap(err, "int")
+									}
+									return nil
+								}(); err != nil {
+									return err
+								}
+							}
+							return nil
+						}(); err != nil {
+							return err
+						}
+					}
+					return nil
+				}(); err != nil {
+					return res, errors.Wrap(err, "parse RateLimit-Reset header")
+				}
+			}
+			return &wrapper, nil
+		default:
+			return res, validate.InvalidContentType(ct)
+		}
+	}
+	switch resp.StatusCode / 100 {
+	case 4:
+		// Pattern 4XX.
+		res, err := func() (res ReadItemRes, err error) {
+			ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
+			if err != nil {
+				return res, errors.Wrap(err, "parse media type")
+			}
+			switch {
+			case ct == "application/problem+json":
+				buf, err := io.ReadAll(resp.Body)
+				if err != nil {
+					return res, err
+				}
+				d := jx.DecodeBytes(buf)
+
+				var response Problem
+				if err := func() error {
+					if err := response.Decode(d); err != nil {
+						return err
+					}
+					if err := d.Skip(); err != io.EOF {
+						return errors.New("unexpected trailing data")
+					}
+					return nil
+				}(); err != nil {
+					err = &ogenerrors.DecodeBodyError{
+						ContentType: ct,
+						Body:        buf,
+						Err:         err,
+					}
+					return res, err
+				}
+				// Validate response.
+				if err := func() error {
+					if err := response.Validate(); err != nil {
+						return err
+					}
+					return nil
+				}(); err != nil {
+					return res, errors.Wrap(err, "validate")
+				}
+				var wrapper ProblemStatusCodeWithHeaders
+				wrapper.Response = response
+				wrapper.StatusCode = resp.StatusCode
+				h := uri.NewHeaderDecoder(resp.Header)
+				// Parse "RateLimit-Limit" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Limit",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitLimitVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitLimitVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitLimit.SetTo(wrapperDotRateLimitLimitVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitLimit.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           1000000,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Limit header")
+					}
+				}
+				// Parse "RateLimit-Remaining" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Remaining",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitRemainingVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitRemainingVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitRemaining.SetTo(wrapperDotRateLimitRemainingVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitRemaining.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           1000000,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Remaining header")
+					}
+				}
+				// Parse "RateLimit-Reset" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Reset",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitResetVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitResetVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitReset.SetTo(wrapperDotRateLimitResetVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitReset.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           86400,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Reset header")
+					}
+				}
+				return &wrapper, nil
+			default:
+				return res, validate.InvalidContentType(ct)
+			}
+		}()
+		if err != nil {
+			return res, errors.Wrapf(err, "pattern 4XX (code %d)", resp.StatusCode)
+		}
+		return res, nil
+	case 5:
+		// Pattern 5XX.
+		res, err := func() (res ReadItemRes, err error) {
+			ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
+			if err != nil {
+				return res, errors.Wrap(err, "parse media type")
+			}
+			switch {
+			case ct == "application/problem+json":
+				buf, err := io.ReadAll(resp.Body)
+				if err != nil {
+					return res, err
+				}
+				d := jx.DecodeBytes(buf)
+
+				var response Problem
+				if err := func() error {
+					if err := response.Decode(d); err != nil {
+						return err
+					}
+					if err := d.Skip(); err != io.EOF {
+						return errors.New("unexpected trailing data")
+					}
+					return nil
+				}(); err != nil {
+					err = &ogenerrors.DecodeBodyError{
+						ContentType: ct,
+						Body:        buf,
+						Err:         err,
+					}
+					return res, err
+				}
+				// Validate response.
+				if err := func() error {
+					if err := response.Validate(); err != nil {
+						return err
+					}
+					return nil
+				}(); err != nil {
+					return res, errors.Wrap(err, "validate")
+				}
+				var wrapper ProblemStatusCodeWithHeaders
+				wrapper.Response = response
+				wrapper.StatusCode = resp.StatusCode
+				h := uri.NewHeaderDecoder(resp.Header)
+				// Parse "RateLimit-Limit" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Limit",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitLimitVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitLimitVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitLimit.SetTo(wrapperDotRateLimitLimitVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitLimit.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           1000000,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Limit header")
+					}
+				}
+				// Parse "RateLimit-Remaining" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Remaining",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitRemainingVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitRemainingVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitRemaining.SetTo(wrapperDotRateLimitRemainingVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitRemaining.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           1000000,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Remaining header")
+					}
+				}
+				// Parse "RateLimit-Reset" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Reset",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitResetVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitResetVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitReset.SetTo(wrapperDotRateLimitResetVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitReset.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           86400,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Reset header")
+					}
+				}
+				return &wrapper, nil
+			default:
+				return res, validate.InvalidContentType(ct)
+			}
+		}()
+		if err != nil {
+			return res, errors.Wrapf(err, "pattern 5XX (code %d)", resp.StatusCode)
+		}
+		return res, nil
+	}
+	return res, validate.UnexpectedStatusCodeWithResponse(resp)
+}
+
 func decodeReadNotificationResponse(resp *http.Response) (res ReadNotificationRes, _ error) {
 	switch resp.StatusCode {
 	case 204:
@@ -186714,6 +190956,685 @@ func decodeUpdateLootTableResponse(resp *http.Response) (res UpdateLootTableRes,
 	return res, validate.UnexpectedStatusCodeWithResponse(resp)
 }
 
+func decodeUpdateLoreResponse(resp *http.Response) (res UpdateLoreRes, _ error) {
+	switch resp.StatusCode {
+	case 204:
+		// Code 204.
+		var wrapper UpdateLoreNoContent
+		h := uri.NewHeaderDecoder(resp.Header)
+		// Parse "RateLimit-Limit" header.
+		{
+			cfg := uri.HeaderParameterDecodingConfig{
+				Name:    "RateLimit-Limit",
+				Explode: false,
+			}
+			if err := func() error {
+				if err := h.HasParam(cfg); err == nil {
+					if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+						var wrapperDotRateLimitLimitVal int32
+						if err := func() error {
+							val, err := d.DecodeValue()
+							if err != nil {
+								return err
+							}
+
+							c, err := conv.ToInt32(val)
+							if err != nil {
+								return err
+							}
+
+							wrapperDotRateLimitLimitVal = c
+							return nil
+						}(); err != nil {
+							return err
+						}
+						wrapper.RateLimitLimit.SetTo(wrapperDotRateLimitLimitVal)
+						return nil
+					}); err != nil {
+						return err
+					}
+					if err := func() error {
+						if value, ok := wrapper.RateLimitLimit.Get(); ok {
+							if err := func() error {
+								if err := (validate.Int{
+									MinSet:        true,
+									Min:           0,
+									MaxSet:        true,
+									Max:           1000000,
+									MinExclusive:  false,
+									MaxExclusive:  false,
+									MultipleOfSet: false,
+									MultipleOf:    0,
+									Pattern:       nil,
+								}).Validate(int64(value)); err != nil {
+									return errors.Wrap(err, "int")
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return err
+					}
+				}
+				return nil
+			}(); err != nil {
+				return res, errors.Wrap(err, "parse RateLimit-Limit header")
+			}
+		}
+		// Parse "RateLimit-Remaining" header.
+		{
+			cfg := uri.HeaderParameterDecodingConfig{
+				Name:    "RateLimit-Remaining",
+				Explode: false,
+			}
+			if err := func() error {
+				if err := h.HasParam(cfg); err == nil {
+					if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+						var wrapperDotRateLimitRemainingVal int32
+						if err := func() error {
+							val, err := d.DecodeValue()
+							if err != nil {
+								return err
+							}
+
+							c, err := conv.ToInt32(val)
+							if err != nil {
+								return err
+							}
+
+							wrapperDotRateLimitRemainingVal = c
+							return nil
+						}(); err != nil {
+							return err
+						}
+						wrapper.RateLimitRemaining.SetTo(wrapperDotRateLimitRemainingVal)
+						return nil
+					}); err != nil {
+						return err
+					}
+					if err := func() error {
+						if value, ok := wrapper.RateLimitRemaining.Get(); ok {
+							if err := func() error {
+								if err := (validate.Int{
+									MinSet:        true,
+									Min:           0,
+									MaxSet:        true,
+									Max:           1000000,
+									MinExclusive:  false,
+									MaxExclusive:  false,
+									MultipleOfSet: false,
+									MultipleOf:    0,
+									Pattern:       nil,
+								}).Validate(int64(value)); err != nil {
+									return errors.Wrap(err, "int")
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return err
+					}
+				}
+				return nil
+			}(); err != nil {
+				return res, errors.Wrap(err, "parse RateLimit-Remaining header")
+			}
+		}
+		// Parse "RateLimit-Reset" header.
+		{
+			cfg := uri.HeaderParameterDecodingConfig{
+				Name:    "RateLimit-Reset",
+				Explode: false,
+			}
+			if err := func() error {
+				if err := h.HasParam(cfg); err == nil {
+					if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+						var wrapperDotRateLimitResetVal int32
+						if err := func() error {
+							val, err := d.DecodeValue()
+							if err != nil {
+								return err
+							}
+
+							c, err := conv.ToInt32(val)
+							if err != nil {
+								return err
+							}
+
+							wrapperDotRateLimitResetVal = c
+							return nil
+						}(); err != nil {
+							return err
+						}
+						wrapper.RateLimitReset.SetTo(wrapperDotRateLimitResetVal)
+						return nil
+					}); err != nil {
+						return err
+					}
+					if err := func() error {
+						if value, ok := wrapper.RateLimitReset.Get(); ok {
+							if err := func() error {
+								if err := (validate.Int{
+									MinSet:        true,
+									Min:           0,
+									MaxSet:        true,
+									Max:           86400,
+									MinExclusive:  false,
+									MaxExclusive:  false,
+									MultipleOfSet: false,
+									MultipleOf:    0,
+									Pattern:       nil,
+								}).Validate(int64(value)); err != nil {
+									return errors.Wrap(err, "int")
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return err
+					}
+				}
+				return nil
+			}(); err != nil {
+				return res, errors.Wrap(err, "parse RateLimit-Reset header")
+			}
+		}
+		return &wrapper, nil
+	}
+	switch resp.StatusCode / 100 {
+	case 4:
+		// Pattern 4XX.
+		res, err := func() (res UpdateLoreRes, err error) {
+			ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
+			if err != nil {
+				return res, errors.Wrap(err, "parse media type")
+			}
+			switch {
+			case ct == "application/problem+json":
+				buf, err := io.ReadAll(resp.Body)
+				if err != nil {
+					return res, err
+				}
+				d := jx.DecodeBytes(buf)
+
+				var response Problem
+				if err := func() error {
+					if err := response.Decode(d); err != nil {
+						return err
+					}
+					if err := d.Skip(); err != io.EOF {
+						return errors.New("unexpected trailing data")
+					}
+					return nil
+				}(); err != nil {
+					err = &ogenerrors.DecodeBodyError{
+						ContentType: ct,
+						Body:        buf,
+						Err:         err,
+					}
+					return res, err
+				}
+				// Validate response.
+				if err := func() error {
+					if err := response.Validate(); err != nil {
+						return err
+					}
+					return nil
+				}(); err != nil {
+					return res, errors.Wrap(err, "validate")
+				}
+				var wrapper ProblemStatusCodeWithHeaders
+				wrapper.Response = response
+				wrapper.StatusCode = resp.StatusCode
+				h := uri.NewHeaderDecoder(resp.Header)
+				// Parse "RateLimit-Limit" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Limit",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitLimitVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitLimitVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitLimit.SetTo(wrapperDotRateLimitLimitVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitLimit.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           1000000,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Limit header")
+					}
+				}
+				// Parse "RateLimit-Remaining" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Remaining",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitRemainingVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitRemainingVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitRemaining.SetTo(wrapperDotRateLimitRemainingVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitRemaining.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           1000000,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Remaining header")
+					}
+				}
+				// Parse "RateLimit-Reset" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Reset",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitResetVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitResetVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitReset.SetTo(wrapperDotRateLimitResetVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitReset.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           86400,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Reset header")
+					}
+				}
+				return &wrapper, nil
+			default:
+				return res, validate.InvalidContentType(ct)
+			}
+		}()
+		if err != nil {
+			return res, errors.Wrapf(err, "pattern 4XX (code %d)", resp.StatusCode)
+		}
+		return res, nil
+	case 5:
+		// Pattern 5XX.
+		res, err := func() (res UpdateLoreRes, err error) {
+			ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
+			if err != nil {
+				return res, errors.Wrap(err, "parse media type")
+			}
+			switch {
+			case ct == "application/problem+json":
+				buf, err := io.ReadAll(resp.Body)
+				if err != nil {
+					return res, err
+				}
+				d := jx.DecodeBytes(buf)
+
+				var response Problem
+				if err := func() error {
+					if err := response.Decode(d); err != nil {
+						return err
+					}
+					if err := d.Skip(); err != io.EOF {
+						return errors.New("unexpected trailing data")
+					}
+					return nil
+				}(); err != nil {
+					err = &ogenerrors.DecodeBodyError{
+						ContentType: ct,
+						Body:        buf,
+						Err:         err,
+					}
+					return res, err
+				}
+				// Validate response.
+				if err := func() error {
+					if err := response.Validate(); err != nil {
+						return err
+					}
+					return nil
+				}(); err != nil {
+					return res, errors.Wrap(err, "validate")
+				}
+				var wrapper ProblemStatusCodeWithHeaders
+				wrapper.Response = response
+				wrapper.StatusCode = resp.StatusCode
+				h := uri.NewHeaderDecoder(resp.Header)
+				// Parse "RateLimit-Limit" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Limit",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitLimitVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitLimitVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitLimit.SetTo(wrapperDotRateLimitLimitVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitLimit.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           1000000,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Limit header")
+					}
+				}
+				// Parse "RateLimit-Remaining" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Remaining",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitRemainingVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitRemainingVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitRemaining.SetTo(wrapperDotRateLimitRemainingVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitRemaining.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           1000000,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Remaining header")
+					}
+				}
+				// Parse "RateLimit-Reset" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Reset",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitResetVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitResetVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitReset.SetTo(wrapperDotRateLimitResetVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitReset.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           86400,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Reset header")
+					}
+				}
+				return &wrapper, nil
+			default:
+				return res, validate.InvalidContentType(ct)
+			}
+		}()
+		if err != nil {
+			return res, errors.Wrapf(err, "pattern 5XX (code %d)", resp.StatusCode)
+		}
+		return res, nil
+	}
+	return res, validate.UnexpectedStatusCodeWithResponse(resp)
+}
+
 func decodeUpdateMapResponse(resp *http.Response) (res UpdateMapRes, _ error) {
 	switch resp.StatusCode {
 	case 200:
@@ -189357,6 +194278,685 @@ func decodeUpdateNpcResponse(resp *http.Response) (res UpdateNpcRes, _ error) {
 	case 5:
 		// Pattern 5XX.
 		res, err := func() (res UpdateNpcRes, err error) {
+			ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
+			if err != nil {
+				return res, errors.Wrap(err, "parse media type")
+			}
+			switch {
+			case ct == "application/problem+json":
+				buf, err := io.ReadAll(resp.Body)
+				if err != nil {
+					return res, err
+				}
+				d := jx.DecodeBytes(buf)
+
+				var response Problem
+				if err := func() error {
+					if err := response.Decode(d); err != nil {
+						return err
+					}
+					if err := d.Skip(); err != io.EOF {
+						return errors.New("unexpected trailing data")
+					}
+					return nil
+				}(); err != nil {
+					err = &ogenerrors.DecodeBodyError{
+						ContentType: ct,
+						Body:        buf,
+						Err:         err,
+					}
+					return res, err
+				}
+				// Validate response.
+				if err := func() error {
+					if err := response.Validate(); err != nil {
+						return err
+					}
+					return nil
+				}(); err != nil {
+					return res, errors.Wrap(err, "validate")
+				}
+				var wrapper ProblemStatusCodeWithHeaders
+				wrapper.Response = response
+				wrapper.StatusCode = resp.StatusCode
+				h := uri.NewHeaderDecoder(resp.Header)
+				// Parse "RateLimit-Limit" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Limit",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitLimitVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitLimitVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitLimit.SetTo(wrapperDotRateLimitLimitVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitLimit.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           1000000,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Limit header")
+					}
+				}
+				// Parse "RateLimit-Remaining" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Remaining",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitRemainingVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitRemainingVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitRemaining.SetTo(wrapperDotRateLimitRemainingVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitRemaining.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           1000000,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Remaining header")
+					}
+				}
+				// Parse "RateLimit-Reset" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Reset",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitResetVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitResetVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitReset.SetTo(wrapperDotRateLimitResetVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitReset.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           86400,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Reset header")
+					}
+				}
+				return &wrapper, nil
+			default:
+				return res, validate.InvalidContentType(ct)
+			}
+		}()
+		if err != nil {
+			return res, errors.Wrapf(err, "pattern 5XX (code %d)", resp.StatusCode)
+		}
+		return res, nil
+	}
+	return res, validate.UnexpectedStatusCodeWithResponse(resp)
+}
+
+func decodeUpdateQuestResponse(resp *http.Response) (res UpdateQuestRes, _ error) {
+	switch resp.StatusCode {
+	case 204:
+		// Code 204.
+		var wrapper UpdateQuestNoContent
+		h := uri.NewHeaderDecoder(resp.Header)
+		// Parse "RateLimit-Limit" header.
+		{
+			cfg := uri.HeaderParameterDecodingConfig{
+				Name:    "RateLimit-Limit",
+				Explode: false,
+			}
+			if err := func() error {
+				if err := h.HasParam(cfg); err == nil {
+					if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+						var wrapperDotRateLimitLimitVal int32
+						if err := func() error {
+							val, err := d.DecodeValue()
+							if err != nil {
+								return err
+							}
+
+							c, err := conv.ToInt32(val)
+							if err != nil {
+								return err
+							}
+
+							wrapperDotRateLimitLimitVal = c
+							return nil
+						}(); err != nil {
+							return err
+						}
+						wrapper.RateLimitLimit.SetTo(wrapperDotRateLimitLimitVal)
+						return nil
+					}); err != nil {
+						return err
+					}
+					if err := func() error {
+						if value, ok := wrapper.RateLimitLimit.Get(); ok {
+							if err := func() error {
+								if err := (validate.Int{
+									MinSet:        true,
+									Min:           0,
+									MaxSet:        true,
+									Max:           1000000,
+									MinExclusive:  false,
+									MaxExclusive:  false,
+									MultipleOfSet: false,
+									MultipleOf:    0,
+									Pattern:       nil,
+								}).Validate(int64(value)); err != nil {
+									return errors.Wrap(err, "int")
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return err
+					}
+				}
+				return nil
+			}(); err != nil {
+				return res, errors.Wrap(err, "parse RateLimit-Limit header")
+			}
+		}
+		// Parse "RateLimit-Remaining" header.
+		{
+			cfg := uri.HeaderParameterDecodingConfig{
+				Name:    "RateLimit-Remaining",
+				Explode: false,
+			}
+			if err := func() error {
+				if err := h.HasParam(cfg); err == nil {
+					if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+						var wrapperDotRateLimitRemainingVal int32
+						if err := func() error {
+							val, err := d.DecodeValue()
+							if err != nil {
+								return err
+							}
+
+							c, err := conv.ToInt32(val)
+							if err != nil {
+								return err
+							}
+
+							wrapperDotRateLimitRemainingVal = c
+							return nil
+						}(); err != nil {
+							return err
+						}
+						wrapper.RateLimitRemaining.SetTo(wrapperDotRateLimitRemainingVal)
+						return nil
+					}); err != nil {
+						return err
+					}
+					if err := func() error {
+						if value, ok := wrapper.RateLimitRemaining.Get(); ok {
+							if err := func() error {
+								if err := (validate.Int{
+									MinSet:        true,
+									Min:           0,
+									MaxSet:        true,
+									Max:           1000000,
+									MinExclusive:  false,
+									MaxExclusive:  false,
+									MultipleOfSet: false,
+									MultipleOf:    0,
+									Pattern:       nil,
+								}).Validate(int64(value)); err != nil {
+									return errors.Wrap(err, "int")
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return err
+					}
+				}
+				return nil
+			}(); err != nil {
+				return res, errors.Wrap(err, "parse RateLimit-Remaining header")
+			}
+		}
+		// Parse "RateLimit-Reset" header.
+		{
+			cfg := uri.HeaderParameterDecodingConfig{
+				Name:    "RateLimit-Reset",
+				Explode: false,
+			}
+			if err := func() error {
+				if err := h.HasParam(cfg); err == nil {
+					if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+						var wrapperDotRateLimitResetVal int32
+						if err := func() error {
+							val, err := d.DecodeValue()
+							if err != nil {
+								return err
+							}
+
+							c, err := conv.ToInt32(val)
+							if err != nil {
+								return err
+							}
+
+							wrapperDotRateLimitResetVal = c
+							return nil
+						}(); err != nil {
+							return err
+						}
+						wrapper.RateLimitReset.SetTo(wrapperDotRateLimitResetVal)
+						return nil
+					}); err != nil {
+						return err
+					}
+					if err := func() error {
+						if value, ok := wrapper.RateLimitReset.Get(); ok {
+							if err := func() error {
+								if err := (validate.Int{
+									MinSet:        true,
+									Min:           0,
+									MaxSet:        true,
+									Max:           86400,
+									MinExclusive:  false,
+									MaxExclusive:  false,
+									MultipleOfSet: false,
+									MultipleOf:    0,
+									Pattern:       nil,
+								}).Validate(int64(value)); err != nil {
+									return errors.Wrap(err, "int")
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return err
+					}
+				}
+				return nil
+			}(); err != nil {
+				return res, errors.Wrap(err, "parse RateLimit-Reset header")
+			}
+		}
+		return &wrapper, nil
+	}
+	switch resp.StatusCode / 100 {
+	case 4:
+		// Pattern 4XX.
+		res, err := func() (res UpdateQuestRes, err error) {
+			ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
+			if err != nil {
+				return res, errors.Wrap(err, "parse media type")
+			}
+			switch {
+			case ct == "application/problem+json":
+				buf, err := io.ReadAll(resp.Body)
+				if err != nil {
+					return res, err
+				}
+				d := jx.DecodeBytes(buf)
+
+				var response Problem
+				if err := func() error {
+					if err := response.Decode(d); err != nil {
+						return err
+					}
+					if err := d.Skip(); err != io.EOF {
+						return errors.New("unexpected trailing data")
+					}
+					return nil
+				}(); err != nil {
+					err = &ogenerrors.DecodeBodyError{
+						ContentType: ct,
+						Body:        buf,
+						Err:         err,
+					}
+					return res, err
+				}
+				// Validate response.
+				if err := func() error {
+					if err := response.Validate(); err != nil {
+						return err
+					}
+					return nil
+				}(); err != nil {
+					return res, errors.Wrap(err, "validate")
+				}
+				var wrapper ProblemStatusCodeWithHeaders
+				wrapper.Response = response
+				wrapper.StatusCode = resp.StatusCode
+				h := uri.NewHeaderDecoder(resp.Header)
+				// Parse "RateLimit-Limit" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Limit",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitLimitVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitLimitVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitLimit.SetTo(wrapperDotRateLimitLimitVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitLimit.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           1000000,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Limit header")
+					}
+				}
+				// Parse "RateLimit-Remaining" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Remaining",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitRemainingVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitRemainingVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitRemaining.SetTo(wrapperDotRateLimitRemainingVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitRemaining.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           1000000,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Remaining header")
+					}
+				}
+				// Parse "RateLimit-Reset" header.
+				{
+					cfg := uri.HeaderParameterDecodingConfig{
+						Name:    "RateLimit-Reset",
+						Explode: false,
+					}
+					if err := func() error {
+						if err := h.HasParam(cfg); err == nil {
+							if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+								var wrapperDotRateLimitResetVal int32
+								if err := func() error {
+									val, err := d.DecodeValue()
+									if err != nil {
+										return err
+									}
+
+									c, err := conv.ToInt32(val)
+									if err != nil {
+										return err
+									}
+
+									wrapperDotRateLimitResetVal = c
+									return nil
+								}(); err != nil {
+									return err
+								}
+								wrapper.RateLimitReset.SetTo(wrapperDotRateLimitResetVal)
+								return nil
+							}); err != nil {
+								return err
+							}
+							if err := func() error {
+								if value, ok := wrapper.RateLimitReset.Get(); ok {
+									if err := func() error {
+										if err := (validate.Int{
+											MinSet:        true,
+											Min:           0,
+											MaxSet:        true,
+											Max:           86400,
+											MinExclusive:  false,
+											MaxExclusive:  false,
+											MultipleOfSet: false,
+											MultipleOf:    0,
+											Pattern:       nil,
+										}).Validate(int64(value)); err != nil {
+											return errors.Wrap(err, "int")
+										}
+										return nil
+									}(); err != nil {
+										return err
+									}
+								}
+								return nil
+							}(); err != nil {
+								return err
+							}
+						}
+						return nil
+					}(); err != nil {
+						return res, errors.Wrap(err, "parse RateLimit-Reset header")
+					}
+				}
+				return &wrapper, nil
+			default:
+				return res, validate.InvalidContentType(ct)
+			}
+		}()
+		if err != nil {
+			return res, errors.Wrapf(err, "pattern 4XX (code %d)", resp.StatusCode)
+		}
+		return res, nil
+	case 5:
+		// Pattern 5XX.
+		res, err := func() (res UpdateQuestRes, err error) {
 			ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
 			if err != nil {
 				return res, errors.Wrap(err, "parse media type")

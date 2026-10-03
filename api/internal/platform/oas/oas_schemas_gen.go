@@ -8510,6 +8510,45 @@ func (s *DeleteLootTableNoContent) SetRateLimitReset(val OptInt32) {
 
 func (*DeleteLootTableNoContent) deleteLootTableRes() {}
 
+// DeleteLoreNoContent is response for DeleteLore operation.
+type DeleteLoreNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *DeleteLoreNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *DeleteLoreNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *DeleteLoreNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *DeleteLoreNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *DeleteLoreNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *DeleteLoreNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*DeleteLoreNoContent) deleteLoreRes() {}
+
 // DeleteNpcNoContent is response for DeleteNpc operation.
 type DeleteNpcNoContent struct {
 	RateLimitLimit     OptInt32
@@ -8587,6 +8626,45 @@ func (s *DeletePushSubscriptionNoContent) SetRateLimitReset(val OptInt32) {
 }
 
 func (*DeletePushSubscriptionNoContent) deletePushSubscriptionRes() {}
+
+// DeleteQuestNoContent is response for DeleteQuest operation.
+type DeleteQuestNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *DeleteQuestNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *DeleteQuestNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *DeleteQuestNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *DeleteQuestNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *DeleteQuestNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *DeleteQuestNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*DeleteQuestNoContent) deleteQuestRes() {}
 
 // DeleteSettlementNoContent is response for DeleteSettlement operation.
 type DeleteSettlementNoContent struct {
@@ -15900,6 +15978,89 @@ func (s *ItemProperty) SetBurst(val OptInt32) {
 	s.Burst = val
 }
 
+// A book or letter to read.
+// Ref: #/components/schemas/ItemReading
+type ItemReading struct {
+	ItemSlug string `json:"itemSlug"`
+}
+
+// GetItemSlug returns the value of ItemSlug.
+func (s *ItemReading) GetItemSlug() string {
+	return s.ItemSlug
+}
+
+// SetItemSlug sets the value of ItemSlug.
+func (s *ItemReading) SetItemSlug(val string) {
+	s.ItemSlug = val
+}
+
+// What a reading did.
+// Ref: #/components/schemas/ItemReadingResult
+type ItemReadingResult struct {
+	// How many Lore entries it unlocked.
+	Unlocked int32 `json:"unlocked"`
+}
+
+// GetUnlocked returns the value of Unlocked.
+func (s *ItemReadingResult) GetUnlocked() int32 {
+	return s.Unlocked
+}
+
+// SetUnlocked sets the value of Unlocked.
+func (s *ItemReadingResult) SetUnlocked(val int32) {
+	s.Unlocked = val
+}
+
+// ItemReadingResultHeaders wraps ItemReadingResult with response headers.
+type ItemReadingResultHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           ItemReadingResult
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ItemReadingResultHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ItemReadingResultHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ItemReadingResultHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ItemReadingResultHeaders) GetResponse() ItemReadingResult {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ItemReadingResultHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ItemReadingResultHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ItemReadingResultHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ItemReadingResultHeaders) SetResponse(val ItemReadingResult) {
+	s.Response = val
+}
+
+func (*ItemReadingResultHeaders) readItemRes() {}
+
 // A spell an item grants; cost is the charges it spends, 0 at will.
 // Ref: #/components/schemas/ItemSpell
 type ItemSpell struct {
@@ -15937,6 +16098,109 @@ func (s *ItemSpell) SetName(val string) {
 func (s *ItemSpell) SetCost(val int32) {
 	s.Cost = val
 }
+
+// The Journal of a Campaign as the caller may see it.
+// Ref: #/components/schemas/Journal
+type Journal struct {
+	// Whether the caller is the DM, who sees and keeps all of it.
+	Dm bool `json:"dm"`
+	// Quests, oldest first. A Player gets none that is hidden.
+	Quests []Quest `json:"quests"`
+	// Lore entries, by title. A Player gets none that is locked.
+	Lore []Lore `json:"lore"`
+	// The slugs of the items the caller carries that still hold locked Lore.
+	Readable []string `json:"readable"`
+}
+
+// GetDm returns the value of Dm.
+func (s *Journal) GetDm() bool {
+	return s.Dm
+}
+
+// GetQuests returns the value of Quests.
+func (s *Journal) GetQuests() []Quest {
+	return s.Quests
+}
+
+// GetLore returns the value of Lore.
+func (s *Journal) GetLore() []Lore {
+	return s.Lore
+}
+
+// GetReadable returns the value of Readable.
+func (s *Journal) GetReadable() []string {
+	return s.Readable
+}
+
+// SetDm sets the value of Dm.
+func (s *Journal) SetDm(val bool) {
+	s.Dm = val
+}
+
+// SetQuests sets the value of Quests.
+func (s *Journal) SetQuests(val []Quest) {
+	s.Quests = val
+}
+
+// SetLore sets the value of Lore.
+func (s *Journal) SetLore(val []Lore) {
+	s.Lore = val
+}
+
+// SetReadable sets the value of Readable.
+func (s *Journal) SetReadable(val []string) {
+	s.Readable = val
+}
+
+// JournalHeaders wraps Journal with response headers.
+type JournalHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           Journal
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *JournalHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *JournalHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *JournalHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *JournalHeaders) GetResponse() Journal {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *JournalHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *JournalHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *JournalHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *JournalHeaders) SetResponse(val Journal) {
+	s.Response = val
+}
+
+func (*JournalHeaders) getJournalRes() {}
 
 // A cantrip or spell a Character learned through a class.
 // Ref: #/components/schemas/LearnedSpellLine
@@ -29743,6 +30007,190 @@ func (s *LootTableInput) SetEntries(val []LootEntry) {
 	s.Entries = val
 }
 
+// A Lore entry. The item that holds it is there for the DM alone.
+// Ref: #/components/schemas/Lore
+type Lore struct {
+	ID    ID     `json:"id"`
+	Title string `json:"title"`
+	Body  string `json:"body"`
+	// Whether the party knows it.
+	Unlocked   bool        `json:"unlocked"`
+	UnlockedAt OptDateTime `json:"unlockedAt"`
+	// The item whose reading unlocks the entry, or empty.
+	ItemSlug  OptString `json:"itemSlug"`
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+// GetID returns the value of ID.
+func (s *Lore) GetID() ID {
+	return s.ID
+}
+
+// GetTitle returns the value of Title.
+func (s *Lore) GetTitle() string {
+	return s.Title
+}
+
+// GetBody returns the value of Body.
+func (s *Lore) GetBody() string {
+	return s.Body
+}
+
+// GetUnlocked returns the value of Unlocked.
+func (s *Lore) GetUnlocked() bool {
+	return s.Unlocked
+}
+
+// GetUnlockedAt returns the value of UnlockedAt.
+func (s *Lore) GetUnlockedAt() OptDateTime {
+	return s.UnlockedAt
+}
+
+// GetItemSlug returns the value of ItemSlug.
+func (s *Lore) GetItemSlug() OptString {
+	return s.ItemSlug
+}
+
+// GetUpdatedAt returns the value of UpdatedAt.
+func (s *Lore) GetUpdatedAt() time.Time {
+	return s.UpdatedAt
+}
+
+// SetID sets the value of ID.
+func (s *Lore) SetID(val ID) {
+	s.ID = val
+}
+
+// SetTitle sets the value of Title.
+func (s *Lore) SetTitle(val string) {
+	s.Title = val
+}
+
+// SetBody sets the value of Body.
+func (s *Lore) SetBody(val string) {
+	s.Body = val
+}
+
+// SetUnlocked sets the value of Unlocked.
+func (s *Lore) SetUnlocked(val bool) {
+	s.Unlocked = val
+}
+
+// SetUnlockedAt sets the value of UnlockedAt.
+func (s *Lore) SetUnlockedAt(val OptDateTime) {
+	s.UnlockedAt = val
+}
+
+// SetItemSlug sets the value of ItemSlug.
+func (s *Lore) SetItemSlug(val OptString) {
+	s.ItemSlug = val
+}
+
+// SetUpdatedAt sets the value of UpdatedAt.
+func (s *Lore) SetUpdatedAt(val time.Time) {
+	s.UpdatedAt = val
+}
+
+// LoreHeaders wraps Lore with response headers.
+type LoreHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           Lore
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *LoreHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *LoreHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *LoreHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *LoreHeaders) GetResponse() Lore {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *LoreHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *LoreHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *LoreHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *LoreHeaders) SetResponse(val Lore) {
+	s.Response = val
+}
+
+func (*LoreHeaders) createLoreRes() {}
+
+// The editable part of a Lore entry.
+// Ref: #/components/schemas/LoreInput
+type LoreInput struct {
+	Title    string    `json:"title"`
+	Body     OptString `json:"body"`
+	ItemSlug OptString `json:"itemSlug"`
+	// The DM's word that the party knows it. Left out, the entry is locked.
+	Unlocked OptBool `json:"unlocked"`
+}
+
+// GetTitle returns the value of Title.
+func (s *LoreInput) GetTitle() string {
+	return s.Title
+}
+
+// GetBody returns the value of Body.
+func (s *LoreInput) GetBody() OptString {
+	return s.Body
+}
+
+// GetItemSlug returns the value of ItemSlug.
+func (s *LoreInput) GetItemSlug() OptString {
+	return s.ItemSlug
+}
+
+// GetUnlocked returns the value of Unlocked.
+func (s *LoreInput) GetUnlocked() OptBool {
+	return s.Unlocked
+}
+
+// SetTitle sets the value of Title.
+func (s *LoreInput) SetTitle(val string) {
+	s.Title = val
+}
+
+// SetBody sets the value of Body.
+func (s *LoreInput) SetBody(val OptString) {
+	s.Body = val
+}
+
+// SetItemSlug sets the value of ItemSlug.
+func (s *LoreInput) SetItemSlug(val OptString) {
+	s.ItemSlug = val
+}
+
+// SetUnlocked sets the value of Unlocked.
+func (s *LoreInput) SetUnlocked(val OptBool) {
+	s.Unlocked = val
+}
+
 // A part of an import Grimoire could not take, and why.
 // Ref: #/components/schemas/ManualPart
 type ManualPart struct {
@@ -38451,10 +38899,12 @@ func (*ProblemStatusCodeWithHeaders) createInviteRes()                  {}
 func (*ProblemStatusCodeWithHeaders) createLibraryCollectionRes()       {}
 func (*ProblemStatusCodeWithHeaders) createLibraryEntryRes()            {}
 func (*ProblemStatusCodeWithHeaders) createLootTableRes()               {}
+func (*ProblemStatusCodeWithHeaders) createLoreRes()                    {}
 func (*ProblemStatusCodeWithHeaders) createNpcRes()                     {}
 func (*ProblemStatusCodeWithHeaders) createOidcAccountRes()             {}
 func (*ProblemStatusCodeWithHeaders) createProposalRes()                {}
 func (*ProblemStatusCodeWithHeaders) createPushSubscriptionRes()        {}
+func (*ProblemStatusCodeWithHeaders) createQuestRes()                   {}
 func (*ProblemStatusCodeWithHeaders) createRollRes()                    {}
 func (*ProblemStatusCodeWithHeaders) createSettlementRes()              {}
 func (*ProblemStatusCodeWithHeaders) createShopRes()                    {}
@@ -38468,8 +38918,10 @@ func (*ProblemStatusCodeWithHeaders) deleteEncounterPoolRes()           {}
 func (*ProblemStatusCodeWithHeaders) deleteEncounterTableRes()          {}
 func (*ProblemStatusCodeWithHeaders) deleteFactionRes()                 {}
 func (*ProblemStatusCodeWithHeaders) deleteLootTableRes()               {}
+func (*ProblemStatusCodeWithHeaders) deleteLoreRes()                    {}
 func (*ProblemStatusCodeWithHeaders) deleteNpcRes()                     {}
 func (*ProblemStatusCodeWithHeaders) deletePushSubscriptionRes()        {}
+func (*ProblemStatusCodeWithHeaders) deleteQuestRes()                   {}
 func (*ProblemStatusCodeWithHeaders) deleteSettlementRes()              {}
 func (*ProblemStatusCodeWithHeaders) deleteShopRes()                    {}
 func (*ProblemStatusCodeWithHeaders) diffNpcRevisionsRes()              {}
@@ -38500,6 +38952,7 @@ func (*ProblemStatusCodeWithHeaders) getFeatBuildRes()                  {}
 func (*ProblemStatusCodeWithHeaders) getHealthRes()                     {}
 func (*ProblemStatusCodeWithHeaders) getInventoryRes()                  {}
 func (*ProblemStatusCodeWithHeaders) getItemBuildRes()                  {}
+func (*ProblemStatusCodeWithHeaders) getJournalRes()                    {}
 func (*ProblemStatusCodeWithHeaders) getLibraryEntryRes()               {}
 func (*ProblemStatusCodeWithHeaders) getMapImageRes()                   {}
 func (*ProblemStatusCodeWithHeaders) getMapRes()                        {}
@@ -38605,6 +39058,7 @@ func (*ProblemStatusCodeWithHeaders) previewSubclassRes()               {}
 func (*ProblemStatusCodeWithHeaders) proposeStandingChangeRes()         {}
 func (*ProblemStatusCodeWithHeaders) publishReleaseNoteRes()            {}
 func (*ProblemStatusCodeWithHeaders) readAllNotificationsRes()          {}
+func (*ProblemStatusCodeWithHeaders) readItemRes()                      {}
 func (*ProblemStatusCodeWithHeaders) readNotificationRes()              {}
 func (*ProblemStatusCodeWithHeaders) removeMemberRes()                  {}
 func (*ProblemStatusCodeWithHeaders) requestRetrainRes()                {}
@@ -38679,10 +39133,12 @@ func (*ProblemStatusCodeWithHeaders) updateFactionRes()                 {}
 func (*ProblemStatusCodeWithHeaders) updateLibraryCollectionRes()       {}
 func (*ProblemStatusCodeWithHeaders) updateLibraryEntryRes()            {}
 func (*ProblemStatusCodeWithHeaders) updateLootTableRes()               {}
+func (*ProblemStatusCodeWithHeaders) updateLoreRes()                    {}
 func (*ProblemStatusCodeWithHeaders) updateMapRes()                     {}
 func (*ProblemStatusCodeWithHeaders) updateMemberRes()                  {}
 func (*ProblemStatusCodeWithHeaders) updateMyCharacterRes()             {}
 func (*ProblemStatusCodeWithHeaders) updateNpcRes()                     {}
+func (*ProblemStatusCodeWithHeaders) updateQuestRes()                   {}
 func (*ProblemStatusCodeWithHeaders) updateSettlementRes()              {}
 func (*ProblemStatusCodeWithHeaders) updateShopRes()                    {}
 func (*ProblemStatusCodeWithHeaders) uploadMapRes()                     {}
@@ -39553,6 +40009,260 @@ func (s *PushSubscriptionInputKeys) SetP256dh(val string) {
 // SetAuth sets the value of Auth.
 func (s *PushSubscriptionInputKeys) SetAuth(val string) {
 	s.Auth = val
+}
+
+// A Quest of the Campaign with its steps in order.
+// Ref: #/components/schemas/Quest
+type Quest struct {
+	ID        ID          `json:"id"`
+	Name      string      `json:"name"`
+	Summary   string      `json:"summary"`
+	Status    QuestStatus `json:"status"`
+	Steps     []QuestStep `json:"steps"`
+	UpdatedAt time.Time   `json:"updatedAt"`
+}
+
+// GetID returns the value of ID.
+func (s *Quest) GetID() ID {
+	return s.ID
+}
+
+// GetName returns the value of Name.
+func (s *Quest) GetName() string {
+	return s.Name
+}
+
+// GetSummary returns the value of Summary.
+func (s *Quest) GetSummary() string {
+	return s.Summary
+}
+
+// GetStatus returns the value of Status.
+func (s *Quest) GetStatus() QuestStatus {
+	return s.Status
+}
+
+// GetSteps returns the value of Steps.
+func (s *Quest) GetSteps() []QuestStep {
+	return s.Steps
+}
+
+// GetUpdatedAt returns the value of UpdatedAt.
+func (s *Quest) GetUpdatedAt() time.Time {
+	return s.UpdatedAt
+}
+
+// SetID sets the value of ID.
+func (s *Quest) SetID(val ID) {
+	s.ID = val
+}
+
+// SetName sets the value of Name.
+func (s *Quest) SetName(val string) {
+	s.Name = val
+}
+
+// SetSummary sets the value of Summary.
+func (s *Quest) SetSummary(val string) {
+	s.Summary = val
+}
+
+// SetStatus sets the value of Status.
+func (s *Quest) SetStatus(val QuestStatus) {
+	s.Status = val
+}
+
+// SetSteps sets the value of Steps.
+func (s *Quest) SetSteps(val []QuestStep) {
+	s.Steps = val
+}
+
+// SetUpdatedAt sets the value of UpdatedAt.
+func (s *Quest) SetUpdatedAt(val time.Time) {
+	s.UpdatedAt = val
+}
+
+// QuestHeaders wraps Quest with response headers.
+type QuestHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           Quest
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *QuestHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *QuestHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *QuestHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *QuestHeaders) GetResponse() Quest {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *QuestHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *QuestHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *QuestHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *QuestHeaders) SetResponse(val Quest) {
+	s.Response = val
+}
+
+func (*QuestHeaders) createQuestRes() {}
+
+// The editable part of a Quest. The steps given replace the ones it had.
+// Ref: #/components/schemas/QuestInput
+type QuestInput struct {
+	Name    string      `json:"name"`
+	Summary OptString   `json:"summary"`
+	Status  QuestStatus `json:"status"`
+	Steps   []QuestStep `json:"steps"`
+}
+
+// GetName returns the value of Name.
+func (s *QuestInput) GetName() string {
+	return s.Name
+}
+
+// GetSummary returns the value of Summary.
+func (s *QuestInput) GetSummary() OptString {
+	return s.Summary
+}
+
+// GetStatus returns the value of Status.
+func (s *QuestInput) GetStatus() QuestStatus {
+	return s.Status
+}
+
+// GetSteps returns the value of Steps.
+func (s *QuestInput) GetSteps() []QuestStep {
+	return s.Steps
+}
+
+// SetName sets the value of Name.
+func (s *QuestInput) SetName(val string) {
+	s.Name = val
+}
+
+// SetSummary sets the value of Summary.
+func (s *QuestInput) SetSummary(val OptString) {
+	s.Summary = val
+}
+
+// SetStatus sets the value of Status.
+func (s *QuestInput) SetStatus(val QuestStatus) {
+	s.Status = val
+}
+
+// SetSteps sets the value of Steps.
+func (s *QuestInput) SetSteps(val []QuestStep) {
+	s.Steps = val
+}
+
+// Where a Quest stands. A hidden Quest is the DM's alone.
+// Ref: #/components/schemas/QuestStatus
+type QuestStatus string
+
+const (
+	QuestStatusHidden    QuestStatus = "hidden"
+	QuestStatusActive    QuestStatus = "active"
+	QuestStatusCompleted QuestStatus = "completed"
+	QuestStatusFailed    QuestStatus = "failed"
+)
+
+// AllValues returns all QuestStatus values.
+func (QuestStatus) AllValues() []QuestStatus {
+	return []QuestStatus{
+		QuestStatusHidden,
+		QuestStatusActive,
+		QuestStatusCompleted,
+		QuestStatusFailed,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s QuestStatus) MarshalText() ([]byte, error) {
+	switch s {
+	case QuestStatusHidden:
+		return []byte(s), nil
+	case QuestStatusActive:
+		return []byte(s), nil
+	case QuestStatusCompleted:
+		return []byte(s), nil
+	case QuestStatusFailed:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *QuestStatus) UnmarshalText(data []byte) error {
+	switch QuestStatus(data) {
+	case QuestStatusHidden:
+		*s = QuestStatusHidden
+		return nil
+	case QuestStatusActive:
+		*s = QuestStatusActive
+		return nil
+	case QuestStatusCompleted:
+		*s = QuestStatusCompleted
+		return nil
+	case QuestStatusFailed:
+		*s = QuestStatusFailed
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// One step of a Quest.
+// Ref: #/components/schemas/QuestStep
+type QuestStep struct {
+	Text string `json:"text"`
+	Done bool   `json:"done"`
+}
+
+// GetText returns the value of Text.
+func (s *QuestStep) GetText() string {
+	return s.Text
+}
+
+// GetDone returns the value of Done.
+func (s *QuestStep) GetDone() bool {
+	return s.Done
+}
+
+// SetText sets the value of Text.
+func (s *QuestStep) SetText(val string) {
+	s.Text = val
+}
+
+// SetDone sets the value of Done.
+func (s *QuestStep) SetDone(val bool) {
+	s.Done = val
 }
 
 // A reachable hex with its cost and where it is reached from.
@@ -47918,6 +48628,84 @@ func (s *UpdateFactionNoContent) SetRateLimitReset(val OptInt32) {
 }
 
 func (*UpdateFactionNoContent) updateFactionRes() {}
+
+// UpdateLoreNoContent is response for UpdateLore operation.
+type UpdateLoreNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *UpdateLoreNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *UpdateLoreNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *UpdateLoreNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *UpdateLoreNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *UpdateLoreNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *UpdateLoreNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*UpdateLoreNoContent) updateLoreRes() {}
+
+// UpdateQuestNoContent is response for UpdateQuest operation.
+type UpdateQuestNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *UpdateQuestNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *UpdateQuestNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *UpdateQuestNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *UpdateQuestNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *UpdateQuestNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *UpdateQuestNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*UpdateQuestNoContent) updateQuestRes() {}
 
 type UploadMapReq struct {
 	Data io.Reader

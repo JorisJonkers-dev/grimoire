@@ -482,6 +482,13 @@ type BuildInvoker interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/loot-tables
 	CreateLootTable(ctx context.Context, request *LootTableInput, params CreateLootTableParams) (CreateLootTableRes, error)
+	// CreateLore invokes createLore operation.
+	//
+	// Adds a Lore entry, locked unless the DM says the party knows it. An entry may name the item that
+	// holds it: reading that item unlocks it. DM only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/lore
+	CreateLore(ctx context.Context, request *LoreInput, params CreateLoreParams) (CreateLoreRes, error)
 	// CreateNpc invokes createNpc operation.
 	//
 	// Adds an NPC and records its first Revision. DM only.
@@ -494,6 +501,12 @@ type BuildInvoker interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/proposals
 	CreateProposal(ctx context.Context, request *ProposalInput, params CreateProposalParams) (CreateProposalRes, error)
+	// CreateQuest invokes createQuest operation.
+	//
+	// Adds a Quest with its steps. A hidden Quest is the DM's alone until its status changes. DM only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/quests
+	CreateQuest(ctx context.Context, request *QuestInput, params CreateQuestParams) (CreateQuestRes, error)
 	// CreateSettlement invokes createSettlement operation.
 	//
 	// Adds a Settlement and records its first Revision. DM only.
@@ -549,12 +562,24 @@ type BuildInvoker interface {
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/loot-tables/{lootTableId}
 	DeleteLootTable(ctx context.Context, params DeleteLootTableParams) (DeleteLootTableRes, error)
+	// DeleteLore invokes deleteLore operation.
+	//
+	// Removes a Lore entry. DM only.
+	//
+	// DELETE /api/v1/campaigns/{campaignId}/lore/{loreId}
+	DeleteLore(ctx context.Context, params DeleteLoreParams) (DeleteLoreRes, error)
 	// DeleteNpc invokes deleteNpc operation.
 	//
 	// Removes the NPC; its Revisions keep it restorable. DM only.
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/npcs/{npcId}
 	DeleteNpc(ctx context.Context, params DeleteNpcParams) (DeleteNpcRes, error)
+	// DeleteQuest invokes deleteQuest operation.
+	//
+	// Removes a Quest and its steps. DM only.
+	//
+	// DELETE /api/v1/campaigns/{campaignId}/quests/{questId}
+	DeleteQuest(ctx context.Context, params DeleteQuestParams) (DeleteQuestRes, error)
 	// DeleteSettlement invokes deleteSettlement operation.
 	//
 	// Removes the Settlement; its Revisions keep it restorable. DM only.
@@ -920,6 +945,12 @@ type BuildInvoker interface {
 	//
 	// PUT /api/v1/campaigns/{campaignId}/loot-tables/{lootTableId}
 	UpdateLootTable(ctx context.Context, request *LootTableInput, params UpdateLootTableParams) (UpdateLootTableRes, error)
+	// UpdateLore invokes updateLore operation.
+	//
+	// Changes a Lore entry, and locks or unlocks it at the DM's word. DM only.
+	//
+	// PUT /api/v1/campaigns/{campaignId}/lore/{loreId}
+	UpdateLore(ctx context.Context, request *LoreInput, params UpdateLoreParams) (UpdateLoreRes, error)
 	// UpdateMap invokes updateMap operation.
 	//
 	// Renames a Map and sets its hex size, grid origin and ambient light. DM only.
@@ -944,6 +975,12 @@ type BuildInvoker interface {
 	//
 	// PUT /api/v1/campaigns/{campaignId}/npcs/{npcId}
 	UpdateNpc(ctx context.Context, request *NpcInput, params UpdateNpcParams) (UpdateNpcRes, error)
+	// UpdateQuest invokes updateQuest operation.
+	//
+	// Changes a Quest: its words, its status, its steps and which of them are done. DM only.
+	//
+	// PUT /api/v1/campaigns/{campaignId}/quests/{questId}
+	UpdateQuest(ctx context.Context, request *QuestInput, params UpdateQuestParams) (UpdateQuestRes, error)
 	// UpdateSettlement invokes updateSettlement operation.
 	//
 	// Replaces the Settlement and records a Revision. DM only.
@@ -1014,6 +1051,14 @@ type PlayInvoker interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/characters/{characterId}/inspiration/pass
 	PassInspiration(ctx context.Context, request *InspirationPass, params PassInspirationParams) (PassInspirationRes, error)
+	// ReadItem invokes readItem operation.
+	//
+	// A Member reads an item they carry, on one of their own Characters or in the Party Stash. Every Lore
+	// entry that item holds is unlocked for the whole party. An item the Member does not carry and an item
+	// that holds nothing are refused alike.
+	//
+	// POST /api/v1/campaigns/{campaignId}/journal/readings
+	ReadItem(ctx context.Context, request *ItemReading, params ReadItemParams) (ReadItemRes, error)
 	// RerollDie invokes rerollDie operation.
 	//
 	// Spends the roller's Heroic Inspiration to roll one die again; the new face stands and the roll
@@ -1210,6 +1255,15 @@ type ReadInvoker interface {
 	//
 	// GET /api/v1/builders/items/{entryId}
 	GetItemBuild(ctx context.Context, params GetItemBuildParams) (GetItemBuildRes, error)
+	// GetJournal invokes getJournal operation.
+	//
+	// The Campaign's Quests and Lore as the caller may see them. The DM gets all of it. A Player gets the
+	// Quests the party has been given and the Lore it has unlocked: a hidden Quest and a locked Lore entry
+	// are left out whole. Readable lists the books and letters the caller carries, on their own Characters
+	// or in the Party Stash, that still hold Lore.
+	//
+	// GET /api/v1/campaigns/{campaignId}/journal
+	GetJournal(ctx context.Context, params GetJournalParams) (GetJournalRes, error)
 	// GetLibraryEntry invokes getLibraryEntry operation.
 	//
 	// One of the caller's entries with its Revisions and the Campaigns it is linked into.
@@ -5361,6 +5415,145 @@ func (c *Client) sendCreateLootTable(ctx context.Context, request *LootTableInpu
 	return result, nil
 }
 
+// CreateLore invokes createLore operation.
+//
+// Adds a Lore entry, locked unless the DM says the party knows it. An entry may name the item that
+// holds it: reading that item unlocks it. DM only.
+//
+// POST /api/v1/campaigns/{campaignId}/lore
+func (c *Client) CreateLore(ctx context.Context, request *LoreInput, params CreateLoreParams) (CreateLoreRes, error) {
+	res, err := c.sendCreateLore(ctx, request, params)
+	return res, err
+}
+
+func (c *Client) sendCreateLore(ctx context.Context, request *LoreInput, params CreateLoreParams) (res CreateLoreRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("createLore"),
+		semconv.HTTPRequestMethodKey.String("POST"),
+		semconv.URLTemplateKey.String("/api/v1/campaigns/{campaignId}/lore"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, CreateLoreOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [3]string
+	pathParts[0] = "/api/v1/campaigns/"
+	{
+		// Encode "campaignId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "campaignId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.CampaignId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	pathParts[2] = "/lore"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "POST", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodeCreateLoreRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, CreateLoreOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeCreateLoreResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
 // CreateNpc invokes createNpc operation.
 //
 // Adds an NPC and records its first Revision. DM only.
@@ -5830,6 +6023,144 @@ func (c *Client) sendCreatePushSubscription(ctx context.Context, request *PushSu
 
 	stage = "DecodeResponse"
 	result, err := decodeCreatePushSubscriptionResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// CreateQuest invokes createQuest operation.
+//
+// Adds a Quest with its steps. A hidden Quest is the DM's alone until its status changes. DM only.
+//
+// POST /api/v1/campaigns/{campaignId}/quests
+func (c *Client) CreateQuest(ctx context.Context, request *QuestInput, params CreateQuestParams) (CreateQuestRes, error) {
+	res, err := c.sendCreateQuest(ctx, request, params)
+	return res, err
+}
+
+func (c *Client) sendCreateQuest(ctx context.Context, request *QuestInput, params CreateQuestParams) (res CreateQuestRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("createQuest"),
+		semconv.HTTPRequestMethodKey.String("POST"),
+		semconv.URLTemplateKey.String("/api/v1/campaigns/{campaignId}/quests"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, CreateQuestOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [3]string
+	pathParts[0] = "/api/v1/campaigns/"
+	{
+		// Encode "campaignId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "campaignId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.CampaignId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	pathParts[2] = "/quests"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "POST", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodeCreateQuestRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, CreateQuestOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeCreateQuestResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
@@ -7779,6 +8110,162 @@ func (c *Client) sendDeleteLootTable(ctx context.Context, params DeleteLootTable
 	return result, nil
 }
 
+// DeleteLore invokes deleteLore operation.
+//
+// Removes a Lore entry. DM only.
+//
+// DELETE /api/v1/campaigns/{campaignId}/lore/{loreId}
+func (c *Client) DeleteLore(ctx context.Context, params DeleteLoreParams) (DeleteLoreRes, error) {
+	res, err := c.sendDeleteLore(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendDeleteLore(ctx context.Context, params DeleteLoreParams) (res DeleteLoreRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("deleteLore"),
+		semconv.HTTPRequestMethodKey.String("DELETE"),
+		semconv.URLTemplateKey.String("/api/v1/campaigns/{campaignId}/lore/{loreId}"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, DeleteLoreOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [4]string
+	pathParts[0] = "/api/v1/campaigns/"
+	{
+		// Encode "campaignId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "campaignId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.CampaignId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	pathParts[2] = "/lore/"
+	{
+		// Encode "loreId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "loreId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.LoreId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[3] = encoded
+	}
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "DELETE", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, DeleteLoreOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeDeleteLoreResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
 // DeleteNpc invokes deleteNpc operation.
 //
 // Removes the NPC; its Revisions keep it restorable. DM only.
@@ -8062,6 +8549,162 @@ func (c *Client) sendDeletePushSubscription(ctx context.Context, params DeletePu
 
 	stage = "DecodeResponse"
 	result, err := decodeDeletePushSubscriptionResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// DeleteQuest invokes deleteQuest operation.
+//
+// Removes a Quest and its steps. DM only.
+//
+// DELETE /api/v1/campaigns/{campaignId}/quests/{questId}
+func (c *Client) DeleteQuest(ctx context.Context, params DeleteQuestParams) (DeleteQuestRes, error) {
+	res, err := c.sendDeleteQuest(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendDeleteQuest(ctx context.Context, params DeleteQuestParams) (res DeleteQuestRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("deleteQuest"),
+		semconv.HTTPRequestMethodKey.String("DELETE"),
+		semconv.URLTemplateKey.String("/api/v1/campaigns/{campaignId}/quests/{questId}"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, DeleteQuestOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [4]string
+	pathParts[0] = "/api/v1/campaigns/"
+	{
+		// Encode "campaignId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "campaignId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.CampaignId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	pathParts[2] = "/quests/"
+	{
+		// Encode "questId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "questId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.QuestId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[3] = encoded
+	}
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "DELETE", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, DeleteQuestOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeDeleteQuestResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
@@ -12259,6 +12902,144 @@ func (c *Client) sendGetItemBuild(ctx context.Context, params GetItemBuildParams
 
 	stage = "DecodeResponse"
 	result, err := decodeGetItemBuildResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// GetJournal invokes getJournal operation.
+//
+// The Campaign's Quests and Lore as the caller may see them. The DM gets all of it. A Player gets the
+// Quests the party has been given and the Lore it has unlocked: a hidden Quest and a locked Lore entry
+// are left out whole. Readable lists the books and letters the caller carries, on their own Characters
+// or in the Party Stash, that still hold Lore.
+//
+// GET /api/v1/campaigns/{campaignId}/journal
+func (c *Client) GetJournal(ctx context.Context, params GetJournalParams) (GetJournalRes, error) {
+	res, err := c.sendGetJournal(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendGetJournal(ctx context.Context, params GetJournalParams) (res GetJournalRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getJournal"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.URLTemplateKey.String("/api/v1/campaigns/{campaignId}/journal"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, GetJournalOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [3]string
+	pathParts[0] = "/api/v1/campaigns/"
+	{
+		// Encode "campaignId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "campaignId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.CampaignId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	pathParts[2] = "/journal"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, GetJournalOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeGetJournalResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
@@ -26520,6 +27301,146 @@ func (c *Client) sendReadAllNotifications(ctx context.Context) (res ReadAllNotif
 	return result, nil
 }
 
+// ReadItem invokes readItem operation.
+//
+// A Member reads an item they carry, on one of their own Characters or in the Party Stash. Every Lore
+// entry that item holds is unlocked for the whole party. An item the Member does not carry and an item
+// that holds nothing are refused alike.
+//
+// POST /api/v1/campaigns/{campaignId}/journal/readings
+func (c *Client) ReadItem(ctx context.Context, request *ItemReading, params ReadItemParams) (ReadItemRes, error) {
+	res, err := c.sendReadItem(ctx, request, params)
+	return res, err
+}
+
+func (c *Client) sendReadItem(ctx context.Context, request *ItemReading, params ReadItemParams) (res ReadItemRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("readItem"),
+		semconv.HTTPRequestMethodKey.String("POST"),
+		semconv.URLTemplateKey.String("/api/v1/campaigns/{campaignId}/journal/readings"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, ReadItemOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [3]string
+	pathParts[0] = "/api/v1/campaigns/"
+	{
+		// Encode "campaignId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "campaignId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.CampaignId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	pathParts[2] = "/journal/readings"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "POST", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodeReadItemRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, ReadItemOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeReadItemResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
 // ReadNotification invokes readNotification operation.
 //
 // Marks one Notification read, as acting on it does.
@@ -37082,6 +38003,165 @@ func (c *Client) sendUpdateLootTable(ctx context.Context, request *LootTableInpu
 	return result, nil
 }
 
+// UpdateLore invokes updateLore operation.
+//
+// Changes a Lore entry, and locks or unlocks it at the DM's word. DM only.
+//
+// PUT /api/v1/campaigns/{campaignId}/lore/{loreId}
+func (c *Client) UpdateLore(ctx context.Context, request *LoreInput, params UpdateLoreParams) (UpdateLoreRes, error) {
+	res, err := c.sendUpdateLore(ctx, request, params)
+	return res, err
+}
+
+func (c *Client) sendUpdateLore(ctx context.Context, request *LoreInput, params UpdateLoreParams) (res UpdateLoreRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("updateLore"),
+		semconv.HTTPRequestMethodKey.String("PUT"),
+		semconv.URLTemplateKey.String("/api/v1/campaigns/{campaignId}/lore/{loreId}"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, UpdateLoreOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [4]string
+	pathParts[0] = "/api/v1/campaigns/"
+	{
+		// Encode "campaignId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "campaignId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.CampaignId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	pathParts[2] = "/lore/"
+	{
+		// Encode "loreId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "loreId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.LoreId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[3] = encoded
+	}
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "PUT", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodeUpdateLoreRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, UpdateLoreOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeUpdateLoreResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
 // UpdateMap invokes updateMap operation.
 //
 // Renames a Map and sets its hex size, grid origin and ambient light. DM only.
@@ -37689,6 +38769,165 @@ func (c *Client) sendUpdateNpc(ctx context.Context, request *NpcInput, params Up
 
 	stage = "DecodeResponse"
 	result, err := decodeUpdateNpcResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// UpdateQuest invokes updateQuest operation.
+//
+// Changes a Quest: its words, its status, its steps and which of them are done. DM only.
+//
+// PUT /api/v1/campaigns/{campaignId}/quests/{questId}
+func (c *Client) UpdateQuest(ctx context.Context, request *QuestInput, params UpdateQuestParams) (UpdateQuestRes, error) {
+	res, err := c.sendUpdateQuest(ctx, request, params)
+	return res, err
+}
+
+func (c *Client) sendUpdateQuest(ctx context.Context, request *QuestInput, params UpdateQuestParams) (res UpdateQuestRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("updateQuest"),
+		semconv.HTTPRequestMethodKey.String("PUT"),
+		semconv.URLTemplateKey.String("/api/v1/campaigns/{campaignId}/quests/{questId}"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, UpdateQuestOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [4]string
+	pathParts[0] = "/api/v1/campaigns/"
+	{
+		// Encode "campaignId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "campaignId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.CampaignId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	pathParts[2] = "/quests/"
+	{
+		// Encode "questId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "questId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.QuestId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[3] = encoded
+	}
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "PUT", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodeUpdateQuestRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, UpdateQuestOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeUpdateQuestResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}

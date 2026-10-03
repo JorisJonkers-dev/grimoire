@@ -276,6 +276,20 @@ func encodeCreateLootTableRequest(
 	return nil
 }
 
+func encodeCreateLoreRequest(
+	req *LoreInput,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodeCreateNpcRequest(
 	req *NpcInput,
 	r *http.Request,
@@ -320,6 +334,20 @@ func encodeCreateProposalRequest(
 
 func encodeCreatePushSubscriptionRequest(
 	req *PushSubscriptionInput,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeCreateQuestRequest(
+	req *QuestInput,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"
@@ -824,6 +852,20 @@ func encodeProposeStandingChangeRequest(
 
 func encodePublishReleaseNoteRequest(
 	req *ReleaseNotePublish,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeReadItemRequest(
+	req *ItemReading,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"
@@ -1482,6 +1524,20 @@ func encodeUpdateLootTableRequest(
 	return nil
 }
 
+func encodeUpdateLoreRequest(
+	req *LoreInput,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodeUpdateMapRequest(
 	req *MapEdit,
 	r *http.Request,
@@ -1526,6 +1582,20 @@ func encodeUpdateMyCharacterRequest(
 
 func encodeUpdateNpcRequest(
 	req *NpcInput,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeUpdateQuestRequest(
+	req *QuestInput,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"

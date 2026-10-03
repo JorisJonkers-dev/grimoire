@@ -460,6 +460,13 @@ type BuildHandler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/loot-tables
 	CreateLootTable(ctx context.Context, req *LootTableInput, params CreateLootTableParams) (CreateLootTableRes, error)
+	// CreateLore implements createLore operation.
+	//
+	// Adds a Lore entry, locked unless the DM says the party knows it. An entry may name the item that
+	// holds it: reading that item unlocks it. DM only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/lore
+	CreateLore(ctx context.Context, req *LoreInput, params CreateLoreParams) (CreateLoreRes, error)
 	// CreateNpc implements createNpc operation.
 	//
 	// Adds an NPC and records its first Revision. DM only.
@@ -472,6 +479,12 @@ type BuildHandler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/proposals
 	CreateProposal(ctx context.Context, req *ProposalInput, params CreateProposalParams) (CreateProposalRes, error)
+	// CreateQuest implements createQuest operation.
+	//
+	// Adds a Quest with its steps. A hidden Quest is the DM's alone until its status changes. DM only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/quests
+	CreateQuest(ctx context.Context, req *QuestInput, params CreateQuestParams) (CreateQuestRes, error)
 	// CreateSettlement implements createSettlement operation.
 	//
 	// Adds a Settlement and records its first Revision. DM only.
@@ -527,12 +540,24 @@ type BuildHandler interface {
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/loot-tables/{lootTableId}
 	DeleteLootTable(ctx context.Context, params DeleteLootTableParams) (DeleteLootTableRes, error)
+	// DeleteLore implements deleteLore operation.
+	//
+	// Removes a Lore entry. DM only.
+	//
+	// DELETE /api/v1/campaigns/{campaignId}/lore/{loreId}
+	DeleteLore(ctx context.Context, params DeleteLoreParams) (DeleteLoreRes, error)
 	// DeleteNpc implements deleteNpc operation.
 	//
 	// Removes the NPC; its Revisions keep it restorable. DM only.
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/npcs/{npcId}
 	DeleteNpc(ctx context.Context, params DeleteNpcParams) (DeleteNpcRes, error)
+	// DeleteQuest implements deleteQuest operation.
+	//
+	// Removes a Quest and its steps. DM only.
+	//
+	// DELETE /api/v1/campaigns/{campaignId}/quests/{questId}
+	DeleteQuest(ctx context.Context, params DeleteQuestParams) (DeleteQuestRes, error)
 	// DeleteSettlement implements deleteSettlement operation.
 	//
 	// Removes the Settlement; its Revisions keep it restorable. DM only.
@@ -898,6 +923,12 @@ type BuildHandler interface {
 	//
 	// PUT /api/v1/campaigns/{campaignId}/loot-tables/{lootTableId}
 	UpdateLootTable(ctx context.Context, req *LootTableInput, params UpdateLootTableParams) (UpdateLootTableRes, error)
+	// UpdateLore implements updateLore operation.
+	//
+	// Changes a Lore entry, and locks or unlocks it at the DM's word. DM only.
+	//
+	// PUT /api/v1/campaigns/{campaignId}/lore/{loreId}
+	UpdateLore(ctx context.Context, req *LoreInput, params UpdateLoreParams) (UpdateLoreRes, error)
 	// UpdateMap implements updateMap operation.
 	//
 	// Renames a Map and sets its hex size, grid origin and ambient light. DM only.
@@ -922,6 +953,12 @@ type BuildHandler interface {
 	//
 	// PUT /api/v1/campaigns/{campaignId}/npcs/{npcId}
 	UpdateNpc(ctx context.Context, req *NpcInput, params UpdateNpcParams) (UpdateNpcRes, error)
+	// UpdateQuest implements updateQuest operation.
+	//
+	// Changes a Quest: its words, its status, its steps and which of them are done. DM only.
+	//
+	// PUT /api/v1/campaigns/{campaignId}/quests/{questId}
+	UpdateQuest(ctx context.Context, req *QuestInput, params UpdateQuestParams) (UpdateQuestRes, error)
 	// UpdateSettlement implements updateSettlement operation.
 	//
 	// Replaces the Settlement and records a Revision. DM only.
@@ -992,6 +1029,14 @@ type PlayHandler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/characters/{characterId}/inspiration/pass
 	PassInspiration(ctx context.Context, req *InspirationPass, params PassInspirationParams) (PassInspirationRes, error)
+	// ReadItem implements readItem operation.
+	//
+	// A Member reads an item they carry, on one of their own Characters or in the Party Stash. Every Lore
+	// entry that item holds is unlocked for the whole party. An item the Member does not carry and an item
+	// that holds nothing are refused alike.
+	//
+	// POST /api/v1/campaigns/{campaignId}/journal/readings
+	ReadItem(ctx context.Context, req *ItemReading, params ReadItemParams) (ReadItemRes, error)
 	// RerollDie implements rerollDie operation.
 	//
 	// Spends the roller's Heroic Inspiration to roll one die again; the new face stands and the roll
@@ -1188,6 +1233,15 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/builders/items/{entryId}
 	GetItemBuild(ctx context.Context, params GetItemBuildParams) (GetItemBuildRes, error)
+	// GetJournal implements getJournal operation.
+	//
+	// The Campaign's Quests and Lore as the caller may see them. The DM gets all of it. A Player gets the
+	// Quests the party has been given and the Lore it has unlocked: a hidden Quest and a locked Lore entry
+	// are left out whole. Readable lists the books and letters the caller carries, on their own Characters
+	// or in the Party Stash, that still hold Lore.
+	//
+	// GET /api/v1/campaigns/{campaignId}/journal
+	GetJournal(ctx context.Context, params GetJournalParams) (GetJournalRes, error)
 	// GetLibraryEntry implements getLibraryEntry operation.
 	//
 	// One of the caller's entries with its Revisions and the Campaigns it is linked into.

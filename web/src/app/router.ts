@@ -51,6 +51,7 @@ const LiveSessionPage = () => import('@/features/live/LiveSessionPage.vue')
 const TablePage = () => import('@/features/live/TablePage.vue')
 const MapsPage = () => import('@/features/live/MapsPage.vue')
 const FactionsPage = () => import('@/features/campaigns/FactionsPage.vue')
+const JournalPage = () => import('@/features/campaigns/JournalPage.vue')
 const MapCalibrationPage = () => import('@/features/live/MapCalibrationPage.vue')
 const SignInPage = () => import('@/features/account/SignInPage.vue')
 const AccountInvitePage = () => import('@/features/account/AccountInvitePage.vue')
@@ -110,6 +111,7 @@ export function createAppRouter(history: RouterHistory = createWebHistory()) {
       { path: '/campaigns/:id/sessions/:sid/table', name: 'table', component: TablePage, meta: { bare: true } },
       { path: '/campaigns/:id/maps', name: 'maps', component: MapsPage },
       { path: '/campaigns/:id/factions', name: 'factions', component: FactionsPage },
+      { path: '/campaigns/:id/journal', name: 'journal', component: JournalPage },
       { path: '/campaigns/:id/maps/:mapId', name: 'map', component: MapCalibrationPage },
       { path: '/join', name: 'join', component: JoinPage },
       { path: '/about/attribution', name: 'attribution', component: AttributionPage },
