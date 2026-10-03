@@ -553,6 +553,8 @@ type Querier interface {
 	ListTracks(ctx context.Context, campaignID uuid.UUID) ([]CampaignTrack, error)
 	ListUnusedInvites(ctx context.Context) ([]ListUnusedInvitesRow, error)
 	LockCampaign(ctx context.Context, id uuid.UUID) error
+	// Holds the Campaign's downtime for one change at a time: whoever comes second reads what the first left.
+	LockCampaignDowntime(ctx context.Context, id uuid.UUID) (uuid.UUID, error)
 	LockCampaignLog(ctx context.Context, lockKey string) error
 	LockEntity(ctx context.Context, lockKey string) error
 	LockRoll(ctx context.Context, arg LockRollParams) (string, error)

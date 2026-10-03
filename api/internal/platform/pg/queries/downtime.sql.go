@@ -308,6 +308,18 @@ func (q *Queries) ListRecipes(ctx context.Context, campaignID uuid.UUID) ([]Camp
 	return items, nil
 }
 
+const lockCampaignDowntime = `-- name: LockCampaignDowntime :one
+SELECT id FROM campaign.campaigns WHERE id = $1 FOR UPDATE
+`
+
+// Holds the Campaign's downtime for one change at a time: whoever comes second reads what the first left.
+func (q *Queries) LockCampaignDowntime(ctx context.Context, id uuid.UUID) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, lockCampaignDowntime, id)
+	var id_2 uuid.UUID
+	err := row.Scan(&id_2)
+	return id_2, err
+}
+
 const setCharacterDowntime = `-- name: SetCharacterDowntime :exec
 UPDATE campaign.characters SET downtime_days = $1, downtime_spent = $2 WHERE id = $3
 `

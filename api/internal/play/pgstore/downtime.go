@@ -73,6 +73,12 @@ func (s *Store) TrainingDays(ctx context.Context, character uuid.UUID, subject s
 	return int(n), err
 }
 
+// Lock holds the Campaign's downtime until the transaction ends.
+func (s *Store) Lock(ctx context.Context, campaign uuid.UUID) error {
+	_, err := s.q.LockCampaignDowntime(ctx, campaign)
+	return err
+}
+
 // WriteDowntime runs downtime changes in one transaction.
 func (s *Store) WriteDowntime(ctx context.Context, fn func(app.DowntimeWriter) error) error {
 	return s.InTx(ctx, func(r app.Repository) error { return fn(r.(*Store)) })

@@ -46,3 +46,7 @@ WHERE l.campaign_id = $1 ORDER BY l.created_at DESC, l.id LIMIT 50;
 -- name: TrainingDays :one
 -- The days a Character has spent training in one thing.
 SELECT coalesce(sum(days), 0)::int FROM campaign.downtime_log WHERE character_id = @character_id AND activity = 'train' AND detail = @detail;
+
+-- name: LockCampaignDowntime :one
+-- Holds the Campaign's downtime for one change at a time: whoever comes second reads what the first left.
+SELECT id FROM campaign.campaigns WHERE id = $1 FOR UPDATE;

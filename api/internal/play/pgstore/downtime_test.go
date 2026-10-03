@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -392,4 +394,212 @@ func mustRecipes(t *testing.T, s *app.Downtimes, campaign uuid.UUID) []domain.Ca
 		t.Fatal(err)
 	}
 	return v.Downtime.Recipes
+}
+
+// between runs something once, just before a downtime change is written: another request that got in first.
+type between struct {
+	app.DowntimeStore
+	first func()
+}
+
+func (b *between) WriteDowntime(ctx context.Context, fn func(app.DowntimeWriter) error) error {
+	if run := b.first; run != nil {
+		b.first = nil
+		run()
+	}
+	return b.DowntimeStore.WriteDowntime(ctx, fn)
+}
+
+// crowded makes every change linger over the downtime it has just read.
+type crowded struct {
+	app.DowntimeStore
+	read func()
+}
+
+type lingering struct {
+	app.DowntimeWriter
+	read func()
+}
+
+func (l lingering) Downtime(ctx context.Context, campaign uuid.UUID) (domain.Downtime, error) {
+	d, err := l.DowntimeWriter.Downtime(ctx, campaign)
+	l.read()
+	return d, err
+}
+
+func (c crowded) WriteDowntime(ctx context.Context, fn func(app.DowntimeWriter) error) error {
+	return c.DowntimeStore.WriteDowntime(ctx, func(w app.DowntimeWriter) error { return fn(lingering{DowntimeWriter: w, read: c.read}) })
+}
+
+// Two requests for one Character cannot both spend the same days and coin: whichever is written second
+// works from what the first left, as if they had come one after the other.
+func TestDowntimeSpentTwiceAtOnceIsSpentOnce(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	tb := setup(t)
+	members := pgstore.CampaignMembers{Store: campaignpg.New(tb.pool)}
+	plain := &app.Downtimes{Store: pgstore.New(tb.pool), Members: members, Now: time.Now}
+	inventories := &app.Inventories{Store: pgstore.New(tb.pool), Members: members, Roll: func(n, _ int) int { return n }}
+	exec := func(q string, args ...any) {
+		t.Helper()
+		if _, err := tb.pool.Exec(ctx, q, args...); err != nil {
+			t.Fatal(err)
+		}
+	}
+	aria := uuid.New()
+	exec(`WITH hero AS (INSERT INTO campaign.account_characters (id, owner_subject, name, ruleset, species_slug, class_slug, background_slug, created_at, updated_at)
+			SELECT $1, m.auth_subject, 'Aria', 'srd-2024', 'human', 'fighter', 'soldier', now(), now() FROM campaign.members m WHERE m.id = $3)
+		INSERT INTO campaign.characters (character_id, id, campaign_id, owner_member_id, name, ruleset, species_slug, class_slug, background_slug,
+		ability_method, hp_max, hp_current, level, downtime_days) VALUES ($1, $1, $2, $3, 'Aria', 'srd-2024', 'human', 'fighter', 'soldier', 'standard-array', 20, 20, 4, 5)`, aria, tb.campaign, tb.playerID)
+	if _, err := inventories.View(ctx, player, tb.campaign, aria); err != nil {
+		t.Fatal(err)
+	}
+	exec(`INSERT INTO campaign.item_instances (id, container_id, item_slug, quantity, identified, attuned, created_at)
+		SELECT gen_random_uuid(), id, 'healing-herb', 2, true, false, now() FROM campaign.containers WHERE character_id = $1`, aria)
+	exec(`INSERT INTO campaign.container_coins (container_id, coin, amount) SELECT id, 'gp', 30 FROM campaign.containers WHERE character_id = $1`, aria)
+	salve, err := plain.AddRecipe(ctx, dm, tb.campaign, downtime.Recipe{Name: "Salve", Makes: "healing-salve", Quantity: 2, Days: 3, CostCP: 2500, Ingredients: []downtime.Ingredient{{Item: "healing-herb", Count: 2}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	craft := app.DowntimeActivity{Kind: domain.DowntimeCraft, Recipe: salve.ID}
+	// While the craft is on its way to being written, two days of work are asked for and done.
+	racing := &app.Downtimes{Members: members, Now: time.Now, Store: &between{DowntimeStore: pgstore.New(tb.pool), first: func() {
+		if _, err := plain.Spend(ctx, player, tb.campaign, aria, app.DowntimeActivity{Kind: domain.DowntimeWork, Days: 2}); err != nil {
+			t.Errorf("the work that got in first: %v", err)
+		}
+	}}}
+	if _, err := racing.Spend(ctx, player, tb.campaign, aria, craft); err != nil {
+		t.Fatalf("the craft: %v", err)
+	}
+	v, err := plain.View(ctx, dm, tb.campaign)
+	if err != nil {
+		t.Fatal(err)
+	}
+	inv, err := inventories.View(ctx, dm, tb.campaign, aria)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Five days: two worked and three crafting. 30 gp, 2 gp earned and 25 gp spent.
+	if ch := v.Downtime.Characters[0]; ch.Days != 0 || ch.Spent != 5 || shops.Worth(inv.Mine.Coins) != 700 || inv.Mine.Items["healing-salve"] != 2 || inv.Mine.Items["healing-herb"] != 0 || len(v.Downtime.Log) != 2 || v.Downtime.Advanced != 5 {
+		t.Fatalf("after both: %+v, %d copper, items %v, %d things done, clock %d days on", ch, shops.Worth(inv.Mine.Coins), inv.Mine.Items, len(v.Downtime.Log), v.Downtime.Advanced)
+	}
+	// A second craft that got in first leaves nothing for this one: it is refused, and nothing is made twice.
+	exec(`UPDATE campaign.characters SET downtime_days = 3 WHERE id = $1`, aria)
+	exec(`INSERT INTO campaign.item_instances (id, container_id, item_slug, quantity, identified, attuned, created_at)
+		SELECT gen_random_uuid(), id, 'healing-herb', 2, true, false, now() FROM campaign.containers WHERE character_id = $1`, aria)
+	exec(`UPDATE campaign.container_coins SET amount = 25 WHERE coin = 'gp' AND container_id IN (SELECT id FROM campaign.containers WHERE character_id = $1)`, aria)
+	exec(`DELETE FROM campaign.container_coins WHERE coin <> 'gp' AND container_id IN (SELECT id FROM campaign.containers WHERE character_id = $1)`, aria)
+	twice := &app.Downtimes{Members: members, Now: time.Now, Store: &between{DowntimeStore: pgstore.New(tb.pool), first: func() {
+		if _, err := plain.Spend(ctx, player, tb.campaign, aria, craft); err != nil {
+			t.Errorf("the craft that got in first: %v", err)
+		}
+	}}}
+	var rule *apperr.RuleError
+	if _, err := twice.Spend(ctx, player, tb.campaign, aria, craft); !errors.As(err, &rule) {
+		t.Fatalf("the craft that came second: %v", err)
+	}
+	inv, _ = inventories.View(ctx, dm, tb.campaign, aria)
+	if inv.Mine.Items["healing-salve"] != 4 || shops.Worth(inv.Mine.Coins) != 0 {
+		t.Fatalf("after two crafts at once: items %v, %d copper", inv.Mine.Items, shops.Worth(inv.Mine.Coins))
+	}
+
+	// Six requests at the same moment for a day of work each, with three days to spend: three are done
+	// and paid, three are refused, and not a day or a coin more. Each request lingers over what it has
+	// read until all six have read it, or for a moment: only one at a time may read it at all.
+	exec(`UPDATE campaign.characters SET downtime_days = 3, downtime_spent = 0 WHERE id = $1`, aria)
+	const askers = 6
+	var arrived atomic.Int32
+	all := make(chan struct{})
+	crowd := &app.Downtimes{Members: members, Now: time.Now, Store: crowded{DowntimeStore: pgstore.New(tb.pool), read: func() {
+		if arrived.Add(1) == askers {
+			close(all)
+		}
+		select {
+		case <-all:
+		case <-time.After(60 * time.Millisecond):
+		}
+	}}}
+	var done, refused atomic.Int32
+	var wg sync.WaitGroup
+	start := make(chan struct{})
+	for range askers {
+		wg.Go(func() {
+			<-start
+			_, err := crowd.Spend(ctx, player, tb.campaign, aria, app.DowntimeActivity{Kind: domain.DowntimeWork, Days: 1})
+			var no *apperr.RuleError
+			switch {
+			case err == nil:
+				done.Add(1)
+			case errors.As(err, &no):
+				refused.Add(1)
+			default:
+				t.Errorf("a day of work: %v", err)
+			}
+		})
+	}
+	close(start)
+	wg.Wait()
+	v, _ = plain.View(ctx, dm, tb.campaign)
+	inv, _ = inventories.View(ctx, dm, tb.campaign, aria)
+	if ch := v.Downtime.Characters[0]; done.Load() != 3 || refused.Load() != 3 || ch.Days != 0 || ch.Spent != 3 || shops.Worth(inv.Mine.Coins) != 300 {
+		t.Fatalf("six at once: %d done, %d refused, %+v, %d copper", done.Load(), refused.Load(), ch, shops.Worth(inv.Mine.Coins))
+	}
+
+	// Days the DM gives while a day is being spent are not lost: the gift waits its turn.
+	exec(`UPDATE campaign.characters SET downtime_days = 5, downtime_spent = 0 WHERE id = $1`, aria)
+	var gift sync.WaitGroup
+	gave := false
+	giving := &app.Downtimes{Members: members, Now: time.Now, Store: crowded{DowntimeStore: pgstore.New(tb.pool), read: func() {
+		if !gave {
+			gave = true
+			gift.Go(func() {
+				if _, err := plain.Grant(ctx, dm, tb.campaign, &aria, 10); err != nil {
+					t.Errorf("the gift: %v", err)
+				}
+			})
+		}
+		time.Sleep(60 * time.Millisecond)
+	}}}
+	if _, err := giving.Spend(ctx, player, tb.campaign, aria, app.DowntimeActivity{Kind: domain.DowntimeWork, Days: 1}); err != nil {
+		t.Fatal(err)
+	}
+	gift.Wait()
+	if v, _ := plain.View(ctx, dm, tb.campaign); v.Downtime.Characters[0].Days != 14 {
+		t.Fatalf("five days, one spent and ten given: %d", v.Downtime.Characters[0].Days)
+	}
+
+	// Two Recipes added at the same moment, with room for one: one is kept and one refused.
+	exec(`INSERT INTO campaign.recipes (id, campaign_id, name, item_slug, quantity, days, cost_cp, created_at)
+		SELECT gen_random_uuid(), $1, 'Filler ' || n, 'rope', 1, 1, 0, now() FROM generate_series(1, $2::int) n`, tb.campaign, app.MaxRecipes-2)
+	var both atomic.Int32
+	pair := make(chan struct{})
+	adding := &app.Downtimes{Members: members, Now: time.Now, Store: crowded{DowntimeStore: pgstore.New(tb.pool), read: func() {
+		if both.Add(1) == 2 {
+			close(pair)
+		}
+		select {
+		case <-pair:
+		case <-time.After(60 * time.Millisecond):
+		}
+	}}}
+	var kept, turned atomic.Int32
+	var adders sync.WaitGroup
+	for range 2 {
+		adders.Go(func() {
+			_, err := adding.AddRecipe(ctx, dm, tb.campaign, downtime.Recipe{Name: "Last", Makes: "rope", Quantity: 1, Days: 1})
+			var no *apperr.RuleError
+			switch {
+			case err == nil:
+				kept.Add(1)
+			case errors.As(err, &no):
+				turned.Add(1)
+			default:
+				t.Errorf("adding a Recipe: %v", err)
+			}
+		})
+	}
+	adders.Wait()
+	if v, _ := plain.View(ctx, dm, tb.campaign); kept.Load() != 1 || turned.Load() != 1 || len(v.Downtime.Recipes) != app.MaxRecipes {
+		t.Fatalf("two at once: %d kept, %d refused, %d Recipes", kept.Load(), turned.Load(), len(v.Downtime.Recipes))
+	}
 }

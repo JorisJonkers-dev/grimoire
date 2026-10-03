@@ -27,17 +27,22 @@ const (
 
 // DowntimeStore keeps a Campaign's downtime and the Inventories it draws on.
 type DowntimeStore interface {
+	Downtime(ctx context.Context, campaign uuid.UUID) (domain.Downtime, error)
+	// WriteDowntime runs downtime changes in one transaction.
+	WriteDowntime(ctx context.Context, fn func(DowntimeWriter) error) error
+}
+
+// DowntimeWriter reads and changes downtime inside a transaction. What a change is checked against is
+// read here, after Lock, so that two changes at once cannot both spend the same days, coin or Items.
+type DowntimeWriter interface {
+	// Lock holds the Campaign's downtime until the transaction ends; a change that comes second waits,
+	// and then reads what the first left.
+	Lock(ctx context.Context, campaign uuid.UUID) error
 	LiveSession(ctx context.Context, campaign uuid.UUID) (bool, error)
 	LoadInventory(ctx context.Context, campaign uuid.UUID) (domain.Inventory, error)
 	Downtime(ctx context.Context, campaign uuid.UUID) (domain.Downtime, error)
 	// TrainingDays is how many days a Character has spent training in one thing.
 	TrainingDays(ctx context.Context, character uuid.UUID, subject string) (int, error)
-	// WriteDowntime runs downtime changes in one transaction.
-	WriteDowntime(ctx context.Context, fn func(DowntimeWriter) error) error
-}
-
-// DowntimeWriter changes downtime inside a transaction.
-type DowntimeWriter interface {
 	SetStack(ctx context.Context, in domain.ContainerID, slug string, n int) error
 	SetPurse(ctx context.Context, in domain.ContainerID, before, after map[string]int) error
 	SetDowntimeDays(ctx context.Context, character uuid.UUID, days, spent int) error
@@ -109,6 +114,9 @@ func (s *Downtimes) Grant(ctx context.Context, c caller.Caller, campaign uuid.UU
 		return DowntimeView{}, apperr.Refuse("give 1 to 3650 downtime days at a time")
 	}
 	err = s.Store.WriteDowntime(ctx, func(w DowntimeWriter) error {
+		if err := w.Lock(ctx, campaign); err != nil {
+			return err
+		}
 		found, err := w.GrantDowntime(ctx, campaign, character, days)
 		if err == nil && !found {
 			err = apperr.ErrNotFound
@@ -130,15 +138,20 @@ func (s *Downtimes) AddRecipe(ctx context.Context, c caller.Caller, campaign uui
 	if err := downtime.CheckRecipe(r); err != nil {
 		return domain.CampaignRecipe{}, apperr.Refuse(err.Error())
 	}
-	d, err := s.Store.Downtime(ctx, campaign)
-	if err != nil {
-		return domain.CampaignRecipe{}, err
-	}
-	if len(d.Recipes) >= MaxRecipes {
-		return domain.CampaignRecipe{}, apperr.Refuse("a Campaign keeps up to 200 Recipes")
-	}
 	made := domain.CampaignRecipe{ID: uuid.New(), Recipe: r}
-	return made, s.Store.WriteDowntime(ctx, func(w DowntimeWriter) error { return w.InsertRecipe(ctx, campaign, made, s.Now()) })
+	return made, s.Store.WriteDowntime(ctx, func(w DowntimeWriter) error {
+		if err := w.Lock(ctx, campaign); err != nil {
+			return err
+		}
+		d, err := w.Downtime(ctx, campaign)
+		if err != nil {
+			return err
+		}
+		if len(d.Recipes) >= MaxRecipes {
+			return apperr.Refuse("a Campaign keeps up to 200 Recipes")
+		}
+		return w.InsertRecipe(ctx, campaign, made, s.Now())
+	})
 }
 
 // RemoveRecipe removes a Recipe. DM only.
@@ -189,37 +202,52 @@ func (s *Downtimes) Spend(ctx context.Context, c caller.Caller, campaign, charac
 	if err != nil {
 		return DowntimeView{}, err
 	}
-	live, err := s.Store.LiveSession(ctx, campaign)
+	err = s.Store.WriteDowntime(ctx, func(w DowntimeWriter) error {
+		if err := w.Lock(ctx, campaign); err != nil {
+			return err
+		}
+		sp, err := spender(ctx, w, me, campaign, character)
+		if err != nil {
+			return err
+		}
+		change, err := s.plan(ctx, w, sp, a)
+		if err != nil {
+			return err
+		}
+		return change(w)
+	})
 	if err != nil {
-		return DowntimeView{}, err
-	}
-	if live {
-		return DowntimeView{}, apperr.Refuse("a Session is live: downtime is spent between Sessions")
-	}
-	d, err := s.Store.Downtime(ctx, campaign)
-	if err != nil {
-		return DowntimeView{}, err
-	}
-	i := slices.IndexFunc(d.Characters, func(ch domain.DowntimeCharacter) bool { return ch.ID == character })
-	if i < 0 {
-		return DowntimeView{}, apperr.ErrNotFound
-	}
-	if d.Characters[i].Owner != me.ID && !me.DM {
-		return DowntimeView{}, apperr.ErrForbidden
-	}
-	inv, err := s.Store.LoadInventory(ctx, campaign)
-	if err != nil {
-		return DowntimeView{}, err
-	}
-	sp := spending{campaign: campaign, who: d.Characters[i], mine: characterContainer(inv, character), down: d}
-	change, err := s.plan(ctx, sp, a)
-	if err != nil {
-		return DowntimeView{}, err
-	}
-	if err := s.Store.WriteDowntime(ctx, change); err != nil {
 		return DowntimeView{}, err
 	}
 	return s.view(ctx, campaign, me)
+}
+
+// spender reads, inside the transaction that will change it, the Character about to spend downtime
+// and what it holds: between Sessions, and the caller's own Character unless the caller is the DM.
+func spender(ctx context.Context, w DowntimeWriter, me domain.Member, campaign, character uuid.UUID) (spending, error) {
+	live, err := w.LiveSession(ctx, campaign)
+	if err != nil {
+		return spending{}, err
+	}
+	if live {
+		return spending{}, apperr.Refuse("a Session is live: downtime is spent between Sessions")
+	}
+	d, err := w.Downtime(ctx, campaign)
+	if err != nil {
+		return spending{}, err
+	}
+	i := slices.IndexFunc(d.Characters, func(ch domain.DowntimeCharacter) bool { return ch.ID == character })
+	if i < 0 {
+		return spending{}, apperr.ErrNotFound
+	}
+	if d.Characters[i].Owner != me.ID && !me.DM {
+		return spending{}, apperr.ErrForbidden
+	}
+	inv, err := w.LoadInventory(ctx, campaign)
+	if err != nil {
+		return spending{}, err
+	}
+	return spending{campaign: campaign, who: d.Characters[i], mine: characterContainer(inv, character), down: d}, nil
 }
 
 // outcome is what an activity leaves: the days and coin left, the Items it changed, the days it took
@@ -241,7 +269,7 @@ func refused(err error) error {
 	return err
 }
 
-func (s *Downtimes) outcome(ctx context.Context, sp spending, a DowntimeActivity) (outcome, error) {
+func (s *Downtimes) outcome(ctx context.Context, w DowntimeWriter, sp spending, a DowntimeActivity) (outcome, error) {
 	subject := strings.TrimSpace(a.Subject)
 	switch a.Kind {
 	case domain.DowntimeCraft:
@@ -262,7 +290,7 @@ func (s *Downtimes) outcome(ctx context.Context, sp spending, a DowntimeActivity
 		cost := downtime.ResearchCost(a.Days)
 		if a.Kind == domain.DowntimeTrain {
 			cost = downtime.TrainingCost(a.Days)
-			done, err := s.Store.TrainingDays(ctx, sp.who.ID, subject)
+			done, err := w.TrainingDays(ctx, sp.who.ID, subject)
 			if err != nil {
 				return outcome{}, err
 			}
@@ -277,8 +305,8 @@ func (s *Downtimes) outcome(ctx context.Context, sp spending, a DowntimeActivity
 }
 
 // plan works out what an activity changes and returns the change to write.
-func (s *Downtimes) plan(ctx context.Context, sp spending, a DowntimeActivity) (func(DowntimeWriter) error, error) {
-	out, err := s.outcome(ctx, sp, a)
+func (s *Downtimes) plan(ctx context.Context, reads DowntimeWriter, sp spending, a DowntimeActivity) (func(DowntimeWriter) error, error) {
+	out, err := s.outcome(ctx, reads, sp, a)
 	if err != nil {
 		return nil, err
 	}
