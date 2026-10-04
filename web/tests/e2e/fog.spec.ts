@@ -23,7 +23,7 @@ test('the party sees only what light and darkvision show, and walking pushes the
   await expect(page.getByTestId('calibration-saved')).toBeVisible()
   await page.getByRole('link', { name: '← Maps' }).click()
   await expect(page.getByTestId('map-list')).toContainText('dark')
-  await page.getByRole('link', { name: '← Campaign' }).click()
+  await page.getByTestId('to-campaign').click()
 
   const context = await browser.newContext({ extraHTTPHeaders: { 'X-User-Id': `e2e-fog-${stamp}` } })
   const player = await context.newPage()

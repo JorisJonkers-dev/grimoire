@@ -29,7 +29,7 @@ test('loot drops into the session and the party carries it off by dragging or ch
   await page.getByTestId('save-loot').click()
   await expect(page.getByTestId('loot-error')).toContainText('write amounts as')
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
-  await page.getByRole('link', { name: '← Campaign' }).click()
+  await page.getByTestId('to-campaign').click()
 
   const context = await browser.newContext({ extraHTTPHeaders: { 'X-User-Id': `e2e-hoard-${stamp}` } })
   const player = await context.newPage()

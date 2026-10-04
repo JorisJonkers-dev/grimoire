@@ -75,7 +75,7 @@ test('a DM takes the Default World, sets its grid and scale, and calibrates it f
 
   // In play the world map shows the grid the DM chose.
   await page.getByRole('link', { name: '← Maps' }).click()
-  await page.getByRole('link', { name: '← Campaign' }).click()
+  await page.getByTestId('to-campaign').click()
   await page.getByTestId('start-session').click()
   await expect(page.getByTestId('connection')).toHaveText('Live')
   await page.getByTestId('scope-world').check()

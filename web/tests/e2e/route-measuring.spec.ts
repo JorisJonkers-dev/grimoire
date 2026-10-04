@@ -21,7 +21,7 @@ test('a player measures a route on the world map in hexes, miles and hours, zoom
   await dm.getByRole('button', { name: 'Save calibration' }).click()
   await expect(dm.getByTestId('calibration-saved')).toBeVisible()
   await dm.getByRole('link', { name: '← Maps' }).click()
-  await dm.getByRole('link', { name: '← Campaign' }).click()
+  await dm.getByTestId('to-campaign').click()
 
   await page.goto(link.pathname + link.hash)
   await page.getByTestId('join-display-name').fill('Aria')

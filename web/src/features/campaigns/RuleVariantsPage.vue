@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CampaignFrame from './CampaignFrame.vue'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { computed, reactive, ref } from 'vue'
 import { useRoute } from 'vue-router'
@@ -82,11 +83,12 @@ const remove = (h: RuleHook) => { drop.mutate({ path: { campaignId, hookId: h.id
 
 <template>
   <main class="g-page">
-    <RouterLink :to="{ name: 'campaign', params: { id: campaignId } }" class="back">← Campaign</RouterLink>
-    <header class="g-headline">
-      <span class="g-eyebrow">Campaign</span>
-      <h1>Rule Variants</h1>
-    </header>
+    <CampaignFrame current="rule-variants">
+      <header class="g-headline">
+        <span class="g-eyebrow">Campaign</span>
+        <h1>Rule Variants</h1>
+      </header>
+    </CampaignFrame>
     <p v-if="list.isError.value" role="alert" class="g-alert" data-testid="variants-missing">That Campaign is not available.</p>
     <template v-else>
       <p class="hint">Optional rules this table plays with. A Session under way follows a switch at once.</p>

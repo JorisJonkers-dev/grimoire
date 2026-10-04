@@ -24,6 +24,6 @@ test('a player uploads a portrait and crops a token icon from it', async ({ page
   await editor.getByTestId('save-token').click()
   await expect(page.getByTestId('sheet-token').getByTestId('token-icon')).toHaveAttribute('src', /\/token\?v=/)
 
-  await page.getByRole('link', { name: '← Campaign' }).click()
+  await page.getByRole('navigation', { name: 'Breadcrumb' }).getByRole('link').click()
   await expect(page.getByTestId('party').getByTestId('token-icon')).toHaveAttribute('src', /\/token\?v=/)
 })

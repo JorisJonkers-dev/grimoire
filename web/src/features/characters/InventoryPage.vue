@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CharacterTabs from './CharacterTabs.vue'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
@@ -124,6 +125,7 @@ const key = (c: ItemCard) => c.instanceId ?? c.slug
   <main class="g-page inventory">
     <RouterLink :to="{ name: 'character', params: { id: ids.campaignId, characterId: ids.characterId } }" class="back">← Sheet</RouterLink>
     <h1>Inventory<template v-if="inv"> · {{ inv.name }}</template></h1>
+    <CharacterTabs :campaign-id="ids.campaignId" :character-id="ids.characterId" current="inventory" />
     <p v-if="inventory.isError.value" role="alert" class="g-alert" data-testid="inventory-error">This Inventory could not be opened.</p>
     <p v-else-if="!inv">Unpacking…</p>
     <template v-else>

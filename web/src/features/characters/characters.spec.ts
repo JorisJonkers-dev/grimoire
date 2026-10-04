@@ -237,6 +237,19 @@ describe('character sheet', () => {
     expect(s.find('[aria-label="Expertise"]').exists()).toBe(true)
     expect(s.text()).toContain('Disadvantage on Stealth')
     expect(s.get('[data-testid="resources"]').text()).toContain('Hit Dice (d10): 1 / 1')
+    // The page says where it is, and the Character's other pages are tabs beside the sheet.
+    expect(wrapper.get('nav[aria-label="Breadcrumb"]').text().replace(/\s*›\s*/g, ' › ')).toBe('Campaign › Kara › Sheet')
+    expect(wrapper.get('nav[aria-label="Breadcrumb"] a').attributes('href')).toBe(`/campaigns/${ID}`)
+    expect(s.findAll('nav[aria-label="Character"] a').map((a) => a.text())).toEqual(['Sheet', 'Inventory', 'Spells', 'Retrain'])
+    expect(s.get('nav[aria-label="Character"] [aria-current="page"]').text()).toBe('Sheet')
+    // The vitals are one band: the numbers, the hit points and Heroic Inspiration.
+    const band = s.get('[data-testid="vitals"]')
+    expect(band.findAll('.stat .label').map((l) => l.text())).toEqual(['Armour', 'Initiative', 'Speed', 'Proficiency', 'Passive Perception'])
+    expect(band.find('[data-testid="hp"]').exists()).toBe(true)
+    expect(band.find('[data-testid="inspiration"]').exists()).toBe(true)
+    // An ability is a row: the modifier over the score, its name, and its save.
+    expect(s.findAll('[data-testid="abilities"] .ability').map((a) => a.text())[0]).toBe('+010StrengthSTRsave +2')
+    expect(s.findAll('[data-testid="abilities"] .ability .save .pip.on')).toHaveLength(1)
     await expectAccessible(wrapper.element as Element)
     await s.get('[data-testid="part-gear"]').trigger('click')
     expect(s.get('[data-testid="part-gear"]').attributes('aria-pressed')).toBe('true')

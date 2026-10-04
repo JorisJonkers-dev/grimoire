@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CampaignFrame from './CampaignFrame.vue'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { computed, reactive, ref } from 'vue'
 import { useRoute } from 'vue-router'
@@ -70,11 +71,12 @@ function add() {
 
 <template>
   <main class="g-page">
-    <RouterLink :to="{ name: 'campaign', params: { id: campaignId } }" class="back">← Campaign</RouterLink>
-    <header class="g-headline">
-      <span class="g-eyebrow">Campaign</span>
-      <h1>Vehicles</h1>
-    </header>
+    <CampaignFrame current="vehicles">
+      <header class="g-headline">
+        <span class="g-eyebrow">Campaign</span>
+        <h1>Vehicles</h1>
+      </header>
+    </CampaignFrame>
     <p v-if="list.isError.value" role="alert" class="g-alert" data-testid="vehicles-missing">That Campaign is not available.</p>
     <template v-else-if="list.isSuccess.value">
       <p class="hint">Wagons, ships and airships the party travels the world map aboard.</p>

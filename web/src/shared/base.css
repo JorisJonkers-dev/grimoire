@@ -541,8 +541,14 @@ a.g-button-link--primary {
 /* On a wide page a button is as wide as its words; only a phone gives it the full row. */
 @media (min-width: 641px) {
   .g-page .stack > .g-button,
-  .g-page form.g-card > .g-button {
+  .g-page form.g-card > .g-button,
+  .g-page section.g-card > .g-button {
     align-self: flex-start;
+    width: auto;
+  }
+  /* A form is for reading down, not across: it keeps to a column however wide the page is. */
+  .g-page form:has(.g-field) {
+    max-width: 720px;
   }
 }
 /* Two panes: a narrow one that says where you are, and the thing itself beside it. */

@@ -33,7 +33,7 @@ test('the DM opens a shop stocked from a loot table, and a player haggles, buys 
     await page.getByTestId('save-loot').click()
   }
   await expect(page.getByTestId('loot-Purse')).toBeVisible()
-  await page.getByRole('link', { name: '← Campaign' }).click()
+  await page.getByTestId('to-campaign').click()
 
   await page.getByTestId('shops-link').click()
   await page.getByTestId('new-settlement').click()
@@ -50,7 +50,7 @@ test('the DM opens a shop stocked from a loot table, and a player haggles, buys 
   await store.getByRole('button', { name: 'Reroll stock of Store' }).click()
   await expect(store.getByTestId('stock-Store-rope')).toHaveText('6× rope · 1 gp')
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
-  await page.getByRole('link', { name: '← Campaign' }).click()
+  await page.getByTestId('to-campaign').click()
 
   const context = await browser.newContext({ extraHTTPHeaders: { 'X-User-Id': `e2e-market-${stamp}` } })
   const player = await context.newPage()

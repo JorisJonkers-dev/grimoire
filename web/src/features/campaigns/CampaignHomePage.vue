@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CampaignFrame from './CampaignFrame.vue'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -199,23 +200,7 @@ const expires = (iso: string) => new Date(iso).toLocaleDateString(undefined, { d
       <ul v-if="rules.length" class="g-card rules" aria-label="How this table plays" data-testid="table-rules">
         <li v-for="rule in rules" :key="rule">{{ rule }}</li>
       </ul>
-      <nav class="g-tabsnav prep" aria-label="Campaign tools">
-        <RouterLink :to="{ name: 'dice', params: { id } }" data-testid="dice-link">Dice</RouterLink>
-        <RouterLink :to="{ name: 'proposals', params: { id } }" data-testid="proposals-link">Proposals</RouterLink>
-        <RouterLink v-if="isDM" :to="{ name: 'npcs', params: { id } }" data-testid="npcs-link">NPCs</RouterLink>
-        <RouterLink v-if="isDM" :to="{ name: 'campaign-library', params: { id } }" data-testid="library-link">Library</RouterLink>
-        <RouterLink v-if="isDM" :to="{ name: 'maps', params: { id } }" data-testid="maps-link">Maps</RouterLink>
-        <RouterLink :to="{ name: 'journal', params: { id } }" data-testid="journal-link">Journal</RouterLink>
-        <RouterLink :to="{ name: 'factions', params: { id } }" data-testid="factions-link">Factions</RouterLink>
-        <RouterLink :to="{ name: 'rule-variants', params: { id } }" data-testid="rules-link">Rule Variants</RouterLink>
-        <RouterLink :to="{ name: 'tracks', params: { id } }" data-testid="tracks-link">Tracks</RouterLink>
-        <RouterLink :to="{ name: 'downtime', params: { id } }" data-testid="downtime-link">Downtime</RouterLink>
-        <RouterLink :to="{ name: 'vehicles', params: { id } }" data-testid="vehicles-link">Vehicles</RouterLink>
-        <RouterLink v-if="isDM" :to="{ name: 'encounters', params: { id } }" data-testid="encounters-link">Random encounters</RouterLink>
-        <RouterLink v-if="isDM" :to="{ name: 'loot', params: { id } }" data-testid="loot-link">Loot tables</RouterLink>
-        <RouterLink v-if="isDM" :to="{ name: 'shops', params: { id } }" data-testid="shops-link">Settlements and shops</RouterLink>
-        <RouterLink v-if="isDM" :to="{ name: 'activity', params: { id } }" data-testid="activity-link">AI activity</RouterLink>
-      </nav>
+      <CampaignFrame current="campaign" :crumbs="false" />
 
       <section class="g-card" data-testid="sessions">
         <h2>Sessions</h2>
