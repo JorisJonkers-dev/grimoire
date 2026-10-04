@@ -193,10 +193,10 @@ func TestRateLimiterKeysAnonymousByTheClientBehindTrustedProxies(t *testing.T) {
 	}
 }
 
-// with makes an anonymous request from a peer with several X-Forwarded-For header lines.
-func with(h http.Handler, peer string, lines ...string) int {
+// with makes an anonymous request through the proxy with several X-Forwarded-For header lines.
+func with(h http.Handler, lines ...string) int {
 	r := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/api", nil)
-	r.RemoteAddr = peer
+	r.RemoteAddr = "10.0.0.1:443"
 	for _, line := range lines {
 		r.Header.Add("X-Forwarded-For", line)
 	}
@@ -209,18 +209,18 @@ func with(h http.Handler, peer string, lines ...string) int {
 // one list, so the caller's own line never stands in for what the proxy saw.
 func TestRateLimiterReadsEveryForwardedLine(t *testing.T) {
 	t.Parallel()
-	const proxy, busy = "10.0.0.1:443", http.StatusTooManyRequests
+	const busy = http.StatusTooManyRequests
 	one := (&httpx.RateLimiter{Limit: 1, Window: time.Minute, Now: time.Now, ProxyHops: 1}).Wrap(ok)
-	if got := with(one, proxy, "203.0.113.7"); got != 200 {
+	if got := with(one, "203.0.113.7"); got != 200 {
 		t.Fatalf("first: %d", got)
 	}
 	for _, forged := range []string{"1.1.1.1", "2.2.2.2", "3.3.3.3, 4.4.4.4"} {
-		if got := with(one, proxy, forged, "203.0.113.7"); got != busy {
+		if got := with(one, forged, "203.0.113.7"); got != busy {
 			t.Fatalf("a line of the caller's own (%q) before the proxy's: %d", forged, got)
 		}
 	}
 	two := (&httpx.RateLimiter{Limit: 1, Window: time.Minute, Now: time.Now, ProxyHops: 2}).Wrap(ok)
-	if a, b := with(two, proxy, "9.9.9.9", "203.0.113.7", "172.16.0.1"), with(two, proxy, "8.8.8.8, 203.0.113.7", "172.16.0.2"); a != 200 || b != busy {
+	if a, b := with(two, "9.9.9.9", "203.0.113.7", "172.16.0.1"), with(two, "8.8.8.8, 203.0.113.7", "172.16.0.2"); a != 200 || b != busy {
 		t.Fatalf("two proxies, a line each: %d %d", a, b)
 	}
 }
