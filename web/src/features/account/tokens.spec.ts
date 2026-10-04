@@ -39,6 +39,10 @@ describe('Access Tokens on the Account page', () => {
     expect(list).toContain('Claude')
     expect(list).toContain('read, build')
     expect(list).toContain('last used')
+    // Tokens are a table: what it is, what it can do, when it ends, when it was last used.
+    expect(wrapper.findAll('[data-testid="access-token-list"] th[scope="col"]').map((h) => h.text())).toEqual(['Token', 'Can', 'Expires', 'Last used', 'Actions'])
+    expect(wrapper.findAll('[data-testid="access-token-list"] tbody tr')).toHaveLength(1)
+    expect(wrapper.findAll('[data-testid="access-token-list"] tbody td')[1]?.text()).toBe('read, build')
     await wrapper.get('[data-testid="access-token-name"]').setValue(' Notebook ')
     await wrapper.get('[data-testid="scope-build"]').setValue(false)
     await wrapper.get('[data-testid="access-token-days"]').setValue(7)

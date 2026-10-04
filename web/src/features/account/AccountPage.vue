@@ -160,10 +160,10 @@ const tabs = computed(() => [
             <p class="hint foot">A method can be removed only while another one remains.</p>
           </section>
         </div>
-        <div v-show="tab === 'notifications'" class="tab" data-testid="account-tab-notifications">
+        <div v-show="tab === 'notifications'" class="tab tab--wide" data-testid="account-tab-notifications">
           <NotificationPreferencesSection />
         </div>
-        <div v-show="tab === 'tokens'" class="tab" data-testid="account-tab-tokens">
+        <div v-show="tab === 'tokens'" class="tab tab--wide" data-testid="account-tab-tokens">
           <AccessTokensSection />
         </div>
         <div v-show="tab === 'activity'" class="tab" data-testid="account-tab-activity">
@@ -219,6 +219,9 @@ const tabs = computed(() => [
   gap: 36px;
   max-width: 880px;
   padding-top: 28px;
+}
+.tab--wide {
+  max-width: none;
 }
 .part {
   display: flex;
