@@ -278,6 +278,7 @@ func serve(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 		Handler: &httpapi.Handler{
 			Push: notices, Accounts: accounts, OIDCName: oidcName,
 			Friends: social, Conversations: social, Notifications: social, Releases: social, DiceSets: social,
+			Home:    &socialapp.Home{Repo: socialpg.New(store.Pool())},
 			Version: version, Store: store, Compendium: compendiumStore, Log: logger,
 			Campaigns:    campaignapp.NewService(campaignpg.New(store.Pool())),
 			Characters:   characters,

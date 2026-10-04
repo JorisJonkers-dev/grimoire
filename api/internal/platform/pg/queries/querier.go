@@ -302,6 +302,13 @@ type Querier interface {
 	GrantDowntimeToAll(ctx context.Context, arg GrantDowntimeToAllParams) error
 	GrantDowntimeToOne(ctx context.Context, arg GrantDowntimeToOneParams) (int64, error)
 	HealCharacter(ctx context.Context, arg HealCharacterParams) error
+	HomeDowntime(ctx context.Context, subject string) ([]HomeDowntimeRow, error)
+	HomeFriendRequests(ctx context.Context, subject string) (int64, error)
+	HomeLevelUps(ctx context.Context, subject string) ([]HomeLevelUpsRow, error)
+	HomeLiveSessions(ctx context.Context, subject string) ([]HomeLiveSessionsRow, error)
+	HomeProposalsToReview(ctx context.Context, subject string) ([]HomeProposalsToReviewRow, error)
+	HomeProposalsToRevise(ctx context.Context, subject string) ([]HomeProposalsToReviseRow, error)
+	HomeRollsWaiting(ctx context.Context, subject string) ([]HomeRollsWaitingRow, error)
 	IdentifyInstance(ctx context.Context, id uuid.UUID) error
 	InsertAccessToken(ctx context.Context, arg InsertAccessTokenParams) error
 	InsertAccount(ctx context.Context, arg InsertAccountParams) (InsertAccountRow, error)
@@ -682,6 +689,14 @@ type Querier interface {
 	SaveZoneCheck(ctx context.Context, arg SaveZoneCheckParams) error
 	ScheduleReleaseNote(ctx context.Context, arg ScheduleReleaseNoteParams) (int64, error)
 	ScheduledChecks(ctx context.Context, campaignID uuid.UUID) ([]ScheduledChecksRow, error)
+	SearchCampaigns(ctx context.Context, arg SearchCampaignsParams) ([]SearchCampaignsRow, error)
+	SearchCharacters(ctx context.Context, arg SearchCharactersParams) ([]SearchCharactersRow, error)
+	SearchFriends(ctx context.Context, arg SearchFriendsParams) ([]SearchFriendsRow, error)
+	SearchItems(ctx context.Context, arg SearchItemsParams) ([]SearchItemsRow, error)
+	SearchLibrary(ctx context.Context, arg SearchLibraryParams) ([]SearchLibraryRow, error)
+	SearchMonsters(ctx context.Context, arg SearchMonstersParams) ([]SearchMonstersRow, error)
+	SearchNpcs(ctx context.Context, arg SearchNpcsParams) ([]SearchNpcsRow, error)
+	SearchSpells(ctx context.Context, arg SearchSpellsParams) ([]SearchSpellsRow, error)
 	SeeReleaseNote(ctx context.Context, arg SeeReleaseNoteParams) (int64, error)
 	SeenUserAgent(ctx context.Context, arg SeenUserAgentParams) (SeenUserAgentRow, error)
 	SessionAccount(ctx context.Context, arg SessionAccountParams) (SessionAccountRow, error)

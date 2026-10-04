@@ -135,6 +135,7 @@ func newStack(t *testing.T, configure func(*identityapp.Service)) stack {
 			Handler: &httpapi.Handler{
 				Version: "1", Store: fakeStore{}, Compendium: &fakeCompendium{}, Accounts: accounts, Log: quiet, OIDCName: "jorisjonkers.dev",
 				Friends: social, Conversations: social, Notifications: social, Releases: social, DiceSets: social,
+				Home:      &socialapp.Home{Repo: socialpg.New(store.Pool())},
 				Campaigns: campaignapp.NewService(campaignpg.New(store.Pool())), NPCs: &campaignapp.NPCs{Repo: campaignpg.New(store.Pool()), Now: time.Now},
 				Characters: &campaignapp.Characters{
 					Repo: campaignpg.New(store.Pool()), Compendium: &fakeCompendium{}, Combat: campaignapp.NoCombat{}, Blobs: storage.Dir{Path: t.TempDir()}, Now: time.Now,

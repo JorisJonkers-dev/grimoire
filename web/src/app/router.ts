@@ -57,6 +57,7 @@ const RuleVariantsPage = () => import('@/features/campaigns/RuleVariantsPage.vue
 const TracksPage = () => import('@/features/campaigns/TracksPage.vue')
 const DowntimePage = () => import('@/features/campaigns/DowntimePage.vue')
 const VehiclesPage = () => import('@/features/campaigns/VehiclesPage.vue')
+const SearchPage = () => import('@/features/home/SearchPage.vue')
 const MapCalibrationPage = () => import('@/features/live/MapCalibrationPage.vue')
 const SignInPage = () => import('@/features/account/SignInPage.vue')
 const AccountInvitePage = () => import('@/features/account/AccountInvitePage.vue')
@@ -75,6 +76,7 @@ export function createAppRouter(history: RouterHistory = createWebHistory()) {
     routes: [
       { path: '/', name: 'home', component: HomePage },
       { path: '/gallery', name: 'gallery', component: GalleryPage },
+      { path: '/search', name: 'search', component: SearchPage },
       { path: '/compendium/spells', name: 'spells', component: SpellListPage },
       { path: '/compendium/spells/:slug', name: 'spell', component: SpellDetailPage },
       { path: '/compendium', redirect: { name: 'spells' } },

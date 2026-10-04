@@ -1298,6 +1298,15 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/builders/conditions/{entryId}
 	GetConditionBuild(ctx context.Context, params GetConditionBuildParams) (GetConditionBuildRes, error)
+	// GetDashboard implements getDashboard operation.
+	//
+	// What the caller sees first: the Sessions under way in the Campaigns they are a Member of, to join in
+	// one click, and what needs them before the next Session. That is their Characters that can level up
+	// or have downtime days to spend, Proposals to review where they are the DM, their own Proposals sent
+	// back for changes, rolls waiting on them and Friend Requests.
+	//
+	// GET /api/v1/dashboard
+	GetDashboard(ctx context.Context) (GetDashboardRes, error)
 	// GetDiceSetImage implements getDiceSetImage operation.
 	//
 	// The uploaded picture itself, for the owner of the set, anyone the set is shared with, and an Admin
@@ -1938,6 +1947,17 @@ type ReadHandler interface {
 	//
 	// POST /api/v1/builders/subclasses/preview
 	PreviewSubclass(ctx context.Context, req *SubclassPreviewInput) (PreviewSubclassRes, error)
+	// Search implements search operation.
+	//
+	// Finds what the caller may open whose name holds the query, with a line that previews each: the
+	// compendium, their own Library and the Shared Library, the Campaigns they are a Member of with the
+	// Characters in them and, where they are the DM, the NPCs, and their Friends. Nothing of a Campaign
+	// they are not in, of another's private Library or of an Account that is not a Friend is ever
+	// returned. Up to five of each kind of thing, by name. What is typed is matched as it stands, whatever
+	// its case.
+	//
+	// GET /api/v1/search
+	Search(ctx context.Context, params SearchParams) (SearchRes, error)
 }
 
 // Server implements http server based on OpenAPI v3 specification and
