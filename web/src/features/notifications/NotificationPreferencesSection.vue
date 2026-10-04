@@ -31,8 +31,17 @@ watch(prefs.data, (d) => {
         </tr>
       </tbody>
     </table>
-    <p class="hint">Sign-in and security Notifications always show in app. Email other than security comes as a Digest, at most once an hour.</p>
-    <NotifyToggle label="Get notifications on this device" done="This device gets the Notifications you chose for devices." />
+    <p class="hint">Sign-in and security Notifications always show in app. Greyed boxes cannot be changed.</p>
+    <aside class="side">
+      <section>
+        <h3>Email</h3>
+        <p class="hint">Email other than security comes as a Digest, at most once an hour.</p>
+      </section>
+      <section>
+        <h3>Devices</h3>
+        <NotifyToggle label="Get notifications on this device" done="This device gets the Notifications you chose for devices." />
+      </section>
+    </aside>
     <p v-if="save.isSuccess.value" role="status" data-testid="preferences-saved">Saved.</p>
     <p v-if="save.isError.value" role="alert" class="g-alert">The preferences could not be saved.</p>
     <GButton type="submit" :disabled="save.isPending.value">Save the preferences</GButton>
@@ -40,32 +49,107 @@ watch(prefs.data, (d) => {
 </template>
 
 <style scoped>
+/* The choices are a table; what they mean for email and for this device sits beside it. */
 .stack {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 12px 72px;
+  align-items: start;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.stack > * {
+  grid-column: 1;
+}
+.stack > .side {
+  display: flex;
+  grid-row: 1 / span 6;
+  grid-column: 2;
+  flex-direction: column;
+}
+.side section {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 22px 0;
+  border-top: 1px solid var(--color-rule);
 }
-h2 {
+.side section:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+h2,
+h3 {
   margin: 0;
+}
+h3 {
+  font-family: var(--font-label);
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-gold);
 }
 table {
   width: 100%;
   border-collapse: collapse;
+  font-size: 15px;
 }
 th,
 td {
-  padding: 6px 4px;
-  border-bottom: 1px solid var(--color-rule);
+  padding: 14px 12px;
+  border-top: 1px solid var(--color-rule);
+  border-bottom: 0;
   text-align: center;
+}
+thead th {
+  width: 90px;
+  padding-top: 0;
+  border-top: 0;
+  font-family: var(--font-label);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--color-text-3);
 }
 tbody th,
 thead th:first-child {
-  text-align: left;
+  width: auto;
+  padding-left: 0;
   font-weight: 400;
+  text-align: left;
+}
+tbody tr:last-child th,
+tbody tr:last-child td {
+  border-bottom: 1px solid var(--color-rule);
+}
+input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
 }
 .hint {
   margin: 0;
-  color: var(--color-text-2);
   font-size: 14px;
+  color: var(--color-text-3);
+}
+.stack > :deep(.g-button) {
+  justify-self: start;
+}
+@media (max-width: 899px) {
+  .stack {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .stack > .side {
+    grid-row: auto;
+    grid-column: 1;
+  }
+  th,
+  td {
+    padding: 12px 4px;
+  }
+  thead th {
+    width: 56px;
+  }
 }
 </style>

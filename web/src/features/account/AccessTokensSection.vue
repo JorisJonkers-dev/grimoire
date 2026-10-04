@@ -43,18 +43,28 @@ function remove(id: string) {
     <p v-if="fresh" role="status" class="fresh" data-testid="access-token-fresh">
       Copy this token now; it is not shown again: <code>{{ fresh }}</code>
     </p>
-    <ul v-if="tokens.data.value?.items.length" class="list" data-testid="access-token-list">
-      <li v-for="t in tokens.data.value.items" :key="t.id">
-        <div>
-          <strong>{{ t.name }}</strong> · {{ t.scopes.join(', ') }}
-          <div class="meta">
-            Expires {{ day(t.expiresAt) }} · {{ t.lastUsedAt ? `last used ${day(t.lastUsedAt)}` : 'never used' }}
-          </div>
-        </div>
-        <GButton type="button" variant="danger" :disabled="revoke.isPending.value" :data-testid="`revoke-${t.id}`" @click="remove(t.id)">Revoke</GButton>
-      </li>
-    </ul>
+    <table v-if="tokens.data.value?.items.length" data-testid="access-token-list">
+      <thead>
+        <tr>
+          <th scope="col">Token</th>
+          <th scope="col">Can</th>
+          <th scope="col">Expires</th>
+          <th scope="col">Last used</th>
+          <th scope="col"><span class="sr">Actions</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="t in tokens.data.value.items" :key="t.id">
+          <td><strong>{{ t.name }}</strong></td>
+          <td class="dim">{{ t.scopes.join(', ') }}</td>
+          <td>{{ day(t.expiresAt) }}</td>
+          <td class="dim">{{ t.lastUsedAt ? `last used ${day(t.lastUsedAt)}` : 'never used' }}</td>
+          <td class="act"><GButton type="button" variant="danger" :disabled="revoke.isPending.value" :data-testid="`revoke-${t.id}`" @click="remove(t.id)">Revoke</GButton></td>
+        </tr>
+      </tbody>
+    </table>
     <p v-else-if="tokens.isSuccess.value" data-testid="access-token-none">No Access Tokens yet.</p>
+    <h2>A new token</h2>
     <form class="stack" data-testid="access-token-form" @submit.prevent="create">
       <GField v-model="name" label="Name" :maxlength="60" hint="Where it is used, such as Claude on my laptop." data-testid="access-token-name" />
       <fieldset class="scopes">
@@ -85,41 +95,85 @@ function remove(id: string) {
 h2 {
   margin: 0;
 }
+p {
+  margin: 0;
+}
 code {
+  padding: 2px 6px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-chip);
+  font-size: 14px;
+  background: var(--color-inset);
   overflow-wrap: anywhere;
 }
+/* A token just made: said once, plainly, with the token itself to copy. */
 .fresh {
-  padding: 8px 12px;
-  border: 1px solid var(--color-gold);
-  border-radius: var(--radius-control);
-}
-.list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.list li {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 8px 0;
+  padding: 14px 0 16px;
+  border-top: 1px solid var(--color-rule);
   border-bottom: 1px solid var(--color-rule);
+  font-weight: 700;
 }
-.meta {
-  color: var(--color-text-3);
+.fresh code {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 9px 12px;
+  font-weight: 400;
+}
+.dim {
+  color: var(--color-text-2);
+}
+.act {
+  text-align: right;
+}
+.act :deep(.g-button) {
+  min-height: 36px;
+  padding: 0 12px;
   font-size: 14px;
+}
+.sr {
+  position: absolute;
+  left: -9999px;
 }
 .scopes {
   display: flex;
   flex-direction: column;
-  gap: 6px;
   margin: 0;
-  padding: 8px 12px;
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-control);
+  padding: 0;
+  border: 0;
+}
+.scopes legend {
+  padding: 0 0 4px;
+  font-size: 14px;
+  color: var(--color-text-3);
+}
+.scopes label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  border-top: 1px solid var(--color-rule);
+}
+@media (max-width: 899px) {
+  thead {
+    display: none;
+  }
+  tr {
+    display: grid;
+    gap: 2px;
+    padding: 12px 0;
+    border-top: 1px solid var(--color-rule);
+  }
+  td {
+    padding: 0;
+    border: 0;
+  }
+  .act {
+    text-align: left;
+  }
+}
+@media (pointer: coarse) {
+  .act :deep(.g-button) {
+    min-height: 44px;
+  }
 }
 </style>

@@ -138,6 +138,15 @@ describe('an Account on the Admin page', () => {
       [base]: () => state,
       '/api/v1/account': () => me,
     })
+    // The page says where it is, is headed by who this is, and keeps the controls to one side.
+    expect(wrapper.get('nav[aria-label="Breadcrumb"]').text().replace(/\s*›\s*/g, ' › ')).toBe('Admin › Accounts › Aria')
+    expect(wrapper.findAll('nav[aria-label="Breadcrumb"] a').map((a) => a.attributes('href'))).toEqual(['/admin', '/admin'])
+    expect(wrapper.get('h1').text()).toBe('Aria @aria')
+    expect(wrapper.get('[data-testid="admin-account-summary"] .g-meta').text()).toContain('Active')
+    expect(wrapper.get('[data-testid="admin-account-summary"] .g-meta').text()).toContain('Member')
+    expect(wrapper.findAll('[data-testid="admin-account-fields"] dt').map((d) => d.text())).toEqual(['Username', 'Nickname', 'Email'])
+    expect(wrapper.findAll('[data-testid="admin-account-fields"] dd').map((d) => d.text())).toEqual(['aria', 'Aria', 'aria@example.com'])
+    expect(wrapper.get('aside').attributes('data-testid')).toBe('admin-account-controls')
     expect(wrapper.get('[data-testid="admin-account-methods"]').text()).toContain('with two-step')
     expect(wrapper.get('[data-testid="admin-account-methods"]').text()).toContain('aria@jorisjonkers.dev')
     expect(wrapper.get('[data-testid="admin-account-methods"]').text()).toContain('2 signed-in devices')
