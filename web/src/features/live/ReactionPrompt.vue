@@ -32,8 +32,8 @@ const title = { opportunity_attack: 'Opportunity attack', shield: 'Shield', read
     </header>
     <p data-testid="reaction-effect">{{ prompt.effect }}</p>
     <div v-if="answerable" class="row">
-      <GButton variant="primary" data-testid="use-reaction" @click="emit('answer', true)">Use reaction</GButton>
-      <GButton data-testid="decline-reaction" @click="emit('answer', false)">Decline</GButton>
+      <GButton variant="primary" aria-keyshortcuts="Y" data-testid="use-reaction" @click="emit('answer', true)">Use reaction</GButton>
+      <GButton aria-keyshortcuts="N" aria-label="Decline the reaction" data-testid="decline-reaction" @click="emit('answer', false)">Decline</GButton>
     </div>
     <p v-else class="wait">Waiting for {{ reactor }}'s reaction.</p>
   </section>

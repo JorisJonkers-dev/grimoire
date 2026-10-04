@@ -5,10 +5,14 @@ import { useRoute, useRouter } from 'vue-router'
 import NotificationBell from '@/features/notifications/NotificationBell.vue'
 import { getAccountOptions, signOutMutation } from '@/infrastructure/api/@tanstack/vue-query.gen'
 import { restoreAccessibility } from '@/shared/a11y/settings'
+import KeyMap from '@/shared/input/KeyMap.vue'
+import { useInput } from '@/shared/input/useInput'
 import { useOnline } from '@/shared/pwa/online'
 
 // How this device is set to look is taken up before anything is drawn.
 restoreAccessibility()
+// Shortcut keys and a gamepad work on every page, the ones with no header too.
+const keys = useInput()
 const route = useRoute()
 const router = useRouter()
 const online = useOnline()
@@ -31,46 +35,54 @@ function leave() {
 </script>
 
 <template>
-  <RouterView v-if="bare" :key="pageKey" />
-  <div v-else class="shell">
-    <header class="bar">
-      <RouterLink :to="{ name: 'home' }" class="brand">Grimoire</RouterLink>
-      <nav aria-label="Main">
-        <RouterLink :to="{ name: 'campaigns' }">Campaigns</RouterLink>
-        <RouterLink v-if="account.data.value" :to="{ name: 'my-characters' }" data-testid="characters-link">Characters</RouterLink>
-        <RouterLink v-if="account.data.value" :to="{ name: 'library' }" data-testid="library-link">Library</RouterLink>
-        <RouterLink v-if="account.data.value" :to="{ name: 'friends' }" data-testid="friends-link">Friends</RouterLink>
-        <RouterLink v-if="account.data.value" :to="{ name: 'conversations' }" data-testid="conversations-link">Talk</RouterLink>
-        <RouterLink v-if="account.data.value" :to="{ name: 'dice-sets' }" data-testid="dice-sets-link">Dice</RouterLink>
-        <RouterLink :to="{ name: 'spells' }">Compendium</RouterLink>
-        <RouterLink v-if="account.data.value?.adminPowers" :to="{ name: 'admin' }" data-testid="admin-link">Admin</RouterLink>
-      </nav>
-      <form v-if="route.name !== 'search'" role="search" aria-label="Search everything" class="seek" data-testid="header-search" @submit.prevent="seek">
-        <input v-model="sought" type="search" maxlength="80" placeholder="Search" aria-label="Search everything" data-testid="header-search-input" />
-      </form>
-      <div class="me" data-testid="account-menu">
-        <template v-if="account.data.value">
-          <NotificationBell />
-          <RouterLink :to="{ name: 'account' }" data-testid="account-link">{{ account.data.value.nickname }}</RouterLink>
-          <button type="button" class="out" data-testid="sign-out" @click="leave">Sign out</button>
-        </template>
-        <RouterLink v-else-if="route.name !== 'sign-in'" :to="{ name: 'sign-in' }" data-testid="sign-in-link">Sign in</RouterLink>
-      </div>
-    </header>
-    <p v-if="!online" role="status" class="offline" data-testid="offline">
-      You are offline. The compendium and your Character sheets still open from this device; live play picks up again when the connection returns.
-    </p>
-    <RouterView :key="pageKey" />
-    <footer class="credit">
-      Grimoire by <a href="https://jorisjonkers.dev">Joris Jonkers</a> ·
-      <RouterLink :to="{ name: 'attribution' }">SRD content under CC-BY-4.0</RouterLink> ·
-      <RouterLink :to="{ name: 'automation' }">Automation coverage</RouterLink> ·
-      <RouterLink :to="{ name: 'accessibility' }" data-testid="accessibility-link">Accessibility</RouterLink>
-    </footer>
+  <KeyMap v-if="keys.open.value" :here="keys.rows.value" @close="keys.show(false)" />
+  <!-- While the list of keys shows, the page behind it takes no focus and no keys. -->
+  <div class="page" :inert="keys.open.value || undefined">
+    <RouterView v-if="bare" :key="pageKey" />
+    <div v-else class="shell">
+      <header class="bar">
+        <RouterLink :to="{ name: 'home' }" class="brand">Grimoire</RouterLink>
+        <nav aria-label="Main">
+          <RouterLink :to="{ name: 'campaigns' }">Campaigns</RouterLink>
+          <RouterLink v-if="account.data.value" :to="{ name: 'my-characters' }" data-testid="characters-link">Characters</RouterLink>
+          <RouterLink v-if="account.data.value" :to="{ name: 'library' }" data-testid="library-link">Library</RouterLink>
+          <RouterLink v-if="account.data.value" :to="{ name: 'friends' }" data-testid="friends-link">Friends</RouterLink>
+          <RouterLink v-if="account.data.value" :to="{ name: 'conversations' }" data-testid="conversations-link">Talk</RouterLink>
+          <RouterLink v-if="account.data.value" :to="{ name: 'dice-sets' }" data-testid="dice-sets-link">Dice</RouterLink>
+          <RouterLink :to="{ name: 'spells' }">Compendium</RouterLink>
+          <RouterLink v-if="account.data.value?.adminPowers" :to="{ name: 'admin' }" data-testid="admin-link">Admin</RouterLink>
+        </nav>
+        <form v-if="route.name !== 'search'" role="search" aria-label="Search everything" class="seek" data-testid="header-search" @submit.prevent="seek">
+          <input v-model="sought" type="search" maxlength="80" placeholder="Search" aria-label="Search everything" aria-keyshortcuts="/" data-testid="header-search-input" />
+        </form>
+        <div class="me" data-testid="account-menu">
+          <template v-if="account.data.value">
+            <NotificationBell />
+            <RouterLink :to="{ name: 'account' }" data-testid="account-link">{{ account.data.value.nickname }}</RouterLink>
+            <button type="button" class="out" data-testid="sign-out" @click="leave">Sign out</button>
+          </template>
+          <RouterLink v-else-if="route.name !== 'sign-in'" :to="{ name: 'sign-in' }" data-testid="sign-in-link">Sign in</RouterLink>
+        </div>
+      </header>
+      <p v-if="!online" role="status" class="offline" data-testid="offline">
+        You are offline. The compendium and your Character sheets still open from this device; live play picks up again when the connection returns.
+      </p>
+      <RouterView :key="pageKey" />
+      <footer class="credit">
+        Grimoire by <a href="https://jorisjonkers.dev">Joris Jonkers</a> ·
+        <RouterLink :to="{ name: 'attribution' }">SRD content under CC-BY-4.0</RouterLink> ·
+        <RouterLink :to="{ name: 'automation' }">Automation coverage</RouterLink> ·
+        <RouterLink :to="{ name: 'accessibility' }" data-testid="accessibility-link">Accessibility</RouterLink>
+      </footer>
+    </div>
   </div>
 </template>
 
 <style scoped>
+/* A wrapper for making the page inert; it lays nothing out itself. */
+.page {
+  display: contents;
+}
 .shell {
   min-height: 100vh;
   display: flex;

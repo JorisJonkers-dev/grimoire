@@ -20,8 +20,8 @@ const sightLine = (s: LivePathSight) => (s.visible ? `${s.label} sees ${props.mo
       <li v-for="s in path.sight" :key="s.tokenId">{{ sightLine(s) }}</li>
     </ul>
     <div class="row">
-      <GButton variant="primary" data-testid="confirm-walk" @click="$emit('confirm')">Confirm</GButton>
-      <GButton data-testid="cancel-walk" @click="$emit('cancel')">Cancel</GButton>
+      <GButton variant="primary" aria-keyshortcuts="C" aria-label="Confirm the walk" data-testid="confirm-walk" @click="$emit('confirm')">Confirm</GButton>
+      <GButton aria-keyshortcuts="Escape" data-testid="cancel-walk" @click="$emit('cancel')">Cancel</GButton>
     </div>
   </section>
 </template>

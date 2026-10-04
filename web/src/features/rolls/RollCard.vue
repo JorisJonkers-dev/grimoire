@@ -136,13 +136,13 @@ function rest() {
         </template>
       </div>
     </div>
-    <GButton v-if="pending && roll.canRoll && roll.dice.some((d) => d.value === undefined)" variant="primary" :disabled="busy" data-testid="roll-rest" @click="rest()">
+    <GButton v-if="pending && roll.canRoll && roll.dice.some((d) => d.value === undefined)" variant="primary" :disabled="busy" aria-keyshortcuts="R" data-testid="roll-rest" @click="rest()">
       Roll the rest for me
     </GButton>
     <div v-if="roll.choosing" class="inspiration" data-testid="inspiration-choice">
       <p v-if="roll.mine">You have Heroic Inspiration: reroll one die and keep the new face, or keep this roll.</p>
       <p v-else>{{ roll.roller.name }} may spend Heroic Inspiration on this roll.</p>
-      <GButton v-if="roll.canRoll" variant="primary" :disabled="busy" data-testid="keep-roll" @click="keep()">Keep this roll</GButton>
+      <GButton v-if="roll.canRoll" variant="primary" :disabled="busy" aria-keyshortcuts="K" data-testid="keep-roll" @click="keep()">Keep this roll</GButton>
     </div>
     <p v-if="roll.rerolled" class="who" data-testid="rerolled">Heroic Inspiration spent on a reroll.</p>
     <ul v-if="resolved" class="breakdown" aria-label="What the total is made of" data-testid="roll-breakdown">

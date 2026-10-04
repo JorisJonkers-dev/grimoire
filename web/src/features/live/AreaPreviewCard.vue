@@ -22,8 +22,8 @@ const emit = defineEmits<{ confirm: []; cancel: [] }>()
       </li>
     </ul>
     <div class="row">
-      <GButton variant="primary" data-testid="confirm-area" @click="emit('confirm')">Cast</GButton>
-      <GButton data-testid="cancel-area" @click="emit('cancel')">Cancel</GButton>
+      <GButton variant="primary" aria-keyshortcuts="C" data-testid="confirm-area" @click="emit('confirm')">Cast</GButton>
+      <GButton aria-keyshortcuts="Escape" data-testid="cancel-area" @click="emit('cancel')">Cancel</GButton>
     </div>
   </section>
 </template>
