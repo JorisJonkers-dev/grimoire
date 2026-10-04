@@ -71,7 +71,7 @@ h2 {
   border: 2px solid var(--color-line);
   border-radius: 999px;
   color: var(--color-text);
-  background: var(--color-surface-2);
+  background: var(--color-raised);
   cursor: pointer;
 }
 .creature--held {

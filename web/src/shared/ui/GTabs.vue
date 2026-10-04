@@ -58,20 +58,21 @@ function key(ev: KeyboardEvent) {
   border-bottom: 1px solid var(--color-line);
 }
 button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   min-height: 44px;
-  padding: 0 14px;
+  padding: 0 12px;
   border: 0;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
   background: none;
   color: var(--color-text-2);
-  font: inherit;
-  font-size: 15px;
+  font-family: var(--font-label);
+  font-size: 16px;
   white-space: nowrap;
   cursor: pointer;
 }
 button[aria-selected='true'] {
-  border-bottom-color: var(--color-gold);
+  box-shadow: inset 0 -2px 0 var(--color-gold);
   color: var(--color-gold-high);
 }
 button:focus-visible {
@@ -79,12 +80,12 @@ button:focus-visible {
   outline-offset: -2px;
 }
 .g-tabs__count {
-  margin-left: 6px;
-  color: var(--color-text-3);
+  font-family: var(--font-ui);
   font-size: 13px;
+  color: var(--color-text-3);
 }
 [role='tabpanel'] {
-  padding-top: 16px;
+  padding-top: 20px;
 }
 [role='tabpanel']:focus-visible {
   outline: none;

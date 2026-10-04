@@ -24,10 +24,10 @@ defineEmits<{ click: [] }>()
   gap: 12px;
   width: 100%;
   min-height: 56px;
-  padding: 8px 4px 8px 12px;
+  padding: 12px 0;
   box-sizing: border-box;
   border: 0;
-  border-bottom: 1px solid var(--color-line);
+  border-top: 1px solid var(--color-rule);
   background: none;
   color: var(--color-text);
   font: inherit;
@@ -37,7 +37,8 @@ defineEmits<{ click: [] }>()
 }
 .g-row:hover,
 .g-row:focus-visible {
-  background: var(--color-surface);
+  background: var(--color-inset);
+  color: var(--color-text);
 }
 .g-row:focus-visible {
   outline: 2px solid var(--color-gold-high);
@@ -47,18 +48,21 @@ defineEmits<{ click: [] }>()
   display: flex;
   flex: 1;
   flex-direction: column;
+  gap: 2px;
   min-width: 0;
 }
 .g-row__title {
-  font-size: 16px;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 17px;
 }
 .g-row__subtitle {
-  color: var(--color-text-2);
-  font-size: 14px;
+  color: var(--color-text-3);
+  font-size: 13px;
 }
 .g-row__chevron {
   flex: none;
-  color: var(--color-bronze);
+  margin: 0 12px;
+  color: var(--color-text-3);
 }
 </style>

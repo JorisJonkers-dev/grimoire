@@ -71,40 +71,50 @@ function act(n: NotificationEntry) {
   justify-content: center;
   width: 40px;
   height: 40px;
+  padding: 0;
   border: 0;
   background: none;
-  color: var(--color-text);
+  color: var(--color-bar-text);
   cursor: pointer;
 }
+.toggle[aria-expanded='true'],
+.toggle:hover {
+  color: var(--color-bar-brand);
+}
 .toggle svg {
-  width: 22px;
-  height: 22px;
+  width: 21px;
+  height: 21px;
 }
 .count {
   position: absolute;
-  top: 2px;
-  right: 0;
-  min-width: 18px;
+  top: 4px;
+  right: 2px;
+  min-width: 16px;
+  height: 16px;
   padding: 0 4px;
-  border-radius: 999px;
-  background: var(--color-gold);
-  color: var(--color-ground);
-  font-size: 12px;
-  line-height: 18px;
+  box-sizing: border-box;
+  border-radius: 8px;
+  background: var(--color-badge);
+  color: var(--color-badge-text);
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 16px;
   text-align: center;
 }
 .panel {
   position: absolute;
-  z-index: 20;
-  top: 44px;
+  z-index: 30;
+  top: 48px;
   right: 0;
-  width: min(360px, calc(100vw - 2 * var(--gutter)));
+  width: min(380px, calc(100vw - 2 * var(--gutter)));
   max-height: 70vh;
   overflow-y: auto;
-  padding: 12px;
-  border: 1px solid var(--color-line);
-  border-radius: 12px;
-  background: var(--color-raised);
+  padding: 14px 16px;
+  border: 1px solid var(--color-edge);
+  border-radius: var(--radius-panel);
+  background: var(--color-surface);
+  box-shadow: 0 14px 32px rgb(0 0 0 / 55%);
+  color: var(--color-text);
 }
 .head {
   display: flex;

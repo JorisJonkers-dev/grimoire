@@ -47,8 +47,12 @@ const pairs = told.flatMap((a, i) => told.slice(i + 1).map((b) => [a, b] as cons
 const closest = (p: Record<string, string>, m: Matrix) => Math.min(...pairs.map(([a, b]) => apart(p[a] ?? '', p[b] ?? '', m)))
 
 describe('colour-blind-safe palettes', () => {
-  it('the standard colours are confused by each kind of colour blindness, which is why there are others', () => {
-    for (const m of Object.values(sight)) expect(closest(standard, m)).toBeLessThan(30)
+  it('each palette keeps the colours further apart than the standard ones, for the sight it is made for', () => {
+    for (const [name, kinds] of [['red-green', ['protanopia', 'deuteranopia']], ['blue-yellow', ['tritanopia']]] as const) {
+      for (const kind of kinds) expect(closest(palette(name), sight[kind] as Matrix), kind).toBeGreaterThan(closest(standard, sight[kind] as Matrix))
+    }
+    // Red and green are the pair the standard colours leave too close.
+    expect(closest(standard, sight.protanopia as Matrix)).toBeLessThan(30)
   })
 
   it.each([

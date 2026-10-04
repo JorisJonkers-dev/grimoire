@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useQuery } from '@tanstack/vue-query'
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { searchOptions } from '@/infrastructure/api/@tanstack/vue-query.gen'
 import type { SearchHit } from '@/infrastructure/api/types.gen'
@@ -22,6 +22,9 @@ watch(typed, (now) => {
   }, PAUSE_MS)
 })
 onBeforeUnmount(() => { clearTimeout(pause) })
+// The page is for typing into: the caret starts in its box.
+const box = ref<HTMLInputElement | null>(null)
+onMounted(() => box.value?.focus())
 
 const long = computed(() => asked.value.length >= MIN)
 const results = useQuery(computed(() => ({ ...searchOptions({ query: { q: asked.value } }), enabled: long.value, retry: false })))
@@ -42,7 +45,7 @@ const count = computed(() => {
     <h1>Search</h1>
     <label class="g-field">
       <span>Search the compendium, your Library, your Campaigns and your Friends</span>
-      <input v-model="typed" type="search" maxlength="80" autocomplete="off" data-testid="search-input" />
+      <input ref="box" v-model="typed" type="search" maxlength="80" autocomplete="off" aria-keyshortcuts="/" data-testid="search-input" />
     </label>
     <p v-if="!long" class="hint" data-testid="search-hint">Type at least 2 characters.</p>
     <p v-else-if="results.isError.value" role="alert" class="g-alert" data-testid="search-problem">Search is not available just now. Sign in and try again.</p>

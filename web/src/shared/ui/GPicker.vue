@@ -161,41 +161,39 @@ onBeforeUnmount(() => {
 input {
   box-sizing: border-box;
   width: 100%;
-  min-height: 52px;
-  padding: 22px 12px 6px;
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface);
+  min-height: var(--size-field);
+  padding: 22px 14px 6px;
+  border: 0;
+  border-radius: var(--radius-control) var(--radius-control) 0 0;
+  background: var(--color-field);
+  box-shadow: inset 0 -1px 0 var(--color-line);
   color: var(--color-text);
   font: inherit;
   font-size: 16px;
 }
 input:focus {
   outline: none;
-  border-color: var(--color-gold);
+  background: var(--color-surface);
+  box-shadow: inset 0 -2px 0 var(--color-brass-edge);
 }
 label {
   position: absolute;
-  top: 16px;
-  left: 13px;
-  color: var(--color-text-3);
+  top: 18px;
+  left: 14px;
+  font-family: var(--font-label);
   font-size: 16px;
+  color: var(--color-text-2);
   pointer-events: none;
   transition:
-    top var(--motion-max),
-    font-size var(--motion-max);
+    top 120ms ease-out,
+    font-size 120ms ease-out;
 }
 input:focus + label,
 input:not(:placeholder-shown) + label {
-  top: 6px;
+  top: 7px;
   font-size: 12px;
-  color: var(--color-gold-high);
 }
-/* The list hangs flush from the field: one shape, square where they meet. */
-.g-picker--open input {
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
-}
+/* The list hangs flush from the field: one shape, round only at its foot. */
 .g-picker__list {
   position: absolute;
   z-index: 20;
@@ -207,30 +205,29 @@ input:not(:placeholder-shown) + label {
   margin: 0;
   padding: 0;
   list-style: none;
-  border: 1px solid var(--color-gold);
+  border: 1px solid var(--color-edge);
   border-top: 0;
-  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
-  background: var(--color-raised);
+  border-radius: 0 0 var(--radius-panel) var(--radius-panel);
+  background: var(--color-surface);
+  box-shadow: 0 14px 32px rgb(0 0 0 / 55%);
 }
 li {
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  padding: 10px 12px;
+  padding: 10px 14px;
+  font-size: 15px;
   cursor: pointer;
-}
-li + li {
-  border-top: 1px solid var(--color-line);
 }
 li.active,
 li[role='option']:hover {
-  background: var(--color-surface);
+  background: var(--color-selected);
   color: var(--color-gold-high);
 }
 .g-picker__hint,
 .g-picker__empty {
   color: var(--color-text-3);
-  font-size: 14px;
+  font-size: 13px;
 }
 .g-picker__empty {
   cursor: default;

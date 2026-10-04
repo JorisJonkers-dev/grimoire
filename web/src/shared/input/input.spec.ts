@@ -74,11 +74,13 @@ describe('pressing a shortcut', () => {
       <button aria-keyshortcuts="C" aria-label="Confirm the walk">Go</button>
       <button aria-keyshortcuts="Escape" disabled>  Cancel  </button>
       <div hidden><button aria-keyshortcuts="X">Hidden</button></div>
-      <input aria-keyshortcuts="/" aria-label="Search everything" />`)
+      <input aria-keyshortcuts="/" aria-label="Search everything" />
+      <label><span>Filter spells</span><input aria-keyshortcuts="F" /></label>`)
     expect(listed()).toEqual([
       { keys: 'E', what: 'End turn' },
       { keys: 'C', what: 'Confirm the walk' },
       { keys: '/', what: 'Search everything' },
+      { keys: 'F', what: 'Filter spells' },
     ])
   })
 })
