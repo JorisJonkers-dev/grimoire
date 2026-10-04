@@ -92,7 +92,7 @@ func (s *Service) ReviewSubmission(ctx context.Context, c caller.Caller, id uuid
 			if err := r.InsertEntry(ctx, copied); err != nil {
 				return err
 			}
-			if err := r.InsertRevision(ctx, copied.ID, domain.Revision{No: 1, Name: copied.Name, Fields: copied.Fields, Design: copied.Design, Author: c.Subject, At: now}); err != nil {
+			if err := r.InsertRevision(ctx, copied.ID, by(c, domain.Revision{No: 1, Name: copied.Name, Fields: copied.Fields, Design: copied.Design, At: now})); err != nil {
 				return err
 			}
 			x.Status, x.Shared = domain.SubmissionApproved, &copied.ID

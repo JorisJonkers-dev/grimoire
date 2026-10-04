@@ -21,6 +21,8 @@ type Repository interface {
 	// UpdateEntry saves a new base and returns its Revision number.
 	UpdateEntry(ctx context.Context, id uuid.UUID, name string, fields domain.Fields, design []byte, now time.Time) (int, error)
 	InsertRevision(ctx context.Context, entry uuid.UUID, r domain.Revision) error
+	// Revision reads one Revision of an entry, or reports ErrNotFound.
+	Revision(ctx context.Context, entry uuid.UUID, no int) (domain.Revision, error)
 	Entry(ctx context.Context, id uuid.UUID) (domain.Entry, error)
 	Entries(ctx context.Context, owner, kind string) ([]domain.Entry, error)
 	Revisions(ctx context.Context, entry uuid.UUID) ([]domain.Revision, error)
@@ -101,7 +103,7 @@ func (s *Service) Create(ctx context.Context, c caller.Caller, d domain.Draft) (
 		if err := r.InsertEntry(ctx, e); err != nil {
 			return err
 		}
-		return r.InsertRevision(ctx, e.ID, domain.Revision{No: 1, Name: e.Name, Fields: e.Fields, Author: c.Subject, At: now})
+		return r.InsertRevision(ctx, e.ID, by(c, domain.Revision{No: 1, Name: e.Name, Fields: e.Fields, At: now}))
 	})
 	return e, err
 }
@@ -156,7 +158,37 @@ func (s *Service) Update(ctx context.Context, c caller.Caller, id uuid.UUID, d d
 		if err != nil {
 			return err
 		}
-		return r.InsertRevision(ctx, id, domain.Revision{No: no, Name: d.Name, Fields: d.Fields, Design: e.Design, Author: c.Subject, At: now})
+		return r.InsertRevision(ctx, id, by(c, domain.Revision{No: no, Name: d.Name, Fields: d.Fields, Design: e.Design, At: now}))
+	})
+	if err != nil {
+		return domain.Detail{}, err
+	}
+	return s.Get(ctx, c, id)
+}
+
+// by stamps a Revision with who made it and how: by hand, or through which MCP client.
+func by(c caller.Caller, r domain.Revision) domain.Revision {
+	r.Author, r.Origin, r.Client = c.Subject, string(c.Origin), c.Client
+	return r
+}
+
+// Restore brings an earlier Revision of one of the caller's entries back as its next Revision: its
+// name, its fields and its design. Nothing is lost: the Revisions in between stay.
+func (s *Service) Restore(ctx context.Context, c caller.Caller, id uuid.UUID, no int) (domain.Detail, error) {
+	if _, err := s.owned(ctx, c, id); err != nil {
+		return domain.Detail{}, err
+	}
+	now := s.Now()
+	err := s.Repo.InTx(ctx, func(r Repository) error {
+		old, err := r.Revision(ctx, id, no)
+		if err != nil {
+			return err
+		}
+		next, err := r.UpdateEntry(ctx, id, old.Name, old.Fields, old.Design, now)
+		if err != nil {
+			return err
+		}
+		return r.InsertRevision(ctx, id, by(c, domain.Revision{No: next, Name: old.Name, Fields: old.Fields, Design: old.Design, At: now}))
 	})
 	if err != nil {
 		return domain.Detail{}, err

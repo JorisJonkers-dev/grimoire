@@ -7,8 +7,8 @@ UPDATE library.entries SET name = @name, fields = @fields, design = sqlc.narg(de
 WHERE id = @id RETURNING revision;
 
 -- name: InsertLibraryRevision :exec
-INSERT INTO library.entry_revisions (entry_id, no, name, fields, author_subject, created_at, design)
-VALUES (@entry_id, @no, @name, @fields, @author_subject, @now, sqlc.narg(design));
+INSERT INTO library.entry_revisions (entry_id, no, name, fields, author_subject, created_at, design, origin, client)
+VALUES (@entry_id, @no, @name, @fields, @author_subject, @now, sqlc.narg(design), @origin, sqlc.narg(client));
 
 -- name: LibraryEntry :one
 SELECT id, owner_subject, kind, name, fields, revision, created_at, updated_at, shared, design FROM library.entries WHERE id = @id;
@@ -19,7 +19,10 @@ WHERE owner_subject = @owner_subject AND (sqlc.narg(kind)::text IS NULL OR kind 
 ORDER BY kind, lower(name), id;
 
 -- name: LibraryRevisions :many
-SELECT no, name, fields, author_subject, created_at, design FROM library.entry_revisions WHERE entry_id = @entry_id ORDER BY no DESC;
+SELECT no, name, fields, author_subject, created_at, design, origin, client FROM library.entry_revisions WHERE entry_id = @entry_id ORDER BY no DESC;
+
+-- name: LibraryRevision :one
+SELECT name, fields, design FROM library.entry_revisions WHERE entry_id = @entry_id AND no = @no;
 
 -- name: LibraryRevisionExists :one
 SELECT EXISTS (SELECT 1 FROM library.entry_revisions WHERE entry_id = @entry_id AND no = @no);

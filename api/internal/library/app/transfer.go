@@ -113,7 +113,7 @@ func (s *Service) importEntry(ctx context.Context, repo Repository, c caller.Cal
 	if err := repo.InsertEntry(ctx, e); err != nil {
 		return e, err
 	}
-	return e, repo.InsertRevision(ctx, e.ID, domain.Revision{No: 1, Name: e.Name, Fields: e.Fields, Design: e.Design, Author: c.Subject, At: now})
+	return e, repo.InsertRevision(ctx, e.ID, by(c, domain.Revision{No: 1, Name: e.Name, Fields: e.Fields, Design: e.Design, At: now}))
 }
 
 // importCollection adds one imported Collection holding the imported entries it names.

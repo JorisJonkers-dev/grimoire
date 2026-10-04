@@ -46,6 +46,6 @@ func (s *Service) saveDesign(ctx context.Context, c caller.Caller, e domain.Entr
 		if err != nil {
 			return err
 		}
-		return r.InsertRevision(ctx, e.ID, domain.Revision{No: no, Name: e.Name, Fields: e.Fields, Design: raw, Author: c.Subject, At: now})
+		return r.InsertRevision(ctx, e.ID, by(c, domain.Revision{No: no, Name: e.Name, Fields: e.Fields, Design: raw, At: now}))
 	})
 }

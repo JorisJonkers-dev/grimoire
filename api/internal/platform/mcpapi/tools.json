@@ -419,6 +419,86 @@
     }
   },
   {
+    "name": "create_library_entry",
+    "description": "Create a Library entry. Adds an entry to the caller's Library as its first Revision. Every call saves a new Revision of the Library entry, named in the answer; restore_library_revision brings an earlier one back.",
+    "method": "POST",
+    "path": "/api/v1/library",
+    "pathParams": [],
+    "queryParams": [],
+    "body": true,
+    "keeps": "library",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "additionalProperties": false,
+          "description": "A new Library entry.",
+          "properties": {
+            "fields": {
+              "description": "Named values, in name order.",
+              "items": {
+                "additionalProperties": false,
+                "description": "One named value of a Library entry.",
+                "properties": {
+                  "name": {
+                    "maxLength": 60,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "value": {
+                    "maxLength": 4000,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "value"
+                ],
+                "type": "object"
+              },
+              "maxItems": 100,
+              "type": "array"
+            },
+            "kind": {
+              "description": "What a Library entry is.",
+              "enum": [
+                "creature",
+                "npc",
+                "location",
+                "shop",
+                "item",
+                "spell",
+                "table",
+                "subclass",
+                "class",
+                "species",
+                "background",
+                "feat",
+                "condition"
+              ],
+              "type": "string"
+            },
+            "name": {
+              "maxLength": 80,
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "name",
+            "fields"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "body"
+      ],
+      "type": "object"
+    }
+  },
+  {
     "name": "create_loot_table",
     "description": "Create a Loot Table. Adds a Loot Table and records its first Revision. DM only.",
     "method": "POST",
@@ -1064,6 +1144,32 @@
     }
   },
   {
+    "name": "get_background_build",
+    "description": "Open a background in the background builder. A homebrew background's design, read back: one of the caller's, or a Shared Library copy.",
+    "method": "GET",
+    "path": "/api/v1/builders/backgrounds/{entryId}",
+    "pathParams": [
+      "entryId"
+    ],
+    "queryParams": [],
+    "body": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "entryId": {
+          "description": "Library entry id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "entryId"
+      ],
+      "type": "object"
+    }
+  },
+  {
     "name": "get_campaign",
     "description": "Get a campaign. A Campaign's home with its settings, the caller's role and every Member. Members only.",
     "method": "GET",
@@ -1085,6 +1191,32 @@
       },
       "required": [
         "campaignId"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "get_class_build",
+    "description": "Open a class in the class builder. A homebrew class's design, read back with its level table: one of the caller's classes, or a Shared Library copy.",
+    "method": "GET",
+    "path": "/api/v1/builders/classes/{entryId}",
+    "pathParams": [
+      "entryId"
+    ],
+    "queryParams": [],
+    "body": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "entryId": {
+          "description": "Library entry id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "entryId"
       ],
       "type": "object"
     }
@@ -1145,6 +1277,170 @@
     }
   },
   {
+    "name": "get_condition_build",
+    "description": "Open a condition in the condition builder. A homebrew condition's design, read back: one of the caller's, or a Shared Library copy.",
+    "method": "GET",
+    "path": "/api/v1/builders/conditions/{entryId}",
+    "pathParams": [
+      "entryId"
+    ],
+    "queryParams": [],
+    "body": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "entryId": {
+          "description": "Library entry id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "entryId"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "get_feat_build",
+    "description": "Open a feat in the feat builder. A homebrew feat's design, read back: one of the caller's, or a Shared Library copy.",
+    "method": "GET",
+    "path": "/api/v1/builders/feats/{entryId}",
+    "pathParams": [
+      "entryId"
+    ],
+    "queryParams": [],
+    "body": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "entryId": {
+          "description": "Library entry id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "entryId"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "get_item_build",
+    "description": "Open an item in the item builder. A homebrew item's design with its card and Price Check: one of the caller's items, or a Shared Library copy.",
+    "method": "GET",
+    "path": "/api/v1/builders/items/{entryId}",
+    "pathParams": [
+      "entryId"
+    ],
+    "queryParams": [],
+    "body": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "entryId": {
+          "description": "Library entry id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "entryId"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "get_library_entry",
+    "description": "Get a Library entry. One of the caller's entries with its Revisions and the Campaigns it is linked into.",
+    "method": "GET",
+    "path": "/api/v1/library/{entryId}",
+    "pathParams": [
+      "entryId"
+    ],
+    "queryParams": [],
+    "body": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "entryId": {
+          "description": "Library entry id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "entryId"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "get_map",
+    "description": "Get a map. One Map with its calibration. DM only.",
+    "method": "GET",
+    "path": "/api/v1/campaigns/{campaignId}/maps/{mapId}",
+    "pathParams": [
+      "campaignId",
+      "mapId"
+    ],
+    "queryParams": [],
+    "body": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        },
+        "mapId": {
+          "description": "Map id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId",
+        "mapId"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "get_monster_build",
+    "description": "Open a creature in the creature builder. A homebrew creature's design, read back: one of the caller's, or a Shared Library copy.",
+    "method": "GET",
+    "path": "/api/v1/builders/monsters/{entryId}",
+    "pathParams": [
+      "entryId"
+    ],
+    "queryParams": [],
+    "body": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "entryId": {
+          "description": "Library entry id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "entryId"
+      ],
+      "type": "object"
+    }
+  },
+  {
     "name": "get_npc",
     "description": "Get an NPC. One NPC. DM only.",
     "method": "GET",
@@ -1174,6 +1470,32 @@
       "required": [
         "campaignId",
         "npcId"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "get_roll_table_build",
+    "description": "Open a Roll Table in its builder. A Roll Table's design, read back: one of the caller's, or a Shared Library copy.",
+    "method": "GET",
+    "path": "/api/v1/builders/roll-tables/{entryId}",
+    "pathParams": [
+      "entryId"
+    ],
+    "queryParams": [],
+    "body": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "entryId": {
+          "description": "Library entry id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "entryId"
       ],
       "type": "object"
     }
@@ -1257,6 +1579,32 @@
     }
   },
   {
+    "name": "get_species_build",
+    "description": "Open a species in the species builder. A homebrew species's design, read back: one of the caller's, or a Shared Library copy.",
+    "method": "GET",
+    "path": "/api/v1/builders/species/{entryId}",
+    "pathParams": [
+      "entryId"
+    ],
+    "queryParams": [],
+    "body": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "entryId": {
+          "description": "Library entry id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "entryId"
+      ],
+      "type": "object"
+    }
+  },
+  {
     "name": "get_spell",
     "description": "Get a spell. One spell with its rules text and the conditions it mentions.",
     "method": "GET",
@@ -1289,6 +1637,58 @@
       },
       "required": [
         "slug"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "get_spell_build",
+    "description": "Open a spell in the Effect builder. A homebrew spell's design with its rules text and area: one of the caller's spells, or a Shared Library copy.",
+    "method": "GET",
+    "path": "/api/v1/builders/spells/{entryId}",
+    "pathParams": [
+      "entryId"
+    ],
+    "queryParams": [],
+    "body": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "entryId": {
+          "description": "Library entry id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "entryId"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "get_subclass_build",
+    "description": "Open a subclass in the subclass builder. A homebrew subclass's design, read back: one of the caller's subclasses, or a Shared Library copy.",
+    "method": "GET",
+    "path": "/api/v1/builders/subclasses/{entryId}",
+    "pathParams": [
+      "entryId"
+    ],
+    "queryParams": [],
+    "body": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "entryId": {
+          "description": "Library entry id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "entryId"
       ],
       "type": "object"
     }
@@ -1526,6 +1926,95 @@
     }
   },
   {
+    "name": "list_factions",
+    "description": "List Factions. The Campaign's Factions with how each regards the party. Every Member sees names and the tier of each Standing, their own Characters' Personal Standing, and the confirmed changes with the reasons the DM shared. Goals, territory, notes, scores, amounts, unshared reasons and changes not yet decided are the DM's alone.",
+    "method": "GET",
+    "path": "/api/v1/campaigns/{campaignId}/factions",
+    "pathParams": [
+      "campaignId"
+    ],
+    "queryParams": [],
+    "body": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "list_library_entries",
+    "description": "List Library entries. The caller's Library entries in kind and name order.",
+    "method": "GET",
+    "path": "/api/v1/library",
+    "pathParams": [],
+    "queryParams": [
+      "kind"
+    ],
+    "body": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "description": "Only entries of this kind.",
+          "enum": [
+            "creature",
+            "npc",
+            "location",
+            "shop",
+            "item",
+            "spell",
+            "table",
+            "subclass",
+            "class",
+            "species",
+            "background",
+            "feat",
+            "condition"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [],
+      "type": "object"
+    }
+  },
+  {
+    "name": "list_linked_entries",
+    "description": "List linked Library entries. The Library entries linked into the Campaign, each with its Campaign Override and pinned Revision resolved. DM only.",
+    "method": "GET",
+    "path": "/api/v1/campaigns/{campaignId}/library",
+    "pathParams": [
+      "campaignId"
+    ],
+    "queryParams": [],
+    "body": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId"
+      ],
+      "type": "object"
+    }
+  },
+  {
     "name": "list_locations",
     "description": "List locations. The places on the Campaign's world maps an Encounter Table can belong to. DM only.",
     "method": "GET",
@@ -1590,6 +2079,32 @@
     "description": "List Loot Tables. The Campaign's Loot Tables. DM only.",
     "method": "GET",
     "path": "/api/v1/campaigns/{campaignId}/loot-tables",
+    "pathParams": [
+      "campaignId"
+    ],
+    "queryParams": [],
+    "body": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "list_maps",
+    "description": "List maps. The Campaign's local and world Maps. DM only.",
+    "method": "GET",
+    "path": "/api/v1/campaigns/{campaignId}/maps",
     "pathParams": [
       "campaignId"
     ],
@@ -1998,6 +2513,73 @@
     }
   },
   {
+    "name": "propose_standing_change",
+    "description": "Suggest a Standing Change. Suggests a move in a Faction's Standing, for the party or for one Character, with a reason. It moves nothing and waits for the DM to confirm it in person, whoever or whatever suggested it. DM only. Nothing changes until the DM confirms it in the app.",
+    "method": "POST",
+    "path": "/api/v1/campaigns/{campaignId}/factions/{factionId}/standing-changes",
+    "pathParams": [
+      "campaignId",
+      "factionId"
+    ],
+    "queryParams": [],
+    "body": true,
+    "keeps": "pending",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "additionalProperties": false,
+          "description": "A suggested Standing Change. Without a Character it is for the party.",
+          "properties": {
+            "characterId": {
+              "description": "Random identifier.",
+              "format": "uuid",
+              "maxLength": 36,
+              "type": "string"
+            },
+            "delta": {
+              "format": "int32",
+              "maximum": 100,
+              "minimum": -100,
+              "type": "integer"
+            },
+            "reason": {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            "shareReason": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "delta",
+            "reason"
+          ],
+          "type": "object"
+        },
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        },
+        "factionId": {
+          "description": "Faction id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId",
+        "factionId",
+        "body"
+      ],
+      "type": "object"
+    }
+  },
+  {
     "name": "reroll_stock",
     "description": "Reroll Stock. Generates the Shop's Stock afresh from its Loot Table, scaled by its Settlement, and records it as a Revision. DM only.",
     "method": "POST",
@@ -2118,6 +2700,42 @@
       "required": [
         "campaignId",
         "tableId",
+        "revisionNo"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "restore_library_revision",
+    "description": "Restore a Revision of a Library entry. Brings an earlier Revision of one of the caller's entries back as its next Revision: its name, its fields and, for an entry made in a builder, its design. The Revisions in between stay, so a restore can itself be undone. Every call saves a new Revision of the Library entry, named in the answer; restore_library_revision brings an earlier one back.",
+    "method": "POST",
+    "path": "/api/v1/library/{entryId}/revisions/{revisionNo}/restore",
+    "pathParams": [
+      "entryId",
+      "revisionNo"
+    ],
+    "queryParams": [],
+    "body": false,
+    "keeps": "library",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "entryId": {
+          "description": "Library entry id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        },
+        "revisionNo": {
+          "description": "The number of the Revision to bring back.",
+          "format": "int32",
+          "maximum": 1000000,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "entryId",
         "revisionNo"
       ],
       "type": "object"
@@ -2458,6 +3076,2107 @@
       "required": [
         "campaignId",
         "sessionId",
+        "body"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "save_background_build",
+    "description": "Save a background design. Saves the design of one of the caller's background entries as its next Revision; Campaigns that see it offer it in character creation. Every call saves a new Revision of the Library entry, named in the answer; restore_library_revision brings an earlier one back.",
+    "method": "PUT",
+    "path": "/api/v1/builders/backgrounds/{entryId}",
+    "pathParams": [
+      "entryId"
+    ],
+    "queryParams": [],
+    "body": true,
+    "keeps": "library",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "additionalProperties": false,
+          "description": "A homebrew background as the background builder makes it, shaped like the 2024 ones.",
+          "properties": {
+            "abilities": {
+              "items": {
+                "maxLength": 40,
+                "type": "string"
+              },
+              "maxItems": 10,
+              "type": "array"
+            },
+            "equipment": {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            "feat": {
+              "maxLength": 120,
+              "type": "string"
+            },
+            "featName": {
+              "maxLength": 200,
+              "type": "string"
+            },
+            "gold": {
+              "format": "int32",
+              "maximum": 100000,
+              "minimum": -100000,
+              "type": "integer"
+            },
+            "skills": {
+              "items": {
+                "maxLength": 40,
+                "type": "string"
+              },
+              "maxItems": 10,
+              "type": "array"
+            },
+            "text": {
+              "maxLength": 8000,
+              "type": "string"
+            },
+            "tool": {
+              "maxLength": 400,
+              "type": "string"
+            }
+          },
+          "required": [
+            "abilities",
+            "skills",
+            "feat",
+            "featName"
+          ],
+          "type": "object"
+        },
+        "entryId": {
+          "description": "Library entry id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "entryId",
+        "body"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "save_class_build",
+    "description": "Save a class design. Saves the design of one of the caller's classes as its next Revision; Campaigns that see it offer it in character creation and multiclassing. Every call saves a new Revision of the Library entry, named in the answer; restore_library_revision brings an earlier one back.",
+    "method": "PUT",
+    "path": "/api/v1/builders/classes/{entryId}",
+    "pathParams": [
+      "entryId"
+    ],
+    "queryParams": [],
+    "body": true,
+    "keeps": "library",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "additionalProperties": false,
+          "description": "A homebrew class as the class builder makes it, from its Hit Die, training, level table, features, subclass and feat levels, and spellcasting.",
+          "properties": {
+            "anyPrimary": {
+              "type": "boolean"
+            },
+            "armor": {
+              "items": {
+                "maxLength": 40,
+                "type": "string"
+              },
+              "maxItems": 10,
+              "type": "array"
+            },
+            "casting": {
+              "additionalProperties": false,
+              "description": "How the class casts: none, an SRD kind (full, half, pact), its own slot table or spell points, from an SRD class's spell list. Tables run over the 20 levels; slots and costs over the nine spell levels.",
+              "properties": {
+                "ability": {
+                  "maxLength": 40,
+                  "type": "string"
+                },
+                "afterRest": {
+                  "type": "boolean"
+                },
+                "cantrips": {
+                  "items": {
+                    "format": "int32",
+                    "maximum": 100000,
+                    "minimum": -100000,
+                    "type": "integer"
+                  },
+                  "maxItems": 40,
+                  "type": "array"
+                },
+                "costs": {
+                  "items": {
+                    "format": "int32",
+                    "maximum": 100000,
+                    "minimum": -100000,
+                    "type": "integer"
+                  },
+                  "maxItems": 40,
+                  "type": "array"
+                },
+                "kind": {
+                  "maxLength": 40,
+                  "type": "string"
+                },
+                "maxSpell": {
+                  "items": {
+                    "format": "int32",
+                    "maximum": 100000,
+                    "minimum": -100000,
+                    "type": "integer"
+                  },
+                  "maxItems": 40,
+                  "type": "array"
+                },
+                "points": {
+                  "items": {
+                    "format": "int32",
+                    "maximum": 100000,
+                    "minimum": -100000,
+                    "type": "integer"
+                  },
+                  "maxItems": 40,
+                  "type": "array"
+                },
+                "prepared": {
+                  "items": {
+                    "format": "int32",
+                    "maximum": 100000,
+                    "minimum": -100000,
+                    "type": "integer"
+                  },
+                  "maxItems": 40,
+                  "type": "array"
+                },
+                "slots": {
+                  "items": {
+                    "items": {
+                      "format": "int32",
+                      "maximum": 100000,
+                      "minimum": -100000,
+                      "type": "integer"
+                    },
+                    "maxItems": 20,
+                    "type": "array"
+                  },
+                  "maxItems": 40,
+                  "type": "array"
+                },
+                "spellList": {
+                  "maxLength": 40,
+                  "type": "string"
+                },
+                "spellbook": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "kind"
+              ],
+              "type": "object"
+            },
+            "columns": {
+              "items": {
+                "additionalProperties": false,
+                "description": "A custom column of the level table, one value for each of the 20 levels.",
+                "properties": {
+                  "name": {
+                    "maxLength": 200,
+                    "type": "string"
+                  },
+                  "values": {
+                    "items": {
+                      "maxLength": 200,
+                      "type": "string"
+                    },
+                    "maxItems": 40,
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "name",
+                  "values"
+                ],
+                "type": "object"
+              },
+              "maxItems": 20,
+              "type": "array"
+            },
+            "featLevels": {
+              "items": {
+                "format": "int32",
+                "maximum": 100000,
+                "minimum": -100000,
+                "type": "integer"
+              },
+              "maxItems": 40,
+              "type": "array"
+            },
+            "features": {
+              "items": {
+                "additionalProperties": false,
+                "description": "A feature gained at a class level.",
+                "properties": {
+                  "level": {
+                    "format": "int32",
+                    "maximum": 100000,
+                    "minimum": -100000,
+                    "type": "integer"
+                  },
+                  "name": {
+                    "maxLength": 200,
+                    "type": "string"
+                  },
+                  "text": {
+                    "maxLength": 8000,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "level",
+                  "name",
+                  "text"
+                ],
+                "type": "object"
+              },
+              "maxItems": 100,
+              "type": "array"
+            },
+            "hitDie": {
+              "format": "int32",
+              "maximum": 100000,
+              "minimum": -100000,
+              "type": "integer"
+            },
+            "primary": {
+              "items": {
+                "maxLength": 40,
+                "type": "string"
+              },
+              "maxItems": 10,
+              "type": "array"
+            },
+            "saves": {
+              "items": {
+                "maxLength": 40,
+                "type": "string"
+              },
+              "maxItems": 10,
+              "type": "array"
+            },
+            "skills": {
+              "format": "int32",
+              "maximum": 100000,
+              "minimum": -100000,
+              "type": "integer"
+            },
+            "subclassLevel": {
+              "format": "int32",
+              "maximum": 100000,
+              "minimum": -100000,
+              "type": "integer"
+            },
+            "weapons": {
+              "items": {
+                "maxLength": 40,
+                "type": "string"
+              },
+              "maxItems": 10,
+              "type": "array"
+            }
+          },
+          "required": [
+            "hitDie",
+            "primary",
+            "saves",
+            "armor",
+            "weapons",
+            "skills",
+            "subclassLevel",
+            "featLevels",
+            "columns",
+            "features",
+            "casting"
+          ],
+          "type": "object"
+        },
+        "entryId": {
+          "description": "Library entry id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "entryId",
+        "body"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "save_condition_build",
+    "description": "Save a condition design. Saves the design of one of the caller's condition entries as its next Revision; Campaigns that see it offer it in the DM's effect picker, with its icon on every token it is on. Every call saves a new Revision of the Library entry, named in the answer; restore_library_revision brings an earlier one back.",
+    "method": "PUT",
+    "path": "/api/v1/builders/conditions/{entryId}",
+    "pathParams": [
+      "entryId"
+    ],
+    "queryParams": [],
+    "body": true,
+    "keeps": "library",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "additionalProperties": false,
+          "description": "A homebrew condition as the condition builder makes it, from its icon, how it ends, how it stacks and what it does.",
+          "properties": {
+            "ability": {
+              "maxLength": 40,
+              "type": "string"
+            },
+            "color": {
+              "maxLength": 20,
+              "type": "string"
+            },
+            "cure": {
+              "description": "What cures a condition that lasts until cured: a lingering injury.",
+              "maxLength": 200,
+              "type": "string"
+            },
+            "ends": {
+              "maxLength": 40,
+              "type": "string"
+            },
+            "icon": {
+              "maxLength": 40,
+              "type": "string"
+            },
+            "maxLevel": {
+              "format": "int32",
+              "maximum": 100000,
+              "minimum": -100000,
+              "type": "integer"
+            },
+            "parts": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "ability": {
+                    "maxLength": 40,
+                    "type": "string"
+                  },
+                  "feet": {
+                    "format": "int32",
+                    "maximum": 100000,
+                    "minimum": -100000,
+                    "type": "integer"
+                  },
+                  "text": {
+                    "maxLength": 2000,
+                    "type": "string"
+                  },
+                  "type": {
+                    "maxLength": 40,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              },
+              "maxItems": 40,
+              "type": "array"
+            },
+            "perLevel": {
+              "additionalProperties": false,
+              "properties": {
+                "d20": {
+                  "format": "int32",
+                  "maximum": 100000,
+                  "minimum": -100000,
+                  "type": "integer"
+                },
+                "deathAt": {
+                  "format": "int32",
+                  "maximum": 100000,
+                  "minimum": -100000,
+                  "type": "integer"
+                },
+                "speedFt": {
+                  "format": "int32",
+                  "maximum": 100000,
+                  "minimum": -100000,
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "d20",
+                "speedFt",
+                "deathAt"
+              ],
+              "type": "object"
+            },
+            "stacks": {
+              "type": "boolean"
+            },
+            "text": {
+              "maxLength": 8000,
+              "type": "string"
+            }
+          },
+          "required": [
+            "icon",
+            "color",
+            "text",
+            "ends",
+            "perLevel",
+            "parts"
+          ],
+          "type": "object"
+        },
+        "entryId": {
+          "description": "Library entry id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "entryId",
+        "body"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "save_feat_build",
+    "description": "Save a feat design. Saves the design of one of the caller's feat entries as its next Revision; Campaigns that see it offer it when a level grants a feat of its category. Every call saves a new Revision of the Library entry, named in the answer; restore_library_revision brings an earlier one back.",
+    "method": "PUT",
+    "path": "/api/v1/builders/feats/{entryId}",
+    "pathParams": [
+      "entryId"
+    ],
+    "queryParams": [],
+    "body": true,
+    "keeps": "library",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "additionalProperties": false,
+          "description": "A homebrew feat as the feat builder makes it, with its category, text, prerequisites and whether it can be taken again.",
+          "properties": {
+            "category": {
+              "maxLength": 40,
+              "type": "string"
+            },
+            "prerequisites": {
+              "items": {
+                "additionalProperties": false,
+                "description": "One thing a feat needs; prerequisites in one group are alternatives, and every group must hold.",
+                "properties": {
+                  "ability": {
+                    "maxLength": 40,
+                    "type": "string"
+                  },
+                  "feat": {
+                    "maxLength": 120,
+                    "type": "string"
+                  },
+                  "group": {
+                    "format": "int32",
+                    "maximum": 100000,
+                    "minimum": -100000,
+                    "type": "integer"
+                  },
+                  "kind": {
+                    "maxLength": 40,
+                    "type": "string"
+                  },
+                  "minimum": {
+                    "format": "int32",
+                    "maximum": 100000,
+                    "minimum": -100000,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "group"
+                ],
+                "type": "object"
+              },
+              "maxItems": 40,
+              "type": "array"
+            },
+            "repeatable": {
+              "type": "boolean"
+            },
+            "text": {
+              "maxLength": 16000,
+              "type": "string"
+            }
+          },
+          "required": [
+            "category",
+            "text",
+            "prerequisites"
+          ],
+          "type": "object"
+        },
+        "entryId": {
+          "description": "Library entry id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "entryId",
+        "body"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "save_item_build",
+    "description": "Save an item design. Saves the design of one of the caller's items as its next Revision; Campaigns that see it carry it in Inventories by its slug. Every call saves a new Revision of the Library entry, named in the answer; restore_library_revision brings an earlier one back.",
+    "method": "PUT",
+    "path": "/api/v1/builders/items/{entryId}",
+    "pathParams": [
+      "entryId"
+    ],
+    "queryParams": [],
+    "body": true,
+    "keeps": "library",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "additionalProperties": false,
+          "description": "A homebrew item as the item builder makes it, from its kind, base item, rarity, enchantment, attunement, charges and Item Properties.",
+          "properties": {
+            "attunement": {
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "maxLength": 40,
+                  "type": "string"
+                },
+                "value": {
+                  "maxLength": 200,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "base": {
+              "maxLength": 80,
+              "type": "string"
+            },
+            "charges": {
+              "additionalProperties": false,
+              "properties": {
+                "bonus": {
+                  "format": "int32",
+                  "maximum": 100000000,
+                  "minimum": -100000,
+                  "type": "integer"
+                },
+                "dice": {
+                  "format": "int32",
+                  "maximum": 100000000,
+                  "minimum": -100000,
+                  "type": "integer"
+                },
+                "faces": {
+                  "format": "int32",
+                  "maximum": 100000000,
+                  "minimum": -100000,
+                  "type": "integer"
+                },
+                "max": {
+                  "format": "int32",
+                  "maximum": 100000000,
+                  "minimum": -100000,
+                  "type": "integer"
+                },
+                "on": {
+                  "maxLength": 40,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "max",
+                "on"
+              ],
+              "type": "object"
+            },
+            "enchantment": {
+              "format": "int32",
+              "maximum": 100000000,
+              "minimum": -100000,
+              "type": "integer"
+            },
+            "kind": {
+              "maxLength": 40,
+              "type": "string"
+            },
+            "properties": {
+              "items": {
+                "additionalProperties": false,
+                "description": "One Item Property row; which fields count depends on its type. A hidden one shows once the item is identified or attuned.",
+                "properties": {
+                  "atLevel": {
+                    "format": "int32",
+                    "maximum": 100000000,
+                    "minimum": -100000,
+                    "type": "integer"
+                  },
+                  "brightFt": {
+                    "format": "int32",
+                    "maximum": 100000000,
+                    "minimum": -100000,
+                    "type": "integer"
+                  },
+                  "burst": {
+                    "format": "int32",
+                    "maximum": 100000000,
+                    "minimum": -100000,
+                    "type": "integer"
+                  },
+                  "cannotDrop": {
+                    "type": "boolean"
+                  },
+                  "capacityLb": {
+                    "format": "int32",
+                    "maximum": 100000000,
+                    "minimum": -100000,
+                    "type": "integer"
+                  },
+                  "cost": {
+                    "format": "int32",
+                    "maximum": 100000000,
+                    "minimum": -100000,
+                    "type": "integer"
+                  },
+                  "damage": {
+                    "maxLength": 40,
+                    "type": "string"
+                  },
+                  "dice": {
+                    "maxLength": 20,
+                    "type": "string"
+                  },
+                  "dimFt": {
+                    "format": "int32",
+                    "maximum": 100000000,
+                    "minimum": -100000,
+                    "type": "integer"
+                  },
+                  "feet": {
+                    "format": "int32",
+                    "maximum": 100000000,
+                    "minimum": -100000,
+                    "type": "integer"
+                  },
+                  "hidden": {
+                    "type": "boolean"
+                  },
+                  "hits": {
+                    "format": "int32",
+                    "maximum": 100000000,
+                    "minimum": -100000,
+                    "type": "integer"
+                  },
+                  "level": {
+                    "format": "int32",
+                    "maximum": 100000000,
+                    "minimum": -100000,
+                    "type": "integer"
+                  },
+                  "misfire": {
+                    "format": "int32",
+                    "maximum": 100000000,
+                    "minimum": -100000,
+                    "type": "integer"
+                  },
+                  "mode": {
+                    "maxLength": 40,
+                    "type": "string"
+                  },
+                  "name": {
+                    "maxLength": 120,
+                    "type": "string"
+                  },
+                  "onlyKind": {
+                    "maxLength": 40,
+                    "type": "string"
+                  },
+                  "pieces": {
+                    "format": "int32",
+                    "maximum": 100000000,
+                    "minimum": -100000,
+                    "type": "integer"
+                  },
+                  "reload": {
+                    "format": "int32",
+                    "maximum": 100000000,
+                    "minimum": -100000,
+                    "type": "integer"
+                  },
+                  "sense": {
+                    "maxLength": 40,
+                    "type": "string"
+                  },
+                  "set": {
+                    "maxLength": 80,
+                    "type": "string"
+                  },
+                  "skill": {
+                    "maxLength": 40,
+                    "type": "string"
+                  },
+                  "speed": {
+                    "maxLength": 40,
+                    "type": "string"
+                  },
+                  "spell": {
+                    "maxLength": 80,
+                    "type": "string"
+                  },
+                  "target": {
+                    "maxLength": 40,
+                    "type": "string"
+                  },
+                  "text": {
+                    "maxLength": 2000,
+                    "type": "string"
+                  },
+                  "type": {
+                    "maxLength": 40,
+                    "type": "string"
+                  },
+                  "uses": {
+                    "maxLength": 40,
+                    "type": "string"
+                  },
+                  "value": {
+                    "format": "int32",
+                    "maximum": 100000000,
+                    "minimum": -100000,
+                    "type": "integer"
+                  },
+                  "weightless": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              },
+              "maxItems": 100,
+              "type": "array"
+            },
+            "rarity": {
+              "enum": [
+                "common",
+                "uncommon",
+                "rare",
+                "very_rare",
+                "legendary"
+              ],
+              "type": "string"
+            },
+            "valueGp": {
+              "format": "int32",
+              "maximum": 100000000,
+              "minimum": -100000,
+              "type": "integer"
+            },
+            "weapon": {
+              "additionalProperties": false,
+              "properties": {
+                "custom": {
+                  "maxLength": 1000,
+                  "type": "string"
+                },
+                "mastery": {
+                  "maxLength": 40,
+                  "type": "string"
+                },
+                "properties": {
+                  "items": {
+                    "maxLength": 40,
+                    "type": "string"
+                  },
+                  "maxItems": 20,
+                  "type": "array"
+                }
+              },
+              "required": [
+                "properties"
+              ],
+              "type": "object"
+            },
+            "weightLb": {
+              "format": "double",
+              "maximum": 100000,
+              "minimum": -100000,
+              "type": "number"
+            }
+          },
+          "required": [
+            "kind",
+            "rarity",
+            "enchantment",
+            "weightLb",
+            "valueGp",
+            "properties"
+          ],
+          "type": "object"
+        },
+        "entryId": {
+          "description": "Library entry id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "entryId",
+        "body"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "save_monster_build",
+    "description": "Save a creature design. Saves the design of one of the caller's creature entries as its next Revision; Campaigns that see it can place it by its slug, with its legendary and lair actions offered in the turn order. Every call saves a new Revision of the Library entry, named in the answer; restore_library_revision brings an earlier one back.",
+    "method": "PUT",
+    "path": "/api/v1/builders/monsters/{entryId}",
+    "pathParams": [
+      "entryId"
+    ],
+    "queryParams": [],
+    "body": true,
+    "keeps": "library",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "additionalProperties": false,
+          "description": "A homebrew creature as the monster builder makes it.",
+          "properties": {
+            "abilities": {
+              "additionalProperties": {
+                "format": "int32",
+                "maximum": 100000,
+                "minimum": -100000,
+                "type": "integer"
+              },
+              "type": "object"
+            },
+            "ac": {
+              "format": "int32",
+              "maximum": 100000,
+              "minimum": -100000,
+              "type": "integer"
+            },
+            "actions": {
+              "items": {
+                "additionalProperties": false,
+                "description": "Something a creature does with its action: a melee or ranged attack, a save it forces, or anything else as text.",
+                "properties": {
+                  "damage": {
+                    "maxLength": 40,
+                    "type": "string"
+                  },
+                  "damageBonus": {
+                    "format": "int32",
+                    "maximum": 100000,
+                    "minimum": -100000,
+                    "type": "integer"
+                  },
+                  "damageType": {
+                    "maxLength": 40,
+                    "type": "string"
+                  },
+                  "dc": {
+                    "format": "int32",
+                    "maximum": 100000,
+                    "minimum": -100000,
+                    "type": "integer"
+                  },
+                  "kind": {
+                    "maxLength": 40,
+                    "type": "string"
+                  },
+                  "longRangeFt": {
+                    "format": "int32",
+                    "maximum": 100000,
+                    "minimum": -100000,
+                    "type": "integer"
+                  },
+                  "name": {
+                    "maxLength": 200,
+                    "type": "string"
+                  },
+                  "rangeFt": {
+                    "format": "int32",
+                    "maximum": 100000,
+                    "minimum": -100000,
+                    "type": "integer"
+                  },
+                  "reachFt": {
+                    "format": "int32",
+                    "maximum": 100000,
+                    "minimum": -100000,
+                    "type": "integer"
+                  },
+                  "recharge": {
+                    "format": "int32",
+                    "maximum": 100000,
+                    "minimum": -100000,
+                    "type": "integer"
+                  },
+                  "saveAbility": {
+                    "maxLength": 40,
+                    "type": "string"
+                  },
+                  "text": {
+                    "maxLength": 8000,
+                    "type": "string"
+                  },
+                  "toHit": {
+                    "format": "int32",
+                    "maximum": 100000,
+                    "minimum": -100000,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "name",
+                  "kind"
+                ],
+                "type": "object"
+              },
+              "maxItems": 40,
+              "type": "array"
+            },
+            "aura": {
+              "additionalProperties": false,
+              "properties": {
+                "feet": {
+                  "format": "int32",
+                  "maximum": 100000,
+                  "minimum": -100000,
+                  "type": "integer"
+                },
+                "name": {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                "text": {
+                  "maxLength": 8000,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "feet",
+                "text"
+              ],
+              "type": "object"
+            },
+            "challenge": {
+              "format": "double",
+              "maximum": 100,
+              "minimum": -100,
+              "type": "number"
+            },
+            "creatureType": {
+              "maxLength": 40,
+              "type": "string"
+            },
+            "hp": {
+              "format": "int32",
+              "maximum": 100000,
+              "minimum": -100000,
+              "type": "integer"
+            },
+            "immunities": {
+              "items": {
+                "maxLength": 40,
+                "type": "string"
+              },
+              "maxItems": 20,
+              "type": "array"
+            },
+            "lair": {
+              "additionalProperties": false,
+              "properties": {
+                "actions": {
+                  "items": {
+                    "additionalProperties": false,
+                    "description": "A named rule of a creature's, or a lair action.",
+                    "properties": {
+                      "name": {
+                        "maxLength": 200,
+                        "type": "string"
+                      },
+                      "text": {
+                        "maxLength": 8000,
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "text"
+                    ],
+                    "type": "object"
+                  },
+                  "maxItems": 40,
+                  "type": "array"
+                },
+                "regional": {
+                  "items": {
+                    "maxLength": 8000,
+                    "type": "string"
+                  },
+                  "maxItems": 20,
+                  "type": "array"
+                }
+              },
+              "required": [
+                "actions",
+                "regional"
+              ],
+              "type": "object"
+            },
+            "legendary": {
+              "additionalProperties": false,
+              "properties": {
+                "actions": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "cost": {
+                        "format": "int32",
+                        "maximum": 100000,
+                        "minimum": -100000,
+                        "type": "integer"
+                      },
+                      "name": {
+                        "maxLength": 200,
+                        "type": "string"
+                      },
+                      "text": {
+                        "maxLength": 8000,
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "cost",
+                      "text"
+                    ],
+                    "type": "object"
+                  },
+                  "maxItems": 20,
+                  "type": "array"
+                },
+                "resistance": {
+                  "format": "int32",
+                  "maximum": 100000,
+                  "minimum": -100000,
+                  "type": "integer"
+                },
+                "uses": {
+                  "format": "int32",
+                  "maximum": 100000,
+                  "minimum": -100000,
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "uses",
+                "resistance",
+                "actions"
+              ],
+              "type": "object"
+            },
+            "multiattack": {
+              "format": "int32",
+              "maximum": 100000,
+              "minimum": -100000,
+              "type": "integer"
+            },
+            "phases": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "hp": {
+                    "format": "int32",
+                    "maximum": 100000,
+                    "minimum": -100000,
+                    "type": "integer"
+                  },
+                  "name": {
+                    "maxLength": 200,
+                    "type": "string"
+                  },
+                  "text": {
+                    "maxLength": 8000,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "hp",
+                  "text"
+                ],
+                "type": "object"
+              },
+              "maxItems": 10,
+              "type": "array"
+            },
+            "resistances": {
+              "items": {
+                "maxLength": 40,
+                "type": "string"
+              },
+              "maxItems": 20,
+              "type": "array"
+            },
+            "saves": {
+              "items": {
+                "maxLength": 40,
+                "type": "string"
+              },
+              "maxItems": 20,
+              "type": "array"
+            },
+            "senses": {
+              "items": {
+                "additionalProperties": false,
+                "description": "A speed beside walking, or a special sense, and how far it reaches.",
+                "properties": {
+                  "feet": {
+                    "format": "int32",
+                    "maximum": 100000,
+                    "minimum": -100000,
+                    "type": "integer"
+                  },
+                  "kind": {
+                    "maxLength": 40,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "feet"
+                ],
+                "type": "object"
+              },
+              "maxItems": 20,
+              "type": "array"
+            },
+            "size": {
+              "maxLength": 40,
+              "type": "string"
+            },
+            "speedFt": {
+              "format": "int32",
+              "maximum": 100000,
+              "minimum": -100000,
+              "type": "integer"
+            },
+            "swarm": {
+              "type": "boolean"
+            },
+            "threshold": {
+              "format": "int32",
+              "maximum": 100000,
+              "minimum": -100000,
+              "type": "integer"
+            },
+            "traits": {
+              "items": {
+                "additionalProperties": false,
+                "description": "A named rule of a creature's, or a lair action.",
+                "properties": {
+                  "name": {
+                    "maxLength": 200,
+                    "type": "string"
+                  },
+                  "text": {
+                    "maxLength": 8000,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "text"
+                ],
+                "type": "object"
+              },
+              "maxItems": 40,
+              "type": "array"
+            },
+            "vulnerabilities": {
+              "items": {
+                "maxLength": 40,
+                "type": "string"
+              },
+              "maxItems": 20,
+              "type": "array"
+            }
+          },
+          "required": [
+            "size",
+            "creatureType",
+            "ac",
+            "hp",
+            "speedFt",
+            "challenge",
+            "abilities",
+            "saves",
+            "senses",
+            "resistances",
+            "immunities",
+            "vulnerabilities",
+            "threshold",
+            "traits",
+            "multiattack",
+            "actions",
+            "phases"
+          ],
+          "type": "object"
+        },
+        "entryId": {
+          "description": "Library entry id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "entryId",
+        "body"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "save_roll_table_build",
+    "description": "Save a Roll Table design. Saves the design of one of the caller's table entries as its next Revision. A Campaign that sees the table can hook it to a Rule Variant of its own. Every call saves a new Revision of the Library entry, named in the answer; restore_library_revision brings an earlier one back.",
+    "method": "PUT",
+    "path": "/api/v1/builders/roll-tables/{entryId}",
+    "pathParams": [
+      "entryId"
+    ],
+    "queryParams": [],
+    "body": true,
+    "keeps": "library",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "additionalProperties": false,
+          "description": "A Roll Table as its builder makes it. Its dice are up to ten of one kind, and its results cover ranges of what they can show, in order and without overlapping.",
+          "properties": {
+            "dice": {
+              "description": "The dice to roll, such as 1d20 or 2d6.",
+              "maxLength": 20,
+              "type": "string"
+            },
+            "results": {
+              "items": {
+                "additionalProperties": false,
+                "description": "What a range of the dice gives. It may apply an Effect to whoever rolled, and give an Item.",
+                "properties": {
+                  "effect": {
+                    "description": "The slug of the Effect it applies.",
+                    "maxLength": 200,
+                    "type": "string"
+                  },
+                  "from": {
+                    "format": "int32",
+                    "maximum": 100000,
+                    "minimum": -100000,
+                    "type": "integer"
+                  },
+                  "item": {
+                    "description": "The slug of the Item it gives.",
+                    "maxLength": 200,
+                    "type": "string"
+                  },
+                  "quantity": {
+                    "format": "int32",
+                    "maximum": 100000,
+                    "minimum": -100000,
+                    "type": "integer"
+                  },
+                  "text": {
+                    "maxLength": 2000,
+                    "type": "string"
+                  },
+                  "to": {
+                    "format": "int32",
+                    "maximum": 100000,
+                    "minimum": -100000,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "from",
+                  "to",
+                  "text"
+                ],
+                "type": "object"
+              },
+              "maxItems": 100,
+              "type": "array"
+            }
+          },
+          "required": [
+            "dice",
+            "results"
+          ],
+          "type": "object"
+        },
+        "entryId": {
+          "description": "Library entry id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "entryId",
+        "body"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "save_species_build",
+    "description": "Save a species design. Saves the design of one of the caller's species entries as its next Revision; Campaigns that see it offer it, and each of its lineages, in character creation. Every call saves a new Revision of the Library entry, named in the answer; restore_library_revision brings an earlier one back.",
+    "method": "PUT",
+    "path": "/api/v1/builders/species/{entryId}",
+    "pathParams": [
+      "entryId"
+    ],
+    "queryParams": [],
+    "body": true,
+    "keeps": "library",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "additionalProperties": false,
+          "description": "A homebrew species as the species builder makes it, from its sizes, creature type, speeds, senses, resistances, traits, innate spells and lineages.",
+          "properties": {
+            "creatureType": {
+              "maxLength": 40,
+              "type": "string"
+            },
+            "lineages": {
+              "items": {
+                "additionalProperties": false,
+                "description": "One branch of the species, picked at creation, with its own trait and spells.",
+                "properties": {
+                  "name": {
+                    "maxLength": 200,
+                    "type": "string"
+                  },
+                  "spells": {
+                    "items": {
+                      "additionalProperties": false,
+                      "description": "An innate spell gained at a character level, cast at will or once per long rest.",
+                      "properties": {
+                        "level": {
+                          "format": "int32",
+                          "maximum": 100000,
+                          "minimum": -100000,
+                          "type": "integer"
+                        },
+                        "name": {
+                          "maxLength": 200,
+                          "type": "string"
+                        },
+                        "spell": {
+                          "maxLength": 120,
+                          "type": "string"
+                        },
+                        "uses": {
+                          "maxLength": 40,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "level",
+                        "spell",
+                        "name",
+                        "uses"
+                      ],
+                      "type": "object"
+                    },
+                    "maxItems": 40,
+                    "type": "array"
+                  },
+                  "text": {
+                    "maxLength": 8000,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "text",
+                  "spells"
+                ],
+                "type": "object"
+              },
+              "maxItems": 20,
+              "type": "array"
+            },
+            "resistances": {
+              "items": {
+                "maxLength": 40,
+                "type": "string"
+              },
+              "maxItems": 20,
+              "type": "array"
+            },
+            "senses": {
+              "items": {
+                "additionalProperties": false,
+                "description": "A speed beside walking, or a special sense, and how far it reaches.",
+                "properties": {
+                  "feet": {
+                    "format": "int32",
+                    "maximum": 100000,
+                    "minimum": -100000,
+                    "type": "integer"
+                  },
+                  "kind": {
+                    "maxLength": 40,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "feet"
+                ],
+                "type": "object"
+              },
+              "maxItems": 20,
+              "type": "array"
+            },
+            "sizes": {
+              "items": {
+                "maxLength": 40,
+                "type": "string"
+              },
+              "maxItems": 10,
+              "type": "array"
+            },
+            "speedFt": {
+              "format": "int32",
+              "maximum": 100000,
+              "minimum": -100000,
+              "type": "integer"
+            },
+            "speeds": {
+              "items": {
+                "additionalProperties": false,
+                "description": "A speed beside walking, or a special sense, and how far it reaches.",
+                "properties": {
+                  "feet": {
+                    "format": "int32",
+                    "maximum": 100000,
+                    "minimum": -100000,
+                    "type": "integer"
+                  },
+                  "kind": {
+                    "maxLength": 40,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "feet"
+                ],
+                "type": "object"
+              },
+              "maxItems": 20,
+              "type": "array"
+            },
+            "spells": {
+              "items": {
+                "additionalProperties": false,
+                "description": "An innate spell gained at a character level, cast at will or once per long rest.",
+                "properties": {
+                  "level": {
+                    "format": "int32",
+                    "maximum": 100000,
+                    "minimum": -100000,
+                    "type": "integer"
+                  },
+                  "name": {
+                    "maxLength": 200,
+                    "type": "string"
+                  },
+                  "spell": {
+                    "maxLength": 120,
+                    "type": "string"
+                  },
+                  "uses": {
+                    "maxLength": 40,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "level",
+                  "spell",
+                  "name",
+                  "uses"
+                ],
+                "type": "object"
+              },
+              "maxItems": 40,
+              "type": "array"
+            },
+            "traits": {
+              "items": {
+                "additionalProperties": false,
+                "description": "A named trait every member of the species has.",
+                "properties": {
+                  "name": {
+                    "maxLength": 200,
+                    "type": "string"
+                  },
+                  "text": {
+                    "maxLength": 8000,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "text"
+                ],
+                "type": "object"
+              },
+              "maxItems": 40,
+              "type": "array"
+            }
+          },
+          "required": [
+            "sizes",
+            "creatureType",
+            "speedFt",
+            "speeds",
+            "senses",
+            "resistances",
+            "traits",
+            "spells",
+            "lineages"
+          ],
+          "type": "object"
+        },
+        "entryId": {
+          "description": "Library entry id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "entryId",
+        "body"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "save_spell_build",
+    "description": "Save a spell design. Saves the design of one of the caller's spells as its next Revision; in a live Session it runs as an area spell. Every call saves a new Revision of the Library entry, named in the answer; restore_library_revision brings an earlier one back.",
+    "method": "PUT",
+    "path": "/api/v1/builders/spells/{entryId}",
+    "pathParams": [
+      "entryId"
+    ],
+    "queryParams": [],
+    "body": true,
+    "keeps": "library",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "additionalProperties": false,
+          "description": "A homebrew spell as the Effect builder makes it, from Targeting and typed parts listed as rows.",
+          "properties": {
+            "castingTime": {
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "action",
+                    "bonus_action",
+                    "reaction",
+                    "minutes"
+                  ],
+                  "type": "string"
+                },
+                "minutes": {
+                  "format": "int32",
+                  "maximum": 10000,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "trigger": {
+                  "enum": [
+                    "when_hit",
+                    "when_damaged",
+                    "ally_attacked",
+                    "creature_casts",
+                    "creature_enters_reach"
+                  ],
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind"
+              ],
+              "type": "object"
+            },
+            "components": {
+              "additionalProperties": false,
+              "properties": {
+                "material": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "consumed": {
+                      "type": "boolean"
+                    },
+                    "costGp": {
+                      "format": "int32",
+                      "maximum": 1000000,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "item": {
+                      "maxLength": 80,
+                      "type": "string"
+                    },
+                    "text": {
+                      "maxLength": 400,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "text"
+                  ],
+                  "type": "object"
+                },
+                "somatic": {
+                  "type": "boolean"
+                },
+                "verbal": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "verbal",
+                "somatic"
+              ],
+              "type": "object"
+            },
+            "concentration": {
+              "type": "boolean"
+            },
+            "duration": {
+              "additionalProperties": false,
+              "properties": {
+                "amount": {
+                  "format": "int32",
+                  "maximum": 1000,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "unit": {
+                  "enum": [
+                    "instant",
+                    "rounds",
+                    "minutes",
+                    "hours",
+                    "until_dispelled"
+                  ],
+                  "type": "string"
+                }
+              },
+              "required": [
+                "unit"
+              ],
+              "type": "object"
+            },
+            "parts": {
+              "items": {
+                "additionalProperties": false,
+                "description": "One row of a spell design; which fields count depends on its type.",
+                "properties": {
+                  "brightFt": {
+                    "format": "int32",
+                    "maximum": 1000,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "condition": {
+                    "maxLength": 40,
+                    "type": "string"
+                  },
+                  "damageType": {
+                    "maxLength": 20,
+                    "type": "string"
+                  },
+                  "dice": {
+                    "maxLength": 20,
+                    "type": "string"
+                  },
+                  "dimFt": {
+                    "format": "int32",
+                    "maximum": 1000,
+                    "minimum": -1000,
+                    "type": "integer"
+                  },
+                  "half": {
+                    "type": "boolean"
+                  },
+                  "onlyTypes": {
+                    "items": {
+                      "maxLength": 20,
+                      "type": "string"
+                    },
+                    "maxItems": 14,
+                    "type": "array"
+                  },
+                  "qualities": {
+                    "items": {
+                      "maxLength": 20,
+                      "type": "string"
+                    },
+                    "maxItems": 8,
+                    "type": "array"
+                  },
+                  "rounds": {
+                    "format": "int32",
+                    "maximum": 1000,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "surface": {
+                    "maxLength": 40,
+                    "type": "string"
+                  },
+                  "text": {
+                    "maxLength": 1000,
+                    "type": "string"
+                  },
+                  "type": {
+                    "enum": [
+                      "damage",
+                      "condition",
+                      "light",
+                      "reveal",
+                      "surface",
+                      "manual"
+                    ],
+                    "type": "string"
+                  },
+                  "when": {
+                    "enum": [
+                      "on_cast",
+                      "start_of_turn"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              },
+              "maxItems": 100,
+              "type": "array"
+            },
+            "ritual": {
+              "type": "boolean"
+            },
+            "save": {
+              "enum": [
+                "strength",
+                "dexterity",
+                "constitution",
+                "intelligence",
+                "wisdom",
+                "charisma"
+              ],
+              "type": "string"
+            },
+            "targeting": {
+              "additionalProperties": false,
+              "properties": {
+                "rangeFt": {
+                  "format": "int32",
+                  "maximum": 5000,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "shape": {
+                  "enum": [
+                    "sphere",
+                    "cylinder",
+                    "emanation",
+                    "ring",
+                    "cone",
+                    "cube",
+                    "line",
+                    "wall"
+                  ],
+                  "type": "string"
+                },
+                "sizeFt": {
+                  "format": "int32",
+                  "maximum": 1000,
+                  "minimum": 0,
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "shape",
+                "sizeFt",
+                "rangeFt"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "targeting",
+            "concentration",
+            "duration",
+            "ritual",
+            "castingTime",
+            "components",
+            "parts"
+          ],
+          "type": "object"
+        },
+        "entryId": {
+          "description": "Library entry id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "entryId",
+        "body"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "save_subclass_build",
+    "description": "Save a subclass design. Saves the design of one of the caller's subclasses as its next Revision; Campaigns that see it offer it on levelling up its class. Every call saves a new Revision of the Library entry, named in the answer; restore_library_revision brings an earlier one back.",
+    "method": "PUT",
+    "path": "/api/v1/builders/subclasses/{entryId}",
+    "pathParams": [
+      "entryId"
+    ],
+    "queryParams": [],
+    "body": true,
+    "keeps": "library",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "additionalProperties": false,
+          "description": "A homebrew subclass as the subclass builder makes it, from level-gated Features, the Resources they spend and the choices they ask for.",
+          "properties": {
+            "choices": {
+              "items": {
+                "additionalProperties": false,
+                "description": "A pick from listed options at a level.",
+                "properties": {
+                  "count": {
+                    "format": "int32",
+                    "maximum": 100000,
+                    "minimum": -100000,
+                    "type": "integer"
+                  },
+                  "level": {
+                    "format": "int32",
+                    "maximum": 100000,
+                    "minimum": -100000,
+                    "type": "integer"
+                  },
+                  "name": {
+                    "maxLength": 200,
+                    "type": "string"
+                  },
+                  "options": {
+                    "items": {
+                      "maxLength": 200,
+                      "type": "string"
+                    },
+                    "maxItems": 100,
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "level",
+                  "name",
+                  "count",
+                  "options"
+                ],
+                "type": "object"
+              },
+              "maxItems": 100,
+              "type": "array"
+            },
+            "class": {
+              "maxLength": 40,
+              "type": "string"
+            },
+            "features": {
+              "items": {
+                "additionalProperties": false,
+                "description": "A Feature gained at a class level; it may spend a use of a Resource, by key, and let its bearer cast a spell.",
+                "properties": {
+                  "level": {
+                    "format": "int32",
+                    "maximum": 100000,
+                    "minimum": -100000,
+                    "type": "integer"
+                  },
+                  "name": {
+                    "maxLength": 200,
+                    "type": "string"
+                  },
+                  "spell": {
+                    "maxLength": 120,
+                    "type": "string"
+                  },
+                  "spellName": {
+                    "maxLength": 200,
+                    "type": "string"
+                  },
+                  "text": {
+                    "maxLength": 4000,
+                    "type": "string"
+                  },
+                  "uses": {
+                    "maxLength": 80,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "level",
+                  "name",
+                  "text"
+                ],
+                "type": "object"
+              },
+              "maxItems": 100,
+              "type": "array"
+            },
+            "resources": {
+              "items": {
+                "additionalProperties": false,
+                "description": "A pool of uses: a fixed number, some per class level, an ability modifier or the Proficiency Bonus, from a level on, coming back on a rest or at dawn.",
+                "properties": {
+                  "ability": {
+                    "maxLength": 40,
+                    "type": "string"
+                  },
+                  "amount": {
+                    "format": "int32",
+                    "maximum": 100000,
+                    "minimum": -100000,
+                    "type": "integer"
+                  },
+                  "basis": {
+                    "maxLength": 40,
+                    "type": "string"
+                  },
+                  "die": {
+                    "maxLength": 20,
+                    "type": "string"
+                  },
+                  "fromLevel": {
+                    "format": "int32",
+                    "maximum": 100000,
+                    "minimum": -100000,
+                    "type": "integer"
+                  },
+                  "key": {
+                    "maxLength": 80,
+                    "type": "string"
+                  },
+                  "name": {
+                    "maxLength": 200,
+                    "type": "string"
+                  },
+                  "recharge": {
+                    "maxLength": 40,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "key",
+                  "name",
+                  "basis",
+                  "fromLevel",
+                  "recharge"
+                ],
+                "type": "object"
+              },
+              "maxItems": 100,
+              "type": "array"
+            }
+          },
+          "required": [
+            "class",
+            "features",
+            "resources",
+            "choices"
+          ],
+          "type": "object"
+        },
+        "entryId": {
+          "description": "Library entry id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "entryId",
         "body"
       ],
       "type": "object"
@@ -3128,6 +5847,75 @@
       "required": [
         "campaignId",
         "tableId",
+        "body"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "update_library_entry",
+    "description": "Edit a Library entry. Saves a new base as the entry's next Revision. Every Campaign that follows the latest Revision sees it; a pinned Campaign does not. Every call saves a new Revision of the Library entry, named in the answer; restore_library_revision brings an earlier one back.",
+    "method": "PUT",
+    "path": "/api/v1/library/{entryId}",
+    "pathParams": [
+      "entryId"
+    ],
+    "queryParams": [],
+    "body": true,
+    "keeps": "library",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "additionalProperties": false,
+          "description": "A Library entry's new base; its kind stays.",
+          "properties": {
+            "fields": {
+              "description": "Named values, in name order.",
+              "items": {
+                "additionalProperties": false,
+                "description": "One named value of a Library entry.",
+                "properties": {
+                  "name": {
+                    "maxLength": 60,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "value": {
+                    "maxLength": 4000,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "value"
+                ],
+                "type": "object"
+              },
+              "maxItems": 100,
+              "type": "array"
+            },
+            "name": {
+              "maxLength": 80,
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "fields"
+          ],
+          "type": "object"
+        },
+        "entryId": {
+          "description": "Library entry id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "entryId",
         "body"
       ],
       "type": "object"

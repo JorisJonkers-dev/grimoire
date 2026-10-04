@@ -18379,8 +18379,9 @@ func (s *LibraryEntryDetailHeaders) SetResponse(val LibraryEntryDetail) {
 	s.Response = val
 }
 
-func (*LibraryEntryDetailHeaders) getLibraryEntryRes()    {}
-func (*LibraryEntryDetailHeaders) updateLibraryEntryRes() {}
+func (*LibraryEntryDetailHeaders) getLibraryEntryRes()        {}
+func (*LibraryEntryDetailHeaders) restoreLibraryRevisionRes() {}
+func (*LibraryEntryDetailHeaders) updateLibraryEntryRes()     {}
 
 // LibraryEntryHeaders wraps LibraryEntry with response headers.
 type LibraryEntryHeaders struct {
@@ -18901,6 +18902,10 @@ type LibraryRevision struct {
 	Name      string        `json:"name"`
 	Fields    LibraryFields `json:"fields"`
 	CreatedAt time.Time     `json:"createdAt"`
+	// How the Revision was made: by hand in the app, or through an MCP client.
+	Origin LibraryRevisionOrigin `json:"origin"`
+	// The MCP client that made it, when one did.
+	Client OptString `json:"client"`
 }
 
 // GetNo returns the value of No.
@@ -18923,6 +18928,16 @@ func (s *LibraryRevision) GetCreatedAt() time.Time {
 	return s.CreatedAt
 }
 
+// GetOrigin returns the value of Origin.
+func (s *LibraryRevision) GetOrigin() LibraryRevisionOrigin {
+	return s.Origin
+}
+
+// GetClient returns the value of Client.
+func (s *LibraryRevision) GetClient() OptString {
+	return s.Client
+}
+
 // SetNo sets the value of No.
 func (s *LibraryRevision) SetNo(val int32) {
 	s.No = val
@@ -18941,6 +18956,72 @@ func (s *LibraryRevision) SetFields(val LibraryFields) {
 // SetCreatedAt sets the value of CreatedAt.
 func (s *LibraryRevision) SetCreatedAt(val time.Time) {
 	s.CreatedAt = val
+}
+
+// SetOrigin sets the value of Origin.
+func (s *LibraryRevision) SetOrigin(val LibraryRevisionOrigin) {
+	s.Origin = val
+}
+
+// SetClient sets the value of Client.
+func (s *LibraryRevision) SetClient(val OptString) {
+	s.Client = val
+}
+
+// How the Revision was made: by hand in the app, or through an MCP client.
+type LibraryRevisionOrigin string
+
+const (
+	LibraryRevisionOriginUI        LibraryRevisionOrigin = "ui"
+	LibraryRevisionOriginMcp       LibraryRevisionOrigin = "mcp"
+	LibraryRevisionOriginGenerator LibraryRevisionOrigin = "generator"
+	LibraryRevisionOriginSystem    LibraryRevisionOrigin = "system"
+)
+
+// AllValues returns all LibraryRevisionOrigin values.
+func (LibraryRevisionOrigin) AllValues() []LibraryRevisionOrigin {
+	return []LibraryRevisionOrigin{
+		LibraryRevisionOriginUI,
+		LibraryRevisionOriginMcp,
+		LibraryRevisionOriginGenerator,
+		LibraryRevisionOriginSystem,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LibraryRevisionOrigin) MarshalText() ([]byte, error) {
+	switch s {
+	case LibraryRevisionOriginUI:
+		return []byte(s), nil
+	case LibraryRevisionOriginMcp:
+		return []byte(s), nil
+	case LibraryRevisionOriginGenerator:
+		return []byte(s), nil
+	case LibraryRevisionOriginSystem:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LibraryRevisionOrigin) UnmarshalText(data []byte) error {
+	switch LibraryRevisionOrigin(data) {
+	case LibraryRevisionOriginUI:
+		*s = LibraryRevisionOriginUI
+		return nil
+	case LibraryRevisionOriginMcp:
+		*s = LibraryRevisionOriginMcp
+		return nil
+	case LibraryRevisionOriginGenerator:
+		*s = LibraryRevisionOriginGenerator
+		return nil
+	case LibraryRevisionOriginSystem:
+		*s = LibraryRevisionOriginSystem
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 // Whether the Collection is on in the Campaign.
@@ -40625,6 +40706,7 @@ func (*ProblemStatusCodeWithHeaders) resetAccountTwoStepRes()           {}
 func (*ProblemStatusCodeWithHeaders) resetRecoveryCodesRes()            {}
 func (*ProblemStatusCodeWithHeaders) restoreEncounterPoolRevisionRes()  {}
 func (*ProblemStatusCodeWithHeaders) restoreEncounterTableRevisionRes() {}
+func (*ProblemStatusCodeWithHeaders) restoreLibraryRevisionRes()        {}
 func (*ProblemStatusCodeWithHeaders) restoreLootTableRevisionRes()      {}
 func (*ProblemStatusCodeWithHeaders) restoreNpcRevisionRes()            {}
 func (*ProblemStatusCodeWithHeaders) restoreSettlementRevisionRes()     {}

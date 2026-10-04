@@ -2836,6 +2836,14 @@ export type LibraryRevision = {
     name: string;
     fields: LibraryFields;
     createdAt: string;
+    /**
+     * How the Revision was made: by hand in the app, or through an MCP client.
+     */
+    origin: 'ui' | 'mcp' | 'generator' | 'system';
+    /**
+     * The MCP client that made it, when one did.
+     */
+    client?: string;
 };
 
 /**
@@ -12005,6 +12013,44 @@ export type UpdateLibraryEntryResponses = {
 };
 
 export type UpdateLibraryEntryResponse = UpdateLibraryEntryResponses[keyof UpdateLibraryEntryResponses];
+
+export type RestoreLibraryRevisionData = {
+    body?: never;
+    path: {
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+        /**
+         * The number of the Revision to bring back.
+         */
+        revisionNo: number;
+    };
+    query?: never;
+    url: '/api/v1/library/{entryId}/revisions/{revisionNo}/restore';
+};
+
+export type RestoreLibraryRevisionErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type RestoreLibraryRevisionError = RestoreLibraryRevisionErrors[keyof RestoreLibraryRevisionErrors];
+
+export type RestoreLibraryRevisionResponses = {
+    /**
+     * The entry as restored.
+     */
+    200: LibraryEntryDetail;
+};
+
+export type RestoreLibraryRevisionResponse = RestoreLibraryRevisionResponses[keyof RestoreLibraryRevisionResponses];
 
 export type ListLinkedEntriesData = {
     body?: never;

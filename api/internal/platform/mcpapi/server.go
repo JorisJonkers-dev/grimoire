@@ -83,6 +83,18 @@ func destructive(t Tool) *bool {
 type result struct {
 	Result   json.RawMessage `json:"result"`
 	Revision *revision       `json:"revision,omitempty"`
+	// LibraryRevision is the Revision of a Library entry a write made; Pending marks a write that
+	// changes nothing until the DM confirms it.
+	LibraryRevision *libraryRevision `json:"libraryRevision,omitempty"`
+	Pending         bool             `json:"pending,omitempty"`
+}
+
+// libraryRevision is a Revision of a Library entry: its number, how it was made and by which client.
+type libraryRevision struct {
+	EntryID uuid.UUID `json:"entryId"`
+	No      int       `json:"no"`
+	Origin  string    `json:"origin"`
+	Client  string    `json:"client,omitempty"`
 }
 
 type revision struct {
@@ -120,7 +132,7 @@ func (o Options) call(t Tool) mcp.ToolHandler {
 		if status >= http.StatusBadRequest {
 			return failure(detail(body)), nil
 		}
-		return success(o.answer(ctx, t, args, body)), nil
+		return success(o.answer(ctx, subject, t, args, body)), nil
 	}
 }
 
@@ -133,9 +145,13 @@ func arguments(raw json.RawMessage) (map[string]json.RawMessage, bool) {
 	return args, json.Unmarshal(raw, &args) == nil
 }
 
-// answer is a write's result with the Revision it recorded, when that can be found.
-func (o Options) answer(ctx context.Context, t Tool, args map[string]json.RawMessage, body json.RawMessage) result {
-	out := result{Result: body}
+// answer is a write's result with how it is kept: the Revision it recorded, when that can be found, or
+// that it waits for the DM.
+func (o Options) answer(ctx context.Context, subject string, t Tool, args map[string]json.RawMessage, body json.RawMessage) result {
+	out := result{Result: body, Pending: t.Keeps == KeepsPending}
+	if t.Keeps == KeepsLibrary {
+		out.LibraryRevision = o.libraryRevision(ctx, subject, t, args, body)
+	}
 	if t.Entity == "" {
 		return out
 	}
@@ -257,6 +273,34 @@ func (o Options) revision(ctx context.Context, t Tool, args map[string]json.RawM
 		return nil, errors.Join(err, errors.New("no revision recorded"))
 	}
 	return &revision{ID: edits[0].RevisionID, No: edits[0].No, Action: string(edits[0].Action)}, nil
+}
+
+// libraryRevision reads back, as the caller, the Revision a write to a Library entry made: the newest
+// of the entry the tool named or the API answered with. A Revision that cannot be read is left out.
+func (o Options) libraryRevision(ctx context.Context, subject string, t Tool, args map[string]json.RawMessage, body json.RawMessage) *libraryRevision {
+	var made struct {
+		ID    uuid.UUID `json:"id"`
+		Entry struct {
+			ID uuid.UUID `json:"id"`
+		} `json:"entry"`
+	}
+	_ = json.Unmarshal(body, &made)
+	id, err := uuid.Parse(text(args["entryId"]))
+	if err != nil {
+		id = made.ID
+	}
+	status, raw := o.serve(ctx, subject, http.MethodGet, "/api/v1/library/"+id.String(), nil)
+	var entry struct {
+		Revisions []libraryRevision `json:"revisions"`
+	}
+	// A refusal carries no Revisions either, so one check covers it.
+	if json.Unmarshal(raw, &entry) != nil || len(entry.Revisions) == 0 {
+		o.Log.ErrorContext(ctx, "mcp: find library revision", "tool", t.Name, "status", status)
+		return nil
+	}
+	out := entry.Revisions[0]
+	out.EntryID = id
+	return &out
 }
 
 func detail(body json.RawMessage) string {

@@ -757,6 +757,14 @@ type BuildInvoker interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/encounter-tables/{tableId}/revisions/{revisionNo}/restore
 	RestoreEncounterTableRevision(ctx context.Context, params RestoreEncounterTableRevisionParams) (RestoreEncounterTableRevisionRes, error)
+	// RestoreLibraryRevision invokes restoreLibraryRevision operation.
+	//
+	// Brings an earlier Revision of one of the caller's entries back as its next Revision: its name, its
+	// fields and, for an entry made in a builder, its design. The Revisions in between stay, so a restore
+	// can itself be undone.
+	//
+	// POST /api/v1/library/{entryId}/revisions/{revisionNo}/restore
+	RestoreLibraryRevision(ctx context.Context, params RestoreLibraryRevisionParams) (RestoreLibraryRevisionRes, error)
 	// RestoreLootTableRevision invokes restoreLootTableRevision operation.
 	//
 	// Brings the Loot Table back to a Revision, recreating it if deleted; the restore is itself a
@@ -31855,6 +31863,162 @@ func (c *Client) sendRestoreEncounterTableRevision(ctx context.Context, params R
 
 	stage = "DecodeResponse"
 	result, err := decodeRestoreEncounterTableRevisionResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// RestoreLibraryRevision invokes restoreLibraryRevision operation.
+//
+// Brings an earlier Revision of one of the caller's entries back as its next Revision: its name, its
+// fields and, for an entry made in a builder, its design. The Revisions in between stay, so a restore
+// can itself be undone.
+//
+// POST /api/v1/library/{entryId}/revisions/{revisionNo}/restore
+func (c *Client) RestoreLibraryRevision(ctx context.Context, params RestoreLibraryRevisionParams) (RestoreLibraryRevisionRes, error) {
+	res, err := c.sendRestoreLibraryRevision(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendRestoreLibraryRevision(ctx context.Context, params RestoreLibraryRevisionParams) (res RestoreLibraryRevisionRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("restoreLibraryRevision"),
+		semconv.HTTPRequestMethodKey.String("POST"),
+		semconv.URLTemplateKey.String("/api/v1/library/{entryId}/revisions/{revisionNo}/restore"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, RestoreLibraryRevisionOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [5]string
+	pathParts[0] = "/api/v1/library/"
+	{
+		// Encode "entryId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "entryId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.EntryId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	pathParts[2] = "/revisions/"
+	{
+		// Encode "revisionNo" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "revisionNo",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			return e.EncodeValue(conv.Int32ToString(params.RevisionNo))
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[3] = encoded
+	}
+	pathParts[4] = "/restore"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "POST", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, RestoreLibraryRevisionOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeRestoreLibraryRevisionResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}

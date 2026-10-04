@@ -24,6 +24,9 @@ type Tool struct {
 	Body        bool     `json:"body"`
 	Entity      string   `json:"entity,omitempty"`
 	ID          string   `json:"id,omitempty"`
+	// Keeps says how a write that records no Revision of a Campaign's prep is kept: "library" as a
+	// Revision of a Library entry, "pending" as something that waits for the DM to confirm.
+	Keeps string `json:"keeps,omitempty"`
 	// Preset is forced into the body and Defaults fill what the caller leaves out, for tools that are
 	// one variant of an operation such as a live command.
 	Preset      map[string]any  `json:"preset,omitempty"`
@@ -116,12 +119,38 @@ func tool(doc node, path, method string, o, x node) (Tool, error) {
 			required = append(required, "body")
 		}
 	}
-	if method != http.MethodGet && t.Entity == "" && t.Preset == nil && t.Name != "undo_change" {
+	if method != http.MethodGet && t.Entity == "" && t.Preset == nil && t.Name != "undo_change" && x["keeps"] == nil {
 		return Tool{}, errors.New("a write tool needs an entity")
+	}
+	if err := t.kept(x, method); err != nil {
+		return Tool{}, err
 	}
 	schema, err := json.Marshal(node{"type": "object", "additionalProperties": false, "properties": props, "required": required})
 	t.InputSchema = schema
 	return t, err
+}
+
+// Ways a write is kept when it records no Revision of a Campaign's prep.
+const (
+	KeepsLibrary = "library"
+	KeepsPending = "pending"
+)
+
+// kept records how a tool's write is kept, and says so where the agent reads it.
+func (t *Tool) kept(x node, method string) error {
+	if x["keeps"] == nil {
+		return nil
+	}
+	t.Keeps, _ = x["keeps"].(string)
+	notes := map[string]string{
+		KeepsLibrary: "Every call saves a new Revision of the Library entry, named in the answer; restore_library_revision brings an earlier one back.",
+		KeepsPending: "Nothing changes until the DM confirms it in the app.",
+	}
+	if notes[t.Keeps] == "" || method == http.MethodGet {
+		return fmt.Errorf("tool %s: keeps %q is not a way a write is kept", t.Name, t.Keeps)
+	}
+	t.Description += " " + notes[t.Keeps]
+	return nil
 }
 
 // variant narrows a body schema to the fields one tool of an operation takes, and records the kind

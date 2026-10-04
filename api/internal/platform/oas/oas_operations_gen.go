@@ -224,6 +224,7 @@ const (
 	ResetRecoveryCodesOperation            OperationName = "ResetRecoveryCodes"
 	RestoreEncounterPoolRevisionOperation  OperationName = "RestoreEncounterPoolRevision"
 	RestoreEncounterTableRevisionOperation OperationName = "RestoreEncounterTableRevision"
+	RestoreLibraryRevisionOperation        OperationName = "RestoreLibraryRevision"
 	RestoreLootTableRevisionOperation      OperationName = "RestoreLootTableRevision"
 	RestoreNpcRevisionOperation            OperationName = "RestoreNpcRevision"
 	RestoreSettlementRevisionOperation     OperationName = "RestoreSettlementRevision"

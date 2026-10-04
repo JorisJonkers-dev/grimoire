@@ -254,14 +254,14 @@ func (s *Service) adopt(ctx context.Context, r Repository, c caller.Caller, p *d
 				return err
 			}
 			p.Entry = &base.ID
-			return r.InsertRevision(ctx, base.ID, domain.Revision{No: no, Name: p.Draft.Name, Fields: p.Draft.Fields, Design: base.Design, Author: c.Subject, At: now})
+			return r.InsertRevision(ctx, base.ID, by(c, domain.Revision{No: no, Name: p.Draft.Name, Fields: p.Draft.Fields, Design: base.Design, At: now}))
 		}
 	}
 	e := domain.Entry{ID: uuid.New(), Owner: c.Subject, Kind: p.Draft.Kind, Name: p.Draft.Name, Fields: p.Draft.Fields, Revision: 1, CreatedAt: now, UpdatedAt: now}
 	if err := r.InsertEntry(ctx, e); err != nil {
 		return err
 	}
-	if err := r.InsertRevision(ctx, e.ID, domain.Revision{No: 1, Name: e.Name, Fields: e.Fields, Author: c.Subject, At: now}); err != nil {
+	if err := r.InsertRevision(ctx, e.ID, by(c, domain.Revision{No: 1, Name: e.Name, Fields: e.Fields, At: now})); err != nil {
 		return err
 	}
 	p.Entry = &e.ID

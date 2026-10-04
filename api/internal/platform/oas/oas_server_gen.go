@@ -735,6 +735,14 @@ type BuildHandler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/encounter-tables/{tableId}/revisions/{revisionNo}/restore
 	RestoreEncounterTableRevision(ctx context.Context, params RestoreEncounterTableRevisionParams) (RestoreEncounterTableRevisionRes, error)
+	// RestoreLibraryRevision implements restoreLibraryRevision operation.
+	//
+	// Brings an earlier Revision of one of the caller's entries back as its next Revision: its name, its
+	// fields and, for an entry made in a builder, its design. The Revisions in between stay, so a restore
+	// can itself be undone.
+	//
+	// POST /api/v1/library/{entryId}/revisions/{revisionNo}/restore
+	RestoreLibraryRevision(ctx context.Context, params RestoreLibraryRevisionParams) (RestoreLibraryRevisionRes, error)
 	// RestoreLootTableRevision implements restoreLootTableRevision operation.
 	//
 	// Brings the Loot Table back to a Revision, recreating it if deleted; the restore is itself a

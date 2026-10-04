@@ -350,3 +350,103 @@ func TestEndpointNeedsAnIdentityAndPointsAtTheIssuer(t *testing.T) {
 		}
 	}
 }
+
+// A write tool says how its write is kept: as a Revision of a Campaign's prep, as a Revision of a
+// Library entry, or as something that waits for the DM. One that says none of these is no tool.
+func TestExportTakesWritesThatAreKeptSomeOtherWay(t *testing.T) {
+	t.Parallel()
+	op := func(x string) []byte {
+		return []byte("paths:\n  /a/{id}:\n    post:\n      x-mcp: " + x + "\n      summary: S\n      description: D.\n")
+	}
+	for keeps, note := range map[string]string{
+		"library": "S. D. Every call saves a new Revision of the Library entry, named in the answer; restore_library_revision brings an earlier one back.",
+		"pending": "S. D. Nothing changes until the DM confirms it in the app.",
+	} {
+		tools, err := mcpapi.Export(op("{ tool: make, keeps: " + keeps + " }"))
+		if err != nil || len(tools) != 1 || tools[0].Keeps != keeps || tools[0].Entity != "" || tools[0].Description != note {
+			t.Fatalf("keeps %s: %+v %v", keeps, tools, err)
+		}
+	}
+	for _, x := range []string{"{ tool: make, keeps: forever }", "{ tool: make, keeps: \"\" }", "{ tool: make }"} {
+		if _, err := mcpapi.Export(op(x)); err == nil {
+			t.Fatalf("%s: exported", x)
+		}
+	}
+	// A tool that only reads keeps nothing, and may not claim to.
+	read := []byte("paths:\n  /a:\n    get:\n      x-mcp: { tool: look, keeps: library }\n      summary: S\n")
+	if _, err := mcpapi.Export(read); err == nil {
+		t.Fatal("a read that keeps a Revision: exported")
+	}
+}
+
+// A write to a Library entry answers with the Revision it made, read back as the caller; a suggestion
+// that waits for the DM says so.
+func TestToolsReportLibraryRevisionsAndWhatIsPending(t *testing.T) {
+	t.Parallel()
+	entry, cid, faction := uuid.New(), uuid.New(), uuid.New()
+	detail := `{"entry":{"id":"` + entry.String() + `"},"revisions":[{"no":4,"origin":"mcp","client":"test-agent"},{"no":3,"origin":"ui"}]}`
+	lost := false
+	api := &fakeAPI{role: "dm", reply: func(r *http.Request) (int, string) {
+		path := r.URL.Path
+		switch {
+		case r.Header.Get("X-User-Id") != "aria":
+			return 500, `{}`
+		case r.Method == http.MethodGet && path == "/api/v1/library/"+entry.String():
+			if lost {
+				return http.StatusNotFound, `{"detail":"gone"}`
+			}
+			return 200, detail
+		case r.Method == http.MethodPost && path == "/api/v1/library":
+			return http.StatusCreated, `{"id":"` + entry.String() + `","name":"Bog Hag"}`
+		case r.Method == http.MethodPut && (path == "/api/v1/library/"+entry.String() || path == "/api/v1/builders/roll-tables/"+entry.String()):
+			return 200, `{"entry":{"id":"` + entry.String() + `"}}`
+		case r.Method == http.MethodPost && path == "/api/v1/library/"+entry.String()+"/revisions/2/restore":
+			return 200, `{"entry":{"id":"` + entry.String() + `"}}`
+		case r.Method == http.MethodPost && strings.HasSuffix(path, "/factions/"+faction.String()+"/standing-changes"):
+			return http.StatusCreated, `{"id":"x","status":"pending"}`
+		case r.Method == http.MethodGet && path == "/api/v1/library":
+			return 200, `[]`
+		}
+		return http.StatusUnprocessableEntity, `{"detail":"Not that."}`
+	}}
+	s := connect(t, mcpapi.Handler(mcpapi.Options{API: api, Edits: &edits{}, Log: quiet}), "aria")
+	made := `"libraryRevision":{"entryId":"` + entry.String() + `","no":4,"origin":"mcp","client":"test-agent"}`
+	for tool, args := range map[string]map[string]any{
+		"create_library_entry":     {"body": map[string]any{"kind": "creature", "name": "Bog Hag", "fields": []any{}}},
+		"update_library_entry":     {"entryId": entry, "body": map[string]any{"name": "Bog Hag", "fields": []any{}}},
+		"save_roll_table_build":    {"entryId": entry, "body": map[string]any{"dice": "1d6", "results": []any{}}},
+		"restore_library_revision": {"entryId": entry, "revisionNo": 2},
+	} {
+		text, failed := callTool(t, s, tool, args)
+		if failed || !strings.Contains(text, made) || strings.Contains(text, `"revision":`) || strings.Contains(text, "pending") {
+			t.Fatalf("%s: %s", tool, text)
+		}
+	}
+	// What it reads keeps nothing, and says nothing of a Revision.
+	if text, failed := callTool(t, s, "list_library_entries", nil); failed || text != `{"result":[]}` {
+		t.Fatalf("list: %s", text)
+	}
+	text, failed := callTool(t, s, "propose_standing_change", map[string]any{"campaignId": cid, "factionId": faction, "body": map[string]any{"delta": 2, "reason": "They saved the mill."}})
+	if failed || text != `{"result":{"id":"x","status":"pending"},"pending":true}` {
+		t.Fatalf("a suggestion: %s", text)
+	}
+	// A Revision that cannot be read back does not undo the write: the answer goes out without it.
+	lost = true
+	if text, failed := callTool(t, s, "update_library_entry", map[string]any{"entryId": entry, "body": map[string]any{"name": "Bog Hag", "fields": []any{}}}); failed || strings.Contains(text, "libraryRevision") || !strings.Contains(text, `"result":{"entry"`) {
+		t.Fatalf("a lost Revision: %s", text)
+	}
+	lost = false
+	detail = `{"entry":{},"revisions":[]}`
+	if text, failed := callTool(t, s, "update_library_entry", map[string]any{"entryId": entry, "body": map[string]any{"name": "Bog Hag", "fields": []any{}}}); failed || strings.Contains(text, "libraryRevision") {
+		t.Fatalf("an entry with no Revisions: %s", text)
+	}
+	detail = `not json`
+	if text, failed := callTool(t, s, "update_library_entry", map[string]any{"entryId": entry, "body": map[string]any{"name": "Bog Hag", "fields": []any{}}}); failed || strings.Contains(text, "libraryRevision") {
+		t.Fatalf("a garbled entry: %s", text)
+	}
+	// The suggestion's Campaign is still the DM's alone to send tools at.
+	api.role = "player"
+	if text, failed := callTool(t, s, "propose_standing_change", map[string]any{"campaignId": cid, "factionId": faction, "body": map[string]any{"delta": 2, "reason": "x"}}); !failed || text != "Only the campaign's DM can use Grimoire's tools on it." {
+		t.Fatalf("a Player's agent: %s", text)
+	}
+}

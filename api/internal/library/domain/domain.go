@@ -87,6 +87,10 @@ type Revision struct {
 	Fields Fields
 	Design []byte
 	Author string
+	// Origin is how the Revision was made, by hand in the app or through an MCP client, and Client
+	// which client that was.
+	Origin string
+	Client string
 	At     time.Time
 }
 

@@ -33717,13 +33717,25 @@ func (s *LibraryRevision) encodeFields(e *jx.Encoder) {
 		e.FieldStart("createdAt")
 		json.EncodeDateTime(e, s.CreatedAt)
 	}
+	{
+		e.FieldStart("origin")
+		s.Origin.Encode(e)
+	}
+	{
+		if s.Client.Set {
+			e.FieldStart("client")
+			s.Client.Encode(e)
+		}
+	}
 }
 
-var jsonFieldsNameOfLibraryRevision = [4]string{
+var jsonFieldsNameOfLibraryRevision = [6]string{
 	0: "no",
 	1: "name",
 	2: "fields",
 	3: "createdAt",
+	4: "origin",
+	5: "client",
 }
 
 // Decode decodes LibraryRevision from json.
@@ -33781,6 +33793,26 @@ func (s *LibraryRevision) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"createdAt\"")
 			}
+		case "origin":
+			requiredBitSet[0] |= 1 << 4
+			if err := func() error {
+				if err := s.Origin.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"origin\"")
+			}
+		case "client":
+			if err := func() error {
+				s.Client.Reset()
+				if err := s.Client.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"client\"")
+			}
 		default:
 			return errors.Errorf("unexpected field %q", k)
 		}
@@ -33791,7 +33823,7 @@ func (s *LibraryRevision) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00001111,
+		0b00011111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -33833,6 +33865,50 @@ func (s *LibraryRevision) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *LibraryRevision) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes LibraryRevisionOrigin as json.
+func (s LibraryRevisionOrigin) Encode(e *jx.Encoder) {
+	e.Str(string(s))
+}
+
+// Decode decodes LibraryRevisionOrigin from json.
+func (s *LibraryRevisionOrigin) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode LibraryRevisionOrigin to nil")
+	}
+	v, err := d.StrBytes()
+	if err != nil {
+		return err
+	}
+	// Try to use constant string.
+	switch LibraryRevisionOrigin(v) {
+	case LibraryRevisionOriginUI:
+		*s = LibraryRevisionOriginUI
+	case LibraryRevisionOriginMcp:
+		*s = LibraryRevisionOriginMcp
+	case LibraryRevisionOriginGenerator:
+		*s = LibraryRevisionOriginGenerator
+	case LibraryRevisionOriginSystem:
+		*s = LibraryRevisionOriginSystem
+	default:
+		*s = LibraryRevisionOrigin(v)
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s LibraryRevisionOrigin) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *LibraryRevisionOrigin) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
