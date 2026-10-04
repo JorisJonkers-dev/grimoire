@@ -111,7 +111,10 @@ const remove = (r: Recipe) => { removing.mutate({ path: { campaignId, recipeId: 
 <template>
   <main class="g-page">
     <RouterLink :to="{ name: 'campaign', params: { id: campaignId } }" class="back">← Campaign</RouterLink>
-    <h1>Downtime</h1>
+    <header class="g-headline">
+      <span class="g-eyebrow">Campaign</span>
+      <h1>Downtime</h1>
+    </header>
     <p v-if="downtime.isError.value" role="alert" class="g-alert" data-testid="downtime-missing">That Campaign is not available.</p>
     <template v-else-if="d">
       <p class="hint" data-testid="downtime-clock">{{ clock }}</p>

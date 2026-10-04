@@ -27,7 +27,10 @@ const problem = computed(() =>
 <template>
   <main class="g-page">
     <RouterLink :to="{ name: 'admin' }" class="back">← Admin</RouterLink>
-    <h1>Dice Set pictures</h1>
+    <header class="g-headline">
+      <span class="g-eyebrow">Admin</span>
+      <h1>Dice Set pictures</h1>
+    </header>
     <p v-if="waiting.isError.value" role="alert" class="g-alert" data-testid="dice-review-forbidden">Only an Admin with two-step sign-in can check Dice Sets.</p>
     <template v-else-if="waiting.data.value">
       <p v-if="review.isError.value" role="alert" class="g-alert" data-testid="dice-review-problem">{{ problem }}</p>
@@ -56,7 +59,6 @@ const problem = computed(() =>
 }
 h2 {
   margin: 0;
-  font-size: 18px;
 }
 .look,
 .actions {

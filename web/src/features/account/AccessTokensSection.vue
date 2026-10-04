@@ -84,7 +84,6 @@ function remove(id: string) {
 }
 h2 {
   margin: 0;
-  font-size: 18px;
 }
 code {
   overflow-wrap: anywhere;

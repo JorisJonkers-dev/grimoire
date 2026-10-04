@@ -40,7 +40,10 @@ function revert(a: Activity) {
 <template>
   <main class="g-page activity">
     <RouterLink :to="{ name: 'campaign', params: { id: campaignId } }" class="back">← Campaign</RouterLink>
-    <h1>AI activity</h1>
+    <header class="g-headline">
+      <span class="g-eyebrow">Campaign</span>
+      <h1>AI activity</h1>
+    </header>
     <p v-if="activity.isError.value" role="alert" class="g-alert" data-testid="activity-refused">Only the DM can see AI activity.</p>
     <template v-else>
       <p class="hint">

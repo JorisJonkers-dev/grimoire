@@ -113,7 +113,10 @@ const optionName = (choice: LevelUpChoice, slug: string) => choice.options.find(
 <template>
   <main class="g-page level-up">
     <RouterLink :to="{ name: 'character', params: { id: ids.campaignId, characterId: ids.characterId } }" class="back">← Sheet</RouterLink>
-    <h1>Level up</h1>
+    <header class="g-headline">
+      <span class="g-eyebrow">Character</span>
+      <h1>Level up</h1>
+    </header>
     <p v-if="plan.isError.value" role="alert" class="g-alert" data-testid="level-up-error">
       {{ plan.error.value?.detail ?? 'The next level could not be loaded.' }}
     </p>
@@ -267,7 +270,6 @@ const optionName = (choice: LevelUpChoice, slug: string) => choice.options.find(
 h1,
 h2 {
   margin: 0;
-  font-family: var(--font-display);
 }
 .hint {
   margin: 0;

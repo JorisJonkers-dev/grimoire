@@ -3,7 +3,7 @@ import { useInfiniteQuery } from '@tanstack/vue-query'
 import { computed, ref, watch } from 'vue'
 import { listSpellsInfiniteOptions } from '@/infrastructure/api/@tanstack/vue-query.gen'
 import type { ListSpellsData, Ruleset, SpellPage } from '@/infrastructure/api/types.gen'
-import { GButton, GField, GRow } from '@/shared/ui'
+import { GButton, GField, GPageHead, GRow } from '@/shared/ui'
 import CompendiumTabs from './CompendiumTabs.vue'
 import { classes, levelLabel, schools, titleCase } from './highlight'
 
@@ -39,8 +39,8 @@ const items = computed(() => spells.data.value?.pages.flatMap((p) => p.items) ??
 
 <template>
   <main class="g-page">
+    <GPageHead eyebrow="Compendium" title="Spells" />
     <CompendiumTabs current="spell" />
-    <h1>Spells</h1>
     <form class="filters" role="search" @submit.prevent>
       <GField v-model="search" type="search" label="Search by name" data-testid="spell-search" class="grow" />
       <label class="g-field">
@@ -86,11 +86,14 @@ const items = computed(() => spells.data.value?.pages.flatMap((p) => p.items) ??
             :subtitle="`${levelLabel(spell.level)} · ${titleCase(spell.school)}`"
             :data-testid="`spell-${spell.slug}`"
           >
+            <template #leading>
+              <span class="level" aria-hidden="true">{{ spell.level === 0 ? '·' : spell.level }}</span>
+            </template>
             <template #trailing>
-              <span class="tags">
-                <span v-if="spell.concentration" class="g-tag">Concentration</span>
-                <span v-if="spell.ritual" class="g-tag">Ritual</span>
-                <span class="g-tag">{{ spell.ruleset === 'srd-2024' ? '2024' : '2014' }}</span>
+              <span class="marks">
+                <span v-if="spell.concentration">Concentration</span>
+                <span v-if="spell.ritual">Ritual</span>
+                <span class="rules">{{ spell.ruleset === 'srd-2024' ? '2024' : '2014' }}</span>
               </span>
             </template>
           </GRow>
@@ -110,7 +113,7 @@ const items = computed(() => spells.data.value?.pages.flatMap((p) => p.items) ??
   gap: 10px;
   align-items: start;
 }
-@media (max-width: 720px) {
+@media (max-width: 899px) {
   .filters {
     grid-template-columns: 1fr 1fr;
   }
@@ -118,13 +121,25 @@ const items = computed(() => spells.data.value?.pages.flatMap((p) => p.items) ??
     grid-column: 1 / -1;
   }
 }
-.rows {
-  gap: 0;
+/* The level stands first in the row, in gold figures. */
+.level {
+  width: 36px;
+  flex: none;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--color-gold-high);
 }
-.tags {
+.marks {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 4px;
+  gap: 4px 16px;
+  font-size: 14px;
+  color: var(--color-text-2);
+}
+.rules {
+  font-size: 13px;
+  color: var(--color-text-3);
 }
 </style>

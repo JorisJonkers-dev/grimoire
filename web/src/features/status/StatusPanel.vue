@@ -23,30 +23,28 @@ const formatDate = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { 
 
 <style scoped>
 .panel {
-  padding: 16px 20px;
-  border: 1px solid var(--color-line);
-  border-radius: 12px;
-  background: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--color-text-2);
 }
 h2 {
-  margin: 0 0 8px;
-  font-family: var(--font-display);
-  font-size: 15px;
-  letter-spacing: 0.14em;
-  color: var(--color-gold);
-  text-transform: uppercase;
+  margin: 0;
+}
+p {
+  margin: 0;
 }
 dl {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: max-content 1fr;
   gap: 4px 16px;
   margin: 0;
 }
 dt {
-  color: var(--color-text-2);
+  color: var(--color-text-3);
 }
 dd {
   margin: 0;
-  font-weight: 700;
 }
 </style>

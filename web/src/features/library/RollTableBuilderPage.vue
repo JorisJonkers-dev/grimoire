@@ -89,10 +89,6 @@ function setItem(r: RollTableResult, slug: string) {
 h1,
 h2 {
   margin: 0;
-  font-family: var(--font-display);
-}
-h2 {
-  font-size: 17px;
 }
 .hint,
 .line {

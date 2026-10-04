@@ -166,8 +166,6 @@ textarea {
 }
 h2 {
   margin: 0 0 6px;
-  font-family: var(--font-display);
-  font-size: 17px;
 }
 .hint {
   margin: 0 0 8px;

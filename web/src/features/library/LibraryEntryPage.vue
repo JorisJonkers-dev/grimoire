@@ -198,10 +198,6 @@ function linkInto() {
 h1,
 h2 {
   margin: 0;
-  font-family: var(--font-display);
-}
-h2 {
-  font-size: 17px;
 }
 .hint {
   margin: 0;

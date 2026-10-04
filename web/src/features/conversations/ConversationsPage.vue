@@ -22,7 +22,10 @@ function open() {
 
 <template>
   <main class="g-page">
-    <h1>Conversations</h1>
+    <header class="g-headline">
+      <span class="g-eyebrow">People</span>
+      <h1>Conversations</h1>
+    </header>
     <p v-if="list.isError.value" role="alert" class="g-alert">Your Conversations could not be read.</p>
     <ul v-else-if="list.data.value?.items.length" class="rows g-card" data-testid="conversation-list">
       <li v-for="c in list.data.value.items" :key="c.id">
@@ -62,7 +65,6 @@ function open() {
 }
 h2 {
   margin: 0;
-  font-size: 18px;
 }
 .rows {
   display: flex;

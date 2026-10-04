@@ -21,7 +21,10 @@ function haptics(on: boolean) {
 
 <template>
   <main class="g-page">
-    <h1>Accessibility</h1>
+    <header class="g-headline">
+      <span class="g-eyebrow">This device</span>
+      <h1>Accessibility</h1>
+    </header>
     <p class="hint">These are kept on this device, so your phone and the TV can each be set as they need.</p>
     <fieldset class="g-card stack">
       <legend>Colours</legend>

@@ -30,7 +30,10 @@ function submit() {
 
 <template>
   <main class="g-page">
-    <h1>Campaigns</h1>
+    <header class="g-headline">
+      <span class="g-eyebrow">Your tables</span>
+      <h1>Campaigns</h1>
+    </header>
     <p v-if="campaigns.isPending.value">Gathering your tables…</p>
     <p v-else-if="campaigns.isError.value" role="alert" class="g-alert">Your campaigns could not be loaded. Try again shortly.</p>
     <template v-else>

@@ -52,7 +52,10 @@ const summary = (t: LootTable) => t.entries.map((e) => `${String(e.weight)}× ${
 <template>
   <main class="g-page loot">
     <RouterLink :to="{ name: 'campaign', params: { id: campaignId } }" class="back">← Campaign</RouterLink>
-    <h1>Loot tables</h1>
+    <header class="g-headline">
+      <span class="g-eyebrow">Campaign prep</span>
+      <h1>Loot tables</h1>
+    </header>
     <p v-if="tables.isError.value" role="alert" class="g-alert" data-testid="loot-refused">Only the DM can prepare loot.</p>
     <template v-else>
       <p v-if="failed" role="alert" class="g-alert" data-testid="loot-error">{{ failed }}</p>

@@ -279,3 +279,119 @@ input[type='range'] {
 .g-alert {
   color: var(--color-danger-text);
 }
+
+/* Where a page sits: Compendium › Spells › Fireball. */
+.g-crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  font-family: var(--font-label);
+  font-size: 15px;
+  color: var(--color-text-3);
+}
+.g-crumbs [aria-current='page'] {
+  color: var(--color-text-2);
+}
+/* The head of a detail page: its name over a rule, what it is in a line under it, what to do beside it. */
+.g-detail-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--color-line);
+}
+.g-detail-head > :first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.g-page .g-detail-head h1 {
+  font-size: 40px;
+}
+.g-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 0;
+  font-size: 15px;
+  color: var(--color-text-2);
+}
+.g-acts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+/* The facts of a thing, each under its name. */
+.g-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+  margin: 0;
+}
+.g-facts dt {
+  font-family: var(--font-label);
+  font-size: 14px;
+  color: var(--color-text-3);
+}
+.g-facts dd {
+  margin: 4px 0 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+/* Rules text reads as a book does. */
+.g-prose {
+  font-family: var(--font-flavour);
+  font-size: 18px;
+  line-height: 1.65;
+  color: var(--color-parchment);
+}
+.g-prose p {
+  margin: 0 0 12px;
+}
+/* A choice between a few, side by side. */
+.g-segment {
+  display: inline-flex;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  overflow: hidden;
+  font-size: 14px;
+}
+.g-segment > * {
+  display: flex;
+  align-items: center;
+  min-height: 42px;
+  padding: 0 14px;
+  border: 0;
+  border-right: 1px solid var(--color-line);
+  background: none;
+  color: var(--color-text-2);
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+.g-segment > :last-child {
+  border-right: 0;
+}
+.g-segment > [aria-current='page'],
+.g-segment > [aria-pressed='true'],
+.g-segment > [aria-checked='true'] {
+  background: var(--color-selected);
+  color: var(--color-gold-high);
+  font-weight: 700;
+}
+@media (max-width: 899px) {
+  .g-page .g-detail-head h1 {
+    font-size: 28px;
+  }
+}
+
+/* A page's name under the small line that says where it belongs. */
+.g-headline {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}

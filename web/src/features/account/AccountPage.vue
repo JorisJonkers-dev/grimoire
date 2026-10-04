@@ -56,7 +56,10 @@ function unlink() {
 
 <template>
   <main class="g-page">
-    <h1>Your Account</h1>
+    <header class="g-headline">
+      <span class="g-eyebrow">Account</span>
+      <h1>Your Account</h1>
+    </header>
     <p v-if="account.isError.value" role="alert" class="g-alert">Your Account could not be read.</p>
     <template v-else-if="account.data.value">
       <form class="g-card stack" data-testid="profile-form" @submit.prevent="saveProfile">
@@ -121,7 +124,6 @@ function unlink() {
 }
 h2 {
   margin: 0;
-  font-size: 18px;
 }
 .readonly {
   display: grid;

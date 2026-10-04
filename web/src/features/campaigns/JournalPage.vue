@@ -108,7 +108,10 @@ function addLore() {
 <template>
   <main class="g-page">
     <RouterLink :to="{ name: 'campaign', params: { id: campaignId } }" class="back">← Campaign</RouterLink>
-    <h1>Journal</h1>
+    <header class="g-headline">
+      <span class="g-eyebrow">Campaign</span>
+      <h1>Journal</h1>
+    </header>
     <p v-if="journal.isError.value" role="alert" class="g-alert" data-testid="journal-missing">That Campaign is not available.</p>
     <template v-else-if="journal.isSuccess.value">
       <p v-if="problem" role="alert" class="g-alert" data-testid="journal-problem">{{ problem }}</p>

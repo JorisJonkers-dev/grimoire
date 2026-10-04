@@ -7,7 +7,10 @@ const mine = useQuery(listMyCharactersOptions())
 
 <template>
   <main class="g-page">
-    <h1>Your Characters</h1>
+    <header class="g-headline">
+      <span class="g-eyebrow">Your heroes</span>
+      <h1>Your Characters</h1>
+    </header>
     <p>Each Character is yours across Campaigns: a new Campaign gets its own progress, while the name and Backstory follow it everywhere.</p>
     <p v-if="mine.isError.value" role="alert" class="g-alert">Your Characters could not be read.</p>
     <ul v-else-if="mine.data.value?.items.length" class="cards" data-testid="my-characters">

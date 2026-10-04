@@ -233,7 +233,10 @@ function adjust(a: Ability, delta: number) {
 <template>
   <main class="g-page builder">
     <RouterLink :to="{ name: 'campaign', params: { id } }" class="back">← Campaign</RouterLink>
-    <h1>New character</h1>
+    <header class="g-headline">
+      <span class="g-eyebrow">Character</span>
+      <h1>New character</h1>
+    </header>
     <p v-if="campaign.isError.value || options.isError.value" role="alert" class="g-alert">The builder could not be loaded. Try again shortly.</p>
     <p v-else-if="!o">Laying out the options…</p>
     <template v-else>

@@ -511,8 +511,6 @@ strong.small {
 }
 h2 {
   margin: 0 0 8px;
-  font-family: var(--font-display);
-  font-size: 17px;
 }
 .skills {
   margin: 0;

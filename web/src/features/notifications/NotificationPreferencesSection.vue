@@ -47,7 +47,6 @@ watch(prefs.data, (d) => {
 }
 h2 {
   margin: 0;
-  font-size: 18px;
 }
 table {
   width: 100%;

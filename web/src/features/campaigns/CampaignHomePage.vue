@@ -373,8 +373,6 @@ const expires = (iso: string) => new Date(iso).toLocaleDateString(undefined, { d
 }
 h2 {
   margin: 0 0 10px;
-  font-family: var(--font-display);
-  font-size: 18px;
 }
 section {
   display: flex;

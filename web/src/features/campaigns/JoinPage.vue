@@ -26,7 +26,10 @@ function join() {
 
 <template>
   <main class="g-page">
-    <h1>Join a campaign</h1>
+    <header class="g-headline">
+      <span class="g-eyebrow">An invitation</span>
+      <h1>Join a campaign</h1>
+    </header>
     <p v-if="!valid || preview.isError.value" role="alert" class="g-alert" data-testid="invite-invalid">
       This invite link is not valid any more. Ask your DM for a new one.
     </p>

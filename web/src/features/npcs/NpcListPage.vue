@@ -34,7 +34,10 @@ function add() {
 <template>
   <main class="g-page">
     <RouterLink :to="{ name: 'campaign', params: { id } }" class="back">← Campaign</RouterLink>
-    <h1>NPCs</h1>
+    <header class="g-headline">
+      <span class="g-eyebrow">Campaign prep</span>
+      <h1>NPCs</h1>
+    </header>
     <p v-if="npcs.isError.value" role="alert" class="g-alert" data-testid="npcs-refused">Only the DM can see the NPCs.</p>
     <template v-else>
       <ul class="g-list" data-testid="npc-list">
@@ -83,8 +86,6 @@ function add() {
 }
 h2 {
   margin: 0 0 8px;
-  font-family: var(--font-display);
-  font-size: 17px;
 }
 .g-list a {
   color: var(--color-gold-high);

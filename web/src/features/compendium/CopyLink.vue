@@ -40,6 +40,7 @@ async function copy() {
   gap: 10px;
 }
 .done {
-  color: var(--color-gold-high);
+  font-size: 14px;
+  color: var(--color-success);
 }
 </style>

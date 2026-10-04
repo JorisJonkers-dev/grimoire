@@ -57,7 +57,10 @@ async function takeDefaultWorld() {
 <template>
   <main class="g-page">
     <RouterLink :to="{ name: 'campaign', params: { id: campaignId } }" class="back">← Campaign</RouterLink>
-    <h1>Maps</h1>
+    <header class="g-headline">
+      <span class="g-eyebrow">Campaign prep</span>
+      <h1>Maps</h1>
+    </header>
     <p v-if="maps.isError.value" role="alert" class="g-alert" data-testid="maps-refused">Only the DM can manage maps.</p>
     <template v-else>
       <ul class="g-list" data-testid="map-list">

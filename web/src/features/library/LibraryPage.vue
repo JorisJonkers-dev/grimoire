@@ -40,7 +40,10 @@ function add() {
 
 <template>
   <main class="g-page library">
-    <h1>Library</h1>
+    <header class="g-headline">
+      <span class="g-eyebrow">Homebrew</span>
+      <h1>Library</h1>
+    </header>
     <RouterLink :to="{ name: 'shared-library' }" data-testid="shared-library-link">Browse the Shared Library</RouterLink>
     <p class="hint">Build creatures, NPCs, places, shops, items, spells and tables once, then link them into any Campaign you run.</p>
     <p v-if="entries.isError.value" role="alert" class="g-alert" data-testid="library-error">Your Library could not be opened.</p>
@@ -82,10 +85,6 @@ function add() {
 h1,
 h2 {
   margin: 0;
-  font-family: var(--font-display);
-}
-h2 {
-  font-size: 17px;
 }
 .hint {
   margin: 0;
