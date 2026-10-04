@@ -130,7 +130,7 @@ export function createAppRouter(history: RouterHistory = createWebHistory()) {
       { path: '/campaigns/:id/maps/:mapId', name: 'map', component: MapCalibrationPage },
       { path: '/join', name: 'join', component: JoinPage },
       { path: '/about/attribution', name: 'attribution', component: AttributionPage },
-      { path: '/sign-in', name: 'sign-in', component: SignInPage },
+      { path: '/sign-in', name: 'sign-in', component: SignInPage, meta: { bare: true } },
       { path: '/account-invite', name: 'account-invite', component: AccountInvitePage },
       { path: '/sign-in-link', name: 'sign-in-link', component: SignInLinkPage },
       { path: '/account', name: 'account', component: AccountPage },
