@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CampaignFrame from '@/features/campaigns/CampaignFrame.vue'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { computed, reactive, ref } from 'vue'
 import { useRoute } from 'vue-router'
@@ -52,11 +53,12 @@ function updated(r: RollRequest) {
 
 <template>
   <main class="g-page">
-    <RouterLink :to="{ name: 'campaign', params: { id } }" class="back">← Campaign</RouterLink>
-    <header class="g-headline">
-      <span class="g-eyebrow">Campaign</span>
-      <h1>Dice</h1>
-    </header>
+    <CampaignFrame current="dice">
+      <header class="g-headline">
+        <span class="g-eyebrow">Campaign</span>
+        <h1>Dice</h1>
+      </header>
+    </CampaignFrame>
     <p v-if="campaign.isError.value" role="alert" class="g-alert" data-testid="dice-missing">This campaign does not exist, or you are not one of its members.</p>
     <template v-else>
       <form class="g-card build" data-testid="roll-form" @submit.prevent="request">

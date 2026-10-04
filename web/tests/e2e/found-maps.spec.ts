@@ -37,7 +37,7 @@ test('the world map is dark for a party without it and dimmed for one with it, a
   await page.getByTestId('use-default-world').click()
   await expect(page.getByRole('heading', { name: 'Default World' })).toBeVisible()
   await page.getByRole('link', { name: '← Maps' }).click()
-  await page.getByRole('link', { name: '← Campaign' }).click()
+  await page.getByTestId('to-campaign').click()
 
   const context = await browser.newContext({ extraHTTPHeaders: { 'X-User-Id': `e2e-found-${stamp}` } })
   const player = await context.newPage()

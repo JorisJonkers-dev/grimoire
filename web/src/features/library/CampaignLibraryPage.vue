@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CampaignFrame from '@/features/campaigns/CampaignFrame.vue'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
@@ -71,11 +72,12 @@ function pinTo(l: LinkedEntry, value: string) {
 
 <template>
   <main class="g-page links">
-    <RouterLink :to="{ name: 'campaign', params: { id } }" class="back">← Campaign</RouterLink>
-    <header class="g-headline">
-      <span class="g-eyebrow">Campaign prep</span>
-      <h1>Library in this Campaign</h1>
-    </header>
+    <CampaignFrame current="campaign-library">
+      <header class="g-headline">
+        <span class="g-eyebrow">Campaign prep</span>
+        <h1>Library in this Campaign</h1>
+      </header>
+    </CampaignFrame>
     <p v-if="linked.isError.value" role="alert" class="g-alert" data-testid="links-refused">Only the DM can see the Campaign's Library entries.</p>
     <template v-else>
       <p class="hint">Entries are linked, not copied: fix one in your Library and every Campaign that follows it sees the fix. Override fields here, or pin a Revision to hold this Campaign still.</p>

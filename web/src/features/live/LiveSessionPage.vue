@@ -564,7 +564,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
       <div class="chrome">
         <header class="head" data-testid="live-bar">
           <RouterLink :to="{ name: 'home' }" class="brand">Grimoire<template v-if="isDM"> · DM</template></RouterLink>
-          <RouterLink :to="{ name: 'campaign', params: { id: campaignId } }" class="back">← Campaign</RouterLink>
+          <RouterLink :to="{ name: 'campaign', params: { id: campaignId } }" class="back" data-testid="to-campaign">← Campaign</RouterLink>
           <div class="where"><span>{{ campaign.data.value?.name }} · </span><h1>Session {{ state.session?.number ?? '' }}</h1></div>
           <span class="g-tag" :class="`conn--${state.connection}`" data-testid="connection" role="status">{{ status }}</span>
           <strong v-if="combat?.status === 'active'" class="turn" data-testid="bar-turn">Round {{ combat.round }}<template v-if="actor"> · {{ actor }}</template></strong>

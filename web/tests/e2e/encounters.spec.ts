@@ -36,7 +36,7 @@ test('the DM prepares random encounters, and rests and checks roll them secretly
   await page.getByTestId('save-table').click()
   await expect(page.getByTestId('table-Road')).toContainText('1× Ambush (goblin x3)')
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
-  await page.getByRole('link', { name: '← Campaign' }).click()
+  await page.getByTestId('to-campaign').click()
 
   const context = await browser.newContext({ extraHTTPHeaders: { 'X-User-Id': `e2e-wilds-${stamp}` } })
   const player = await context.newPage()

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CampaignFrame from './CampaignFrame.vue'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { computed, reactive, ref } from 'vue'
 import { useRoute } from 'vue-router'
@@ -77,11 +78,12 @@ function add() {
 
 <template>
   <main class="g-page">
-    <RouterLink :to="{ name: 'campaign', params: { id: campaignId } }" class="back">← Campaign</RouterLink>
-    <header class="g-headline">
-      <span class="g-eyebrow">Campaign</span>
-      <h1>Tracks</h1>
-    </header>
+    <CampaignFrame current="tracks">
+      <header class="g-headline">
+        <span class="g-eyebrow">Campaign</span>
+        <h1>Tracks</h1>
+      </header>
+    </CampaignFrame>
     <p v-if="list.isError.value" role="alert" class="g-alert" data-testid="tracks-missing">That Campaign is not available.</p>
     <template v-else-if="list.isSuccess.value">
       <p class="hint">Scores this Campaign keeps, such as stress, honour or renown.</p>

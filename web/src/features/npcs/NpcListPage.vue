@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CampaignFrame from '@/features/campaigns/CampaignFrame.vue'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -33,11 +34,12 @@ function add() {
 
 <template>
   <main class="g-page">
-    <RouterLink :to="{ name: 'campaign', params: { id } }" class="back">← Campaign</RouterLink>
-    <header class="g-headline">
-      <span class="g-eyebrow">Campaign prep</span>
-      <h1>NPCs</h1>
-    </header>
+    <CampaignFrame current="npcs">
+      <header class="g-headline">
+        <span class="g-eyebrow">Campaign prep</span>
+        <h1>NPCs</h1>
+      </header>
+    </CampaignFrame>
     <p v-if="npcs.isError.value" role="alert" class="g-alert" data-testid="npcs-refused">Only the DM can see the NPCs.</p>
     <template v-else>
       <ul class="g-list" data-testid="npc-list">

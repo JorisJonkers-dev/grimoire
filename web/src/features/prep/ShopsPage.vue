@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CampaignFrame from '@/features/campaigns/CampaignFrame.vue'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
@@ -89,11 +90,12 @@ const restocks = (s: Shop) => (s.restock === 'never' ? 'never restocks' : s.rest
 
 <template>
   <main class="g-page shops">
-    <RouterLink :to="{ name: 'campaign', params: { id: campaignId } }" class="back">← Campaign</RouterLink>
-    <header class="g-headline">
-      <span class="g-eyebrow">Campaign prep</span>
-      <h1>Settlements and shops</h1>
-    </header>
+    <CampaignFrame current="shops">
+      <header class="g-headline">
+        <span class="g-eyebrow">Campaign prep</span>
+        <h1>Settlements and shops</h1>
+      </header>
+    </CampaignFrame>
     <p v-if="settlements.isError.value" role="alert" class="g-alert" data-testid="shops-refused">Only the DM can prepare settlements and shops.</p>
     <template v-else>
       <p v-if="failed" role="alert" class="g-alert" data-testid="shops-error">{{ failed }}</p>

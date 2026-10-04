@@ -24,7 +24,7 @@ test('the DM draws a world map, the party travels it, and places ahead stay hidd
   await expect(page.getByRole('heading', { name: 'Realm' })).toBeVisible()
   await page.getByRole('link', { name: '← Maps' }).click()
   await expect(page.getByTestId('map-list')).toContainText('world map')
-  await page.getByRole('link', { name: '← Campaign' }).click()
+  await page.getByTestId('to-campaign').click()
 
   const context = await browser.newContext({ extraHTTPHeaders: { 'X-User-Id': `e2e-world-${stamp}` } })
   const player = await context.newPage()

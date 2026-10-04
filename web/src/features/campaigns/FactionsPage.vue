@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CampaignFrame from './CampaignFrame.vue'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { computed, reactive, ref } from 'vue'
 import { useRoute } from 'vue-router'
@@ -99,11 +100,12 @@ function decide(ch: StandingChange, confirm: boolean) {
 
 <template>
   <main class="g-page">
-    <RouterLink :to="{ name: 'campaign', params: { id: campaignId } }" class="back">← Campaign</RouterLink>
-    <header class="g-headline">
-      <span class="g-eyebrow">Campaign</span>
-      <h1>Factions</h1>
-    </header>
+    <CampaignFrame current="factions">
+      <header class="g-headline">
+        <span class="g-eyebrow">Campaign</span>
+        <h1>Factions</h1>
+      </header>
+    </CampaignFrame>
     <p v-if="list.isError.value" role="alert" class="g-alert" data-testid="factions-missing">That Campaign is not available.</p>
     <template v-else>
       <p class="hint">How each Faction regards the party, from Hostile to Allied. The DM decides when it changes.</p>

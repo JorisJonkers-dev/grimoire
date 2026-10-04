@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CampaignFrame from '@/features/campaigns/CampaignFrame.vue'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
@@ -51,11 +52,12 @@ const summary = (t: LootTable) => t.entries.map((e) => `${String(e.weight)}× ${
 
 <template>
   <main class="g-page loot">
-    <RouterLink :to="{ name: 'campaign', params: { id: campaignId } }" class="back">← Campaign</RouterLink>
-    <header class="g-headline">
-      <span class="g-eyebrow">Campaign prep</span>
-      <h1>Loot tables</h1>
-    </header>
+    <CampaignFrame current="loot">
+      <header class="g-headline">
+        <span class="g-eyebrow">Campaign prep</span>
+        <h1>Loot tables</h1>
+      </header>
+    </CampaignFrame>
     <p v-if="tables.isError.value" role="alert" class="g-alert" data-testid="loot-refused">Only the DM can prepare loot.</p>
     <template v-else>
       <p v-if="failed" role="alert" class="g-alert" data-testid="loot-error">{{ failed }}</p>
