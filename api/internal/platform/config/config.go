@@ -131,21 +131,29 @@ func Load(getenv func(string) string) (Config, error) {
 	if c.DatabaseURL == "" {
 		return Config{}, ErrMissingDatabaseURL
 	}
+	if err := c.loadLimits(getenv); err != nil {
+		return Config{}, err
+	}
+	return c, nil
+}
+
+// loadLimits reads the rate limit and how many reverse proxies to trust for it.
+func (c *Config) loadLimits(getenv func(string) string) error {
 	if v := getenv("GRIMOIRE_RATE_LIMIT_PER_MINUTE"); v != "" {
 		n, err := strconv.Atoi(v)
 		if err != nil || n < 1 {
-			return Config{}, fmt.Errorf("config: GRIMOIRE_RATE_LIMIT_PER_MINUTE must be a positive integer, got %q", v)
+			return fmt.Errorf("config: GRIMOIRE_RATE_LIMIT_PER_MINUTE must be a positive integer, got %q", v)
 		}
 		c.RateLimit = n
 	}
 	if v := getenv("GRIMOIRE_TRUSTED_PROXY_HOPS"); v != "" {
 		n, err := strconv.Atoi(v)
 		if err != nil || n < 0 || n > maxProxyHops {
-			return Config{}, fmt.Errorf("config: GRIMOIRE_TRUSTED_PROXY_HOPS must be an integer from 0 to %d, got %q", maxProxyHops, v)
+			return fmt.Errorf("config: GRIMOIRE_TRUSTED_PROXY_HOPS must be an integer from 0 to %d, got %q", maxProxyHops, v)
 		}
 		c.ProxyHops = n
 	}
-	return c, nil
+	return nil
 }
 
 // maxProxyHops is the longest chain of reverse proxies the server can be told to trust.
