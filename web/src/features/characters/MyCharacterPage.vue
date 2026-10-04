@@ -9,7 +9,7 @@ import {
   listCampaignsOptions,
   updateMyCharacterMutation,
 } from '@/infrastructure/api/@tanstack/vue-query.gen'
-import { GButton, GField } from '@/shared/ui'
+import { GAvatar, GButton, GField } from '@/shared/ui'
 
 const route = useRoute()
 const router = useRouter()
@@ -49,46 +49,97 @@ function bring() {
 
 <template>
   <main class="g-page">
-    <RouterLink :to="{ name: 'my-characters' }">All your Characters</RouterLink>
+    <nav aria-label="Breadcrumb" class="g-crumbs">
+      <RouterLink :to="{ name: 'my-characters' }">Characters</RouterLink> <span aria-hidden="true">›</span>
+      <span aria-current="page">{{ character.data.value?.name ?? 'Character' }}</span>
+    </nav>
     <p v-if="character.isError.value" role="alert" class="g-alert" data-testid="my-character-error">This Character could not be read.</p>
     <template v-else-if="character.data.value">
-      <h1>{{ character.data.value.name }}</h1>
-      <p class="dim">{{ character.data.value.species }} {{ character.data.value.class }} · {{ character.data.value.background }} · {{ character.data.value.ruleset }}</p>
-      <form class="g-card stack" data-testid="my-character-form" @submit.prevent="update">
-        <h2>Identity</h2>
-        <GField v-model="name" label="Name" :maxlength="60" required data-testid="my-character-name" />
-        <GField v-model="backstory" label="Backstory" multiline :maxlength="4000" data-testid="my-character-backstory" />
-        <p v-if="save.isSuccess.value" role="status" data-testid="my-character-saved">Saved in every Campaign.</p>
-        <p v-if="save.isError.value" role="alert" class="g-alert">Give the Character a name of up to 60 characters.</p>
-        <GButton type="submit" :disabled="!name.trim() || save.isPending.value">Save</GButton>
-      </form>
-      <section class="g-card stack" data-testid="my-character-campaigns">
-        <h2>Campaigns</h2>
-        <ul v-if="character.data.value.campaigns.length" class="rows">
-          <li v-for="e in character.data.value.campaigns" :key="e.characterId">
-            <RouterLink :to="{ name: 'character', params: { id: e.campaignId, characterId: e.characterId } }">{{ e.campaignName }}</RouterLink>
-            <span class="dim">level {{ e.level }} · {{ e.hpCurrent }}/{{ e.hpMax }} HP</span>
-          </li>
-        </ul>
-        <p v-else>Not in a Campaign yet.</p>
-        <form v-if="open.length" class="stack" data-testid="my-character-join" @submit.prevent="bring">
-          <label class="g-field">
-            <span>Bring into</span>
-            <select v-model="target" data-testid="my-character-target">
-              <option value="" disabled>Choose a Campaign</option>
-              <option v-for="c in open" :key="c.id" :value="c.id">{{ c.name }}</option>
-            </select>
-          </label>
-          <p class="dim">The new Campaign gets its own progress, from first level.</p>
-          <p v-if="join.isError.value" role="alert" class="g-alert" data-testid="my-character-join-failed">{{ joinFailed }}</p>
-          <GButton type="submit" :disabled="!target || join.isPending.value">Join the Campaign</GButton>
-        </form>
-      </section>
+      <header class="g-detail-head">
+        <div class="who">
+          <GAvatar :name="character.data.value.name" :size="96" aria-hidden="true" />
+          <div class="names">
+            <h1>{{ character.data.value.name }}</h1>
+            <p class="g-meta">
+              <span>{{ character.data.value.species }} {{ character.data.value.class }}</span>
+              <span>{{ character.data.value.background }} background</span>
+              <span>{{ character.data.value.ruleset }}</span>
+            </p>
+          </div>
+        </div>
+      </header>
+      <div class="cols">
+        <div class="main">
+          <section data-testid="my-character-campaigns">
+            <h2>In Campaigns</h2>
+            <table v-if="character.data.value.campaigns.length">
+              <tbody>
+                <tr v-for="e in character.data.value.campaigns" :key="e.characterId">
+                  <td><RouterLink :to="{ name: 'campaign', params: { id: e.campaignId } }" class="camp">{{ e.campaignName }}</RouterLink></td>
+                  <td>Level {{ e.level }}</td>
+                  <td class="dim">{{ e.hpCurrent }}/{{ e.hpMax }} HP</td>
+                  <td class="open"><RouterLink :to="{ name: 'character', params: { id: e.campaignId, characterId: e.characterId } }" class="g-action">Sheet</RouterLink></td>
+                </tr>
+              </tbody>
+            </table>
+            <p v-else class="dim">Not in a Campaign yet.</p>
+          </section>
+          <form class="stack" data-testid="my-character-form" @submit.prevent="update">
+            <h2>Identity</h2>
+            <GField v-model="name" label="Name" :maxlength="60" required data-testid="my-character-name" />
+            <GField v-model="backstory" label="Backstory" multiline :maxlength="4000" data-testid="my-character-backstory" />
+            <p class="dim">Your DMs can read your Backstory to weave it into the story.</p>
+            <p v-if="save.isSuccess.value" role="status" data-testid="my-character-saved">Saved in every Campaign.</p>
+            <p v-if="save.isError.value" role="alert" class="g-alert">Give the Character a name of up to 60 characters.</p>
+            <GButton type="submit" variant="primary" :disabled="!name.trim() || save.isPending.value">Save</GButton>
+          </form>
+        </div>
+        <aside class="side">
+          <h2>Another Campaign</h2>
+          <form v-if="open.length" class="stack" data-testid="my-character-join" @submit.prevent="bring">
+            <label class="g-field">
+              <span>Bring into</span>
+              <select v-model="target" data-testid="my-character-target">
+                <option value="" disabled>Choose a Campaign</option>
+                <option v-for="c in open" :key="c.id" :value="c.id">{{ c.name }}</option>
+              </select>
+            </label>
+            <p class="dim">The new Campaign gets its own progress, from first level.</p>
+            <p v-if="join.isError.value" role="alert" class="g-alert" data-testid="my-character-join-failed">{{ joinFailed }}</p>
+            <GButton type="submit" :disabled="!target || join.isPending.value">Join the Campaign</GButton>
+          </form>
+          <p v-else class="dim">There is no other Campaign of yours to bring this Character into.</p>
+        </aside>
+      </div>
     </template>
   </main>
 </template>
 
 <style scoped>
+.g-detail-head > .who {
+  flex-direction: row;
+  align-items: center;
+  gap: 24px;
+}
+.names {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 36px 72px;
+  align-items: start;
+}
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+  min-width: 0;
+}
+.side,
 .stack {
   display: flex;
   flex-direction: column;
@@ -97,22 +148,46 @@ function bring() {
 h2 {
   margin: 0;
 }
-.rows {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+section h2 {
+  margin-bottom: 10px;
 }
-.rows li {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 8px;
+p {
+  margin: 0;
+}
+.camp {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--color-text);
+}
+.camp:hover {
+  color: var(--color-gold-high);
+}
+td {
+  padding: 13px 12px;
+}
+td:first-child {
+  padding-left: 0;
+}
+.open {
+  padding-right: 0;
+  text-align: right;
 }
 .dim {
-  color: var(--color-text-3);
   font-size: 14px;
+  color: var(--color-text-3);
+}
+td.dim {
+  font-size: inherit;
+  color: var(--color-text-2);
+}
+@media (max-width: 899px) {
+  .cols {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .g-detail-head > .who {
+    gap: 14px;
+  }
 }
 </style>
