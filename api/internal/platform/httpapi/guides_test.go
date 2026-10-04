@@ -101,3 +101,34 @@ func TestThePublicCompendiumIsRateLimited(t *testing.T) {
 		t.Fatalf("a minute later: %d", rec.Code)
 	}
 }
+
+// Behind a reverse proxy the server is told to trust, each anonymous reader has a budget of their own:
+// one reader past theirs does not shut the compendium to the rest.
+func TestThePublicCompendiumLimitsEachReaderBehindAProxy(t *testing.T) {
+	t.Parallel()
+	h, err := httpapi.New(httpapi.Options{
+		Handler:   &httpapi.Handler{Version: "1", Store: fakeStore{}, Compendium: &fakeCompendium{}, Log: quiet},
+		RateLimit: 2, ProxyHops: 1, Now: time.Now,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	via := func(reader string) int {
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/api/v1/compendium/guides", nil)
+		req.RemoteAddr = "10.0.0.1:443"
+		req.Header.Set("X-Forwarded-For", reader)
+		rec := httptest.NewRecorder()
+		h.ServeHTTP(rec, req)
+		return rec.Code
+	}
+	if a, b, c := via("203.0.113.7"), via("203.0.113.7"), via("203.0.113.7"); a != http.StatusOK || b != http.StatusOK || c != http.StatusTooManyRequests {
+		t.Fatalf("one reader: %d %d %d", a, b, c)
+	}
+	if got := via("198.51.100.9"); got != http.StatusOK {
+		t.Fatalf("another reader through the same proxy: %d", got)
+	}
+	// Writing somebody else's address in front of one's own buys no new budget.
+	if got := via("198.51.100.200, 203.0.113.7"); got != http.StatusTooManyRequests {
+		t.Fatalf("a forged header: %d", got)
+	}
+}
