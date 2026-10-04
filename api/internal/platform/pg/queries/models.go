@@ -1388,6 +1388,8 @@ type LibraryEntryRevision struct {
 	AuthorSubject string
 	CreatedAt     time.Time
 	Design        []byte
+	Origin        string
+	Client        pgtype.Text
 }
 
 type LibraryProposal struct {

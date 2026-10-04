@@ -81,6 +81,7 @@ func (s *Store) UpdateEntry(ctx context.Context, id uuid.UUID, name string, fiel
 func (s *Store) InsertRevision(ctx context.Context, entry uuid.UUID, r domain.Revision) error {
 	return s.q.InsertLibraryRevision(ctx, queries.InsertLibraryRevisionParams{
 		EntryID: entry, No: int32(r.No), Name: r.Name, Fields: encode(r.Fields), Design: r.Design, AuthorSubject: r.Author, Now: r.At, //nolint:gosec // revision numbers are small
+		Origin: r.Origin, Client: pgtype.Text{String: r.Client, Valid: r.Client != ""},
 	})
 }
 
@@ -108,9 +109,20 @@ func (s *Store) Revisions(ctx context.Context, entry uuid.UUID) ([]domain.Revisi
 	rows, err := s.q.LibraryRevisions(ctx, entry)
 	out := make([]domain.Revision, 0, len(rows))
 	for _, r := range rows {
-		out = append(out, domain.Revision{No: int(r.No), Name: r.Name, Fields: decode(r.Fields), Design: r.Design, Author: r.AuthorSubject, At: r.CreatedAt})
+		out = append(out, domain.Revision{
+			No: int(r.No), Name: r.Name, Fields: decode(r.Fields), Design: r.Design, Author: r.AuthorSubject, Origin: r.Origin, Client: r.Client.String, At: r.CreatedAt,
+		})
 	}
 	return out, err
+}
+
+// Revision reads one Revision of an entry: its name, fields and design.
+func (s *Store) Revision(ctx context.Context, entry uuid.UUID, no int) (domain.Revision, error) {
+	r, err := s.q.LibraryRevision(ctx, queries.LibraryRevisionParams{EntryID: entry, No: int32(no)}) //nolint:gosec // checked by the API
+	if errors.Is(err, pgx.ErrNoRows) {
+		return domain.Revision{}, apperr.ErrNotFound
+	}
+	return domain.Revision{No: no, Name: r.Name, Fields: decode(r.Fields), Design: r.Design}, err
 }
 
 // RevisionExists reports whether an entry has a Revision.

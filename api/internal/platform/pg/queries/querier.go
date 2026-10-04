@@ -477,6 +477,7 @@ type Querier interface {
 	LibraryEntries(ctx context.Context, arg LibraryEntriesParams) ([]LibraryEntry, error)
 	LibraryEntry(ctx context.Context, id uuid.UUID) (LibraryEntry, error)
 	LibraryEntryUses(ctx context.Context, entryID uuid.UUID) ([]LibraryEntryUsesRow, error)
+	LibraryRevision(ctx context.Context, arg LibraryRevisionParams) (LibraryRevisionRow, error)
 	LibraryRevisionExists(ctx context.Context, arg LibraryRevisionExistsParams) (bool, error)
 	LibraryRevisions(ctx context.Context, entryID uuid.UUID) ([]LibraryRevisionsRow, error)
 	LinkLibraryEntry(ctx context.Context, arg LinkLibraryEntryParams) error

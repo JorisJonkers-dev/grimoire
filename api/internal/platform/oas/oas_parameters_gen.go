@@ -18013,6 +18013,151 @@ func decodeRestoreEncounterTableRevisionParams(args [3]string, argsEscaped bool,
 	return params, nil
 }
 
+// RestoreLibraryRevisionParams is parameters of restoreLibraryRevision operation.
+type RestoreLibraryRevisionParams struct {
+	// Library entry id.
+	EntryId ID
+	// The number of the Revision to bring back.
+	RevisionNo int32
+}
+
+func unpackRestoreLibraryRevisionParams(packed middleware.Parameters) (params RestoreLibraryRevisionParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "entryId",
+			In:   "path",
+		}
+		params.EntryId = packed[key].(ID)
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "revisionNo",
+			In:   "path",
+		}
+		params.RevisionNo = packed[key].(int32)
+	}
+	return params
+}
+
+func decodeRestoreLibraryRevisionParams(args [2]string, argsEscaped bool, r *http.Request) (params RestoreLibraryRevisionParams, _ error) {
+	// Decode path: entryId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "entryId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				var paramsDotEntryIdVal uuid.UUID
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUUID(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotEntryIdVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.EntryId = ID(paramsDotEntryIdVal)
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "entryId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	// Decode path: revisionNo.
+	if err := func() error {
+		param := args[1]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[1])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "revisionNo",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToInt32(val)
+				if err != nil {
+					return err
+				}
+
+				params.RevisionNo = c
+				return nil
+			}(); err != nil {
+				return err
+			}
+			if err := func() error {
+				if err := (validate.Int{
+					MinSet:        true,
+					Min:           1,
+					MaxSet:        true,
+					Max:           1000000,
+					MinExclusive:  false,
+					MaxExclusive:  false,
+					MultipleOfSet: false,
+					MultipleOf:    0,
+					Pattern:       nil,
+				}).Validate(int64(params.RevisionNo)); err != nil {
+					return errors.Wrap(err, "int")
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "revisionNo",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
 // RestoreLootTableRevisionParams is parameters of restoreLootTableRevision operation.
 type RestoreLootTableRevisionParams struct {
 	// Campaign id.

@@ -60,6 +60,7 @@ func TestEveryLibraryDatabaseFaultSurfaces(t *testing.T) {
 		"create":  func(s *app.Service) error { _, err := s.Create(ctx, dm, draft); return err },
 		"get":     func(s *app.Service) error { _, err := s.Get(ctx, dm, fresh()); return err },
 		"update":  func(s *app.Service) error { _, err := s.Update(ctx, dm, fresh(), draft); return err },
+		"restore": func(s *app.Service) error { _, err := s.Restore(ctx, dm, fresh(), 1); return err },
 		"linked":  func(s *app.Service) error { _, err := s.Linked(ctx, dm, campaign); return err },
 		"link": func(s *app.Service) error {
 			e, err := base.Create(ctx, dm, draft)

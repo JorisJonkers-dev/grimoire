@@ -873,6 +873,10 @@ type RestoreEncounterTableRevisionRes interface {
 	restoreEncounterTableRevisionRes()
 }
 
+type RestoreLibraryRevisionRes interface {
+	restoreLibraryRevisionRes()
+}
+
 type RestoreLootTableRevisionRes interface {
 	restoreLootTableRevisionRes()
 }

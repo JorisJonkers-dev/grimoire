@@ -91,7 +91,7 @@ describe('library page', () => {
 describe('library entry page', () => {
   it('edits the base as a new Revision, shows where it is used and links it into a Campaign', async () => {
     const sent: Sent[] = []
-    const detail = { entry: hag, revisions: [{ no: 2, name: 'Bog Hag', fields: hag.fields, createdAt: at }, { no: 1, name: 'Hag', fields: [], createdAt: at }], uses: [{ campaignId: CAMP, campaign: 'Morvain', pinnedRevision: 1 }] }
+    const detail = { entry: hag, revisions: [{ no: 2, name: 'Bog Hag', fields: hag.fields, createdAt: at, origin: 'ui' }, { no: 1, name: 'Hag', fields: [], createdAt: at, origin: 'ui' }], uses: [{ campaignId: CAMP, campaign: 'Morvain', pinnedRevision: 1 }] }
     const { wrapper } = await mountApp(`/library/${HAG}`, {
       [`/api/v1/campaigns/${OTHER}/library`]: async (u, req) => {
         await record(sent, u, req)
@@ -294,7 +294,7 @@ describe('shared library', () => {
   it('shows a shared copy read-only, ready to link', async () => {
     const { wrapper } = await mountApp(`/library/${COPY}`, {
       '/api/v1/campaigns': () => ({ items: [{ id: OTHER, name: 'Second', ruleset: 'srd-2024', myRole: 'dm', memberCount: 1, createdAt: at }] }),
-      [`/api/v1/library/${COPY}`]: () => ({ entry: copy, revisions: [{ no: 1, name: 'Bog Hag', fields: hag.fields, createdAt: at }], uses: [] }),
+      [`/api/v1/library/${COPY}`]: () => ({ entry: copy, revisions: [{ no: 1, name: 'Bog Hag', fields: hag.fields, createdAt: at, origin: 'ui' }], uses: [] }),
     })
     expect(wrapper.get('[data-testid="entry-shared"]').text()).toContain('read-only copy')
     expect(wrapper.get('[data-testid="entry-fields"]').text()).toContain('HP')

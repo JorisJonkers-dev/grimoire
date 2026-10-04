@@ -24,6 +24,7 @@ type LibraryService interface {
 	Create(ctx context.Context, c caller.Caller, d domain.Draft) (domain.Entry, error)
 	Get(ctx context.Context, c caller.Caller, id uuid.UUID) (domain.Detail, error)
 	Update(ctx context.Context, c caller.Caller, id uuid.UUID, d domain.Draft) (domain.Detail, error)
+	Restore(ctx context.Context, c caller.Caller, id uuid.UUID, no int) (domain.Detail, error)
 	Linked(ctx context.Context, c caller.Caller, campaign uuid.UUID) ([]domain.Linked, error)
 	Link(ctx context.Context, c caller.Caller, campaign, entry uuid.UUID) (domain.Linked, error)
 	Unlink(ctx context.Context, c caller.Caller, campaign, entry uuid.UUID) error
@@ -105,7 +106,11 @@ func optShared(shared bool) oas.OptBool {
 func libraryDetailOut(d domain.Detail) *oas.LibraryEntryDetailHeaders {
 	out := oas.LibraryEntryDetail{Entry: libraryEntryOut(d.Entry), Revisions: []oas.LibraryRevision{}, Uses: []oas.LibraryUse{}}
 	for _, r := range d.Revisions {
-		out.Revisions = append(out.Revisions, oas.LibraryRevision{No: int32(r.No), Name: r.Name, Fields: fieldsOut(r.Fields), CreatedAt: r.At.UTC()}) //nolint:gosec // revision numbers are small
+		rev := oas.LibraryRevision{No: int32(r.No), Name: r.Name, Fields: fieldsOut(r.Fields), CreatedAt: r.At.UTC(), Origin: oas.LibraryRevisionOrigin(r.Origin)} //nolint:gosec // revision numbers are small
+		if r.Client != "" {
+			rev.Client = oas.NewOptString(r.Client)
+		}
+		out.Revisions = append(out.Revisions, rev)
 	}
 	for _, u := range d.Uses {
 		out.Uses = append(out.Uses, oas.LibraryUse{CampaignId: oas.ID(u.CampaignID), Campaign: u.Campaign, PinnedRevision: optRevision(u.Pinned)})
@@ -194,6 +199,17 @@ func (h *Handler) GetLibraryEntry(ctx context.Context, p oas.GetLibraryEntryPara
 func (h *Handler) UpdateLibraryEntry(ctx context.Context, req *oas.LibraryEntryUpdate, p oas.UpdateLibraryEntryParams) (oas.UpdateLibraryEntryRes, error) {
 	d, bad := libraryCall(ctx, h, "update library entry", func(c caller.Caller) (domain.Detail, error) {
 		return h.Library.Update(ctx, c, uuid.UUID(p.EntryId), domain.Draft{Name: req.Name, Fields: fieldsIn(req.Fields)})
+	})
+	if bad != nil {
+		return bad, nil
+	}
+	return libraryDetailOut(d), nil
+}
+
+// RestoreLibraryRevision brings an earlier Revision of one of the caller's entries back.
+func (h *Handler) RestoreLibraryRevision(ctx context.Context, p oas.RestoreLibraryRevisionParams) (oas.RestoreLibraryRevisionRes, error) {
+	d, bad := libraryCall(ctx, h, "restore library revision", func(c caller.Caller) (domain.Detail, error) {
+		return h.Library.Restore(ctx, c, uuid.UUID(p.EntryId), int(p.RevisionNo))
 	})
 	if bad != nil {
 		return bad, nil

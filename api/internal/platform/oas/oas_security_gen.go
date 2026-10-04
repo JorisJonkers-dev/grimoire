@@ -236,6 +236,7 @@ var operationRolesForwardAuth = map[string][]string{
 	ResetRecoveryCodesOperation:            []string{},
 	RestoreEncounterPoolRevisionOperation:  []string{},
 	RestoreEncounterTableRevisionOperation: []string{},
+	RestoreLibraryRevisionOperation:        []string{},
 	RestoreLootTableRevisionOperation:      []string{},
 	RestoreNpcRevisionOperation:            []string{},
 	RestoreSettlementRevisionOperation:     []string{},

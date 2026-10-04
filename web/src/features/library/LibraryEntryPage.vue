@@ -7,10 +7,11 @@ import {
   linkLibraryEntryMutation,
   listCampaignsOptions,
   listMySubmissionsOptions,
+  restoreLibraryRevisionMutation,
   shareLibraryEntryMutation,
   updateLibraryEntryMutation,
 } from '@/infrastructure/api/@tanstack/vue-query.gen'
-import type { LibraryField } from '@/infrastructure/api/types.gen'
+import type { LibraryField, LibraryRevision } from '@/infrastructure/api/types.gen'
 import { GButton, GField } from '@/shared/ui'
 import FieldsEditor from './FieldsEditor.vue'
 import { cleanFields, copyFields, kindNames } from './fields'
@@ -64,6 +65,25 @@ function save() {
         void client.invalidateQueries()
         status.value = `Saved as Revision ${String(next.entry.revision)}.`
       },
+    },
+  )
+}
+// A Revision an agent made says so, and which agent when it gave its name.
+const madeBy = (r: LibraryRevision) => (r.origin === 'mcp' ? ` · made through ${r.client ?? 'an agent'}` : '')
+const restore = useMutation(restoreLibraryRevisionMutation())
+const restoreFailed = ref(false)
+function bringBack(no: number) {
+  restoreFailed.value = false
+  status.value = ''
+  restore.mutate(
+    { path: { entryId: String(route.params.entryId), revisionNo: no } },
+    {
+      onSuccess: (next) => {
+        client.setQueryData(getLibraryEntryOptions(path.value).queryKey, next)
+        void client.invalidateQueries()
+        status.value = `Revision ${String(no)} brought back as Revision ${String(next.entry.revision)}.`
+      },
+      onError: () => { restoreFailed.value = true },
     },
   )
 }
@@ -139,8 +159,20 @@ function linkInto() {
       </section>
       <section class="g-card stack" data-testid="entry-revisions">
         <h2>Revisions</h2>
+        <p v-if="restoreFailed" role="alert" class="g-alert" data-testid="revision-problem">That Revision could not be brought back.</p>
         <ul class="g-list">
-          <li v-for="r in d.revisions" :key="r.no">Revision {{ r.no }} · {{ r.name }} · {{ when(r.createdAt) }}</li>
+          <li v-for="r in d.revisions" :key="r.no" class="revision" data-testid="entry-revision">
+            <span data-testid="revision-line">Revision {{ r.no }} · {{ r.name }} · {{ when(r.createdAt) }}{{ madeBy(r) }}</span>
+            <GButton
+              v-if="!shared && r.no !== d.entry.revision"
+              :disabled="restore.isPending.value"
+              :aria-label="`Bring Revision ${String(r.no)} back`"
+              data-testid="revision-restore"
+              @click="bringBack(r.no)"
+            >
+              Bring back
+            </GButton>
+          </li>
         </ul>
       </section>
     </template>
@@ -148,6 +180,13 @@ function linkInto() {
 </template>
 
 <style scoped>
+.revision {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
 .back {
   color: var(--color-gold-high);
 }

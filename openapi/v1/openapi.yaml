@@ -3414,6 +3414,7 @@ paths:
     get:
       operationId: listFactions
       x-ogen-operation-group: Read
+      x-mcp: { tool: list_factions }
       summary: List Factions
       description: The Campaign's Factions with how each regards the party. Every Member sees names and the tier of each Standing, their own Characters' Personal Standing, and the confirmed changes with the reasons the DM shared. Goals, territory, notes, scores, amounts, unshared reasons and changes not yet decided are the DM's alone.
       tags: [Campaign]
@@ -3537,6 +3538,7 @@ paths:
     post:
       operationId: proposeStandingChange
       x-ogen-operation-group: Build
+      x-mcp: { tool: propose_standing_change, keeps: pending }
       summary: Suggest a Standing Change
       description: Suggests a move in a Faction's Standing, for the party or for one Character, with a reason. It moves nothing and waits for the DM to confirm it in person, whoever or whatever suggested it. DM only.
       tags: [Campaign]
@@ -4642,6 +4644,7 @@ paths:
     get:
       operationId: listMaps
       x-ogen-operation-group: Read
+      x-mcp: { tool: list_maps }
       summary: List maps
       description: The Campaign's local and world Maps. DM only.
       tags: [Prep]
@@ -4714,6 +4717,7 @@ paths:
     get:
       operationId: getMap
       x-ogen-operation-group: Read
+      x-mcp: { tool: get_map }
       summary: Get a map
       description: One Map with its calibration. DM only.
       tags: [Prep]
@@ -4998,6 +5002,7 @@ paths:
     get:
       operationId: listLibraryEntries
       x-ogen-operation-group: Read
+      x-mcp: { tool: list_library_entries }
       summary: List Library entries
       description: "The caller's Library entries in kind and name order."
       tags: [Library]
@@ -5030,6 +5035,7 @@ paths:
     post:
       operationId: createLibraryEntry
       x-ogen-operation-group: Build
+      x-mcp: { tool: create_library_entry, keeps: library }
       summary: Create a Library entry
       description: "Adds an entry to the caller's Library as its first Revision."
       tags: [Library]
@@ -5284,6 +5290,7 @@ paths:
     get:
       operationId: getLibraryEntry
       x-ogen-operation-group: Read
+      x-mcp: { tool: get_library_entry }
       summary: Get a Library entry
       description: "One of the caller's entries with its Revisions and the Campaigns it is linked into."
       tags: [Library]
@@ -5310,6 +5317,7 @@ paths:
     put:
       operationId: updateLibraryEntry
       x-ogen-operation-group: Build
+      x-mcp: { tool: update_library_entry, keeps: library }
       summary: Edit a Library entry
       description: "Saves a new base as the entry's next Revision. Every Campaign that follows the latest Revision sees it; a pinned Campaign does not."
       tags: [Library]
@@ -5339,10 +5347,48 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/library/{entryId}/revisions/{revisionNo}/restore:
+    post:
+      operationId: restoreLibraryRevision
+      x-ogen-operation-group: Build
+      x-mcp: { tool: restore_library_revision, keeps: library }
+      summary: Restore a Revision of a Library entry
+      description: "Brings an earlier Revision of one of the caller's entries back as its next Revision: its name, its fields and, for an entry made in a builder, its design. The Revisions in between stay, so a restore can itself be undone."
+      tags: [Library]
+      parameters:
+        - name: entryId
+          in: path
+          required: true
+          description: Library entry id.
+          schema: { $ref: "#/components/schemas/Id" }
+        - name: revisionNo
+          in: path
+          required: true
+          description: The number of the Revision to bring back.
+          schema: { type: integer, format: int32, minimum: 1, maximum: 1000000 }
+      responses:
+        "200":
+          description: The entry as restored.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LibraryEntryDetail"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /api/v1/campaigns/{campaignId}/library:
     get:
       operationId: listLinkedEntries
       x-ogen-operation-group: Read
+      x-mcp: { tool: list_linked_entries }
       summary: List linked Library entries
       description: "The Library entries linked into the Campaign, each with its Campaign Override and pinned Revision resolved. DM only."
       tags: [Library]
@@ -5864,6 +5910,7 @@ paths:
     get:
       operationId: getSpellBuild
       x-ogen-operation-group: Read
+      x-mcp: { tool: get_spell_build }
       summary: Open a spell in the Effect builder
       description: "A homebrew spell's design with its rules text and area: one of the caller's spells, or a Shared Library copy."
       tags: [Library]
@@ -5890,6 +5937,7 @@ paths:
     put:
       operationId: saveSpellBuild
       x-ogen-operation-group: Build
+      x-mcp: { tool: save_spell_build, keeps: library }
       summary: Save a spell design
       description: "Saves the design of one of the caller's spells as its next Revision; in a live Session it runs as an area spell."
       tags: [Library]
@@ -5954,6 +6002,7 @@ paths:
     get:
       operationId: getItemBuild
       x-ogen-operation-group: Read
+      x-mcp: { tool: get_item_build }
       summary: Open an item in the item builder
       description: "A homebrew item's design with its card and Price Check: one of the caller's items, or a Shared Library copy."
       tags: [Library]
@@ -5980,6 +6029,7 @@ paths:
     put:
       operationId: saveItemBuild
       x-ogen-operation-group: Build
+      x-mcp: { tool: save_item_build, keeps: library }
       summary: Save an item design
       description: "Saves the design of one of the caller's items as its next Revision; Campaigns that see it carry it in Inventories by its slug."
       tags: [Library]
@@ -6044,6 +6094,7 @@ paths:
     get:
       operationId: getSubclassBuild
       x-ogen-operation-group: Read
+      x-mcp: { tool: get_subclass_build }
       summary: Open a subclass in the subclass builder
       description: "A homebrew subclass's design, read back: one of the caller's subclasses, or a Shared Library copy."
       tags: [Library]
@@ -6070,6 +6121,7 @@ paths:
     put:
       operationId: saveSubclassBuild
       x-ogen-operation-group: Build
+      x-mcp: { tool: save_subclass_build, keeps: library }
       summary: Save a subclass design
       description: "Saves the design of one of the caller's subclasses as its next Revision; Campaigns that see it offer it on levelling up its class."
       tags: [Library]
@@ -6134,6 +6186,7 @@ paths:
     get:
       operationId: getClassBuild
       x-ogen-operation-group: Read
+      x-mcp: { tool: get_class_build }
       summary: Open a class in the class builder
       description: "A homebrew class's design, read back with its level table: one of the caller's classes, or a Shared Library copy."
       tags: [Library]
@@ -6160,6 +6213,7 @@ paths:
     put:
       operationId: saveClassBuild
       x-ogen-operation-group: Build
+      x-mcp: { tool: save_class_build, keeps: library }
       summary: Save a class design
       description: "Saves the design of one of the caller's classes as its next Revision; Campaigns that see it offer it in character creation and multiclassing."
       tags: [Library]
@@ -6224,6 +6278,7 @@ paths:
     get:
       operationId: getSpeciesBuild
       x-ogen-operation-group: Read
+      x-mcp: { tool: get_species_build }
       summary: Open a species in the species builder
       description: "A homebrew species's design, read back: one of the caller's, or a Shared Library copy."
       tags: [Library]
@@ -6250,6 +6305,7 @@ paths:
     put:
       operationId: saveSpeciesBuild
       x-ogen-operation-group: Build
+      x-mcp: { tool: save_species_build, keeps: library }
       summary: Save a species design
       description: "Saves the design of one of the caller's species entries as its next Revision; Campaigns that see it offer it, and each of its lineages, in character creation."
       tags: [Library]
@@ -6314,6 +6370,7 @@ paths:
     get:
       operationId: getFeatBuild
       x-ogen-operation-group: Read
+      x-mcp: { tool: get_feat_build }
       summary: Open a feat in the feat builder
       description: "A homebrew feat's design, read back: one of the caller's, or a Shared Library copy."
       tags: [Library]
@@ -6340,6 +6397,7 @@ paths:
     put:
       operationId: saveFeatBuild
       x-ogen-operation-group: Build
+      x-mcp: { tool: save_feat_build, keeps: library }
       summary: Save a feat design
       description: "Saves the design of one of the caller's feat entries as its next Revision; Campaigns that see it offer it when a level grants a feat of its category."
       tags: [Library]
@@ -6404,6 +6462,7 @@ paths:
     get:
       operationId: getBackgroundBuild
       x-ogen-operation-group: Read
+      x-mcp: { tool: get_background_build }
       summary: Open a background in the background builder
       description: "A homebrew background's design, read back: one of the caller's, or a Shared Library copy."
       tags: [Library]
@@ -6430,6 +6489,7 @@ paths:
     put:
       operationId: saveBackgroundBuild
       x-ogen-operation-group: Build
+      x-mcp: { tool: save_background_build, keeps: library }
       summary: Save a background design
       description: "Saves the design of one of the caller's background entries as its next Revision; Campaigns that see it offer it in character creation."
       tags: [Library]
@@ -6494,6 +6554,7 @@ paths:
     get:
       operationId: getConditionBuild
       x-ogen-operation-group: Read
+      x-mcp: { tool: get_condition_build }
       summary: Open a condition in the condition builder
       description: "A homebrew condition's design, read back: one of the caller's, or a Shared Library copy."
       tags: [Library]
@@ -6520,6 +6581,7 @@ paths:
     put:
       operationId: saveConditionBuild
       x-ogen-operation-group: Build
+      x-mcp: { tool: save_condition_build, keeps: library }
       summary: Save a condition design
       description: "Saves the design of one of the caller's condition entries as its next Revision; Campaigns that see it offer it in the DM's effect picker, with its icon on every token it is on."
       tags: [Library]
@@ -6584,6 +6646,7 @@ paths:
     get:
       operationId: getRollTableBuild
       x-ogen-operation-group: Read
+      x-mcp: { tool: get_roll_table_build }
       summary: Open a Roll Table in its builder
       description: "A Roll Table's design, read back: one of the caller's, or a Shared Library copy."
       tags: [Library]
@@ -6610,6 +6673,7 @@ paths:
     put:
       operationId: saveRollTableBuild
       x-ogen-operation-group: Build
+      x-mcp: { tool: save_roll_table_build, keeps: library }
       summary: Save a Roll Table design
       description: "Saves the design of one of the caller's table entries as its next Revision. A Campaign that sees the table can hook it to a Rule Variant of its own."
       tags: [Library]
@@ -6674,6 +6738,7 @@ paths:
     get:
       operationId: getMonsterBuild
       x-ogen-operation-group: Read
+      x-mcp: { tool: get_monster_build }
       summary: Open a creature in the creature builder
       description: "A homebrew creature's design, read back: one of the caller's, or a Shared Library copy."
       tags: [Library]
@@ -6700,6 +6765,7 @@ paths:
     put:
       operationId: saveMonsterBuild
       x-ogen-operation-group: Build
+      x-mcp: { tool: save_monster_build, keeps: library }
       summary: Save a creature design
       description: "Saves the design of one of the caller's creature entries as its next Revision; Campaigns that see it can place it by its slug, with its legendary and lair actions offered in the turn order."
       tags: [Library]
@@ -12413,12 +12479,14 @@ components:
       type: object
       description: One saved version of an entry's base.
       additionalProperties: false
-      required: [no, name, fields, createdAt]
+      required: [no, name, fields, createdAt, origin]
       properties:
         no: { type: integer, format: int32, minimum: 1, maximum: 1000000 }
         name: { type: string, maxLength: 80 }
         fields: { $ref: "#/components/schemas/LibraryFields" }
         createdAt: { type: string, format: date-time, maxLength: 40 }
+        origin: { type: string, enum: [ui, mcp, generator, system], description: "How the Revision was made: by hand in the app, or through an MCP client." }
+        client: { type: string, maxLength: 80, description: "The MCP client that made it, when one did." }
     LibraryUse:
       type: object
       description: A Campaign an entry is linked into, and the Revision it is pinned to there.

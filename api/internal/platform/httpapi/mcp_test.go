@@ -17,6 +17,8 @@ import (
 	campaignpg "github.com/JorisJonkers-dev/grimoire/api/internal/campaign/pgstore"
 	comppg "github.com/JorisJonkers-dev/grimoire/api/internal/compendium/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium/snapshot"
+	libraryapp "github.com/JorisJonkers-dev/grimoire/api/internal/library/app"
+	librarypg "github.com/JorisJonkers-dev/grimoire/api/internal/library/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/httpapi"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/mcpapi"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg"
@@ -52,9 +54,15 @@ func mcpStack(t *testing.T) (http.Handler, *pgxpool.Pool) {
 		t.Fatal(err)
 	}
 	repo := campaignpg.New(store.Pool())
+	lib := &libraryapp.Service{
+		Repo: librarypg.New(store.Pool()), Members: playpg.CampaignMembers{Store: repo}, Now: time.Now, Log: quiet,
+		Admins: admins{}, Surfaces: playpg.New(store.Pool()).SurfaceKinds,
+	}
 	h, err := httpapi.New(httpapi.Options{
 		Handler: &httpapi.Handler{
 			Version: "1", Store: fakeStore{}, Compendium: compendium, Campaigns: app.NewService(repo), NPCs: &app.NPCs{Repo: repo, Now: time.Now}, Log: quiet,
+			Factions: &app.Factions{Repo: repo, Now: time.Now},
+			Library:  lib, RollTableBuilds: lib,
 			Prep: &prepapp.Service{
 				Repo: preppg.New(store.Pool()), Members: playpg.CampaignMembers{Store: repo}, Now: time.Now,
 				Seed: func() uint64 { return 3 }, Source: func(seed uint64) dice.Source { return rng.New(seed) },

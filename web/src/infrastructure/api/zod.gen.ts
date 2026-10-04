@@ -1753,7 +1753,14 @@ export const zLibraryRevision = z.object({
     no: z.int().gte(1).lte(1000000),
     name: z.string().max(80),
     fields: zLibraryFields,
-    createdAt: z.iso.datetime().max(40)
+    createdAt: z.iso.datetime().max(40),
+    origin: z.enum([
+        'ui',
+        'mcp',
+        'generator',
+        'system'
+    ]),
+    client: z.string().max(80).optional()
 });
 
 /**
@@ -7686,6 +7693,16 @@ export const zUpdateLibraryEntryPath = z.object({
  * The entry.
  */
 export const zUpdateLibraryEntryResponse = zLibraryEntryDetail;
+
+export const zRestoreLibraryRevisionPath = z.object({
+    entryId: zId,
+    revisionNo: z.int().gte(1).lte(1000000)
+});
+
+/**
+ * The entry as restored.
+ */
+export const zRestoreLibraryRevisionResponse = zLibraryEntryDetail;
 
 export const zListLinkedEntriesPath = z.object({
     campaignId: zId

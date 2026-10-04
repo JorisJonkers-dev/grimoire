@@ -334,8 +334,8 @@ func (q *Queries) InsertLibraryEntry(ctx context.Context, arg InsertLibraryEntry
 }
 
 const insertLibraryRevision = `-- name: InsertLibraryRevision :exec
-INSERT INTO library.entry_revisions (entry_id, no, name, fields, author_subject, created_at, design)
-VALUES ($1, $2, $3, $4, $5, $6, $7)
+INSERT INTO library.entry_revisions (entry_id, no, name, fields, author_subject, created_at, design, origin, client)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 `
 
 type InsertLibraryRevisionParams struct {
@@ -346,6 +346,8 @@ type InsertLibraryRevisionParams struct {
 	AuthorSubject string
 	Now           time.Time
 	Design        []byte
+	Origin        string
+	Client        pgtype.Text
 }
 
 func (q *Queries) InsertLibraryRevision(ctx context.Context, arg InsertLibraryRevisionParams) error {
@@ -357,6 +359,8 @@ func (q *Queries) InsertLibraryRevision(ctx context.Context, arg InsertLibraryRe
 		arg.AuthorSubject,
 		arg.Now,
 		arg.Design,
+		arg.Origin,
+		arg.Client,
 	)
 	return err
 }
@@ -583,6 +587,28 @@ func (q *Queries) LibraryEntryUses(ctx context.Context, entryID uuid.UUID) ([]Li
 	return items, nil
 }
 
+const libraryRevision = `-- name: LibraryRevision :one
+SELECT name, fields, design FROM library.entry_revisions WHERE entry_id = $1 AND no = $2
+`
+
+type LibraryRevisionParams struct {
+	EntryID uuid.UUID
+	No      int32
+}
+
+type LibraryRevisionRow struct {
+	Name   string
+	Fields []byte
+	Design []byte
+}
+
+func (q *Queries) LibraryRevision(ctx context.Context, arg LibraryRevisionParams) (LibraryRevisionRow, error) {
+	row := q.db.QueryRow(ctx, libraryRevision, arg.EntryID, arg.No)
+	var i LibraryRevisionRow
+	err := row.Scan(&i.Name, &i.Fields, &i.Design)
+	return i, err
+}
+
 const libraryRevisionExists = `-- name: LibraryRevisionExists :one
 SELECT EXISTS (SELECT 1 FROM library.entry_revisions WHERE entry_id = $1 AND no = $2)
 `
@@ -600,7 +626,7 @@ func (q *Queries) LibraryRevisionExists(ctx context.Context, arg LibraryRevision
 }
 
 const libraryRevisions = `-- name: LibraryRevisions :many
-SELECT no, name, fields, author_subject, created_at, design FROM library.entry_revisions WHERE entry_id = $1 ORDER BY no DESC
+SELECT no, name, fields, author_subject, created_at, design, origin, client FROM library.entry_revisions WHERE entry_id = $1 ORDER BY no DESC
 `
 
 type LibraryRevisionsRow struct {
@@ -610,6 +636,8 @@ type LibraryRevisionsRow struct {
 	AuthorSubject string
 	CreatedAt     time.Time
 	Design        []byte
+	Origin        string
+	Client        pgtype.Text
 }
 
 func (q *Queries) LibraryRevisions(ctx context.Context, entryID uuid.UUID) ([]LibraryRevisionsRow, error) {
@@ -628,6 +656,8 @@ func (q *Queries) LibraryRevisions(ctx context.Context, entryID uuid.UUID) ([]Li
 			&i.AuthorSubject,
 			&i.CreatedAt,
 			&i.Design,
+			&i.Origin,
+			&i.Client,
 		); err != nil {
 			return nil, err
 		}
