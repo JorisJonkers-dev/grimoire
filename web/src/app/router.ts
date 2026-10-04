@@ -58,6 +58,7 @@ const TracksPage = () => import('@/features/campaigns/TracksPage.vue')
 const DowntimePage = () => import('@/features/campaigns/DowntimePage.vue')
 const VehiclesPage = () => import('@/features/campaigns/VehiclesPage.vue')
 const SearchPage = () => import('@/features/home/SearchPage.vue')
+const GuidesPage = () => import('@/features/compendium/GuidesPage.vue')
 const MapCalibrationPage = () => import('@/features/live/MapCalibrationPage.vue')
 const SignInPage = () => import('@/features/account/SignInPage.vue')
 const AccountInvitePage = () => import('@/features/account/AccountInvitePage.vue')
@@ -80,6 +81,7 @@ export function createAppRouter(history: RouterHistory = createWebHistory()) {
       { path: '/compendium/spells', name: 'spells', component: SpellListPage },
       { path: '/compendium/spells/:slug', name: 'spell', component: SpellDetailPage },
       { path: '/compendium', redirect: { name: 'spells' } },
+      { path: '/compendium/guides', name: 'guides', component: GuidesPage },
       { path: '/compendium/:kind', name: 'entries', component: EntryListPage },
       { path: '/compendium/:kind/:slug', name: 'entry', component: EntryDetailPage },
       { path: '/about/automation', name: 'automation', component: AutomationPage },

@@ -11,6 +11,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/httpapi"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/features"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/guides"
 )
 
 type fakeCompendium struct {
@@ -23,6 +24,9 @@ type fakeCompendium struct {
 	builderErr error
 	traitsErr  error
 	catErr     error
+	guidesErr  error
+	// guidesFor is the ruleset the guides were last asked for.
+	guidesFor  *string
 	spells     []compendium.SpellSummary
 	entries    []compendium.EntrySummary
 	lastFilter *compendium.SpellFilter
@@ -87,6 +91,19 @@ func (f *fakeCompendium) GetSpell(_ context.Context, slug, _ string) (compendium
 
 func (f *fakeCompendium) ListSources(context.Context) ([]compendium.Source, error) {
 	return []compendium.Source{{Key: "srd-2024", Title: "SRD 5.2", RulesetYear: 2024, License: "CC-BY-4.0", Attribution: "a", URL: "https://x"}}, f.sourcesErr
+}
+
+func (f *fakeCompendium) Guides(_ context.Context, ruleset string) (compendium.Guides, error) {
+	f.guidesFor = &ruleset
+	return compendium.Guides{
+		Spells: []compendium.GuideLevel{
+			{Level: 0, Spells: []compendium.GuideSpell{{Slug: "fire-bolt", Name: "Fire Bolt", School: "evocation"}}},
+			{Level: 1, Spells: []compendium.GuideSpell{}},
+		},
+		Challenges: []compendium.GuideChallenge{{Challenge: "1/4", Monsters: 2, Band: guides.Band{Attacks: 3, ToHitLow: 4, ToHit: 5, ToHitHigh: 6, Damage: 7}}},
+		Tiers:      []guides.Tier{{No: 2, From: 5, To: 10, Rarities: []string{"common", "rare"}}},
+		Rarities:   []compendium.GuideRarity{{Rarity: "rare", FirstTier: 2, Items: []compendium.GuideItem{{Slug: "amulet-of-health", Name: "Amulet of Health"}}}},
+	}, f.guidesErr
 }
 
 func compendiumServer(t *testing.T, c *fakeCompendium) http.Handler {

@@ -15,6 +15,7 @@ defineProps<{ current: string }>()
     >
       {{ k.label }}
     </RouterLink>
+    <RouterLink :to="{ name: 'guides' }" :aria-current="current === 'guides' ? 'page' : undefined">Guides</RouterLink>
   </nav>
 </template>
 

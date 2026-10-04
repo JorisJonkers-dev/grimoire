@@ -2,6 +2,7 @@ package config_test
 
 import (
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/config"
@@ -103,6 +104,22 @@ func TestLoadRejectsBadRateLimit(t *testing.T) {
 		_, err := config.Load(env(map[string]string{"GRIMOIRE_DATABASE_URL": "x", "GRIMOIRE_RATE_LIMIT_PER_MINUTE": v}))
 		if err == nil {
 			t.Fatalf("accepted %q", v)
+		}
+	}
+}
+
+// The server trusts as many reverse proxies as it is told stand in front of it, and none by default.
+func TestLoadProxyHops(t *testing.T) {
+	t.Parallel()
+	for v, want := range map[string]int{"": 0, "0": 0, "1": 1, "2": 2, "8": 8} {
+		c, err := config.Load(env(map[string]string{"GRIMOIRE_DATABASE_URL": "x", "GRIMOIRE_TRUSTED_PROXY_HOPS": v}))
+		if err != nil || c.ProxyHops != want {
+			t.Fatalf("%q: %d %v", v, c.ProxyHops, err)
+		}
+	}
+	for _, v := range []string{"abc", "-1", "9", "1.5"} {
+		if _, err := config.Load(env(map[string]string{"GRIMOIRE_DATABASE_URL": "x", "GRIMOIRE_TRUSTED_PROXY_HOPS": v})); err == nil || !strings.Contains(err.Error(), "GRIMOIRE_TRUSTED_PROXY_HOPS") {
+			t.Fatalf("accepted %q: %v", v, err)
 		}
 	}
 }

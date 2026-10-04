@@ -317,6 +317,7 @@ func serve(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 		},
 		DevSubject:  cfg.DevSubject,
 		RateLimit:   cfg.RateLimit,
+		ProxyHops:   cfg.ProxyHops,
 		Now:         time.Now,
 		Web:         webui.Handler(webui.Embedded()),
 		Edits:       campaignpg.New(store.Pool()),

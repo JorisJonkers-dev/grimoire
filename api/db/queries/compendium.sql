@@ -70,7 +70,7 @@ SELECT coalesce(max(id), 0)::bigint AS version FROM ops.compendium_imports;
 SELECT coalesce((SELECT snapshot_hash FROM ops.compendium_imports ORDER BY id DESC LIMIT 1), '')::text AS snapshot_hash;
 
 -- name: ListSources :many
-SELECT key, title, ruleset_year, license, attribution, url FROM compendium.documents ORDER BY precedence DESC, key;
+SELECT key, title, ruleset_year, license, attribution, url FROM compendium.documents WHERE key LIKE 'srd-%' ORDER BY precedence DESC, key;
 
 -- name: ListSpells :many
 WITH effective AS (
@@ -78,7 +78,7 @@ WITH effective AS (
         s.id, s.slug, s.name, s.level, s.school_id, s.ritual, s.concentration, d.key AS document_key
     FROM compendium.spells s
     JOIN compendium.documents d ON d.id = s.document_id
-    WHERE sqlc.narg(ruleset)::text IS NULL OR d.key = sqlc.narg(ruleset)::text
+    WHERE d.key LIKE 'srd-%' AND (sqlc.narg(ruleset)::text IS NULL OR d.key = sqlc.narg(ruleset)::text)
     ORDER BY s.slug, d.precedence DESC
 )
 SELECT e.slug, e.name, e.level, sch.slug AS school, e.ritual, e.concentration, e.document_key
@@ -101,7 +101,7 @@ FROM compendium.spells s
 JOIN compendium.documents d ON d.id = s.document_id
 JOIN compendium.magic_schools sch ON sch.id = s.school_id
 LEFT JOIN compendium.ability_scores ab ON ab.id = s.save_ability_id
-WHERE s.slug = @slug AND (sqlc.narg(ruleset)::text IS NULL OR d.key = sqlc.narg(ruleset)::text)
+WHERE s.slug = @slug AND d.key LIKE 'srd-%' AND (sqlc.narg(ruleset)::text IS NULL OR d.key = sqlc.narg(ruleset)::text)
 ORDER BY d.precedence DESC
 LIMIT 1;
 

@@ -5,7 +5,9 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"net/netip"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -29,6 +31,11 @@ type RateLimiter struct {
 	Window time.Duration
 	Now    func() time.Time
 	Exempt map[string]bool
+	// ProxyHops is how many reverse proxies in front of the server are trusted to append the address
+	// they saw to X-Forwarded-For. With none, an anonymous caller is keyed by the peer address, which
+	// behind a proxy is the proxy's and is shared by everyone. ProxyHops stays 0 unless the server can
+	// only be reached through that many proxies: a caller who reaches it directly writes the header.
+	ProxyHops int
 	// Log, when set, records the first request each key has refused in a window.
 	Log *slog.Logger
 
@@ -49,7 +56,7 @@ func (l *RateLimiter) Wrap(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 			return
 		}
-		k := key(r)
+		k := l.key(r)
 		remaining, reset, ok := l.take(k)
 		h := w.Header()
 		h.Set("RateLimit-Limit", strconv.Itoa(l.Limit))
@@ -96,13 +103,32 @@ func (l *RateLimiter) take(k string) (remaining, resetSeconds int, ok bool) {
 	return l.Limit - win.count, resetSeconds, true
 }
 
-func key(r *http.Request) string {
+func (l *RateLimiter) key(r *http.Request) string {
 	if id := r.Header.Get(IdentityHeader); id != "" {
 		return "id:" + id
+	}
+	if client, ok := forwardedClient(r.Header.Get("X-Forwarded-For"), l.ProxyHops); ok {
+		return "ip:" + client
 	}
 	host, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {
 		host = r.RemoteAddr
 	}
 	return "ip:" + host
+}
+
+// forwardedClient is the address the outermost of hops trusted proxies saw its caller at: each proxy
+// appends the address it saw, so that is the entry hops from the right. Whatever a caller wrote into
+// the header themselves lies further left and is never read. It reports false with no proxy trusted,
+// with fewer entries than proxies, or when that entry is no address.
+func forwardedClient(header string, hops int) (string, bool) {
+	parts := strings.Split(header, ",")
+	if hops < 1 || len(parts) < hops {
+		return "", false
+	}
+	addr, err := netip.ParseAddr(strings.TrimSpace(parts[len(parts)-hops]))
+	if err != nil {
+		return "", false
+	}
+	return addr.String(), true
 }
