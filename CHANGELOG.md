@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/JorisJonkers-dev/grimoire/compare/v1.2.0...v1.2.1) (2026-10-04)
+
+
+### Bug Fixes
+
+* sign-in page centred, with both the external login and the Username ([#214](https://github.com/JorisJonkers-dev/grimoire/issues/214)) ([6282976](https://github.com/JorisJonkers-dev/grimoire/commit/6282976c29f396d002caee3c5829d2dfafcc6cab))
+
 ## [1.2.0](https://github.com/JorisJonkers-dev/grimoire/compare/v1.1.0...v1.2.0) (2026-10-04)
 
 
