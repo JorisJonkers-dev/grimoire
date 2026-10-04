@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import BuilderCrumbs from './BuilderCrumbs.vue'
 import { useMutation, useQuery } from '@tanstack/vue-query'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
@@ -25,7 +26,7 @@ const skills = [
 
 <template>
   <main class="g-page builder">
-    <RouterLink :to="{ name: 'library-entry', params: { entryId: String(route.params.entryId) } }" class="back">← Entry</RouterLink>
+    <BuilderCrumbs :entry-id="String(route.params.entryId)" here="Background builder" />
     <p v-if="background.isError.value" role="alert" class="g-alert" data-testid="background-error">This entry cannot be opened in the background builder.</p>
     <p v-else-if="!design">Opening the background…</p>
     <template v-else>

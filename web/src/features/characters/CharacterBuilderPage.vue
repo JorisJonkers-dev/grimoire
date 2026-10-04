@@ -80,6 +80,15 @@ watch(methods, (allowed) => {
   if (!allowed.includes(method.value) && allowed[0]) method.value = allowed[0]
 }, { immediate: true })
 
+// What has been chosen so far, shown under its step.
+const chosen = computed(() => [
+  o.value?.species.find((x) => x.slug === species.value)?.name,
+  o.value?.classes.find((x) => x.slug === klass.value)?.name,
+  o.value?.backgrounds.find((x) => x.slug === background.value)?.name,
+  undefined, undefined, undefined, undefined,
+  name.value.trim() || undefined,
+  undefined,
+])
 const chosenBackground = computed(() => o.value?.backgrounds.find((b) => b.slug === background.value))
 const chosenClass = computed(() => o.value?.classes.find((c) => c.slug === klass.value))
 const bonusChoices = computed<readonly Ability[]>(() => {
@@ -232,7 +241,11 @@ function adjust(a: Ability, delta: number) {
 
 <template>
   <main class="g-page builder">
-    <RouterLink :to="{ name: 'campaign', params: { id } }" class="back">← Campaign</RouterLink>
+    <nav aria-label="Breadcrumb" class="g-crumbs">
+      <RouterLink :to="{ name: 'campaigns' }">Campaigns</RouterLink> <span aria-hidden="true">›</span>
+      <RouterLink :to="{ name: 'campaign', params: { id } }" data-testid="to-campaign">{{ campaign.data.value?.name ?? 'Campaign' }}</RouterLink> <span aria-hidden="true">›</span>
+      <span aria-current="page">New character</span>
+    </nav>
     <header class="g-headline">
       <span class="g-eyebrow">Character</span>
       <h1>New character</h1>
@@ -242,7 +255,9 @@ function adjust(a: Ability, delta: number) {
     <template v-else>
       <p class="hint" data-testid="starting-level">Your Character starts at level {{ startingLevel }} in {{ campaign.data.value?.name }}.</p>
       <ol class="steps" aria-label="Steps">
-        <li v-for="(s, i) in steps" :key="s" :aria-current="i === step ? 'step' : undefined" :class="{ done: i < step }">{{ s }}</li>
+        <li v-for="(s, i) in steps" :key="s" :aria-current="i === step ? 'step' : undefined" :class="{ done: i < step }">
+          <span class="what">{{ s }}<small v-if="chosen[i]" :data-testid="`chosen-${String(i)}`">{{ chosen[i] }}</small></span>
+        </li>
       </ol>
 
       <section v-if="step === 0" class="g-card stack" data-testid="step-species">
@@ -404,31 +419,87 @@ function adjust(a: Ability, delta: number) {
 </template>
 
 <style scoped>
-.back {
-  color: var(--color-gold-high);
+/* Wide: the steps stand down the side, each with what was chosen, and the step in hand fills the rest. */
+@media (min-width: 900px) {
+  .builder {
+    display: grid;
+    grid-template-columns: 250px minmax(0, 1fr);
+    column-gap: 40px;
+    align-items: start;
+  }
+  .builder > * {
+    grid-column: 2;
+  }
+  .builder > nav,
+  .builder > header,
+  .builder > p {
+    grid-column: 1 / -1;
+  }
+  .builder > .steps {
+    grid-row: 4 / span 12;
+    grid-column: 1;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: 2px;
+  }
 }
 .steps {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 4px;
   margin: 0;
   padding: 0;
   list-style: none;
-  font-size: 13px;
-  color: var(--color-text-3);
+  counter-reset: step;
+  color: var(--color-text-2);
 }
 .steps li {
-  flex: none;
-  padding: 4px 10px;
-  border-radius: var(--radius-chip);
-  border: 1px solid var(--color-line);
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: var(--radius-control);
+  counter-increment: step;
 }
-.steps li[aria-current='step'] {
+.steps li::before {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--color-edge);
+  border-radius: 50%;
+  font-size: 12px;
+  content: counter(step);
+}
+.steps li.done::before {
   border-color: var(--color-gold);
   color: var(--color-gold-high);
+  content: '◆';
 }
-.steps li.done {
-  color: var(--color-text-2);
+.steps li[aria-current='step'] {
+  color: var(--color-gold-high);
+  background: var(--color-selected);
+}
+.steps li[aria-current='step']::before {
+  border-color: var(--color-brass-edge);
+}
+.what {
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-label);
+  font-size: 15px;
+}
+.what small {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--color-text-3);
+}
+section.g-card {
+  margin: 0;
+  padding: 0;
+  border: 0;
 }
 .stack {
   display: flex;
@@ -444,21 +515,35 @@ fieldset {
   border: 0;
 }
 legend {
-  margin-bottom: 6px;
-  font-family: var(--font-display);
+  margin-bottom: 10px;
+  padding: 0;
+  font-family: var(--font-label);
+  font-size: 15px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-gold);
 }
+/* A choice is a row under a rule; the one taken is lit. */
 .choice {
   display: flex;
   align-items: center;
   gap: 10px;
-  min-height: 44px;
-  padding: 0 12px;
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-md);
+  min-height: 46px;
+  padding: 0 10px;
+  border-top: 1px solid var(--color-rule);
+  cursor: pointer;
+}
+fieldset > .choice + :not(.choice) {
+  margin-top: 6px;
+}
+.choice:has(input:checked) {
+  color: var(--color-gold-high);
+  background: var(--color-selected);
 }
 .choice small {
   margin-left: auto;
-  color: var(--color-text-2);
+  font-size: 13px;
+  color: var(--color-text-3);
 }
 .scores {
   display: grid;
@@ -470,9 +555,9 @@ legend {
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  padding: 8px;
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-md);
+  padding: 10px 8px;
+  border-radius: var(--radius-control);
+  background: var(--color-field);
 }
 .score select,
 .score input {
@@ -480,10 +565,11 @@ legend {
   width: 64px;
   font-size: 16px;
   text-align: center;
-  background: var(--color-surface);
+  border: 0;
+  border-radius: var(--radius-control) var(--radius-control) 0 0;
   color: var(--color-text);
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-md);
+  background: var(--color-inset);
+  box-shadow: inset 0 -1px 0 var(--color-line);
 }
 .abbr {
   font-family: var(--font-display);
@@ -497,11 +583,12 @@ legend {
 .stepper button {
   min-width: 44px;
   min-height: 44px;
-  border: 1px solid var(--color-bronze);
-  border-radius: var(--radius-md);
+  border: 1px solid var(--color-edge);
+  border-radius: var(--radius-control);
   background: var(--color-raised);
   color: var(--color-text);
   font-size: 18px;
+  cursor: pointer;
 }
 .hint {
   margin: 0;
@@ -530,28 +617,33 @@ dd {
 }
 .tiles {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 180px), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 190px), 1fr));
   gap: 8px;
 }
 .tile {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 12px;
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-md);
+  padding: 14px 12px 12px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  background: var(--color-field);
   cursor: pointer;
 }
+.tile strong {
+  font-family: var(--font-display);
+  font-size: 15px;
+}
 .tile.picked {
-  border-color: var(--color-gold);
-  background: var(--color-raised);
+  border-color: var(--color-brass-edge);
+  background: var(--color-selected);
 }
 .tile:focus-within {
   outline: 2px solid var(--color-gold);
 }
 .detail {
+  font-size: 13px;
   color: var(--color-text-2);
-  font-size: 14px;
 }
 .primary {
   color: var(--color-gold-high);

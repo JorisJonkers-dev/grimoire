@@ -79,7 +79,13 @@ describe('character builder', () => {
     })
     expect(wrapper.get('[data-testid="starting-level"]').text()).toContain('level 3')
     expect(wrapper.get('[data-testid="next"]').attributes('disabled')).toBeDefined()
+    // The page says where it is, and each step shows what was chosen once something is.
+    expect(wrapper.get('nav[aria-label="Breadcrumb"]').text().replace(/\s*›\s*/g, ' › ')).toBe(`Campaigns › ${campaign.name} › New character`)
+    expect(wrapper.get('[data-testid="to-campaign"]').attributes('href')).toBe(`/campaigns/${ID}`)
+    expect(wrapper.find('[data-testid="chosen-0"]').exists()).toBe(false)
     await wrapper.get('input[value="human"]').setValue(true)
+    expect(wrapper.get('[data-testid="chosen-0"]').text()).toBe('Human')
+    expect(wrapper.get('ol[aria-label="Steps"] [aria-current="step"]').text()).toBe('SpeciesHuman')
     await expectAccessible(wrapper.element as Element)
     await next(wrapper)
     expect(wrapper.get('[data-testid="primary-fighter"]').text()).toBe('Main: STR or DEX')

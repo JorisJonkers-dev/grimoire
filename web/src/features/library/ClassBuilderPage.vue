@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import BuilderCrumbs from './BuilderCrumbs.vue'
 import { useMutation, useQuery } from '@tanstack/vue-query'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
@@ -44,7 +45,7 @@ function addFeature() {
 
 <template>
   <main class="g-page builder">
-    <RouterLink :to="{ name: 'library-entry', params: { entryId: String(route.params.entryId) } }" class="back">← Entry</RouterLink>
+    <BuilderCrumbs :entry-id="String(route.params.entryId)" here="Class builder" />
     <p v-if="klass.isError.value" role="alert" class="g-alert" data-testid="class-error">This entry cannot be opened in the class builder.</p>
     <p v-else-if="!design">Opening the class…</p>
     <template v-else>
