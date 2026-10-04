@@ -4,7 +4,8 @@ import type { LiveCombat, LiveInitiativeRoll, LiveRosterEntry, LiveToken } from 
 import { StatusIcon } from '@/shared/ui'
 import { initials } from './board'
 import { effectLabel } from './conditions'
-import { REVEAL_FADE_MS, REVEAL_HOLD_MS, reducedMotion } from './motion'
+import { reducedMotion } from '@/shared/a11y/settings'
+import { REVEAL_FADE_MS, REVEAL_HOLD_MS } from './motion'
 
 const props = withDefaults(
   defineProps<{ roster: LiveRosterEntry[]; combat?: LiveCombat; tokens?: LiveToken[]; reveal?: { order: LiveInitiativeRoll[]; n: number } | null }>(),

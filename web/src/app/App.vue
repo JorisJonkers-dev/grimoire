@@ -4,8 +4,11 @@ import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import NotificationBell from '@/features/notifications/NotificationBell.vue'
 import { getAccountOptions, signOutMutation } from '@/infrastructure/api/@tanstack/vue-query.gen'
+import { restoreAccessibility } from '@/shared/a11y/settings'
 import { useOnline } from '@/shared/pwa/online'
 
+// How this device is set to look is taken up before anything is drawn.
+restoreAccessibility()
 const route = useRoute()
 const router = useRouter()
 const online = useOnline()
@@ -61,7 +64,8 @@ function leave() {
     <footer class="credit">
       Grimoire by <a href="https://jorisjonkers.dev">Joris Jonkers</a> ·
       <RouterLink :to="{ name: 'attribution' }">SRD content under CC-BY-4.0</RouterLink> ·
-      <RouterLink :to="{ name: 'automation' }">Automation coverage</RouterLink>
+      <RouterLink :to="{ name: 'automation' }">Automation coverage</RouterLink> ·
+      <RouterLink :to="{ name: 'accessibility' }" data-testid="accessibility-link">Accessibility</RouterLink>
     </footer>
   </div>
 </template>

@@ -5,7 +5,10 @@
 @import '@fontsource/alegreya-sans/400.css';
 @import '@fontsource/alegreya-sans/700.css';
 @import '@fontsource/alegreya-sans/800.css';
+@import '@fontsource/opendyslexic/400.css';
+@import '@fontsource/opendyslexic/700.css';
 @import './tokens.css';
+@import './a11y/accessibility.css';
 
 :root {
   color-scheme: dark;

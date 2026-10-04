@@ -1,6 +1,7 @@
 import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { expectAccessible } from '@/test/axe'
+import { still, vibrating } from '@/test/haptics'
 import { fakeClock, mountApp } from '@/test/mountApp'
 import { configureApi } from '@/infrastructure/http'
 import { jsonResponse } from '@/test/mountWithQuery'
@@ -46,6 +47,8 @@ afterEach(() => {
   document.body.innerHTML = ''
   vi.unstubAllGlobals()
   vi.useRealTimers()
+  still()
+  localStorage.clear()
 })
 
 describe('notation', () => {
@@ -232,6 +235,35 @@ describe('dice tray', () => {
     // The d20s wear the chosen set; the d4, which the set leaves alone, stays plain.
     const flat = wrapper.findAll('[data-testid="dice-2d"] [role="img"]')
     expect(flat.map((d) => d.element.querySelector('[data-testid="die-tint"]')?.getAttribute('fill'))).toEqual(['#102030', '#102030', undefined])
+  })
+
+  it('lands at once when the app is set to reduce motion, and buzzes as the roll lands', async () => {
+    reducedMotion(false)
+    localStorage.setItem('grimoire.accessibility', JSON.stringify({ reduceMotion: true }))
+    const buzzed = vibrating()
+    const landed = ROLL.replace(/05$/, '09')
+    const { wrapper } = await mountApp(`/campaigns/${ID}/dice`, {
+      [`${base}/rolls/${landed}/dice/0`]: problem(503),
+      [`${base}/rolls/${landed}/rest`]: () => withDice([5, 6, 1], { id: landed, status: 'resolved', total: 9 }),
+      [`${base}/rolls`]: (_u, req) => (req.method === 'POST' ? roll({ id: landed }) : []),
+      [base]: () => campaign('player'),
+    })
+    fakeClock()
+    await wrapper.get('[data-testid="roll-purpose"]').setValue('Stealth')
+    await wrapper.get('[data-testid="roll-form"]').trigger('submit')
+    await flushPromises()
+    const card = () => wrapper.get('[data-testid="roll-card"]')
+    // A roll that could not be saved has not landed.
+    await card().get('[data-testid="auto-0"]').trigger('click')
+    await flushPromises()
+    expect(card().get('[role="alert"]').text()).toContain('could not be saved')
+    expect(buzzed).toEqual([])
+    await card().get('[data-testid="roll-rest"]').trigger('click')
+    expect(card().find('[aria-label*="rolling"]').exists()).toBe(false)
+    await flushPromises()
+    expect(card().get('[data-testid="roll-total"]').text()).toContain('9')
+    expect(buzzed).toEqual([40])
+    wrapper.unmount()
   })
 
   it('tumbles until the server answers, and reports failures', async () => {

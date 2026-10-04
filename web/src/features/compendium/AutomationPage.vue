@@ -15,26 +15,28 @@ const coverage = useQuery(getAutomationCoverageOptions())
     </p>
     <p v-if="coverage.isPending.value">Counting…</p>
     <p v-else-if="coverage.isError.value" role="alert">The report could not be loaded. Try again shortly.</p>
-    <table v-else data-testid="automation-table">
-      <thead>
-        <tr>
-          <th scope="col">Kind</th>
-          <th scope="col">Entries</th>
-          <th scope="col">Full</th>
-          <th scope="col">Partial</th>
-          <th scope="col">Manual</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="row in coverage.data.value" :key="row.kind">
-          <th scope="row">{{ row.kind === 'spell' ? 'Spells' : kindLabel(row.kind) }}</th>
-          <td>{{ row.total }}</td>
-          <td>{{ row.full }}</td>
-          <td>{{ row.partial }}</td>
-          <td>{{ row.manual }}</td>
-        </tr>
-      </tbody>
-    </table>
+    <div v-else class="scroll" role="group" aria-label="Table of automation coverage" tabindex="0">
+      <table data-testid="automation-table">
+        <thead>
+          <tr>
+            <th scope="col">Kind</th>
+            <th scope="col">Entries</th>
+            <th scope="col">Full</th>
+            <th scope="col">Partial</th>
+            <th scope="col">Manual</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="row in coverage.data.value" :key="row.kind">
+            <th scope="row">{{ row.kind === 'spell' ? 'Spells' : kindLabel(row.kind) }}</th>
+            <td>{{ row.total }}</td>
+            <td>{{ row.full }}</td>
+            <td>{{ row.partial }}</td>
+            <td>{{ row.manual }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </main>
 </template>
 
@@ -46,6 +48,10 @@ const coverage = useQuery(getAutomationCoverageOptions())
 }
 h1 {
   font-family: var(--font-display);
+}
+/* A table wider than a phone scrolls on its own, not the page. */
+.scroll {
+  overflow-x: auto;
 }
 table {
   width: 100%;

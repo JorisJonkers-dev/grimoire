@@ -1,0 +1,32 @@
+/* What the accessibility settings change; shared/a11y/settings.ts names them on the root. */
+:root[data-text="large"] {
+  --text-scale: 1.15;
+}
+:root[data-text="largest"] {
+  --text-scale: 1.3;
+}
+:root[data-font="dyslexia"] {
+  --font-display: OpenDyslexic, sans-serif;
+  --font-flavour: OpenDyslexic, sans-serif;
+  --font-ui: OpenDyslexic, sans-serif;
+}
+/* Each palette changes only the colours that tell things apart: palettes.spec.ts checks how they are seen. */
+:root[data-palette="red-green"] {
+  --color-party: #56B4E9;
+  --color-enemy: #E69F00;
+  --color-success: #009E73;
+}
+:root[data-palette="blue-yellow"] {
+  --color-party: #C8B6FF;
+  --color-enemy: #E8590C;
+  --color-success: #3DDC97;
+}
+/* Text and controls with no size of their own take the browser's, which follows the text size too. */
+body {
+  font-size: 16px;
+  /* A long word or address breaks rather than running off the side at a larger text size. */
+  overflow-wrap: break-word;
+}
+:where(button, input, select, textarea) {
+  font-size: 13.3333px;
+}

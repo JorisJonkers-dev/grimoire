@@ -1,4 +1,4 @@
-import { reducedMotion } from '@/features/live/motion'
+import { reducedMotion } from '@/shared/a11y/settings'
 import type { FromWorker, ToWorker } from './diceWorker'
 
 /** Remembered for the tab once a device proved too slow, or had no WebGL: it gets the 2D dice from then on. */

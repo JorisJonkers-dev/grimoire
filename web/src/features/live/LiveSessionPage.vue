@@ -11,6 +11,8 @@ import HexGrid from '@/shared/map/HexGrid.vue'
 import NotifyToggle from '@/shared/pwa/NotifyToggle.vue'
 import { useWakeLock } from '@/shared/pwa/wakeLock'
 import { GButton } from '@/shared/ui'
+import { accessibility, buzz } from '@/shared/a11y/settings'
+import { KEPT_LINES, rollLine, turnLine } from './announce'
 import { BANNER_MS } from './motion'
 import { DM_PAGES, PLAYER_PAGES, usePhoneShell } from './phoneShell'
 import { after, board, describe, emanations, hexes, stacks, zoneHexes } from './board'
@@ -165,12 +167,20 @@ const chips = [
   { key: 'bonus', field: 'bonusAction', label: 'Bonus' },
   { key: 'reaction', field: 'reaction', label: 'Reaction' },
 ] as const
+// What a screen reader is told: each turn as it starts and each roll as it lands, the last few kept.
+const lines = ref<{ no: number; text: string }[]>([])
+let lineNo = 0
+function say(text: string) {
+  lines.value = [...lines.value, { no: ++lineNo, text }].slice(-KEPT_LINES)
+}
 // A player's roll, as it resolves anywhere at the table, is thrown on this screen's dice stage.
 watch(
   () => state.value?.rolls,
   () => {
     const r = state.value?.roll
-    if (r) throwDice(r, r.id)
+    if (!r) return
+    throwDice(r, r.id)
+    if (accessibility.announceRolls) say(rollLine(r))
   },
 )
 // "It's your turn" rises over a player's screen as their turn starts, then fades.
@@ -178,11 +188,14 @@ const banner = ref('')
 let bannerTimer: ReturnType<typeof setTimeout> | undefined
 watch(() => state.value?.turn?.n, () => {
   const starting = state.value?.turn?.tokenIds ?? []
+  const acting = (view.value?.tokens ?? []).filter((t) => starting.includes(t.id)).map((t) => t.label)
   const names = mine.value.filter((t) => starting.includes(t.id)).map((t) => t.label)
+  if (accessibility.announceTurns) say(turnLine(state.value?.turn?.round ?? 0, acting, names))
   if (names.length === 0) return
   clearTimeout(bannerTimer)
   banner.value = names.join(' and ')
   bannerTimer = setTimeout(() => { banner.value = '' }, BANNER_MS)
+  buzz([120, 60, 120])
 })
 function dismissBanner() {
   clearTimeout(bannerTimer)
@@ -548,6 +561,9 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         <NotifyToggle />
       </header>
       <p v-if="state.rejection" role="alert" class="g-alert" data-testid="rejection">{{ state.rejection }}</p>
+      <div class="sr-only" role="log" aria-live="polite" aria-label="What is happening" data-testid="announcer">
+        <p v-for="l in lines" :key="l.no">{{ l.text }}</p>
+      </div>
       <button v-if="banner" type="button" class="turn-banner" data-testid="turn-banner" @click="dismissBanner">
         <strong>It's your turn</strong> <span>{{ banner }}</span>
       </button>
@@ -569,7 +585,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         @pointerdown="shell.swipeStart"
         @pointerup="shell.swipeEnd"
       >
-        <p v-if="!isDM && turns.length > 0" data-page="always" role="status" class="banner" data-testid="your-turn">Your turn</p>
+        <p v-if="!isDM && turns.length > 0" data-page="always" class="banner" data-testid="your-turn">Your turn</p>
         <p v-if="view?.tableResult" data-page="always" role="status" class="walk" data-testid="table-result">{{ tableResultLine(view.tableResult) }}</p>
         <div v-if="view && !combat && (isDM || view.exploration)" data-page="actions" class="row" data-testid="exploration">
           <GButton v-if="isDM" :data-testid="view.exploration ? 'stop-turns' : 'start-turns'" @click="live?.send({ kind: 'explore', on: !view.exploration })">
