@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AuthShell from './AuthShell.vue'
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -32,13 +33,13 @@ function submit() {
 </script>
 
 <template>
-  <main class="g-page narrow">
+  <AuthShell>
     <h1>Set up your Account</h1>
     <p v-if="!valid || preview.isError.value" role="alert" class="g-alert" data-testid="account-invite-invalid">
       This invite has been used or has expired. Ask an Admin for a new one.
     </p>
     <p v-else-if="!preview.data.value">Reading the invite…</p>
-    <form v-else class="g-card stack" data-testid="account-setup" @submit.prevent="submit">
+    <form v-else class="stack" data-testid="account-setup" @submit.prevent="submit">
       <p v-if="preview.data.value.admin">You are invited as an Admin.</p>
       <GField v-model="form.username" label="Username" :maxlength="32" autocomplete="username" required :rules="[usernameRule]" hint="You sign in with it." data-testid="setup-username" />
       <GField v-model="form.nickname" label="Nickname" :maxlength="40" required hint="What others see." data-testid="setup-nickname" />
@@ -47,16 +48,21 @@ function submit() {
       <p v-if="accept.isError.value" role="alert" class="g-alert" data-testid="setup-failed">That Username or email may be taken, or the invite has expired.</p>
       <GButton type="submit" variant="primary" :disabled="!ready || accept.isPending.value">Create my Account</GButton>
     </form>
-  </main>
+  </AuthShell>
 </template>
 
 <style scoped>
-.narrow {
-  max-width: 420px;
+h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 34px;
 }
 .stack {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
+}
+.stack p {
+  margin: 0;
 }
 </style>

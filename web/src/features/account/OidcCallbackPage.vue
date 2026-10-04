@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AuthShell from './AuthShell.vue'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -88,13 +89,13 @@ const failedText = computed(() => {
 </script>
 
 <template>
-  <main class="g-page narrow">
+  <AuthShell>
     <h1>Signing in</h1>
     <template v-if="failure">
       <p role="alert" class="g-alert" data-testid="oidc-failed">{{ failure }}</p>
       <RouterLink :to="{ name: 'sign-in' }">Back to signing in</RouterLink>
     </template>
-    <form v-else-if="pending" class="g-card stack" data-testid="oidc-choose" @submit.prevent="submit">
+    <form v-else-if="pending" class="stack" data-testid="oidc-choose" @submit.prevent="submit">
       <p>Welcome, {{ pending.name || pending.username }}. No Grimoire Account has your {{ provider }} login yet.</p>
       <div class="choice" role="radiogroup" aria-label="How to continue">
         <label><input v-model="mode" type="radio" value="create" data-testid="oidc-mode-create" /> Create an Account</label>
@@ -115,17 +116,22 @@ const failedText = computed(() => {
       </GButton>
     </form>
     <p v-else role="status">Checking your sign-in…</p>
-  </main>
+  </AuthShell>
 </template>
 
 <style scoped>
-.narrow {
-  max-width: 460px;
+h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 34px;
 }
 .stack {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
+}
+.stack p {
+  margin: 0;
 }
 .choice {
   display: flex;
