@@ -4892,6 +4892,85 @@ export type SearchResults = {
 };
 
 /**
+ * A spell as the spells-by-level guide lists it.
+ */
+export type GuideSpell = {
+    slug: Slug;
+    name: string;
+    school: Slug;
+};
+
+/**
+ * The spells of one spell level, by name; level 0 holds the cantrips.
+ */
+export type GuideSpellLevel = {
+    level: number;
+    spells: Array<GuideSpell>;
+};
+
+/**
+ * The monsters of one Challenge Rating and what their attacks look like.
+ */
+export type GuideChallenge = {
+    /**
+     * The Challenge Rating as the books write it, such as 1/4 or 5.
+     */
+    challenge: string;
+    monsters: number;
+    /**
+     * How many attacks those monsters have between them.
+     */
+    attacks: number;
+    toHitLow: number;
+    /**
+     * The middle bonus to hit.
+     */
+    toHit: number;
+    toHitHigh: number;
+    /**
+     * The middle damage of one hit, on average dice, rounded down.
+     */
+    damage: number;
+};
+
+/**
+ * A tier of play and the magic item rarities that suit a party in it.
+ */
+export type GuideTier = {
+    tier: number;
+    fromLevel: number;
+    toLevel: number;
+    rarities: Array<string>;
+};
+
+/**
+ * A magic item as the loot guide lists it.
+ */
+export type GuideItem = {
+    slug: Slug;
+    name: string;
+};
+
+/**
+ * The magic items of one rarity, by name, and the first tier of play they suit.
+ */
+export type GuideRarity = {
+    rarity: string;
+    firstTier: number;
+    items: Array<GuideItem>;
+};
+
+/**
+ * The compendium's guides, worked out of its SRD entries.
+ */
+export type CompendiumGuides = {
+    spellsByLevel: Array<GuideSpellLevel>;
+    attacksByChallenge: Array<GuideChallenge>;
+    lootTiers: Array<GuideTier>;
+    lootByRarity: Array<GuideRarity>;
+};
+
+/**
  * What a vehicle travels over. A ship or an airship travels round the clock; a land vehicle a day's eight hours.
  */
 export type VehicleKind = 'land' | 'water' | 'air';
@@ -6157,6 +6236,40 @@ export type ListSourcesResponses = {
 };
 
 export type ListSourcesResponse = ListSourcesResponses[keyof ListSourcesResponses];
+
+export type GetCompendiumGuidesData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * One ruleset alone; without it the newest rules each entry has.
+         */
+        ruleset?: Ruleset;
+    };
+    url: '/api/v1/compendium/guides';
+};
+
+export type GetCompendiumGuidesErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetCompendiumGuidesError = GetCompendiumGuidesErrors[keyof GetCompendiumGuidesErrors];
+
+export type GetCompendiumGuidesResponses = {
+    /**
+     * The guides.
+     */
+    200: CompendiumGuides;
+};
+
+export type GetCompendiumGuidesResponse = GetCompendiumGuidesResponses[keyof GetCompendiumGuidesResponses];
 
 export type ListCampaignsData = {
     body?: never;

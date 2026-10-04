@@ -493,7 +493,7 @@ const findEntry = `-- name: FindEntry :one
 SELECT e.id, e.name, e.subtitle::text AS subtitle, d.key AS document_key
 FROM compendium.entries e
 JOIN compendium.documents d ON d.id = e.document_id
-WHERE e.kind = $1 AND e.slug = $2 AND ($3::text IS NULL OR d.key = $3::text)
+WHERE e.kind = $1 AND e.slug = $2 AND d.key LIKE 'srd-%' AND ($3::text IS NULL OR d.key = $3::text)
 ORDER BY d.precedence DESC
 LIMIT 1
 `
@@ -742,7 +742,7 @@ WITH effective AS (
     SELECT DISTINCT ON (e.kind, e.slug) e.kind, e.id, e.slug, e.name, e.subtitle::text AS subtitle, d.key AS document_key
     FROM compendium.entries e
     JOIN compendium.documents d ON d.id = e.document_id
-    WHERE e.kind = $5 AND ($6::text IS NULL OR d.key = $6::text)
+    WHERE e.kind = $5 AND d.key LIKE 'srd-%' AND ($6::text IS NULL OR d.key = $6::text)
     ORDER BY e.kind, e.slug, d.precedence DESC
 )
 SELECT kind, slug, name, subtitle::text AS subtitle, document_key FROM effective

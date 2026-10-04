@@ -16,7 +16,11 @@ type Config struct {
 	AutoMigrate bool
 	AutoImport  bool
 	RateLimit   int
-	AssetDir    string
+	// ProxyHops is how many reverse proxies stand in front of the server (GRIMOIRE_TRUSTED_PROXY_HOPS).
+	// Each is trusted to append the address it saw to X-Forwarded-For, so that anonymous callers are
+	// rate limited one by one and not as the proxy. Leave it 0 where the server can be reached directly.
+	ProxyHops int
+	AssetDir  string
 	// OAuthIssuer is the authorization server MCP agents sign in with; empty leaves discovery out.
 	OAuthIssuer string
 	S3          *S3
@@ -127,15 +131,33 @@ func Load(getenv func(string) string) (Config, error) {
 	if c.DatabaseURL == "" {
 		return Config{}, ErrMissingDatabaseURL
 	}
-	if v := getenv("GRIMOIRE_RATE_LIMIT_PER_MINUTE"); v != "" {
-		n, err := strconv.Atoi(v)
-		if err != nil || n < 1 {
-			return Config{}, fmt.Errorf("config: GRIMOIRE_RATE_LIMIT_PER_MINUTE must be a positive integer, got %q", v)
-		}
-		c.RateLimit = n
+	if err := c.loadLimits(getenv); err != nil {
+		return Config{}, err
 	}
 	return c, nil
 }
+
+// loadLimits reads the rate limit and how many reverse proxies to trust for it.
+func (c *Config) loadLimits(getenv func(string) string) error {
+	if v := getenv("GRIMOIRE_RATE_LIMIT_PER_MINUTE"); v != "" {
+		n, err := strconv.Atoi(v)
+		if err != nil || n < 1 {
+			return fmt.Errorf("config: GRIMOIRE_RATE_LIMIT_PER_MINUTE must be a positive integer, got %q", v)
+		}
+		c.RateLimit = n
+	}
+	if v := getenv("GRIMOIRE_TRUSTED_PROXY_HOPS"); v != "" {
+		n, err := strconv.Atoi(v)
+		if err != nil || n < 0 || n > maxProxyHops {
+			return fmt.Errorf("config: GRIMOIRE_TRUSTED_PROXY_HOPS must be an integer from 0 to %d, got %q", maxProxyHops, v)
+		}
+		c.ProxyHops = n
+	}
+	return nil
+}
+
+// maxProxyHops is the longest chain of reverse proxies the server can be told to trust.
+const maxProxyHops = 8
 
 func (c *Config) loadS3(getenv func(string) string) error {
 	endpoint := getenv("GRIMOIRE_S3_ENDPOINT")

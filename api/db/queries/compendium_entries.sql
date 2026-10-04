@@ -131,7 +131,7 @@ WITH effective AS (
     SELECT DISTINCT ON (e.kind, e.slug) e.kind, e.id, e.slug, e.name, e.subtitle::text AS subtitle, d.key AS document_key
     FROM compendium.entries e
     JOIN compendium.documents d ON d.id = e.document_id
-    WHERE e.kind = @kind AND (sqlc.narg(ruleset)::text IS NULL OR d.key = sqlc.narg(ruleset)::text)
+    WHERE e.kind = @kind AND d.key LIKE 'srd-%' AND (sqlc.narg(ruleset)::text IS NULL OR d.key = sqlc.narg(ruleset)::text)
     ORDER BY e.kind, e.slug, d.precedence DESC
 )
 SELECT kind, slug, name, subtitle::text AS subtitle, document_key FROM effective
@@ -144,7 +144,7 @@ LIMIT @page_size;
 SELECT e.id, e.name, e.subtitle::text AS subtitle, d.key AS document_key
 FROM compendium.entries e
 JOIN compendium.documents d ON d.id = e.document_id
-WHERE e.kind = @kind AND e.slug = @slug AND (sqlc.narg(ruleset)::text IS NULL OR d.key = sqlc.narg(ruleset)::text)
+WHERE e.kind = @kind AND e.slug = @slug AND d.key LIKE 'srd-%' AND (sqlc.narg(ruleset)::text IS NULL OR d.key = sqlc.narg(ruleset)::text)
 ORDER BY d.precedence DESC
 LIMIT 1;
 

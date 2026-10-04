@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg/queries"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/guides"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/social/domain"
 )
 
@@ -88,19 +89,6 @@ func spellLevel(level int32) string {
 	return "Level " + strconv.Itoa(int(level))
 }
 
-// rating writes a Challenge Rating as the books do: 1/8, 1/4, 1/2 or a whole number.
-func rating(cr float64) string {
-	switch cr {
-	case 0.125:
-		return "1/8"
-	case 0.25:
-		return "1/4"
-	case 0.5:
-		return "1/2"
-	}
-	return strconv.FormatFloat(cr, 'f', -1, 64)
-}
-
 // literal makes what was typed match as itself in a LIKE pattern: none of it is a wildcard.
 func literal(typed string) string {
 	return strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`).Replace(typed)
@@ -159,7 +147,7 @@ func (s *Store) searchCompendium(ctx context.Context, q sought) ([]domain.Hit, e
 		return nil, err
 	}
 	for _, r := range monsters {
-		out = append(out, domain.Hit{Group: domain.GroupCompendium, Kind: "monster", Title: r.Name, Preview: r.Size + " " + strings.ToLower(r.CreatureType) + " · CR " + rating(r.ChallengeRating), Path: "/compendium/monster/" + r.Slug})
+		out = append(out, domain.Hit{Group: domain.GroupCompendium, Kind: "monster", Title: r.Name, Preview: r.Size + " " + strings.ToLower(r.CreatureType) + " · CR " + guides.Challenge(r.ChallengeRating), Path: "/compendium/monster/" + r.Slug})
 	}
 	items, err := s.q.SearchItems(ctx, queries.SearchItemsParams{Pattern: q.pattern, Needle: q.needle, Lim: q.lim})
 	if err != nil {

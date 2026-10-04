@@ -791,6 +791,19 @@ func (UnimplementedHandler) GetClassBuild(ctx context.Context, params GetClassBu
 	return r, ht.ErrNotImplemented
 }
 
+// GetCompendiumGuides implements getCompendiumGuides operation.
+//
+// Guides worked out of the SRD entries of the compendium, and of nothing else: every spell by its
+// level, what the attacks of monsters of each Challenge Rating look like (how many, the lowest, middle
+// and highest bonus to hit, and the middle damage of a hit), and loot by party level: the tiers of
+// play, the magic item rarities that suit each, and the magic items of each rarity. Open to anyone,
+// without an Account.
+//
+// GET /api/v1/compendium/guides
+func (UnimplementedHandler) GetCompendiumGuides(ctx context.Context, params GetCompendiumGuidesParams) (r GetCompendiumGuidesRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetConditionBuild implements getConditionBuild operation.
 //
 // A homebrew condition's design, read back: one of the caller's, or a Shared Library copy.

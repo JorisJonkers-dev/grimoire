@@ -5,7 +5,9 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"net/netip"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -29,6 +31,11 @@ type RateLimiter struct {
 	Window time.Duration
 	Now    func() time.Time
 	Exempt map[string]bool
+	// ProxyHops is how many reverse proxies in front of the server are trusted to append the address
+	// they saw to X-Forwarded-For. With none, an anonymous caller is keyed by the peer address, which
+	// behind a proxy is the proxy's and is shared by everyone. ProxyHops stays 0 unless the server can
+	// only be reached through that many proxies: a caller who reaches it directly writes the header.
+	ProxyHops int
 	// Log, when set, records the first request each key has refused in a window.
 	Log *slog.Logger
 
@@ -49,7 +56,7 @@ func (l *RateLimiter) Wrap(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 			return
 		}
-		k := key(r)
+		k := l.key(r)
 		remaining, reset, ok := l.take(k)
 		h := w.Header()
 		h.Set("RateLimit-Limit", strconv.Itoa(l.Limit))
@@ -96,13 +103,50 @@ func (l *RateLimiter) take(k string) (remaining, resetSeconds int, ok bool) {
 	return l.Limit - win.count, resetSeconds, true
 }
 
-func key(r *http.Request) string {
+func (l *RateLimiter) key(r *http.Request) string {
 	if id := r.Header.Get(IdentityHeader); id != "" {
 		return "id:" + id
+	}
+	// A proxy may append to the caller's header line or add one of its own: every line is read, in order.
+	if client, ok := forwardedClient(strings.Join(r.Header.Values("X-Forwarded-For"), ","), l.ProxyHops); ok {
+		return "ip:" + client
 	}
 	host, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {
 		host = r.RemoteAddr
 	}
+	if addr, err := netip.ParseAddr(host); err == nil {
+		host = network(addr)
+	}
 	return "ip:" + host
+}
+
+// callerBits is how much of an IPv6 address names the caller's network: the rest is theirs to choose.
+const callerBits = 64
+
+// network is the caller an address stands for: an IPv4 address is one caller, an IPv6 address one of
+// the many its holder can use, so its /64 is. An IPv4 address written as IPv6 is the IPv4 caller.
+func network(addr netip.Addr) string {
+	addr = addr.Unmap()
+	if addr.Is4() {
+		return addr.String()
+	}
+	prefix, _ := addr.Prefix(callerBits)
+	return prefix.String()
+}
+
+// forwardedClient is the address the outermost of hops trusted proxies saw its caller at: each proxy
+// appends the address it saw, so that is the entry hops from the right. Whatever a caller wrote into
+// the header themselves lies further left and is never read. It reports false with no proxy trusted,
+// with fewer entries than proxies, or when that entry is no address.
+func forwardedClient(header string, hops int) (string, bool) {
+	parts := strings.Split(header, ",")
+	if hops < 1 || len(parts) < hops {
+		return "", false
+	}
+	addr, err := netip.ParseAddr(strings.TrimSpace(parts[len(parts)-hops]))
+	if err != nil {
+		return "", false
+	}
+	return network(addr), true
 }

@@ -46,6 +46,7 @@ paths:
       summary: List spells
       description: Spells in name order, one page at a time. Without a ruleset the 2024 rules lead the blend.
       tags: [Compendium]
+      security: []
       parameters:
         - $ref: "#/components/parameters/IfNoneMatch"
         - name: q
@@ -106,6 +107,7 @@ paths:
       summary: Get a spell
       description: One spell with its rules text and the conditions it mentions.
       tags: [Compendium]
+      security: []
       parameters:
         - $ref: "#/components/parameters/IfNoneMatch"
         - name: slug
@@ -147,6 +149,7 @@ paths:
       summary: List compendium entries
       description: Entries of one kind in name order, one page at a time. Without a ruleset the 2024 rules lead the blend.
       tags: [Compendium]
+      security: []
       parameters:
         - $ref: "#/components/parameters/IfNoneMatch"
         - name: kind
@@ -200,6 +203,7 @@ paths:
       summary: Get a compendium entry
       description: One entry rendered for reading, with the conditions its text mentions.
       tags: [Compendium]
+      security: []
       parameters:
         - $ref: "#/components/parameters/IfNoneMatch"
         - name: kind
@@ -246,6 +250,7 @@ paths:
       summary: Get automation coverage
       description: How many entries of each kind the rules engine computes fully, partly, or leaves to the DM.
       tags: [Compendium]
+      security: []
       parameters:
         - $ref: "#/components/parameters/IfNoneMatch"
       responses:
@@ -327,6 +332,7 @@ paths:
       summary: List compendium sources
       description: The documents the compendium draws from, with the attribution each license requires.
       tags: [Compendium]
+      security: []
       responses:
         "200":
           description: Every source document.
@@ -344,6 +350,37 @@ paths:
                 maxItems: 100
                 items:
                   $ref: "#/components/schemas/Source"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/compendium/guides:
+    get:
+      operationId: getCompendiumGuides
+      x-ogen-operation-group: Read
+      summary: Read the compendium's guides
+      description: "Guides worked out of the SRD entries of the compendium, and of nothing else: every spell by its level, what the attacks of monsters of each Challenge Rating look like (how many, the lowest, middle and highest bonus to hit, and the middle damage of a hit), and loot by party level: the tiers of play, the magic item rarities that suit each, and the magic items of each rarity. Open to anyone, without an Account."
+      tags: [Compendium]
+      security: []
+      parameters:
+        - name: ruleset
+          in: query
+          description: One ruleset alone; without it the newest rules each entry has.
+          schema: { $ref: "#/components/schemas/Ruleset" }
+      responses:
+        "200":
+          description: The guides.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompendiumGuides"
         "4XX":
           $ref: "#/components/responses/Problem"
         "5XX":
@@ -14680,6 +14717,94 @@ components:
           type: array
           maxItems: 100
           items: { $ref: "#/components/schemas/SearchHit" }
+    GuideSpell:
+      type: object
+      description: A spell as the spells-by-level guide lists it.
+      additionalProperties: false
+      required: [slug, name, school]
+      properties:
+        slug: { $ref: "#/components/schemas/Slug" }
+        name: { type: string, maxLength: 120 }
+        school: { $ref: "#/components/schemas/Slug" }
+    GuideSpellLevel:
+      type: object
+      description: The spells of one spell level, by name; level 0 holds the cantrips.
+      additionalProperties: false
+      required: [level, spells]
+      properties:
+        level: { type: integer, format: int32, minimum: 0, maximum: 9 }
+        spells:
+          type: array
+          maxItems: 2000
+          items: { $ref: "#/components/schemas/GuideSpell" }
+    GuideChallenge:
+      type: object
+      description: The monsters of one Challenge Rating and what their attacks look like.
+      additionalProperties: false
+      required: [challenge, monsters, attacks, toHitLow, toHit, toHitHigh, damage]
+      properties:
+        challenge: { type: string, maxLength: 10, description: "The Challenge Rating as the books write it, such as 1/4 or 5." }
+        monsters: { type: integer, format: int32, minimum: 0, maximum: 100000 }
+        attacks: { type: integer, format: int32, minimum: 0, maximum: 100000, description: "How many attacks those monsters have between them." }
+        toHitLow: { type: integer, format: int32, minimum: -20, maximum: 40 }
+        toHit: { type: integer, format: int32, minimum: -20, maximum: 40, description: "The middle bonus to hit." }
+        toHitHigh: { type: integer, format: int32, minimum: -20, maximum: 40 }
+        damage: { type: integer, format: int32, minimum: 0, maximum: 10000, description: "The middle damage of one hit, on average dice, rounded down." }
+    GuideTier:
+      type: object
+      description: A tier of play and the magic item rarities that suit a party in it.
+      additionalProperties: false
+      required: [tier, fromLevel, toLevel, rarities]
+      properties:
+        tier: { type: integer, format: int32, minimum: 1, maximum: 4 }
+        fromLevel: { type: integer, format: int32, minimum: 1, maximum: 20 }
+        toLevel: { type: integer, format: int32, minimum: 1, maximum: 20 }
+        rarities:
+          type: array
+          maxItems: 10
+          items: { type: string, maxLength: 20 }
+    GuideItem:
+      type: object
+      description: A magic item as the loot guide lists it.
+      additionalProperties: false
+      required: [slug, name]
+      properties:
+        slug: { $ref: "#/components/schemas/Slug" }
+        name: { type: string, maxLength: 120 }
+    GuideRarity:
+      type: object
+      description: The magic items of one rarity, by name, and the first tier of play they suit.
+      additionalProperties: false
+      required: [rarity, firstTier, items]
+      properties:
+        rarity: { type: string, maxLength: 20 }
+        firstTier: { type: integer, format: int32, minimum: 1, maximum: 4 }
+        items:
+          type: array
+          maxItems: 5000
+          items: { $ref: "#/components/schemas/GuideItem" }
+    CompendiumGuides:
+      type: object
+      description: The compendium's guides, worked out of its SRD entries.
+      additionalProperties: false
+      required: [spellsByLevel, attacksByChallenge, lootTiers, lootByRarity]
+      properties:
+        spellsByLevel:
+          type: array
+          maxItems: 10
+          items: { $ref: "#/components/schemas/GuideSpellLevel" }
+        attacksByChallenge:
+          type: array
+          maxItems: 100
+          items: { $ref: "#/components/schemas/GuideChallenge" }
+        lootTiers:
+          type: array
+          maxItems: 4
+          items: { $ref: "#/components/schemas/GuideTier" }
+        lootByRarity:
+          type: array
+          maxItems: 10
+          items: { $ref: "#/components/schemas/GuideRarity" }
     VehicleKind:
       type: string
       description: What a vehicle travels over. A ship or an airship travels round the clock; a land vehicle a day's eight hours.

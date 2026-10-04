@@ -20,6 +20,7 @@ type CompendiumReader interface {
 	GetEntry(ctx context.Context, kind, slug, ruleset string) (compendium.EntryDetail, error)
 	AutomationCoverage(ctx context.Context) ([]compendium.AutomationCount, error)
 	BuilderOptions(ctx context.Context, ruleset string) (compendium.BuilderOptions, error)
+	Guides(ctx context.Context, ruleset string) (compendium.Guides, error)
 }
 
 const defaultPageSize = 50
@@ -162,4 +163,43 @@ func setOpt(dst *oas.OptString, v string) {
 	if v != "" {
 		*dst = oas.NewOptString(v)
 	}
+}
+
+// GetCompendiumGuides reads the guides worked out of the compendium's SRD entries. Anyone may.
+//
+//nolint:gosec // counts, levels and bonuses are bounded by the compendium
+func (h *Handler) GetCompendiumGuides(ctx context.Context, p oas.GetCompendiumGuidesParams) (oas.GetCompendiumGuidesRes, error) {
+	g, err := h.Compendium.Guides(ctx, string(p.Ruleset.Or("")))
+	if err != nil {
+		h.Log.ErrorContext(ctx, "compendium guides", "error", err)
+		return unavailable(), nil
+	}
+	out := oas.CompendiumGuides{
+		SpellsByLevel: make([]oas.GuideSpellLevel, 0, len(g.Spells)), AttacksByChallenge: make([]oas.GuideChallenge, 0, len(g.Challenges)),
+		LootTiers: make([]oas.GuideTier, 0, len(g.Tiers)), LootByRarity: make([]oas.GuideRarity, 0, len(g.Rarities)),
+	}
+	for _, l := range g.Spells {
+		level := oas.GuideSpellLevel{Level: int32(l.Level), Spells: make([]oas.GuideSpell, 0, len(l.Spells))}
+		for _, sp := range l.Spells {
+			level.Spells = append(level.Spells, oas.GuideSpell{Slug: oas.Slug(sp.Slug), Name: sp.Name, School: oas.Slug(sp.School)})
+		}
+		out.SpellsByLevel = append(out.SpellsByLevel, level)
+	}
+	for _, c := range g.Challenges {
+		out.AttacksByChallenge = append(out.AttacksByChallenge, oas.GuideChallenge{
+			Challenge: c.Challenge, Monsters: int32(c.Monsters), Attacks: int32(c.Band.Attacks),
+			ToHitLow: int32(c.Band.ToHitLow), ToHit: int32(c.Band.ToHit), ToHitHigh: int32(c.Band.ToHitHigh), Damage: int32(c.Band.Damage),
+		})
+	}
+	for _, t := range g.Tiers {
+		out.LootTiers = append(out.LootTiers, oas.GuideTier{Tier: int32(t.No), FromLevel: int32(t.From), ToLevel: int32(t.To), Rarities: t.Rarities})
+	}
+	for _, r := range g.Rarities {
+		rarity := oas.GuideRarity{Rarity: r.Rarity, FirstTier: int32(r.FirstTier), Items: make([]oas.GuideItem, 0, len(r.Items))}
+		for _, it := range r.Items {
+			rarity.Items = append(rarity.Items, oas.GuideItem{Slug: oas.Slug(it.Slug), Name: it.Name})
+		}
+		out.LootByRarity = append(out.LootByRarity, rarity)
+	}
+	return &oas.CompendiumGuidesHeaders{Response: out}, nil
 }

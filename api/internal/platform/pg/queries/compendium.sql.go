@@ -136,7 +136,7 @@ FROM compendium.spells s
 JOIN compendium.documents d ON d.id = s.document_id
 JOIN compendium.magic_schools sch ON sch.id = s.school_id
 LEFT JOIN compendium.ability_scores ab ON ab.id = s.save_ability_id
-WHERE s.slug = $1 AND ($2::text IS NULL OR d.key = $2::text)
+WHERE s.slug = $1 AND d.key LIKE 'srd-%' AND ($2::text IS NULL OR d.key = $2::text)
 ORDER BY d.precedence DESC
 LIMIT 1
 `
@@ -211,7 +211,7 @@ func (q *Queries) LatestSnapshotHash(ctx context.Context) (string, error) {
 }
 
 const listSources = `-- name: ListSources :many
-SELECT key, title, ruleset_year, license, attribution, url FROM compendium.documents ORDER BY precedence DESC, key
+SELECT key, title, ruleset_year, license, attribution, url FROM compendium.documents WHERE key LIKE 'srd-%' ORDER BY precedence DESC, key
 `
 
 type ListSourcesRow struct {
@@ -256,7 +256,7 @@ WITH effective AS (
         s.id, s.slug, s.name, s.level, s.school_id, s.ritual, s.concentration, d.key AS document_key
     FROM compendium.spells s
     JOIN compendium.documents d ON d.id = s.document_id
-    WHERE $8::text IS NULL OR d.key = $8::text
+    WHERE d.key LIKE 'srd-%' AND ($8::text IS NULL OR d.key = $8::text)
     ORDER BY s.slug, d.precedence DESC
 )
 SELECT e.slug, e.name, e.level, sch.slug AS school, e.ritual, e.concentration, e.document_key

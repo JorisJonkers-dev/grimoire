@@ -20,7 +20,10 @@ type Options struct {
 	Handler    *Handler
 	DevSubject string
 	RateLimit  int
-	Now        func() time.Time
+	// ProxyHops is how many reverse proxies in front of the server are trusted to say who an anonymous
+	// caller is, for the rate limit; see httpx.RateLimiter.
+	ProxyHops int
+	Now       func() time.Time
 	// Web serves the single-page app for every path the API does not own; nil leaves it out.
 	Web http.Handler
 	// Edits lets MCP tools report the Revisions they record; nil leaves /mcp out.
@@ -40,11 +43,12 @@ func New(o Options) (http.Handler, error) {
 		return nil, err
 	}
 	limiter := &httpx.RateLimiter{
-		Limit:  o.RateLimit,
-		Window: time.Minute,
-		Now:    o.Now,
-		Exempt: map[string]bool{"/healthz": true, "/readyz": true},
-		Log:    o.Handler.Log,
+		Limit:     o.RateLimit,
+		ProxyHops: o.ProxyHops,
+		Window:    time.Minute,
+		Now:       o.Now,
+		Exempt:    map[string]bool{"/healthz": true, "/readyz": true},
+		Log:       o.Handler.Log,
 	}
 	guarded := scoped(srv)
 	api := o.identity(limiter.Wrap(guarded))
