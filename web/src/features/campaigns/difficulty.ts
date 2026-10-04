@@ -7,7 +7,7 @@ export const difficulties: { value: Difficulty; name: string; changes: string }[
   { value: 'hard', name: 'Hard', changes: 'enemies come with a quarter more hit points and attack at +2' },
 ]
 
-export const KARMIC_DICE = 'Karmic dice: after two low d20s in a row that play asked of you, the next one the app rolls for you leans high; after two high ones it leans low. A die you throw yourself is never changed, nor is a roll you make for yourself.'
+export const KARMIC_DICE = 'Karmic dice: after two low d20s in a row that a fight or the DM asked of you, the next one the app rolls for you leans high; after two high ones it leans low. A die you throw yourself is never changed, nor is a roll you make for yourself or a check outside a fight.'
 
 /** What a table plays by that every Member should know: a difficulty preset that changes play, and karmic dice. */
 export function tableRules(difficulty: Difficulty | undefined, karmicDice: boolean | undefined): string[] {

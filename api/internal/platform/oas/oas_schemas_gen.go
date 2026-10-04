@@ -3779,9 +3779,9 @@ type Campaign struct {
 	// The DC of a check or a save is shown on its Roll Card; without it the DC is the DM's to know.
 	ShowDcs    OptBool       `json:"showDcs"`
 	Difficulty OptDifficulty `json:"difficulty"`
-	// The d20s the server rolls for rolls asked of a roller are karmic: after two low ones in a row the
-	// roller's next leans high, and after two high ones it leans low. A die a player throws is never
-	// karmic, nor is a roll a Member makes for themself.
+	// The d20s the server rolls for rolls a fight or the DM asks of a roller are karmic: after two low
+	// ones in a row the roller's next leans high, and after two high ones it leans low. A die a player
+	// throws is never karmic, nor is a roll a Member makes for themself or a check taken outside a fight.
 	KarmicDice OptBool `json:"karmicDice"`
 	// The exhaustion the Campaign plays with: srd-2024, gentle, grim or off.
 	Exhaustion OptString `json:"exhaustion"`
@@ -4386,9 +4386,9 @@ type CampaignSummary struct {
 	// The DC of a check or a save is shown on its Roll Card; without it the DC is the DM's to know.
 	ShowDcs    OptBool       `json:"showDcs"`
 	Difficulty OptDifficulty `json:"difficulty"`
-	// The d20s the server rolls for rolls asked of a roller are karmic: after two low ones in a row the
-	// roller's next leans high, and after two high ones it leans low. A die a player throws is never
-	// karmic, nor is a roll a Member makes for themself.
+	// The d20s the server rolls for rolls a fight or the DM asks of a roller are karmic: after two low
+	// ones in a row the roller's next leans high, and after two high ones it leans low. A die a player
+	// throws is never karmic, nor is a roll a Member makes for themself or a check taken outside a fight.
 	KarmicDice OptBool `json:"karmicDice"`
 	// The exhaustion the Campaign plays with: srd-2024, gentle, grim or off.
 	Exhaustion OptString `json:"exhaustion"`
@@ -4659,9 +4659,9 @@ type CampaignUpdate struct {
 	// The DC of a check or a save is shown on its Roll Card; without it the DC is the DM's to know.
 	ShowDcs    OptBool       `json:"showDcs"`
 	Difficulty OptDifficulty `json:"difficulty"`
-	// The d20s the server rolls for rolls asked of a roller are karmic: after two low ones in a row the
-	// roller's next leans high, and after two high ones it leans low. A die a player throws is never
-	// karmic, nor is a roll a Member makes for themself.
+	// The d20s the server rolls for rolls a fight or the DM asks of a roller are karmic: after two low
+	// ones in a row the roller's next leans high, and after two high ones it leans low. A die a player
+	// throws is never karmic, nor is a roll a Member makes for themself or a check taken outside a fight.
 	KarmicDice OptBool `json:"karmicDice"`
 	// The exhaustion the Campaign plays with: srd-2024, gentle, grim or off.
 	Exhaustion OptString `json:"exhaustion"`

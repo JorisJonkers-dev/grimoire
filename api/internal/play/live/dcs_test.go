@@ -4,6 +4,9 @@ import (
 	"context"
 	"testing"
 
+	"github.com/google/uuid"
+
+	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/live"
 )
 
@@ -65,5 +68,48 @@ func TestASavesDCIsShownOnlyWhileTheCampaignShowsIt(t *testing.T) {
 	tb.dm, tb.player = join(t, w, w.dm, dmCaller, live.AudienceDM), join(t, w, w.player, playerCaller, live.AudienceParty)
 	if dc, party, purpose := round(); dc != 10 || party != 0 || purpose != "Wisdom save to end Frightened" {
 		t.Fatalf("unreadable = %d, party %d, %q", dc, party, purpose)
+	}
+}
+
+// Karmic dice go by the rolls a fight asks of a roller. A check a player takes whenever they like
+// outside a fight is of their own making: it is not asked of them, so it can neither lean nor count,
+// and nobody can take free checks until their next attack leans.
+func TestOnlyAFightsRollsAreAskedOfTheirRoller(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	w, tb, ids := magicTable(t)
+	d, _ := tb.dmSays(live.Command{Kind: live.CmdPlace, MonsterSlug: "goblin", TokenKind: domain.TokenNPC, Label: "Innkeeper", Q: 1})
+	keeper := token(d.View, "Innkeeper")
+	asked := func(purpose string) (yes, all int) {
+		t.Helper()
+		if err := w.pool.QueryRow(ctx, "SELECT count(*) FILTER (WHERE asked), count(*) FROM play.roll_requests WHERE campaign_id = $1 AND purpose LIKE $2",
+			w.session.CampaignID, purpose+"%").Scan(&yes, &all); err != nil {
+			t.Fatal(err)
+		}
+		return yes, all
+	}
+	for range 3 {
+		if p := tb.playerSays(live.Command{Kind: live.CmdTakeAction, TokenID: ids["Aria"], Action: "influence", TargetID: keeper.ID}); p.View == nil {
+			t.Fatalf("an Influence check outside a fight = %+v", p)
+		}
+		tb.fill(uuid.UUID(lastRoll(t, w, "Influence").ID).String(), w.player, 3)
+		// The roll settling is a change of its own: both screens catch up before the next try.
+		look(t, w, tb.player)
+		look(t, w, tb.dm)
+	}
+	if yes, all := asked("Influence"); yes != 0 || all != 3 {
+		t.Fatalf("checks outside a fight asked = %d of %d", yes, all)
+	}
+	// In a fight, the initiative and the attack are asked.
+	tb.fight(ids, "Aria", "Goblin")
+	tb.dmSays(live.Command{Kind: live.CmdMove, TokenID: ids["Goblin"], Q: 0, R: 1})
+	if u := tb.playerSays(live.Command{Kind: live.CmdAttack, TokenID: ids["Aria"], TargetID: ids["Goblin"]}); u.View == nil || u.View.Combat.Attack == nil {
+		t.Fatalf("the attack = %+v", u)
+	}
+	if yes, all := asked("Initiative"); yes != 2 || all != 2 {
+		t.Fatalf("initiative asked = %d of %d", yes, all)
+	}
+	if yes, all := asked("Longsword attack"); yes != 1 || all != 1 {
+		t.Fatalf("the attack asked = %d of %d", yes, all)
 	}
 }

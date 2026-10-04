@@ -14,7 +14,7 @@ ALTER TABLE play.roll_dice ADD COLUMN IF NOT EXISTS karmic_dropped integer;
 ALTER TABLE play.roll_dice ADD CONSTRAINT roll_dice_karmic_check
     CHECK (karmic_dropped IS NULL OR (mode = 'auto' AND faces = 20 AND karmic_dropped BETWEEN 1 AND 20)) NOT VALID;
 
--- A roll asked of its roller, by live play or by a DM, rather than one a Member made for themself.
+-- A roll asked of its roller, by a fight or by a DM, rather than one a Member made for themself.
 -- Only an asked roll can be karmic or count towards a run, so nobody makes their own luck.
 ALTER TABLE play.roll_requests ADD COLUMN IF NOT EXISTS asked boolean NOT NULL DEFAULT false;
 

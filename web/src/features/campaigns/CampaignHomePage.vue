@@ -330,7 +330,7 @@ const expires = (iso: string) => new Date(iso).toLocaleDateString(undefined, { d
         </label>
         <label class="check">
           <input v-model="karmicDice" type="checkbox" data-testid="karmic-dice-setting" />
-          <span>Karmic dice: after two low d20s in a row that play asked of a roller, the next one the app rolls for them leans high, and after two high ones it leans low. Dice thrown by hand and rolls a Member makes for themself are never changed, and every Member is told</span>
+          <span>Karmic dice: after two low d20s in a row that a fight or you asked of a roller, the next one the app rolls for them leans high, and after two high ones it leans low. Dice thrown by hand, rolls a Member makes for themself and checks outside a fight are never changed, and every Member is told</span>
         </label>
         <label class="g-field">
           <span>Exhaustion</span>
