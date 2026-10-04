@@ -33,14 +33,18 @@ test('a player takes a turn with the keyboard alone', async ({ page, browser }, 
   await page.getByTestId('choose-combatants').click()
   await page.getByTestId('begin-combat').click()
 
-  // From here on neither screen is touched with the mouse. R rolls the dice waiting on each.
-  await expect(page.getByTestId('roll-rest')).toBeVisible()
-  await page.keyboard.press('r')
-  await expect(player.getByTestId('roll-rest')).toBeVisible()
-  await player.keyboard.press('r')
+  // From here on neither screen is touched with the mouse. Each types the die it threw into its Roll
+  // Card and sends it with Enter, so the order is known: Aria, then the Goblin.
+  const typed = async (who: Page, face: string) => {
+    await who.getByTestId('roll-card').getByTestId('face-0').focus()
+    await who.keyboard.type(face)
+    await who.keyboard.press('Enter')
+  }
+  await expect(page.getByTestId('roll-card')).toContainText('Initiative for Goblin')
+  await typed(page, '5')
+  await expect(player.getByTestId('roll-card')).toContainText('Initiative for Aria')
+  await typed(player, '15')
   await expect(player.getByTestId('initiative-rail')).toContainText('Round 1')
-  // Whoever won the roll, the DM ends the Goblin's turn with E when it comes first.
-  if (await page.getByTestId('turn-Goblin').isVisible()) await page.keyboard.press('e')
   await expect(player.getByTestId('turn-Aria')).toBeVisible()
 
   // M finds my Character on the map; the arrows walk the hexes; Enter plans the walk; C confirms it.
