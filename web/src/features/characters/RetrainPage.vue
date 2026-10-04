@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CharacterTabs from './CharacterTabs.vue'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { computed, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
@@ -96,6 +97,7 @@ const when = (iso: string) => new Date(iso).toLocaleDateString()
       <span class="g-eyebrow">Character</span>
       <h1>Retrain</h1>
     </header>
+    <CharacterTabs :campaign-id="ids.campaignId" :character-id="ids.characterId" current="retrain" />
     <p v-if="sheet.isError.value || choices.isError.value" role="alert" class="g-alert" data-testid="retrain-error">Only the Character's player can retrain it.</p>
     <p v-else-if="!s || !options.data.value || !choices.data.value">Gathering the build…</p>
     <template v-else>

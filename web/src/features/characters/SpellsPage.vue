@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CharacterTabs from './CharacterTabs.vue'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { computed, reactive, ref } from 'vue'
 import { useRoute } from 'vue-router'
@@ -93,6 +94,7 @@ function copyOne(cs: ClassSpells) {
       <span class="g-eyebrow">Character</span>
       <h1>Spells</h1>
     </header>
+    <CharacterTabs :campaign-id="ids.campaignId" :character-id="ids.characterId" current="spells" />
     <p v-if="spells.isError.value" role="alert" class="g-alert" data-testid="spells-error">These spells could not be loaded.</p>
     <p v-else-if="!sc">Opening the spellbook…</p>
     <template v-else>

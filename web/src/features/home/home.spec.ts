@@ -169,6 +169,34 @@ describe('the search', () => {
     expect(wrapper.find('[data-testid="search-hint"]').exists()).toBe(false)
   })
 
+  it('narrows to one place to look, and previews the result in hand beside the list', async () => {
+    const { wrapper } = await mountApp('/search?q=fire', { '/api/v1/search': () => found })
+    const scopes = () => wrapper.findAll('[data-testid="search-scopes"] button')
+    expect(scopes().map((b) => b.text())).toEqual(['Everything · 5', 'Compendium · 2', 'Library · 1', 'Campaigns · 1', 'People · 1'])
+    expect(scopes().map((b) => b.attributes('aria-pressed'))).toEqual(['true', 'false', 'false', 'false', 'false'])
+    const preview = wrapper.get('[data-testid="search-preview"]')
+    expect(preview.get('.g-eyebrow').text()).toBe('Compendium · spell')
+    expect(preview.get('h2').text()).toBe('Fireball')
+    expect(preview.get('p').text()).toBe('Level 3 evocation spell')
+    expect(preview.get('a').attributes('href')).toBe('/compendium/spells/fireball')
+    expect(preview.get('a').text()).toBe('Open')
+    // The result the keyboard or the pointer is on is the one previewed.
+    await wrapper.findAll('[data-testid="search-hit"] a')[2]?.trigger('focus')
+    expect(preview.get('h2').text()).toBe('Fire Drake')
+    await wrapper.findAll('[data-testid="search-hit"] a')[4]?.trigger('mouseenter')
+    expect(preview.get('h2').text()).toBe('Firebeard')
+    await scopes()[1]?.trigger('click')
+    expect(scopes().map((b) => b.attributes('aria-pressed'))).toEqual(['false', 'true', 'false', 'false', 'false'])
+    expect(wrapper.findAll('[data-testid="search-hit"]')).toHaveLength(2)
+    expect(wrapper.findAll('[data-testid="search-group"] h2').map((h) => h.text())).toEqual(['Compendium'])
+    // What was in hand is no longer listed, so the first that is takes its place.
+    expect(preview.get('h2').text()).toBe('Fireball')
+    expect(wrapper.get('[data-testid="search-count"]').text()).toBe('5 results for “fire”.')
+    await scopes()[0]?.trigger('click')
+    expect(wrapper.findAll('[data-testid="search-hit"]')).toHaveLength(5)
+    await expectAccessible(wrapper.element as Element)
+  })
+
   it('says so when the search cannot be made', async () => {
     const { wrapper } = await mountApp('/search?q=fire', { '/api/v1/search': denied })
     expect(wrapper.get('[data-testid="search-problem"]').text()).toBe('Search is not available just now. Sign in and try again.')

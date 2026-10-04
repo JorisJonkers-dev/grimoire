@@ -36,11 +36,9 @@ const valid = computed(() => Number.isInteger(amount.value) && amount.value > 0 
 .hp {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 12px;
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 14px;
 }
 .numbers {
   display: flex;
@@ -50,34 +48,36 @@ const valid = computed(() => Number.isInteger(amount.value) && amount.value > 0 
 }
 .label {
   font-size: 12px;
-  color: var(--color-text-2);
+  color: var(--color-text-3);
 }
 strong {
   font-family: var(--font-display);
   font-size: 26px;
+  line-height: 1.1;
 }
 .temp {
+  font-size: 14px;
   color: var(--color-gold-high);
 }
 .bar {
-  height: 8px;
-  border-radius: var(--radius-chip);
-  background: var(--color-raised);
+  height: 7px;
   overflow: hidden;
+  border-radius: 4px;
+  background: var(--color-rule);
 }
 .bar span {
   display: block;
   height: 100%;
-  background: var(--color-success);
+  background: var(--color-party);
 }
 .bar span.low {
-  background: var(--color-enemy-soft);
+  background: var(--color-danger-edge);
 }
 .controls {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: 8px;
+  gap: 6px;
 }
 .controls label {
   display: flex;
@@ -85,13 +85,25 @@ strong {
   gap: 2px;
 }
 input {
-  width: 80px;
-  min-height: 44px;
+  width: 64px;
+  min-height: 32px;
   padding: 0 8px;
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-md);
-  background: var(--color-raised);
-  color: var(--color-text);
+  border: 0;
+  border-radius: var(--radius-control) var(--radius-control) 0 0;
   font: inherit;
+  color: var(--color-text);
+  background: var(--color-inset);
+  box-shadow: inset 0 -1px 0 var(--color-line);
+}
+.controls :deep(.g-button) {
+  min-height: 32px;
+  padding: 0 14px;
+  font-size: 13px;
+}
+@media (pointer: coarse) {
+  input,
+  .controls :deep(.g-button) {
+    min-height: 44px;
+  }
 }
 </style>
