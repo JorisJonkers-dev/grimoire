@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/campaign/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg/pgtest"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/difficulty"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
 
@@ -177,6 +179,25 @@ func TestUpdateChangesSettings(t *testing.T) {
 		}
 	}
 	side, odd := "side", "dexterity"
+	// A Campaign starts at the rules as written with plain dice; a preset nobody knows is refused.
+	if got, err := s.Update(ctx, dmCaller, d.ID, app.UpdateInput{}); err != nil || got.Difficulty != difficulty.Standard || got.KarmicDice {
+		t.Fatalf("difficulty at first = %+v %v", got, err)
+	}
+	for _, preset := range []string{difficulty.Story, difficulty.Hard, difficulty.Standard} {
+		if got, err := s.Update(ctx, dmCaller, d.ID, app.UpdateInput{Difficulty: &preset, KarmicDice: &on}); err != nil || got.Difficulty != preset || !got.KarmicDice || !got.HighGround {
+			t.Fatalf("difficulty %s = %+v %v", preset, got, err)
+		}
+	}
+	nightmare := "nightmare"
+	if _, err := s.Update(ctx, dmCaller, d.ID, app.UpdateInput{Difficulty: &nightmare}); err == nil || !strings.Contains(err.Error(), "the difficulty is story, standard or hard") {
+		t.Fatalf("unknown difficulty: %v", err)
+	}
+	if got, err := s.Get(ctx, dmCaller, d.ID); err != nil || got.Difficulty != difficulty.Standard || !got.KarmicDice {
+		t.Fatalf("read back = %+v %v", got.Campaign, err)
+	}
+	if list, err := s.List(ctx, dmCaller, nil, 10); err != nil || len(list) == 0 || !list[0].KarmicDice || list[0].Difficulty != difficulty.Standard {
+		t.Fatalf("listed = %+v %v", list, err)
+	}
 	if got, err := s.Update(ctx, dmCaller, d.ID, app.UpdateInput{InitiativeMode: &side, ShareInitiative: &on}); err != nil || got.InitiativeMode != "side" || !got.ShareInitiative {
 		t.Fatalf("side initiative = %+v %v", got, err)
 	}

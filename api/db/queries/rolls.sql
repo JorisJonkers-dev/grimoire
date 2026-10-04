@@ -46,10 +46,10 @@ SELECT group_no, label FROM play.roll_request_labels WHERE roll_id = $1 ORDER BY
 SELECT label, value FROM play.roll_request_modifiers WHERE roll_id = $1 ORDER BY ordering;
 
 -- name: RollDice :many
-SELECT die_no, group_no, faces, value, mode FROM play.roll_dice WHERE roll_id = $1 ORDER BY die_no;
+SELECT die_no, group_no, faces, value, mode, karmic_dropped FROM play.roll_dice WHERE roll_id = $1 ORDER BY die_no;
 
 -- name: SetRollDie :execrows
-UPDATE play.roll_dice SET value = @value, mode = @mode WHERE roll_id = @roll_id AND die_no = @die_no AND value IS NULL;
+UPDATE play.roll_dice SET value = @value, mode = @mode, karmic_dropped = sqlc.narg(karmic_dropped) WHERE roll_id = @roll_id AND die_no = @die_no AND value IS NULL;
 
 -- name: ResolveRoll :exec
 UPDATE play.roll_requests SET status = 'resolved', total = @total, resolved_at = @now WHERE id = @id;
@@ -72,4 +72,14 @@ UPDATE campaign.characters SET heroic_inspiration = false
 WHERE id = (SELECT id FROM campaign.characters c WHERE c.campaign_id = @campaign_id AND c.owner_member_id = @member_id AND c.heroic_inspiration ORDER BY c.id LIMIT 1);
 
 -- name: RerollDie :execrows
-UPDATE play.roll_dice SET value = @value, mode = 'auto' WHERE roll_id = @roll_id AND die_no = @die_no AND value IS NOT NULL;
+UPDATE play.roll_dice SET value = @value, mode = 'auto', karmic_dropped = NULL WHERE roll_id = @roll_id AND die_no = @die_no AND value IS NOT NULL;
+
+-- name: CampaignKarmicDice :one
+SELECT karmic_dice FROM campaign.campaigns WHERE id = $1;
+
+-- name: RollKarma :one
+SELECT recent FROM play.roll_karma WHERE campaign_id = @campaign_id AND member_id = @member_id FOR UPDATE;
+
+-- name: SetRollKarma :exec
+INSERT INTO play.roll_karma (campaign_id, member_id, recent) VALUES (@campaign_id, @member_id, @recent)
+ON CONFLICT (campaign_id, member_id) DO UPDATE SET recent = EXCLUDED.recent;

@@ -158,7 +158,7 @@ func (r *runtime) planCast(m domain.Member, cmd Command) (Write, string) {
 	ability := p.spell.Save
 	for _, t := range p.targets {
 		target := domain.AreaTarget{Token: t.ID}
-		if roll, ok := r.saveRoll(m, t, ability, fmt.Sprintf("save against %s (DC %d)", p.spell.Name, cast.DC)); ok {
+		if roll, ok := r.saveRoll(m, t, ability, "save against "+p.spell.Name+r.dcNote(cast.DC)); ok {
 			target.SaveRoll = &roll.ID
 			w.Rolls = append(w.Rolls, roll)
 		}

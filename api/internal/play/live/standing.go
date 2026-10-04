@@ -25,15 +25,26 @@ func (r *runtime) readStandings() {
 	r.st.standings = list
 }
 
-// showsDCs reads whether the Campaign shows the DC of a check on its Roll Card now. The DM changes it
-// outside the Session, so it is read at each check; a setting that cannot be read hides the DC.
+// showsDCs reads whether the Campaign shows DCs now. The DM changes it outside the Session, so it is
+// read at each check and save; a setting that cannot be read hides the DC. What it read last is what
+// the party's view of a save waiting goes by.
 func (r *runtime) showsDCs() bool {
 	shown, err := r.store.ShowDCs(context.Background(), r.campaign)
 	if err != nil {
 		r.log.Error("live: show dcs", "error", err)
-		return false
+		shown = false
 	}
+	r.st.dcsShown = shown
 	return shown
+}
+
+// dcNote is a DC as the purpose of a Roll Card carries it: " (DC 13)" while the Campaign shows DCs,
+// and nothing while the DC is the DM's to know.
+func (r *runtime) dcNote(dc int) string {
+	if !r.showsDCs() {
+		return ""
+	}
+	return " (DC " + strconv.Itoa(dc) + ")"
 }
 
 // factionOf finds a Faction of the Campaign among the Standings read last.
@@ -144,9 +155,7 @@ func (r *runtime) aimed(out *sway, target, actor domain.Token) regard.Mode {
 		return regard.Straight
 	}
 	out.target, out.dc = &target.ID, influenceDC(target)
-	if r.showsDCs() {
-		out.shownDC = " (DC " + strconv.Itoa(out.dc) + ")"
-	}
+	out.shownDC = r.dcNote(out.dc)
 	attitude, moved := r.st.movedAttitude(target.ID, character)
 	if !moved {
 		return regard.Straight

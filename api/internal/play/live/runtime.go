@@ -313,6 +313,8 @@ type Store interface {
 	// whether the Campaign shows the DC of a check on its Roll Card now.
 	LoadAttitudes(ctx context.Context, id domain.SessionID) ([]domain.Attitude, error)
 	ShowDCs(ctx context.Context, campaign uuid.UUID) (bool, error)
+	// Difficulty reads the Campaign's difficulty preset now.
+	Difficulty(ctx context.Context, campaign uuid.UUID) (string, error)
 	// LoadDying reads the Characters at 0 hit points.
 	LoadDying(ctx context.Context, id domain.SessionID) (map[domain.TokenID]domain.Dying, error)
 	// RestInfo reads what a rest needs of each Character; RestSupplies whether a Long Rest costs Rations.

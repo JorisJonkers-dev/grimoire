@@ -38,6 +38,8 @@ type Die struct {
 	Value int
 	Mode  string
 	Kept  bool
+	// KarmicDropped is set on a karmic d20: the other face the server rolled and let go.
+	KarmicDropped *int
 }
 
 // Roll statuses.

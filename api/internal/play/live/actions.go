@@ -204,7 +204,7 @@ func (r *runtime) planUnarmed(m domain.Member, cmd Command) (Write, string) {
 	}
 	name := strings.ToUpper(ability[:1]) + ability[1:]
 	notation := strings.Join(append([]string{attack.D20(attack.ModeOf(len(p.Advantages), len(p.Disadvantages)))}, p.Dice...), "+")
-	roll := r.request(m, t, fmt.Sprintf("%s save against %s's %s (DC %d)", name, a.Label, strings.ReplaceAll(string(option), "_", " "), dc), notation,
+	roll := r.request(m, t, fmt.Sprintf("%s save against %s's %s%s", name, a.Label, strings.ReplaceAll(string(option), "_", " "), r.dcNote(dc)), notation,
 		domain.Modifier{Label: name + " save", Value: bonus}, domain.Modifier{Label: "Exhaustion", Value: -p.Penalty})
 	target := t.ID
 	w.Rolls, w.Pending = []domain.Roll{roll}, &domain.PendingAction{RollID: roll.ID, Actor: a.ID, Target: &target, Action: string(option), DC: dc}

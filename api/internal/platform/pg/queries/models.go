@@ -52,6 +52,8 @@ type CampaignCampaign struct {
 	ShowDcs           bool
 	ShortRests        int32
 	DowntimeAdvanced  int32
+	Difficulty        string
+	KarmicDice        bool
 }
 
 type CampaignCharacter struct {
@@ -1745,12 +1747,19 @@ type PlayRewind struct {
 }
 
 type PlayRollDice struct {
-	RollID  uuid.UUID
-	DieNo   int32
-	GroupNo int32
-	Faces   int32
-	Value   pgtype.Int4
-	Mode    pgtype.Text
+	RollID        uuid.UUID
+	DieNo         int32
+	GroupNo       int32
+	Faces         int32
+	Value         pgtype.Int4
+	Mode          pgtype.Text
+	KarmicDropped pgtype.Int4
+}
+
+type PlayRollKarma struct {
+	CampaignID uuid.UUID
+	MemberID   uuid.UUID
+	Recent     []int32
 }
 
 type PlayRollRequest struct {

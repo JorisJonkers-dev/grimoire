@@ -78,6 +78,7 @@ type Querier interface {
 	CampaignClock(ctx context.Context, id uuid.UUID) (CampaignClockRow, error)
 	CampaignContainerCoins(ctx context.Context, campaignID uuid.UUID) ([]CampaignContainerCoin, error)
 	CampaignContainers(ctx context.Context, campaignID uuid.UUID) ([]CampaignContainersRow, error)
+	CampaignDifficulty(ctx context.Context, id uuid.UUID) (string, error)
 	CampaignDowntime(ctx context.Context, id uuid.UUID) (CampaignDowntimeRow, error)
 	CampaignEntryMonsters(ctx context.Context, campaignID uuid.UUID) ([]PrepEntryMonster, error)
 	CampaignExhaustion(ctx context.Context, id uuid.UUID) (string, error)
@@ -91,6 +92,7 @@ type Querier interface {
 	CampaignHomebrewSpells(ctx context.Context, campaignID uuid.UUID) ([]CampaignHomebrewSpellsRow, error)
 	CampaignInitiative(ctx context.Context, id uuid.UUID) (CampaignInitiativeRow, error)
 	CampaignItemInstances(ctx context.Context, campaignID uuid.UUID) ([]CampaignItemInstancesRow, error)
+	CampaignKarmicDice(ctx context.Context, id uuid.UUID) (bool, error)
 	CampaignLibraryCollections(ctx context.Context, arg CampaignLibraryCollectionsParams) ([]CampaignLibraryCollectionsRow, error)
 	CampaignLibraryLinks(ctx context.Context, arg CampaignLibraryLinksParams) ([]CampaignLibraryLinksRow, error)
 	CampaignLocations(ctx context.Context, campaignID uuid.UUID) ([]CampaignLocationsRow, error)
@@ -668,6 +670,7 @@ type Querier interface {
 	// Rolled scores are set once per draft; a draft is started if there is none.
 	RollCharacterDraft(ctx context.Context, arg RollCharacterDraftParams) (int64, error)
 	RollDice(ctx context.Context, rollID uuid.UUID) ([]RollDiceRow, error)
+	RollKarma(ctx context.Context, arg RollKarmaParams) ([]int32, error)
 	RollLabels(ctx context.Context, rollID uuid.UUID) ([]RollLabelsRow, error)
 	RollModifiers(ctx context.Context, rollID uuid.UUID) ([]RollModifiersRow, error)
 	RulesetYear(ctx context.Context, key string) (int32, error)
@@ -786,6 +789,7 @@ type Querier interface {
 	SetResourceUsed(ctx context.Context, arg SetResourceUsedParams) error
 	SetRollChoice(ctx context.Context, arg SetRollChoiceParams) error
 	SetRollDie(ctx context.Context, arg SetRollDieParams) (int64, error)
+	SetRollKarma(ctx context.Context, arg SetRollKarmaParams) error
 	SetRuleVariant(ctx context.Context, arg SetRuleVariantParams) error
 	SetSessionMap(ctx context.Context, arg SetSessionMapParams) error
 	SetSessionShop(ctx context.Context, arg SetSessionShopParams) error

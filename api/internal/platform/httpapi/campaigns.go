@@ -126,6 +126,8 @@ func summaryOut(s domain.Summary) oas.CampaignSummary {
 		HoldLevelUps:     oas.NewOptBool(s.HoldLevelUps),
 		NoUndo:           oas.NewOptBool(s.NoUndo),
 		ShowDcs:          oas.NewOptBool(s.ShowDCs),
+		Difficulty:       oas.NewOptDifficulty(oas.Difficulty(s.Difficulty)),
+		KarmicDice:       oas.NewOptBool(s.KarmicDice),
 		Exhaustion:       oas.NewOptString(s.ExhaustionVariant),
 	}
 }
@@ -144,6 +146,8 @@ func detailOut(d domain.Detail) oas.Campaign {
 		HoldLevelUps:     oas.NewOptBool(d.HoldLevelUps),
 		NoUndo:           oas.NewOptBool(d.NoUndo),
 		ShowDcs:          oas.NewOptBool(d.ShowDCs),
+		Difficulty:       oas.NewOptDifficulty(oas.Difficulty(d.Difficulty)),
+		KarmicDice:       oas.NewOptBool(d.KarmicDice),
 		Exhaustion:       oas.NewOptString(d.ExhaustionVariant),
 		Members:          make([]oas.Member, 0, len(d.Members)),
 	}
@@ -283,6 +287,13 @@ func characterSettings(req *oas.CampaignUpdate, in *app.UpdateInput) {
 	}
 	if v, set := req.ShowDcs.Get(); set {
 		in.ShowDCs = &v
+	}
+	if v, set := req.Difficulty.Get(); set {
+		preset := string(v)
+		in.Difficulty = &preset
+	}
+	if v, set := req.KarmicDice.Get(); set {
+		in.KarmicDice = &v
 	}
 	if v, set := req.Exhaustion.Get(); set {
 		in.ExhaustionVariant = &v

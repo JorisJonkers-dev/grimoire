@@ -115,6 +115,17 @@ func (q *Queries) ActionTokenEvent(ctx context.Context, actionID uuid.UUID) (Act
 	return i, err
 }
 
+const campaignDifficulty = `-- name: CampaignDifficulty :one
+SELECT difficulty FROM campaign.campaigns WHERE id = $1
+`
+
+func (q *Queries) CampaignDifficulty(ctx context.Context, id uuid.UUID) (string, error) {
+	row := q.db.QueryRow(ctx, campaignDifficulty, id)
+	var difficulty string
+	err := row.Scan(&difficulty)
+	return difficulty, err
+}
+
 const campaignNoUndo = `-- name: CampaignNoUndo :one
 SELECT no_undo FROM campaign.campaigns WHERE id = $1
 `

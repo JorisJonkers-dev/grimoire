@@ -256,9 +256,18 @@ func TestEveryPlayDatabaseFaultSurfaces(t *testing.T) {
 		"keep":   func(r *app.Rolls) error { _, err := r.Keep(ctx, player, tb.campaign, held()); return err },
 		"reroll": func(r *app.Rolls) error { _, err := r.Reroll(ctx, player, tb.campaign, held(), 0); return err },
 		"create": func(r *app.Rolls) error { _, err := r.Create(ctx, player, tb.campaign, attack()); return err },
-		"get":    func(r *app.Rolls) error { _, err := r.Get(ctx, player, tb.campaign, resolved.ID); return err },
-		"list":   func(r *app.Rolls) error { _, err := r.List(ctx, player, tb.campaign, 5); return err },
-		"log":    func(r *app.Rolls) error { _, err := r.Log(ctx, dm, tb.campaign, 5); return err },
+		"auto d20": func(r *app.Rolls) error {
+			n++
+			fresh, err := base.Create(ctx, dm, tb.campaign, app.RollInput{Purpose: "Luck " + strconv.Itoa(n), Notation: "1d20"})
+			if err != nil {
+				t.Fatal(err)
+			}
+			_, err = r.SetDie(ctx, dm, tb.campaign, fresh.ID, 0, app.Fill{Auto: true})
+			return err
+		},
+		"get":  func(r *app.Rolls) error { _, err := r.Get(ctx, player, tb.campaign, resolved.ID); return err },
+		"list": func(r *app.Rolls) error { _, err := r.List(ctx, player, tb.campaign, 5); return err },
+		"log":  func(r *app.Rolls) error { _, err := r.Log(ctx, dm, tb.campaign, 5); return err },
 		"set": func(r *app.Rolls) error {
 			n++
 			fresh, err := base.Create(ctx, player, tb.campaign, app.RollInput{Purpose: "Check " + strconv.Itoa(n), Notation: "1d20+1d4"})

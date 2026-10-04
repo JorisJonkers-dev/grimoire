@@ -286,6 +286,11 @@ func (s *Store) LoadAttitudes(ctx context.Context, id domain.SessionID) ([]domai
 	return out, nil
 }
 
+// Difficulty reads the Campaign's difficulty preset.
+func (s *Store) Difficulty(ctx context.Context, campaign uuid.UUID) (string, error) {
+	return s.q.CampaignDifficulty(ctx, campaign)
+}
+
 // ShowDCs reads whether the Campaign shows the DC of a check on its Roll Card.
 func (s *Store) ShowDCs(ctx context.Context, campaign uuid.UUID) (bool, error) {
 	return s.q.CampaignShowDCs(ctx, campaign)

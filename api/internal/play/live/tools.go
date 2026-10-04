@@ -64,6 +64,7 @@ func (r *runtime) planSpawn(cmd Command) (Write, string) {
 		if err != nil {
 			return Write{}, "No such monster: " + m.Slug + "."
 		}
+		r.toughened(domain.TokenEnemy, &stats)
 		for i := range m.Count {
 			label := name
 			if m.Count > 1 {

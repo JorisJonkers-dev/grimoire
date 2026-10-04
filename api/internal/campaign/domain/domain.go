@@ -77,6 +77,10 @@ type Campaign struct {
 	NoUndo bool
 	// ShowDCs puts the DC of a check on its Roll Card; without it the DC is the DM's to know.
 	ShowDCs bool
+	// Difficulty is the Campaign's difficulty preset: story, standard or hard.
+	Difficulty string
+	// KarmicDice makes the d20s the server rolls karmic; a die a player throws never is.
+	KarmicDice bool
 	// ExhaustionVariant is the exhaustion the Campaign plays with: srd-2024, gentle, grim or off.
 	ExhaustionVariant string
 }
@@ -95,6 +99,8 @@ type SettingsChange struct {
 	HoldLevelUps     *bool
 	NoUndo           *bool
 	ShowDCs          *bool
+	Difficulty       *string
+	KarmicDice       *bool
 	// ExhaustionVariant picks the Campaign's exhaustion.
 	ExhaustionVariant *string
 }

@@ -6907,6 +6907,18 @@ func (s *Campaign) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.Difficulty.Set {
+			e.FieldStart("difficulty")
+			s.Difficulty.Encode(e)
+		}
+	}
+	{
+		if s.KarmicDice.Set {
+			e.FieldStart("karmicDice")
+			s.KarmicDice.Encode(e)
+		}
+	}
+	{
 		if s.Exhaustion.Set {
 			e.FieldStart("exhaustion")
 			s.Exhaustion.Encode(e)
@@ -6932,7 +6944,7 @@ func (s *Campaign) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfCampaign = [19]string{
+var jsonFieldsNameOfCampaign = [21]string{
 	0:  "id",
 	1:  "name",
 	2:  "ruleset",
@@ -6948,10 +6960,12 @@ var jsonFieldsNameOfCampaign = [19]string{
 	12: "holdLevelUps",
 	13: "noUndo",
 	14: "showDcs",
-	15: "exhaustion",
-	16: "shareInitiative",
-	17: "me",
-	18: "members",
+	15: "difficulty",
+	16: "karmicDice",
+	17: "exhaustion",
+	18: "shareInitiative",
+	19: "me",
+	20: "members",
 }
 
 // Decode decodes Campaign from json.
@@ -7124,6 +7138,26 @@ func (s *Campaign) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"showDcs\"")
 			}
+		case "difficulty":
+			if err := func() error {
+				s.Difficulty.Reset()
+				if err := s.Difficulty.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"difficulty\"")
+			}
+		case "karmicDice":
+			if err := func() error {
+				s.KarmicDice.Reset()
+				if err := s.KarmicDice.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"karmicDice\"")
+			}
 		case "exhaustion":
 			if err := func() error {
 				s.Exhaustion.Reset()
@@ -7145,7 +7179,7 @@ func (s *Campaign) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"shareInitiative\"")
 			}
 		case "me":
-			requiredBitSet[2] |= 1 << 1
+			requiredBitSet[2] |= 1 << 3
 			if err := func() error {
 				if err := s.Me.Decode(d); err != nil {
 					return err
@@ -7155,7 +7189,7 @@ func (s *Campaign) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"me\"")
 			}
 		case "members":
-			requiredBitSet[2] |= 1 << 2
+			requiredBitSet[2] |= 1 << 4
 			if err := func() error {
 				s.Members = make([]Member, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
@@ -7184,7 +7218,7 @@ func (s *Campaign) Decode(d *jx.Decoder) error {
 	for i, mask := range [3]uint8{
 		0b00111111,
 		0b00000000,
-		0b00000110,
+		0b00011000,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -8016,6 +8050,18 @@ func (s *CampaignSummary) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.Difficulty.Set {
+			e.FieldStart("difficulty")
+			s.Difficulty.Encode(e)
+		}
+	}
+	{
+		if s.KarmicDice.Set {
+			e.FieldStart("karmicDice")
+			s.KarmicDice.Encode(e)
+		}
+	}
+	{
 		if s.Exhaustion.Set {
 			e.FieldStart("exhaustion")
 			s.Exhaustion.Encode(e)
@@ -8029,7 +8075,7 @@ func (s *CampaignSummary) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfCampaignSummary = [17]string{
+var jsonFieldsNameOfCampaignSummary = [19]string{
 	0:  "id",
 	1:  "name",
 	2:  "ruleset",
@@ -8045,8 +8091,10 @@ var jsonFieldsNameOfCampaignSummary = [17]string{
 	12: "holdLevelUps",
 	13: "noUndo",
 	14: "showDcs",
-	15: "exhaustion",
-	16: "shareInitiative",
+	15: "difficulty",
+	16: "karmicDice",
+	17: "exhaustion",
+	18: "shareInitiative",
 }
 
 // Decode decodes CampaignSummary from json.
@@ -8219,6 +8267,26 @@ func (s *CampaignSummary) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"showDcs\"")
 			}
+		case "difficulty":
+			if err := func() error {
+				s.Difficulty.Reset()
+				if err := s.Difficulty.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"difficulty\"")
+			}
+		case "karmicDice":
+			if err := func() error {
+				s.KarmicDice.Reset()
+				if err := s.KarmicDice.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"karmicDice\"")
+			}
 		case "exhaustion":
 			if err := func() error {
 				s.Exhaustion.Reset()
@@ -8377,6 +8445,18 @@ func (s *CampaignUpdate) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.Difficulty.Set {
+			e.FieldStart("difficulty")
+			s.Difficulty.Encode(e)
+		}
+	}
+	{
+		if s.KarmicDice.Set {
+			e.FieldStart("karmicDice")
+			s.KarmicDice.Encode(e)
+		}
+	}
+	{
 		if s.Exhaustion.Set {
 			e.FieldStart("exhaustion")
 			s.Exhaustion.Encode(e)
@@ -8390,7 +8470,7 @@ func (s *CampaignUpdate) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfCampaignUpdate = [13]string{
+var jsonFieldsNameOfCampaignUpdate = [15]string{
 	0:  "name",
 	1:  "ruleset",
 	2:  "reactionTimeoutS",
@@ -8402,8 +8482,10 @@ var jsonFieldsNameOfCampaignUpdate = [13]string{
 	8:  "holdLevelUps",
 	9:  "noUndo",
 	10: "showDcs",
-	11: "exhaustion",
-	12: "shareInitiative",
+	11: "difficulty",
+	12: "karmicDice",
+	13: "exhaustion",
+	14: "shareInitiative",
 }
 
 // Decode decodes CampaignUpdate from json.
@@ -8530,6 +8612,26 @@ func (s *CampaignUpdate) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"showDcs\"")
+			}
+		case "difficulty":
+			if err := func() error {
+				s.Difficulty.Reset()
+				if err := s.Difficulty.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"difficulty\"")
+			}
+		case "karmicDice":
+			if err := func() error {
+				s.KarmicDice.Reset()
+				if err := s.KarmicDice.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"karmicDice\"")
 			}
 		case "exhaustion":
 			if err := func() error {
@@ -17939,6 +18041,48 @@ func (s *DiePlacement) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *DiePlacement) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes Difficulty as json.
+func (s Difficulty) Encode(e *jx.Encoder) {
+	e.Str(string(s))
+}
+
+// Decode decodes Difficulty from json.
+func (s *Difficulty) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode Difficulty to nil")
+	}
+	v, err := d.StrBytes()
+	if err != nil {
+		return err
+	}
+	// Try to use constant string.
+	switch Difficulty(v) {
+	case DifficultyStory:
+		*s = DifficultyStory
+	case DifficultyStandard:
+		*s = DifficultyStandard
+	case DifficultyHard:
+		*s = DifficultyHard
+	default:
+		*s = Difficulty(v)
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s Difficulty) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *Difficulty) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -47307,8 +47451,10 @@ func (s *LiveSave) encodeFields(e *jx.Encoder) {
 		e.Str(s.Effect)
 	}
 	{
-		e.FieldStart("dc")
-		e.Int32(s.DC)
+		if s.DC.Set {
+			e.FieldStart("dc")
+			s.DC.Encode(e)
+		}
 	}
 }
 
@@ -47361,11 +47507,9 @@ func (s *LiveSave) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"effect\"")
 			}
 		case "dc":
-			requiredBitSet[0] |= 1 << 3
 			if err := func() error {
-				v, err := d.Int32()
-				s.DC = int32(v)
-				if err != nil {
+				s.DC.Reset()
+				if err := s.DC.Decode(d); err != nil {
 					return err
 				}
 				return nil
@@ -47382,7 +47526,7 @@ func (s *LiveSave) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00001111,
+		0b00000111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -61284,6 +61428,39 @@ func (s *OptDiePlacement) UnmarshalJSON(data []byte) error {
 	return s.Decode(d)
 }
 
+// Encode encodes Difficulty as json.
+func (o OptDifficulty) Encode(e *jx.Encoder) {
+	if !o.Set {
+		return
+	}
+	e.Str(string(o.Value))
+}
+
+// Decode decodes Difficulty from json.
+func (o *OptDifficulty) Decode(d *jx.Decoder) error {
+	if o == nil {
+		return errors.New("invalid: unable to decode OptDifficulty to nil")
+	}
+	o.Set = true
+	if err := o.Value.Decode(d); err != nil {
+		return err
+	}
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s OptDifficulty) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *OptDifficulty) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
 // Encode encodes DisplayName as json.
 func (o OptDisplayName) Encode(e *jx.Encoder) {
 	if !o.Set {
@@ -71278,15 +71455,22 @@ func (s *RollDie) encodeFields(e *jx.Encoder) {
 		e.FieldStart("kept")
 		e.Bool(s.Kept)
 	}
+	{
+		if s.KarmicDropped.Set {
+			e.FieldStart("karmicDropped")
+			s.KarmicDropped.Encode(e)
+		}
+	}
 }
 
-var jsonFieldsNameOfRollDie = [6]string{
+var jsonFieldsNameOfRollDie = [7]string{
 	0: "no",
 	1: "group",
 	2: "faces",
 	3: "value",
 	4: "mode",
 	5: "kept",
+	6: "karmicDropped",
 }
 
 // Decode decodes RollDie from json.
@@ -71365,6 +71549,16 @@ func (s *RollDie) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"kept\"")
+			}
+		case "karmicDropped":
+			if err := func() error {
+				s.KarmicDropped.Reset()
+				if err := s.KarmicDropped.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"karmicDropped\"")
 			}
 		default:
 			return errors.Errorf("unexpected field %q", k)

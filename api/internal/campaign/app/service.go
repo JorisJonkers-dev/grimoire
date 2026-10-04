@@ -16,6 +16,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/campaign/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/classbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/conditionbuild"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/difficulty"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/featbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/speciesbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/subclassbuild"
@@ -232,6 +233,9 @@ type UpdateInput struct {
 	NoUndo *bool
 	// ShowDCs puts the DC of a check on its Roll Card.
 	ShowDCs *bool
+	// Difficulty picks the difficulty preset; KarmicDice makes the d20s the server rolls karmic.
+	Difficulty *string
+	KarmicDice *bool
 	// ExhaustionVariant picks the Campaign's exhaustion: srd-2024, gentle, grim or off.
 	ExhaustionVariant *string
 }
@@ -251,24 +255,36 @@ func (s *Service) Update(ctx context.Context, c caller.Caller, id domain.Campaig
 	if in.Ruleset != nil && *in.Ruleset != Ruleset {
 		return domain.Campaign{}, domain.ErrInvalid
 	}
-	if t := in.ReactionTimeoutS; t != nil && (*t < 3 || *t > 120) {
-		return domain.Campaign{}, refuse("reactions wait between 3 and 120 seconds")
-	}
-	if m := in.InitiativeMode; m != nil && *m != "individual" && *m != "side" {
-		return domain.Campaign{}, refuse("initiative is individual or by side")
+	if err := playRules(in); err != nil {
+		return domain.Campaign{}, err
 	}
 	if err := creationRules(in); err != nil {
 		return domain.Campaign{}, err
 	}
-	if v := in.ExhaustionVariant; v != nil && !slices.Contains(conditionbuild.Variants(), *v) {
-		return domain.Campaign{}, refuse("exhaustion is srd-2024, gentle, grim or off")
-	}
 	change := domain.SettingsChange{
 		Name: in.Name, Ruleset: in.Ruleset, ReactionTimeoutS: in.ReactionTimeoutS, HighGround: in.HighGround, RestSupplies: in.RestSupplies,
-		InitiativeMode: in.InitiativeMode, ShareInitiative: in.ShareInitiative, CreationMethods: in.CreationMethods, StartingLevel: in.StartingLevel, HoldLevelUps: in.HoldLevelUps, NoUndo: in.NoUndo, ShowDCs: in.ShowDCs,
+		InitiativeMode: in.InitiativeMode, ShareInitiative: in.ShareInitiative, CreationMethods: in.CreationMethods, StartingLevel: in.StartingLevel, HoldLevelUps: in.HoldLevelUps, NoUndo: in.NoUndo, ShowDCs: in.ShowDCs, Difficulty: in.Difficulty, KarmicDice: in.KarmicDice,
 		ExhaustionVariant: in.ExhaustionVariant,
 	}
 	return s.Repo.UpdateCampaign(ctx, id, change, s.Now())
+}
+
+// playRules checks the settings play goes by: how long a reaction waits, how initiative is rolled, the
+// exhaustion and the difficulty preset.
+func playRules(in UpdateInput) error {
+	if t := in.ReactionTimeoutS; t != nil && (*t < 3 || *t > 120) {
+		return refuse("reactions wait between 3 and 120 seconds")
+	}
+	if m := in.InitiativeMode; m != nil && *m != "individual" && *m != "side" {
+		return refuse("initiative is individual or by side")
+	}
+	if v := in.ExhaustionVariant; v != nil && !slices.Contains(conditionbuild.Variants(), *v) {
+		return refuse("exhaustion is srd-2024, gentle, grim or off")
+	}
+	if v := in.Difficulty; v != nil && !difficulty.Valid(*v) {
+		return refuse("the difficulty is story, standard or hard")
+	}
+	return nil
 }
 
 // creationRules checks new-Character settings: at least one known ability score method, each once, and

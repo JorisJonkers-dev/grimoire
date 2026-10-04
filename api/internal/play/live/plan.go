@@ -167,6 +167,9 @@ func (r *runtime) planPlace(c caller.Caller, cmd Command) (Write, string) {
 	if reason != "" {
 		return Write{}, reason
 	}
+	if cmd.MonsterSlug != "" {
+		r.toughened(cmd.TokenKind, stats)
+	}
 	label := strings.TrimSpace(cmd.Label)
 	switch {
 	case label == "" || len([]rune(label)) > 40:

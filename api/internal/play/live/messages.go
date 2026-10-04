@@ -852,12 +852,13 @@ type LegView struct {
 	Vehicle string `json:"vehicle,omitempty"`
 }
 
-// SaveView is a saving throw waiting on its Roll Card to end an Effect.
+// SaveView is a saving throw waiting on its Roll Card to end an Effect. The party gets its DC only
+// while the Campaign shows DCs.
 type SaveView struct {
 	RollID  string `json:"rollId"`
 	TokenID string `json:"tokenId"`
 	Effect  string `json:"effect"`
-	DC      int    `json:"dc"`
+	DC      int    `json:"dc,omitempty"`
 }
 
 // CombatView is the running Combat: its round and every Combatant the audience can see, in turn order.

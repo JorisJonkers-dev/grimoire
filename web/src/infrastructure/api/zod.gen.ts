@@ -1364,6 +1364,15 @@ export const zDiceGroup = z.object({
 });
 
 /**
+ * The Campaign's difficulty preset. story: enemies come with three quarters of their hit points and attack at −2. standard: the rules as written. hard: enemies come with a quarter more hit points and attack at +2.
+ */
+export const zDifficulty = z.enum([
+    'story',
+    'standard',
+    'hard'
+]);
+
+/**
  * One die of a Roll Request.
  */
 export const zRollDie = z.object({
@@ -1372,7 +1381,8 @@ export const zRollDie = z.object({
     faces: z.int().gte(4).lte(100),
     value: z.int().gte(1).lte(100).optional(),
     mode: z.enum(['auto', 'manual']).optional(),
-    kept: z.boolean()
+    kept: z.boolean(),
+    karmicDropped: z.int().gte(1).lte(20).optional()
 });
 
 /**
@@ -3175,7 +3185,7 @@ export const zLiveSave = z.object({
     rollId: zId,
     tokenId: zId,
     effect: z.string().max(80),
-    dc: z.int().gte(1).lte(40)
+    dc: z.int().gte(1).lte(40).optional()
 });
 
 /**
@@ -5501,6 +5511,8 @@ export const zCampaignSummary = z.object({
     holdLevelUps: z.boolean().optional(),
     noUndo: z.boolean().optional(),
     showDcs: z.boolean().optional(),
+    difficulty: zDifficulty.optional(),
+    karmicDice: z.boolean().optional(),
     exhaustion: z.string().max(40).optional(),
     shareInitiative: z.boolean().optional()
 });
@@ -5532,6 +5544,8 @@ export const zCampaign = z.object({
     holdLevelUps: z.boolean().optional(),
     noUndo: z.boolean().optional(),
     showDcs: z.boolean().optional(),
+    difficulty: zDifficulty.optional(),
+    karmicDice: z.boolean().optional(),
     exhaustion: z.string().max(40).optional(),
     shareInitiative: z.boolean().optional(),
     me: zMember,
@@ -5635,6 +5649,8 @@ export const zCampaignUpdate = z.object({
     holdLevelUps: z.boolean().optional(),
     noUndo: z.boolean().optional(),
     showDcs: z.boolean().optional(),
+    difficulty: zDifficulty.optional(),
+    karmicDice: z.boolean().optional(),
     exhaustion: z.string().max(40).optional(),
     shareInitiative: z.boolean().optional()
 });

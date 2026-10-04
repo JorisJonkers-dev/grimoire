@@ -69,6 +69,9 @@ DELETE FROM play.checkpoints c WHERE c.session_id = @session_id AND c.kind = 'ro
 -- name: CampaignShowDCs :one
 SELECT show_dcs FROM campaign.campaigns WHERE id = $1;
 
+-- name: CampaignDifficulty :one
+SELECT difficulty FROM campaign.campaigns WHERE id = $1;
+
 -- name: SessionAttitudes :many
 -- The attitudes of the creatures on a Session's map towards the Campaign's Characters.
 SELECT a.token_id, a.character_id, a.attitude

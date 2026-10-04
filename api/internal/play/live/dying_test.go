@@ -22,6 +22,7 @@ import (
 func TestDownedStabilisedAndRevived(t *testing.T) {
 	t.Parallel()
 	w := setup(t)
+	showDCs(t, w)
 	w.hub.Stats = bestiary{owner: w.player.ID}
 	rolls := &app.Rolls{
 		Repo: pgstore.New(w.pool), Members: pgstore.CampaignMembers{Store: campaignpg.New(w.pool)}, Seed: func() uint64 { return 7 },

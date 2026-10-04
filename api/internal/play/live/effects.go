@@ -2,7 +2,6 @@ package live
 
 import (
 	"context"
-	"fmt"
 	"slices"
 	"strings"
 
@@ -272,7 +271,7 @@ func (r *runtime) saves(dm domain.Member, t domain.Token) ([]domain.Roll, []doma
 		if e.Target != t.ID || e.SaveAbility == "" || slices.ContainsFunc(r.st.fx.Saves, func(p domain.PendingSave) bool { return p.Effect == e.ID }) {
 			continue
 		}
-		roll, ok := r.saveRoll(dm, t, e.SaveAbility, fmt.Sprintf("save to end %s (DC %d)", e.Name, e.SaveDC))
+		roll, ok := r.saveRoll(dm, t, e.SaveAbility, "save to end "+e.Name+r.dcNote(e.SaveDC))
 		if !ok {
 			continue
 		}
@@ -428,7 +427,7 @@ func (r *runtime) concentrationSave(w Write, actor domain.Member, c caller.Calle
 	t := r.st.tokens[h.Token]
 	dc := min(30, max(10, (h.Before-h.After)/2))
 	next := Write{Kind: domain.ActionConcentrationChecked, Token: t}
-	roll, ok := r.saveRoll(actor, t, "constitution", fmt.Sprintf("save to keep concentrating on %s (DC %d)", held[0].Name, dc))
+	roll, ok := r.saveRoll(actor, t, "constitution", "save to keep concentrating on "+held[0].Name+r.dcNote(dc))
 	if !ok {
 		for _, e := range held {
 			next.ended = append(next.ended, e.ID)

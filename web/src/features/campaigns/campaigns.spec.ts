@@ -1,7 +1,7 @@
 import { flushPromises } from '@vue/test-utils'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { expectAccessible } from '@/test/axe'
-import { mountApp, type Route } from '@/test/mountApp'
+import { mountApp, unmountAll, type Route } from '@/test/mountApp'
 import { jsonResponse } from '@/test/mountWithQuery'
 
 const ID = '0190c7a8-0000-7000-8000-000000000001'
@@ -257,11 +257,23 @@ describe('table settings', () => {
     await wrapper.get('[data-testid="starting-level-input"]').setValue(3)
     await wrapper.get('[data-testid="hold-level-ups"]').setValue(true)
     await wrapper.get('[data-testid="exhaustion-variant"]').setValue('grim')
+    // The difficulty preset and karmic dice start at the rules as written.
+    const difficulty = wrapper.get('[data-testid="difficulty-setting"]')
+    expect((difficulty.element as HTMLSelectElement).value).toBe('standard')
+    expect(difficulty.findAll('option').map((o) => o.text())).toEqual([
+      'Story: enemies come with three quarters of their hit points and attack at −2',
+      'Standard: the rules as written',
+      'Hard: enemies come with a quarter more hit points and attack at +2',
+    ])
+    await difficulty.setValue('story')
+    expect((wrapper.get('[data-testid="karmic-dice-setting"]').element as HTMLInputElement).checked).toBe(false)
+    await wrapper.get('[data-testid="karmic-dice-setting"]').setValue(true)
     await wrapper.get('[data-testid="settings"]').trigger('submit')
     await flushPromises()
     expect(sent).toEqual([{
       reactionTimeoutS: 5, highGround: true, restSupplies: true, initiativeMode: 'side', shareInitiative: true,
       creationMethods: ['standard-array', 'point-buy'], startingLevel: 3, holdLevelUps: true, noUndo: true, showDcs: true, exhaustion: 'grim',
+      difficulty: 'story', karmicDice: true,
     }])
     expect(wrapper.get('[data-testid="settings-saved"]').text()).toBe('Saved.')
   })
@@ -283,6 +295,43 @@ describe('table settings', () => {
       [`/api/v1/campaigns/${ID}`]: () => home('player'),
     })
     expect(playerView.wrapper.find('[data-testid="settings"]').exists()).toBe(false)
+    // Nothing is said of a table that plays the rules as written with plain dice.
+    expect(playerView.wrapper.find('[data-testid="table-rules"]').exists()).toBe(false)
+  })
+
+  it('tells every Member the difficulty preset and that the dice are karmic', async () => {
+    const routes = (extra: object, role: 'dm' | 'player' = 'player') => ({
+      [`/api/v1/campaigns/${ID}/sessions`]: () => [],
+      [`/api/v1/campaigns/${ID}/characters`]: () => [],
+      [`/api/v1/campaigns/${ID}/invites`]: () => [],
+      [`/api/v1/campaigns/${ID}`]: () => ({ ...home(role), ...extra }),
+    })
+    const both = await mountApp(`/campaigns/${ID}`, routes({ difficulty: 'hard', karmicDice: true }))
+    expect(both.wrapper.findAll('[data-testid="table-rules"] li').map((li) => li.text())).toEqual([
+      'Hard difficulty: enemies come with a quarter more hit points and attack at +2.',
+      'Karmic dice: after two low d20s in a row, the next d20 the app rolls for you leans high; after two high ones it leans low. A die you throw yourself is never changed.',
+    ])
+    await expectAccessible(both.wrapper.element as Element)
+    unmountAll()
+    const story = await mountApp(`/campaigns/${ID}`, routes({ difficulty: 'story', karmicDice: false }))
+    expect(story.wrapper.findAll('[data-testid="table-rules"] li').map((li) => li.text())).toEqual([
+      'Story difficulty: enemies come with three quarters of their hit points and attack at −2.',
+    ])
+    unmountAll()
+    // The DM reads it too, above the settings that set it; the settings start from what the Campaign has.
+    const dice = await mountApp(`/campaigns/${ID}`, routes({ difficulty: 'standard', karmicDice: true }, 'dm'))
+    expect(dice.wrapper.findAll('[data-testid="table-rules"] li')).toHaveLength(1)
+    expect(dice.wrapper.get('[data-testid="table-rules"]').text()).toContain('Karmic dice')
+    expect((dice.wrapper.get('[data-testid="karmic-dice-setting"]').element as HTMLInputElement).checked).toBe(true)
+    unmountAll()
+    const hard = await mountApp(`/campaigns/${ID}`, routes({ difficulty: 'hard', karmicDice: false }, 'dm'))
+    expect((hard.wrapper.get('[data-testid="difficulty-setting"]').element as HTMLSelectElement).value).toBe('hard')
+    // What Members are told is what the Campaign has, not what the DM is still choosing.
+    await hard.wrapper.get('[data-testid="difficulty-setting"]').setValue('story')
+    await hard.wrapper.get('[data-testid="karmic-dice-setting"]').setValue(true)
+    expect(hard.wrapper.findAll('[data-testid="table-rules"] li').map((li) => li.text())).toEqual([
+      'Hard difficulty: enemies come with a quarter more hit points and attack at +2.',
+    ])
   })
 })
 

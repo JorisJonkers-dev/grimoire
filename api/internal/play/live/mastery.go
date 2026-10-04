@@ -1,7 +1,6 @@
 package live
 
 import (
-	"fmt"
 	"slices"
 
 	"github.com/google/uuid"
@@ -70,7 +69,7 @@ func (r *runtime) masteryAfterHit(a, t domain.Token, p domain.PendingAttack, dea
 			return
 		}
 	case h.SaveAbility != "":
-		roll, ok := r.saveRoll(actor, t, h.SaveAbility, fmt.Sprintf("save against %s's Topple (DC %d)", a.Label, h.SaveDC))
+		roll, ok := r.saveRoll(actor, t, h.SaveAbility, "save against "+a.Label+"'s Topple"+r.dcNote(h.SaveDC))
 		if !ok {
 			r.st.unarmedOutcome(&w, a, t, string(toppled))
 			break

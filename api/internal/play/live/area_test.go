@@ -33,6 +33,7 @@ func TestAreaSpellsSavesAndSurfaces(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 	w := setup(t)
+	showDCs(t, w)
 	w.hub.Stats = bestiary{owner: w.player.ID}
 	storm := effects.Definition{Slug: "storm-sphere", Name: "Storm Sphere", Concentration: true, Components: []effects.Component{
 		effects.Area{Shape: hex.SphereArea, SizeFt: 20, RangeFt: 150}, effects.SaveDamage{Ability: "strength", Dice: "2d6", Type: "bludgeoning", Half: false},

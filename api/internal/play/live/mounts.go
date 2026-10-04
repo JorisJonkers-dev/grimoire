@@ -1,7 +1,6 @@
 package live
 
 import (
-	"fmt"
 	"slices"
 	"strconv"
 
@@ -317,7 +316,7 @@ func (r *runtime) unseat(w Write, actor domain.Member, c caller.Caller) {
 	}
 	for _, id := range w.unseated {
 		t := r.st.tokens[id]
-		roll, rolled := r.saveRoll(actor, t, "dexterity", fmt.Sprintf("save to stay on %s (DC %d)", r.st.tokens[*t.Mount].Label, mounted.FallDC))
+		roll, rolled := r.saveRoll(actor, t, "dexterity", "save to stay on "+r.st.tokens[*t.Mount].Label+r.dcNote(mounted.FallDC))
 		if !rolled {
 			r.fall(id, actor, c)
 			continue
