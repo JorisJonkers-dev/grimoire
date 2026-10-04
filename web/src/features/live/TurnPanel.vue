@@ -29,7 +29,7 @@ const pips: { key: Resource; field: 'action' | 'bonusAction' | 'reaction'; label
       </GButton>
       <span class="move" data-testid="movement">{{ combatant.movementFt }} / {{ combatant.speedFt }} ft</span>
     </div>
-    <GButton variant="primary" data-testid="end-turn" @click="emit('end')">End turn</GButton>
+    <GButton variant="primary" aria-keyshortcuts="E" data-testid="end-turn" @click="emit('end')">End turn</GButton>
   </section>
 </template>
 

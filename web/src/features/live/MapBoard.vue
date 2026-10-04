@@ -6,8 +6,8 @@ import { type Captions, DANGER_NOTE, describeStack, groundNotes, initials, stack
 import { cellsFor, key, layoutOf, squareLines } from './geometry'
 
 const props = withDefaults(
-  defineProps<{ map: LiveMap; view: LiveView; dm?: boolean; selected?: string | null; path?: Coord[]; danger?: Coord[]; area?: Coord[]; zone?: Coord[]; reach?: Coord[]; captions?: Captions; title: string }>(),
-  { dm: false, selected: null, path: () => [], danger: () => [], captions: () => ({}), area: () => [], zone: () => [], reach: () => [] },
+  defineProps<{ map: LiveMap; view: LiveView; dm?: boolean; selected?: string | null; path?: Coord[]; danger?: Coord[]; area?: Coord[]; zone?: Coord[]; reach?: Coord[]; captions?: Captions; title: string; home?: string }>(),
+  { dm: false, selected: null, path: () => [], danger: () => [], captions: () => ({}), area: () => [], zone: () => [], reach: () => [], home: '' },
 )
 const emit = defineEmits<{ select: [coord: Coord] }>()
 
@@ -90,6 +90,7 @@ const cells = computed(() =>
         tabindex="0"
         :aria-label="c.label"
         :data-hex="c.k"
+        :aria-keyshortcuts="home === c.k ? 'M' : undefined"
         @click="emit('select', { q: c.q, r: c.r })"
         @keydown.enter.prevent="emit('select', { q: c.q, r: c.r })"
       >

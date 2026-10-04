@@ -4,7 +4,8 @@ import { type Coord, corners, type Layout, toPixel } from '@/shared/hex'
 import { type GridCell, gridBox } from './grid'
 
 
-const props = withDefaults(defineProps<{ cells: GridCell[]; size?: number; title: string }>(), { size: 24 })
+// home is the hex the M key finds: where the Character I play stands.
+const props = withDefaults(defineProps<{ cells: GridCell[]; size?: number; title: string; home?: string }>(), { size: 24, home: '' })
 const emit = defineEmits<{ select: [coord: Coord] }>()
 
 const layout = computed<Layout>(() => ({ size: props.size, origin: { x: 0, y: 0 } }))
@@ -38,6 +39,7 @@ const box = computed(() => gridBox(props.cells, props.size))
         tabindex="0"
         :aria-label="`Hex ${String(s.q)}, ${String(s.r)}${s.label ? `: ${s.label}` : ''}`"
         :data-hex="`${String(s.q)},${String(s.r)}`"
+        :aria-keyshortcuts="home === `${String(s.q)},${String(s.r)}` ? 'M' : undefined"
         @click="emit('select', { q: s.q, r: s.r })"
         @keydown.enter.prevent="emit('select', { q: s.q, r: s.r })"
       >

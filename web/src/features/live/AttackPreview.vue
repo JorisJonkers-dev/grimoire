@@ -18,8 +18,8 @@ const emit = defineEmits<{ confirm: []; cancel: [] }>()
       <li v-for="r in preview.reasons" :key="r">{{ r }}</li>
     </ul>
     <div class="row">
-      <GButton variant="primary" data-testid="confirm-attack" @click="emit('confirm')">Attack</GButton>
-      <GButton data-testid="cancel-attack" @click="emit('cancel')">Cancel</GButton>
+      <GButton variant="primary" aria-keyshortcuts="C" data-testid="confirm-attack" @click="emit('confirm')">Attack</GButton>
+      <GButton aria-keyshortcuts="Escape" data-testid="cancel-attack" @click="emit('cancel')">Cancel</GButton>
     </div>
   </section>
 </template>

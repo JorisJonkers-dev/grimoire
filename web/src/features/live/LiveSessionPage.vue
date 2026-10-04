@@ -154,6 +154,11 @@ const mine = computed(() => view.value?.tokens.filter((t) => t.controllerId && t
 // A rider who controls its mount walks by walking the mount.
 const steedOf = (t: LiveToken | null) => (t?.mountControlled ? (view.value?.tokens.find((o) => o.id === t.mountId) ?? t) : t)
 const walker = computed(() => steedOf(isDM.value ? chosen.value : (mine.value.find((t) => t.id === selected.value) ?? mine.value[0] ?? null)))
+// The hex the M key finds: where the creature I am playing stands, else the middle of the map.
+const home = computed(() => {
+  const t = walker.value ?? chosen.value
+  return t ? `${String(t.q)},${String(t.r)}` : '0,0'
+})
 const combat = computed(() => view.value?.combat ?? null)
 // The shared roster strip, and whose Effects the effects card shows.
 const roster = computed(() => view.value?.roster ?? [])
@@ -541,8 +546,8 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
       >
         <div class="zoomer" data-testid="zoomer" :style="{ width: `${String(Math.round(shell.zoom.value * 100))}%` }">
           <WorldPanel v-if="scope === 'world'" :world="view?.world" :dm="isDM" :maps="worldMaps" :local-maps="localMaps" :measure="state?.measure ?? null" :game-day="view?.gameDay ?? 0" :game-minute="view?.gameMinute ?? 0" :marching-order="view?.marchingOrder ?? []" :vehicles="fleet.data.value?.vehicles ?? []" @send="(cmd) => live?.send(cmd)" />
-          <MapBoard v-else-if="view?.map" :map="view.map" :view="view" :dm="isDM" :selected="selected" :path="walkPath" :danger="walkDanger" :captions="suggestions" :area="areaHexes" :zone="zoneCells" :reach="view.sneak?.reach ?? []" :title="view.map.name" @select="pick" />
-          <HexGrid v-else :cells="cells" :title="`Session ${String(state.session?.number ?? '')} map`" @select="pick" />
+          <MapBoard v-else-if="view?.map" :map="view.map" :view="view" :dm="isDM" :selected="selected" :path="walkPath" :danger="walkDanger" :captions="suggestions" :area="areaHexes" :zone="zoneCells" :reach="view.sneak?.reach ?? []" :title="view.map.name" :home="home" @select="pick" />
+          <HexGrid v-else :cells="cells" :title="`Session ${String(state.session?.number ?? '')} map`" :home="home" @select="pick" />
         </div>
         <div class="zoom" role="group" aria-label="Map zoom">
           <button type="button" aria-label="Zoom out" :disabled="!shell.canZoomOut.value" data-testid="zoom-out" @click="shell.zoomOut">−</button>
