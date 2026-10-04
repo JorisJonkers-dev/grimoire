@@ -51,8 +51,7 @@ function newCodes() {
 </script>
 
 <template>
-  <section class="g-card stack" data-testid="two-step-section">
-    <h2>Two-step sign-in</h2>
+  <section class="stack" aria-label="Two-step sign-in" data-testid="two-step-section">
     <p v-if="account.admin && !account.adminPowers" role="alert" class="g-alert" data-testid="admin-needs-two-step">
       Turn on two-step sign-in to use your Admin powers.
     </p>

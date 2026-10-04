@@ -81,6 +81,29 @@ describe('Conversations', () => {
     expect(sent).toEqual([{ body: 'Who brings @Kara', mentions: [{ kind: 'character', campaignId: camp, id: kara }] }])
   })
 
+  it('keeps the other Conversations beside the open thread, and heads the thread with who is in it', async () => {
+    const other = '0190c7a8-0000-7000-8000-0000000000d2'
+    const { wrapper } = await mountApp(`/conversations/${talk}`, {
+      [`/api/v1/conversations/${talk}/messages`]: () => ({ items: [] }),
+      '/api/v1/conversations': () => ({ items: [
+        { id: talk, title: '', members: [me, bram], updatedAt: '2026-10-02T12:00:00Z', unread: 0, lastBody: 'See you Friday' },
+        { id: other, title: 'Party', members: [me, bram, dana], updatedAt: '2026-10-01T12:00:00Z', unread: 2, lastBody: '' },
+      ] }),
+      '/api/v1/account': () => me,
+    })
+    const side = wrapper.get('[data-testid="conversation-side"]')
+    expect(side.get('h1').text()).toBe('Conversations')
+    expect(side.findAll('[data-testid="conversation-list"] a').map((a) => a.attributes('href'))).toEqual([`/conversations/${talk}`, `/conversations/${other}`])
+    expect(side.get(`[data-testid="conversation-${talk}"]`).attributes('aria-current')).toBe('page')
+    expect(side.get(`[data-testid="conversation-${other}"]`).attributes('aria-current')).toBeUndefined()
+    // A group shows how many are in it where one person would show an initial.
+    expect(side.get(`[data-testid="conversation-${other}"] .face`).text()).toBe('3')
+    expect(side.get(`[data-testid="conversation-${other}"]`).text()).toContain('No messages yet')
+    const head = wrapper.get('[data-testid="thread-head"]')
+    expect(head.get('h2').text()).toBe('Aria, Bram')
+    expect(wrapper.get('[data-testid="thread-empty"]').text()).toContain('Say hello')
+  })
+
   it('says when a Conversation is not yours, and when there are none', async () => {
     const shut = await mountApp(`/conversations/${talk}`, { '/api/v1/conversations': () => jsonResponse({ status: 404, title: 'Not found' }, 404), '/api/v1/account': () => me })
     expect(shut.wrapper.get('[data-testid="conversation-error"]').text()).toContain('could not be read')

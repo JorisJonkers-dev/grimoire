@@ -75,6 +75,14 @@ button[aria-selected='true'] {
   box-shadow: inset 0 -2px 0 var(--color-gold);
   color: var(--color-gold-high);
 }
+/* The diamond marks where you are, as it does in the header. */
+button[aria-selected='true']::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  background: var(--color-gold-high);
+  transform: rotate(45deg);
+}
 button:focus-visible {
   outline: 2px solid var(--color-gold-high);
   outline-offset: -2px;

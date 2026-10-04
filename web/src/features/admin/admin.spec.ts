@@ -45,6 +45,50 @@ describe('the Admin page', () => {
     expect(wrapper.get('[data-testid="invite-link"]').text()).toContain(`/account-invite#${token}`)
   })
 
+  it('heads the page, counts what is there, and keeps Accounts, Invites and Release Notes each on a tab', async () => {
+    const { wrapper, router } = await mountApp('/admin', {
+      '/api/v1/admin/accounts': () => ({
+        accounts: [{ ...aria, admin: true }, bram],
+        invites: [{ id: '0190c7a8-0000-7000-8000-0000000000e1', admin: false, status: 'invited', createdAt: '2026-10-01T10:00:00Z', expiresAt: '2026-10-04T10:00:00Z' },
+          { id: '0190c7a8-0000-7000-8000-0000000000e2', admin: false, status: 'expired', createdAt: '2026-09-01T10:00:00Z', expiresAt: '2026-09-02T10:00:00Z' }],
+      }),
+      '/api/v1/account': () => me,
+    })
+    expect(wrapper.get('[data-testid="page-eyebrow"]').text()).toBe('Admin')
+    expect(wrapper.get('h1').text()).toBe('Accounts')
+    const tabs = () => wrapper.findAll('nav[aria-label="Admin"] a')
+    expect(tabs().map((a) => a.text())).toEqual(['Accounts2', 'Invites1', 'Release Notes', 'Shared Library', 'Dice Sets'])
+    expect(tabs().map((a) => a.attributes('href'))).toEqual(['/admin', '/admin?tab=invites', '/admin?tab=notes', '/admin/shared-library', '/admin/dice-sets'])
+    expect(tabs()[0]?.attributes('aria-current')).toBe('page')
+    expect(wrapper.get('[data-testid="admin-tally"]').text()).toBe('2 accounts · 1 invite not yet used · 1 disabled')
+    expect(wrapper.findAll('[data-testid="admin-accounts"] th').map((h) => h.text())).toEqual(['Account', 'Email', 'Role', 'Status'])
+    const cells = wrapper.findAll('[data-testid="admin-account-aria"] td').map((c) => c.text())
+    expect(cells[0]).toBe('AAria@aria')
+    expect(cells.slice(1, 3)).toEqual(['aria@example.com', 'Admin'])
+    expect(cells[3]).toMatch(/^Activeseen /)
+    expect(wrapper.findAll('[data-testid="admin-account-bram"] td').map((c) => c.text()).slice(2)).toEqual(['Member', 'Disablednever seen'])
+    expect(wrapper.get('[data-testid="admin-accounts"]').isVisible()).toBe(true)
+    expect(wrapper.get('[data-testid="admin-invites"]').isVisible()).toBe(false)
+    expect(wrapper.get('[data-testid="release-notes"]').isVisible()).toBe(false)
+
+    // The button in the head leads to where an invite is made.
+    await wrapper.get('[data-testid="new-invite"]').trigger('click')
+    await flushPromises()
+    expect(router.currentRoute.value.fullPath).toBe('/admin?tab=invites')
+    expect(wrapper.get('h1').text()).toBe('Invites')
+    expect(tabs()[1]?.attributes('aria-current')).toBe('page')
+    expect(wrapper.get('[data-testid="admin-accounts"]').isVisible()).toBe(false)
+    expect(wrapper.get('[data-testid="admin-invites"]').isVisible()).toBe(true)
+    await router.push('/admin?tab=notes')
+    await flushPromises()
+    expect(wrapper.get('h1').text()).toBe('Release Notes')
+    expect(wrapper.get('[data-testid="release-notes"]').isVisible()).toBe(true)
+    // A tab nobody knows falls back to the Accounts.
+    await router.push('/admin?tab=nonsense')
+    await flushPromises()
+    expect(wrapper.get('h1').text()).toBe('Accounts')
+  })
+
   it('tells someone without Admin powers why the page is closed', async () => {
     const { wrapper } = await mountApp('/admin', {
       '/api/v1/admin/accounts': () => jsonResponse({ status: 403, title: 'Forbidden' }, 403),

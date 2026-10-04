@@ -1,3 +1,4 @@
+import { expectAccessible } from '@/test/axe'
 import { flushPromises } from '@vue/test-utils'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { signInOnUnauthorized } from '@/infrastructure/http'
@@ -168,8 +169,37 @@ describe('the Account page', () => {
     expect(sent).toEqual([{ password: 'a new long password' }])
   })
 
+  it('heads the page with who you are, and keeps profile, notifications, tokens and activity each on a tab', async () => {
+    const { wrapper } = await mountApp('/account', {
+      '/api/v1/account/history': () => ({ items: [{ at: '2026-10-02T12:00:00Z', actor: 'aria', action: 'created', detail: 'from an invite' }] }),
+      '/api/v1/account': () => ({ ...account, admin: true, adminPowers: true }),
+    })
+    const head = wrapper.get('[data-testid="account-head"]')
+    expect(head.get('h1').text()).toBe('Account')
+    expect(head.get('.g-avatar').text()).toBe(account.nickname.slice(0, 1).toUpperCase())
+    expect(head.get('[data-testid="account-who"]').text()).toBe(`${account.nickname} @${account.username} · Admin`)
+    const tabs = wrapper.findAll('[role="tab"]')
+    expect(tabs.map((t) => t.text())).toEqual(['Profile & sign-in', 'Notifications', 'Access Tokens', 'Activity'])
+    expect(tabs.map((t) => t.attributes('aria-selected'))).toEqual(['true', 'false', 'false', 'false'])
+    const shown = () => ['profile', 'notifications', 'tokens', 'activity'].filter((k) => wrapper.get(`[data-testid="account-tab-${k}"]`).isVisible())
+    expect(shown()).toEqual(['profile'])
+    // The profile is rows of a name and its value, not a stack of boxes.
+    expect(wrapper.findAll('[data-testid="profile-form"] .g-rows__row > label').map((l) => l.text())).toEqual(['Username', 'Nickname', 'Email'])
+    expect(wrapper.findAll('[data-testid="sign-in-methods"] .g-rows__row > :first-child').map((l) => l.text())).toEqual(['Password', 'Two-step sign-in'])
+    await tabs[2]?.trigger('click')
+    expect(shown()).toEqual(['tokens'])
+    expect(wrapper.get('[data-testid="account-tab-tokens"]').find('[data-testid="access-tokens"]').exists()).toBe(true)
+    await tabs[3]?.trigger('click')
+    expect(shown()).toEqual(['activity'])
+    expect(wrapper.get('[data-testid="account-history"]').text()).toContain('Account created')
+    await tabs[1]?.trigger('click')
+    expect(shown()).toEqual(['notifications'])
+    await expectAccessible(wrapper.element as Element)
+  })
+
   it('says when the Account cannot be read', async () => {
     const { wrapper } = await mountApp('/account', { '/api/v1/account': () => jsonResponse({ status: 500, title: 'Boom' }, 500) })
     expect(wrapper.text()).toContain('could not be read')
+    expect(wrapper.get('h1').text()).toBe('Account')
   })
 })

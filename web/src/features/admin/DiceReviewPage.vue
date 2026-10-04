@@ -5,7 +5,8 @@ import { listDiceSetsToReviewOptions, reviewDiceSetMutation } from '@/infrastruc
 import type { DiceSet } from '@/infrastructure/api/types.gen'
 import DiceSheet from '@/features/dice/DiceSheet.vue'
 import { PLAIN } from '@/features/dice/sets'
-import { GButton } from '@/shared/ui'
+import { GButton, GPageHead } from '@/shared/ui'
+import AdminTabs from './AdminTabs.vue'
 
 // A Dice Set with an uploaded picture waits here before everyone can see it.
 const client = useQueryClient()
@@ -26,11 +27,8 @@ const problem = computed(() =>
 
 <template>
   <main class="g-page">
-    <RouterLink :to="{ name: 'admin' }" class="back">← Admin</RouterLink>
-    <header class="g-headline">
-      <span class="g-eyebrow">Admin</span>
-      <h1>Dice Set pictures</h1>
-    </header>
+    <GPageHead eyebrow="Admin" title="Dice Set pictures" />
+    <AdminTabs current="dice" />
     <p v-if="waiting.isError.value" role="alert" class="g-alert" data-testid="dice-review-forbidden">Only an Admin with two-step sign-in can check Dice Sets.</p>
     <template v-else-if="waiting.data.value">
       <p v-if="review.isError.value" role="alert" class="g-alert" data-testid="dice-review-problem">{{ problem }}</p>

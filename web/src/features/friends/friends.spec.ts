@@ -77,6 +77,8 @@ describe('the Friends page', () => {
     expect(empty.wrapper.get('[data-testid="friend-none"]').text()).toContain('No Friends yet')
     unmountAll()
     const none = await mountApp('/friends', { '/api/v1/friends': () => jsonResponse({ status: 403, title: 'No Account' }, 403) })
+    // The page keeps its name even when it has nothing to show.
+    expect(none.wrapper.get('h1').text()).toBe('Friends')
     expect(none.wrapper.get('[data-testid="friends-no-account"]').text()).toContain('need a Grimoire Account')
   })
 })

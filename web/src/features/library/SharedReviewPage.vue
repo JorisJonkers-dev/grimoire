@@ -2,7 +2,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { computed, reactive } from 'vue'
 import { listSharedSubmissionsOptions, reviewSharedSubmissionMutation } from '@/infrastructure/api/@tanstack/vue-query.gen'
-import { GButton, GField } from '@/shared/ui'
+import AdminTabs from '@/features/admin/AdminTabs.vue'
+import { GButton, GField, GPageHead } from '@/shared/ui'
 import { kindNames } from './fields'
 
 const client = useQueryClient()
@@ -24,11 +25,8 @@ function decide(id: string, decision: 'approve' | 'decline') {
 
 <template>
   <main class="g-page review">
-    <RouterLink :to="{ name: 'admin' }" class="back">← Admin</RouterLink>
-    <header class="g-headline">
-      <span class="g-eyebrow">Admin</span>
-      <h1>Shared Library requests</h1>
-    </header>
+    <GPageHead eyebrow="Admin" title="Shared Library requests" />
+    <AdminTabs current="shared" />
     <p v-if="requests.isError.value" role="alert" class="g-alert" data-testid="shared-review-forbidden">Only an Admin with two-step sign-in can review the Shared Library.</p>
     <template v-else>
       <p v-if="review.error.value" role="alert" class="g-alert" data-testid="shared-review-problem">{{ review.error.value.detail ?? 'That review was not saved.' }}</p>
