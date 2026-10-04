@@ -60,6 +60,14 @@ describe('your Characters', () => {
       '/api/v1/account': () => me,
     })
     expect(wrapper.get('[data-testid="my-character-campaigns"]').text()).toContain('5/28 HP')
+    // The page says where it is, is headed by the Character, and lists its Campaigns as a table with a way to each sheet.
+    expect(wrapper.get('nav[aria-label="Breadcrumb"]').text().replace(/\s*›\s*/g, ' › ')).toBe(`Characters › ${kara.name}`)
+    expect(wrapper.get('nav[aria-label="Breadcrumb"] a').attributes('href')).toBe('/characters')
+    expect(wrapper.get('.g-detail-head h1').text()).toBe(kara.name)
+    const rows = wrapper.findAll('[data-testid="my-character-campaigns"] tbody tr')
+    expect(rows).toHaveLength(kara.campaigns.length)
+    expect(rows[0]?.findAll('a').map((a) => a.text())).toEqual([kara.campaigns[0]?.campaignName, 'Sheet'])
+    expect(wrapper.get('aside').find('[data-testid="my-character-join"]').exists()).toBe(true)
     await wrapper.get('[data-testid="my-character-name"]').setValue(' Kara Vale ')
     await wrapper.get('[data-testid="my-character-form"]').trigger('submit')
     await flushPromises()

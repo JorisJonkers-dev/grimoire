@@ -114,7 +114,7 @@ const optionName = (choice: LevelUpChoice, slug: string) => choice.options.find(
   <main class="g-page level-up">
     <RouterLink :to="{ name: 'character', params: { id: ids.campaignId, characterId: ids.characterId } }" class="back">← Sheet</RouterLink>
     <header class="g-headline">
-      <span class="g-eyebrow">Character</span>
+      <span class="g-eyebrow">Level-up</span>
       <h1>Level up</h1>
     </header>
     <p v-if="plan.isError.value" role="alert" class="g-alert" data-testid="level-up-error">
@@ -259,78 +259,107 @@ const optionName = (choice: LevelUpChoice, slug: string) => choice.options.find(
 </template>
 
 <style scoped>
-.back {
-  color: var(--color-gold-high);
-}
+/* A level is taken in one panel: what it is, the steps, the step in hand, and the way on. */
 .level-up {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  box-sizing: border-box;
+  width: min(100%, 760px);
+  margin: 32px auto;
+  padding: 28px 32px 24px;
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-panel);
+  background: var(--color-surface);
 }
-h1,
-h2 {
-  margin: 0;
+.back {
+  align-self: flex-start;
+  color: var(--color-gold-high);
+}
+h1 {
+  font-size: 30px;
 }
 .hint {
   margin: 0;
+  font-size: 16px;
   color: var(--color-text-2);
 }
 .steps {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 6px 26px;
   margin: 0;
-  padding: 0;
+  padding: 0 0 18px;
+  border-bottom: 1px solid var(--color-line);
   list-style: none;
-  font-size: 13px;
-  color: var(--color-text-3);
+  counter-reset: step;
+  font-family: var(--font-label);
+  font-size: 16px;
+  color: var(--color-text-2);
 }
 .steps li {
-  padding: 4px 10px;
-  border-radius: var(--radius-chip);
-  border: 1px solid var(--color-line);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  counter-increment: step;
+}
+.steps li::before {
+  content: counter(step) ' ·';
 }
 .steps li[aria-current='step'] {
-  border-color: var(--color-gold);
   color: var(--color-gold-high);
 }
 .steps li.done {
-  color: var(--color-text-2);
+  color: var(--color-text-3);
 }
 .stack {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
+section.g-card {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
 fieldset {
   display: flex;
   flex-direction: column;
-  gap: 6px;
   margin: 0;
   padding: 0;
   border: 0;
 }
 legend {
-  margin-bottom: 6px;
-  font-family: var(--font-display);
+  margin-bottom: 10px;
+  padding: 0;
+  font-family: var(--font-label);
+  font-size: 15px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-gold);
 }
 .tiles {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 180px), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 190px), 1fr));
   gap: 8px;
 }
 .tile {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 12px;
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-md);
+  padding: 14px 12px 12px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  background: var(--color-field);
   cursor: pointer;
 }
+.tile strong {
+  font-family: var(--font-display);
+  font-size: 15px;
+}
 .tile.picked {
-  border-color: var(--color-gold);
-  background: var(--color-raised);
+  border-color: var(--color-brass-edge);
+  background: var(--color-selected);
 }
 .tile:focus-within {
   outline: 2px solid var(--color-gold);
@@ -345,52 +374,82 @@ legend {
   color: var(--color-text-2);
 }
 .blocked {
-  cursor: not-allowed;
+  opacity: 0.6;
 }
-.unmet,
-.choice.blocked small {
+.choice.blocked small,
+.unmet {
   color: var(--color-enemy-soft);
 }
+/* A choice is a row under a rule, with what it gives at the far end. */
 .choice {
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-height: 44px;
-  padding: 0 12px;
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-md);
+  gap: 16px;
+  min-height: 52px;
+  border-top: 1px solid var(--color-rule);
+  font-size: 17px;
+  cursor: pointer;
+}
+.choice:has(input:checked) {
+  color: var(--color-gold-high);
+}
+.choice input {
+  width: 18px;
+  height: 18px;
 }
 .choice small {
   margin-left: auto;
-  color: var(--color-text-2);
+  font-family: var(--font-display);
+  font-size: 18px;
+  color: var(--color-gold-high);
 }
 .pick {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
+  padding: 8px 0;
+  font-size: 14px;
+  color: var(--color-text-2);
 }
 select {
-  min-height: 44px;
-  padding: 0 8px;
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-md);
-  background: var(--color-raised);
-  color: var(--color-text);
+  min-height: var(--size-control);
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--radius-control) var(--radius-control) 0 0;
   font: inherit;
+  font-size: 16px;
+  color: var(--color-text);
+  background: var(--color-field);
+  box-shadow: inset 0 -1px 0 var(--color-line);
 }
 .facts {
   display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 4px 12px;
+  grid-template-columns: 160px minmax(0, 1fr);
   margin: 0;
+  font-size: 15px;
 }
-dd {
+.facts dt,
+.facts dd {
   margin: 0;
+  padding: 11px 0;
+  border-top: 1px solid var(--color-rule);
+}
+dt {
+  color: var(--color-text-3);
 }
 .nav {
   display: flex;
-  align-items: center;
   justify-content: space-between;
   gap: 8px;
+  padding-top: 18px;
+  border-top: 1px solid var(--color-line);
+}
+@media (max-width: 640px) {
+  .level-up {
+    margin: 0;
+    padding: 20px 16px;
+    border: 0;
+    border-radius: 0;
+  }
 }
 </style>
