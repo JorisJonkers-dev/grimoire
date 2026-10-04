@@ -104,7 +104,6 @@ function release() {
 }
 h2 {
   margin: 0;
-  font-size: 18px;
 }
 .rows {
   display: flex;
@@ -119,7 +118,7 @@ h2 {
   justify-content: space-between;
   gap: 8px;
   padding: 8px 0;
-  border-bottom: 1px solid var(--color-line);
+  border-bottom: 1px solid var(--color-rule);
 }
 .meta {
   display: flex;

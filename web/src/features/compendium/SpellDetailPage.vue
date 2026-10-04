@@ -29,149 +29,127 @@ const paragraphs = (text: string) => text.split(/\n+/).filter((p) => p.trim() !=
 </script>
 
 <template>
-  <main class="spell">
-    <RouterLink :to="{ name: 'spells' }" class="back">← All spells</RouterLink>
+  <main class="g-page">
+    <nav aria-label="Breadcrumb" class="g-crumbs">
+      <RouterLink :to="{ name: 'spells' }">Compendium</RouterLink> <span aria-hidden="true">›</span>
+      <RouterLink :to="{ name: 'spells' }" class="back">Spells</RouterLink> <span aria-hidden="true">›</span>
+      <span aria-current="page">{{ spell.data.value?.name ?? slug }}</span>
+    </nav>
     <p v-if="spell.isPending.value">Turning the page…</p>
     <p v-else-if="spell.isError.value" role="alert" data-testid="spell-missing">That spell is not in this grimoire.</p>
-    <article v-else-if="spell.data.value" data-testid="spell-detail">
-      <header>
-        <h1>{{ spell.data.value.name }}</h1>
-        <p class="sub">
-          {{ levelLabel(spell.data.value.level) }} · {{ titleCase(spell.data.value.school) }}
-          <template v-if="spell.data.value.ritual"> · ritual</template>
-        </p>
-        <nav class="rules" aria-label="Ruleset">
-          <RouterLink :to="{ name: 'spell', params: { slug }, query: { ruleset: 'srd-2024' } }" :aria-current="spell.data.value.ruleset === 'srd-2024' ? 'page' : undefined">2024</RouterLink>
-          <RouterLink :to="{ name: 'spell', params: { slug }, query: { ruleset: 'srd-2014' } }" :aria-current="spell.data.value.ruleset === 'srd-2014' ? 'page' : undefined">2014</RouterLink>
-        </nav>
-        <CopyLink :to="{ name: 'spell', params: { slug }, query: { ruleset: spell.data.value.ruleset } }" />
+    <article v-else-if="spell.data.value" class="body" data-testid="spell-detail">
+      <header class="g-detail-head">
+        <div>
+          <span class="g-eyebrow">Spell · SRD {{ spell.data.value.ruleset === 'srd-2024' ? '5.2' : '5.1' }}</span>
+          <h1>{{ spell.data.value.name }}</h1>
+          <p class="g-meta sub">
+            <span>{{ levelLabel(spell.data.value.level) }} · {{ titleCase(spell.data.value.school) }}<template v-if="spell.data.value.ritual"> · ritual</template></span>
+            <span class="classes">{{ spell.data.value.classes.map(titleCase).join(' · ') }}</span>
+          </p>
+        </div>
+        <div class="g-acts">
+          <nav class="g-segment" aria-label="Ruleset">
+            <RouterLink :to="{ name: 'spell', params: { slug }, query: { ruleset: 'srd-2024' } }" :aria-current="spell.data.value.ruleset === 'srd-2024' ? 'page' : undefined">2024</RouterLink>
+            <RouterLink :to="{ name: 'spell', params: { slug }, query: { ruleset: 'srd-2014' } }" :aria-current="spell.data.value.ruleset === 'srd-2014' ? 'page' : undefined">2014</RouterLink>
+          </nav>
+          <CopyLink :to="{ name: 'spell', params: { slug }, query: { ruleset: spell.data.value.ruleset } }" />
+        </div>
       </header>
-      <dl class="props">
-        <dt>Casting time</dt>
-        <dd>{{ spell.data.value.castingTime }}</dd>
-        <dt>Range</dt>
-        <dd>{{ spell.data.value.rangeText }}</dd>
-        <dt>Components</dt>
-        <dd>{{ components }}</dd>
-        <dt>Duration</dt>
-        <dd>{{ spell.data.value.concentration ? 'Concentration, ' : '' }}{{ spell.data.value.duration }}</dd>
-        <template v-if="spell.data.value.saveAbility">
+      <dl class="g-facts props">
+        <div>
+          <dt>Casting time</dt>
+          <dd>{{ spell.data.value.castingTime }}</dd>
+        </div>
+        <div>
+          <dt>Range</dt>
+          <dd>{{ spell.data.value.rangeText }}</dd>
+        </div>
+        <div>
+          <dt>Components</dt>
+          <dd>{{ components }}</dd>
+        </div>
+        <div>
+          <dt>Duration</dt>
+          <dd>{{ spell.data.value.concentration ? 'Concentration, ' : '' }}{{ spell.data.value.duration }}</dd>
+        </div>
+        <div v-if="spell.data.value.saveAbility">
           <dt>Save</dt>
           <dd>{{ titleCase(spell.data.value.saveAbility) }}</dd>
-        </template>
-        <template v-if="spell.data.value.damageRoll">
+        </div>
+        <div v-if="spell.data.value.damageRoll">
           <dt>Damage</dt>
           <dd>{{ spell.data.value.damageRoll }} {{ spell.data.value.damageTypes.map(titleCase).join(', ') }}</dd>
-        </template>
+        </div>
       </dl>
-      <div class="text">
-        <p v-for="(para, i) in paragraphs(spell.data.value.description)" :key="i">
-          <template v-for="(seg, j) in highlight(para, mentionNames)" :key="j">
-            <button v-if="seg.mention" type="button" class="term" :aria-expanded="open?.name === seg.mention" @click="open = byName(seg.mention)">{{ seg.text }}</button>
-            <template v-else>{{ seg.text }}</template>
-          </template>
-        </p>
-      </div>
+      <section class="part" aria-labelledby="spell-description">
+        <h2 id="spell-description">Description</h2>
+        <div class="g-prose text">
+          <p v-for="(para, i) in paragraphs(spell.data.value.description)" :key="i">
+            <template v-for="(seg, j) in highlight(para, mentionNames)" :key="j">
+              <button v-if="seg.mention" type="button" class="term" :aria-expanded="open?.name === seg.mention" @click="open = byName(seg.mention)">{{ seg.text }}</button>
+              <template v-else>{{ seg.text }}</template>
+            </template>
+          </p>
+        </div>
+      </section>
       <section v-if="open" class="popover" role="dialog" :aria-label="open.name" data-testid="condition-popover">
-        <h2>{{ open.name }}</h2>
+        <h3>{{ open.name }}</h3>
         <p v-for="(para, i) in paragraphs(open.description)" :key="i">{{ para }}</p>
-        <button type="button" class="close" @click="open = null">Close</button>
+        <button type="button" class="g-action close" @click="open = null">Close</button>
       </section>
-      <section v-if="spell.data.value.higherLevel" class="text">
-        <h2>At higher levels</h2>
-        <p>{{ spell.data.value.higherLevel }}</p>
+      <section v-if="spell.data.value.higherLevel" class="part" aria-labelledby="spell-higher">
+        <h2 id="spell-higher">At higher levels</h2>
+        <div class="g-prose text">
+          <p>{{ spell.data.value.higherLevel }}</p>
+        </div>
       </section>
-      <p class="classes">{{ spell.data.value.classes.map(titleCase).join(' · ') }}</p>
     </article>
   </main>
 </template>
 
 <style scoped>
-.spell {
-  padding: 24px var(--gutter);
+.g-page {
+  gap: 32px;
+  padding-top: 40px;
+}
+.body {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  box-sizing: border-box;
-  width: 100%;
+  gap: 36px;
+  max-width: 980px;
 }
-.back {
-  color: var(--color-gold-high);
-}
-h1 {
-  margin: 0;
-  font-family: var(--font-display);
-}
-.sub {
-  margin: 4px 0 0;
-  font-family: var(--font-flavour);
-  font-style: italic;
-  color: var(--color-text-2);
-}
-.rules {
+.part {
   display: flex;
-  gap: 8px;
-  margin-top: 8px;
+  flex-direction: column;
+  gap: 10px;
 }
-.rules a {
-  min-height: 36px;
-  padding: 6px 14px;
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-pill);
-  color: var(--color-text);
-  text-decoration: none;
-}
-.rules a[aria-current='page'] {
-  border-color: var(--color-gold);
-  color: var(--color-gold-high);
-}
-.props {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 6px 16px;
-  margin: 12px 0;
-}
-dt {
-  color: var(--color-text-2);
-}
-dd {
-  margin: 0;
-}
-.text {
-  font-family: var(--font-flavour);
-  font-size: 18px;
-  line-height: 1.5;
-}
+/* A word the rules define is marked; pressing it shows what it means. */
 .term {
-  padding: 0 2px;
+  padding: 0;
   border: 0;
-  border-bottom: 1px dashed var(--color-gold-high);
+  border-bottom: 1px solid var(--color-brass-line);
   background: none;
   color: var(--color-gold-high);
   font: inherit;
   cursor: pointer;
 }
 .popover {
-  padding: 14px 16px;
-  border: 1px solid var(--color-gold);
-  border-radius: var(--radius-lg);
-  background: var(--color-raised);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 18px;
+  border: 1px solid var(--color-edge);
+  border-radius: var(--radius-panel);
+  background: var(--color-surface);
+  box-shadow: 0 14px 32px rgb(0 0 0 / 55%);
 }
-.popover h2,
-.text h2 {
-  margin: 0 0 6px;
-  font-family: var(--font-display);
-  font-size: 16px;
+.popover p {
+  margin: 0;
+  font-size: 15px;
+  color: var(--color-text-2);
 }
 .close {
-  min-height: 44px;
-  padding: 0 16px;
-  border: 1px solid var(--color-bronze);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-  color: var(--color-text);
-}
-.classes {
-  color: var(--color-text-2);
+  align-self: flex-start;
+  min-height: var(--size-touch-target);
 }
 </style>

@@ -59,7 +59,10 @@ function ask() {
 
 <template>
   <main class="g-page">
-    <h1>Friends</h1>
+    <header class="g-headline">
+      <span class="g-eyebrow">People</span>
+      <h1>Friends</h1>
+    </header>
     <p v-if="noAccount" role="alert" class="g-alert" data-testid="friends-no-account">Friends need a Grimoire Account; sign in with one first.</p>
     <p v-else-if="page.isError.value" role="alert" class="g-alert">Your Friends could not be read.</p>
     <template v-else-if="page.data.value">
@@ -130,7 +133,6 @@ function ask() {
 }
 h2 {
   margin: 0;
-  font-size: 18px;
 }
 .rows {
   display: flex;
@@ -146,7 +148,7 @@ h2 {
   justify-content: space-between;
   gap: 8px;
   padding: 10px 0;
-  border-bottom: 1px solid var(--color-line);
+  border-bottom: 1px solid var(--color-rule);
 }
 .actions {
   display: flex;

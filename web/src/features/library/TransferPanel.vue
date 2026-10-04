@@ -78,8 +78,6 @@ async function upload(ev: Event) {
 <style scoped>
 h2 {
   margin: 0;
-  font-family: var(--font-display);
-  font-size: 17px;
 }
 .hint {
   margin: 0;

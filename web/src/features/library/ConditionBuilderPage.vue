@@ -130,10 +130,6 @@ const parts = [
 h1,
 h2 {
   margin: 0;
-  font-family: var(--font-display);
-}
-h2 {
-  font-size: 17px;
 }
 .hint {
   margin: 0;
@@ -194,7 +190,7 @@ legend {
   align-items: end;
   gap: 8px 12px;
   padding: 10px 0;
-  border-top: 1px solid var(--color-line);
+  border-top: 1px solid var(--color-rule);
 }
 .small {
   max-width: 110px;

@@ -110,7 +110,6 @@ function after(message: string) {
 }
 h2 {
   margin: 0;
-  font-size: 18px;
 }
 p,
 ul {

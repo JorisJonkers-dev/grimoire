@@ -39,7 +39,10 @@ function send() {
 <template>
   <main class="g-page proposals">
     <RouterLink :to="{ name: 'campaign', params: { id } }" class="back">← Campaign</RouterLink>
-    <h1>Proposals</h1>
+    <header class="g-headline">
+      <span class="g-eyebrow">Campaign</span>
+      <h1>Proposals</h1>
+    </header>
     <p class="hint">Suggest Homebrew for this Campaign. The DM reviews it, may ask for changes, and approves it into the Campaign Collection.</p>
     <p v-if="proposals.isError.value" role="alert" class="g-alert" data-testid="proposals-error">The Proposals could not be opened.</p>
     <template v-else>
@@ -81,10 +84,6 @@ function send() {
 h1,
 h2 {
   margin: 0;
-  font-family: var(--font-display);
-}
-h2 {
-  font-size: 17px;
 }
 .hint {
   margin: 0;

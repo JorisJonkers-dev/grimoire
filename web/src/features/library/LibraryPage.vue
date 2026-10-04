@@ -4,7 +4,7 @@ import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { createLibraryEntryMutation, listLibraryEntriesOptions } from '@/infrastructure/api/@tanstack/vue-query.gen'
 import type { LibraryField, LibraryKind } from '@/infrastructure/api/types.gen'
-import { GButton, GField, GRow, GTabs } from '@/shared/ui'
+import { GButton, GField, GPageHead, GRow, GTabs } from '@/shared/ui'
 import CollectionsPanel from './CollectionsPanel.vue'
 import TransferPanel from './TransferPanel.vue'
 import FieldsEditor from './FieldsEditor.vue'
@@ -40,9 +40,11 @@ function add() {
 
 <template>
   <main class="g-page library">
-    <h1>Library</h1>
-    <RouterLink :to="{ name: 'shared-library' }" data-testid="shared-library-link">Browse the Shared Library</RouterLink>
-    <p class="hint">Build creatures, NPCs, places, shops, items, spells and tables once, then link them into any Campaign you run.</p>
+    <GPageHead eyebrow="Reusable in every Campaign you run" title="Library">
+      <RouterLink :to="{ name: 'shared-library' }" class="g-action" data-testid="shared-library-link">Browse the Shared Library</RouterLink>
+      <a href="#library-new" class="g-button-link g-button-link--primary">New entry</a>
+    </GPageHead>
+    <p class="g-lede">Build creatures, NPCs, places, shops, items, spells and tables once, then link them into any Campaign you run.</p>
     <p v-if="entries.isError.value" role="alert" class="g-alert" data-testid="library-error">Your Library could not be opened.</p>
     <template v-else>
       <GTabs v-model="shown" label="Kinds" :tabs="tabs" />
@@ -50,11 +52,11 @@ function add() {
       <ul class="g-list" data-testid="library-list">
         <li v-for="e in list" :key="e.id">
           <GRow :to="{ name: 'library-entry', params: { entryId: e.id } }" :title="e.name" :subtitle="`Revision ${String(e.revision)}`">
-            <template #trailing><span class="g-tag">{{ kindNames[e.kind] }}</span></template>
+            <template #trailing><span class="kind">{{ kindNames[e.kind] }}</span></template>
           </GRow>
         </li>
       </ul>
-      <form class="g-card stack" data-testid="library-create" @submit.prevent="add">
+      <form id="library-new" class="g-card stack" data-testid="library-create" @submit.prevent="add">
         <h2>New entry</h2>
         <label class="g-field">
           <span>Kind</span>
@@ -74,29 +76,18 @@ function add() {
 </template>
 
 <style scoped>
-.library {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-h1,
-h2 {
-  margin: 0;
-  font-family: var(--font-display);
-}
-h2 {
-  font-size: 17px;
-}
 .hint {
   margin: 0;
+  color: var(--color-text-3);
+}
+.kind {
+  font-size: 15px;
   color: var(--color-text-2);
 }
 .stack {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-}
-.g-list {
-  gap: 0;
+  gap: 12px;
+  max-width: 720px;
 }
 </style>

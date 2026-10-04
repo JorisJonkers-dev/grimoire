@@ -35,7 +35,10 @@ function rarityLine(r: GuideRarity): string {
 
 <template>
   <main class="g-page">
-    <h1>Guides</h1>
+    <header class="g-headline">
+      <span class="g-eyebrow">Compendium</span>
+      <h1>Guides</h1>
+    </header>
     <CompendiumTabs current="guides" />
     <nav class="rules" aria-label="Ruleset">
       <RouterLink :to="{ name: 'guides' }" :aria-current="ruleset === undefined ? 'page' : undefined">Newest</RouterLink>
@@ -133,7 +136,7 @@ table {
 th,
 td {
   padding: 6px 10px;
-  border-bottom: 1px solid var(--color-line);
+  border-bottom: 1px solid var(--color-rule);
   text-align: left;
   white-space: nowrap;
 }

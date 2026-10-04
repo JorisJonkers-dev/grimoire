@@ -16,7 +16,8 @@ const me = useQuery({ ...getMeOptions(), retry: false })
 <style scoped>
 .who {
   margin: 0;
-  color: var(--color-text-2);
+  font-size: 14px;
+  color: var(--color-text-3);
 }
 strong {
   color: var(--color-text);

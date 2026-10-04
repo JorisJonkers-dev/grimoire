@@ -144,7 +144,7 @@ function post() {
   width: 100%;
   padding: 8px;
   border: 1px solid var(--color-line);
-  border-radius: 8px;
+  border-radius: var(--radius-control);
   background: none;
   color: inherit;
   text-align: left;

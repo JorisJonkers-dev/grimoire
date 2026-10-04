@@ -89,7 +89,10 @@ function copyOne(cs: ClassSpells) {
 <template>
   <main class="g-page spells">
     <RouterLink :to="{ name: 'character', params: { id: ids.campaignId, characterId: ids.characterId } }" class="back">← Sheet</RouterLink>
-    <h1>Spells</h1>
+    <header class="g-headline">
+      <span class="g-eyebrow">Character</span>
+      <h1>Spells</h1>
+    </header>
     <p v-if="spells.isError.value" role="alert" class="g-alert" data-testid="spells-error">These spells could not be loaded.</p>
     <p v-else-if="!sc">Opening the spellbook…</p>
     <template v-else>
@@ -195,7 +198,7 @@ h3 {
 .chips li {
   padding: 4px 10px;
   border: 1px solid var(--color-line);
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-chip);
   background: var(--color-raised);
 }
 .chips small {

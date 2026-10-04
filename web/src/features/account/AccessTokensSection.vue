@@ -84,7 +84,6 @@ function remove(id: string) {
 }
 h2 {
   margin: 0;
-  font-size: 18px;
 }
 code {
   overflow-wrap: anywhere;
@@ -92,7 +91,7 @@ code {
 .fresh {
   padding: 8px 12px;
   border: 1px solid var(--color-gold);
-  border-radius: 8px;
+  border-radius: var(--radius-control);
 }
 .list {
   display: flex;
@@ -108,7 +107,7 @@ code {
   justify-content: space-between;
   gap: 12px;
   padding: 8px 0;
-  border-bottom: 1px solid var(--color-line);
+  border-bottom: 1px solid var(--color-rule);
 }
 .meta {
   color: var(--color-text-3);
@@ -121,6 +120,6 @@ code {
   margin: 0;
   padding: 8px 12px;
   border: 1px solid var(--color-line);
-  border-radius: 8px;
+  border-radius: var(--radius-control);
 }
 </style>

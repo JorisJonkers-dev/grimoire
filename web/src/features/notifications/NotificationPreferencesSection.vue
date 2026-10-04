@@ -47,7 +47,6 @@ watch(prefs.data, (d) => {
 }
 h2 {
   margin: 0;
-  font-size: 18px;
 }
 table {
   width: 100%;
@@ -56,7 +55,7 @@ table {
 th,
 td {
   padding: 6px 4px;
-  border-bottom: 1px solid var(--color-line);
+  border-bottom: 1px solid var(--color-rule);
   text-align: center;
 }
 tbody th,

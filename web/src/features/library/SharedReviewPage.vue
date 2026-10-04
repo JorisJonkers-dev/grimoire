@@ -25,7 +25,10 @@ function decide(id: string, decision: 'approve' | 'decline') {
 <template>
   <main class="g-page review">
     <RouterLink :to="{ name: 'admin' }" class="back">← Admin</RouterLink>
-    <h1>Shared Library requests</h1>
+    <header class="g-headline">
+      <span class="g-eyebrow">Admin</span>
+      <h1>Shared Library requests</h1>
+    </header>
     <p v-if="requests.isError.value" role="alert" class="g-alert" data-testid="shared-review-forbidden">Only an Admin with two-step sign-in can review the Shared Library.</p>
     <template v-else>
       <p v-if="review.error.value" role="alert" class="g-alert" data-testid="shared-review-problem">{{ review.error.value.detail ?? 'That review was not saved.' }}</p>
@@ -71,10 +74,6 @@ function decide(id: string, decision: 'approve' | 'decline') {
 h1,
 h2 {
   margin: 0;
-  font-family: var(--font-display);
-}
-h2 {
-  font-size: 17px;
 }
 .hint {
   margin: 0;

@@ -38,25 +38,56 @@ afterEach(() => {
 })
 
 describe('the Dashboard', () => {
-  it('lists the Sessions under way with a way in, and what needs me with where to deal with it', async () => {
-    const { wrapper } = await mountApp('/', { '/api/v1/dashboard': () => busy })
+  it('greets me, counts what needs me, and lists the Sessions under way with a way in', async () => {
+    const who = { id: '0190c7a8-0000-7000-8000-0000000000c1', username: 'aria', nickname: 'Aria', email: 'aria@example.com', admin: false, hasPassword: true, twoStep: false, recoveryCodesLeft: 0, adminPowers: false }
+    const mine = { items: [
+      { id: CID, name: 'Morvain', ruleset: 'srd-2024', myRole: 'dm', memberCount: 3, createdAt: '2026-09-30T20:00:00Z' },
+      { id: CID2, name: 'Fire Reach', ruleset: 'srd-2024', myRole: 'player', memberCount: 4, createdAt: '2026-09-30T20:00:00Z' },
+    ] }
+    const { wrapper } = await mountApp('/', { '/api/v1/dashboard': () => busy, '/api/v1/account': () => who, '/api/v1/campaigns': () => mine })
+    expect(wrapper.get('[data-testid="greeting"]').text()).toMatch(/^Good (morning|afternoon|evening), Aria\.$/)
+    expect(wrapper.get('h1').text()).toBe('Three things need you')
     const live = wrapper.findAll('[data-testid="live-session"]')
-    expect(live.map((li) => li.text())).toEqual(['Morvain · Session 3 · you are the DM Join', 'Fire Reach · Session 12 Join'])
-    expect(live.map((li) => li.get('a').attributes('href'))).toEqual([`/campaigns/${CID}/sessions/${SID}`, `/campaigns/${CID2}/sessions/${SID2}`])
-    expect(live.map((li) => li.get('a').attributes('aria-label'))).toEqual(['Join Session 3 of Morvain', 'Join Session 12 of Fire Reach'])
+    expect(live.map((row) => row.text())).toEqual(['Morvain is playing now · Session 3 · you are the DMJoin', 'Fire Reach is playing now · Session 12Join'])
+    expect(live.map((row) => row.get('a').attributes('href'))).toEqual([`/campaigns/${CID}/sessions/${SID}`, `/campaigns/${CID2}/sessions/${SID2}`])
+    expect(live.map((row) => row.get('a').attributes('aria-label'))).toEqual(['Join Session 3 of Morvain', 'Join Session 12 of Fire Reach'])
+    // Each thing that needs me: what it is, the word for dealing with it, and where it belongs.
     const needs = wrapper.findAll('[data-testid="need"]')
-    expect(needs.map((li) => li.text())).toEqual(['Kara can level up · Fire Reach', '2 Proposals to review · Morvain', '1 Friend Request to answer'])
-    expect(needs.map((li) => li.get('a').attributes('href'))).toEqual([`/campaigns/${CID2}/characters/x/level-up`, `/campaigns/${CID}/proposals`, '/friends'])
+    expect(needs.map((row) => row.findAll('span').map((part) => part.text()))).toEqual([
+      ['Kara can level up', 'Fire Reach · Advancement'], ['2 Proposals to review', 'Morvain · Proposal'], ['1 Friend Request to answer', 'Friends'],
+    ])
+    expect(needs.map((row) => row.get('a').text())).toEqual(['Level up', 'Review', 'Answer'])
+    expect(needs.map((row) => row.get('a').attributes('href'))).toEqual([`/campaigns/${CID2}/characters/x/level-up`, `/campaigns/${CID}/proposals`, '/friends'])
+    expect(needs.map((row) => row.get('a').attributes('aria-label'))).toEqual(['Level up: Kara can level up', 'Review: 2 Proposals to review', 'Answer: 1 Friend Request to answer'])
     expect(wrapper.find('[data-testid="nothing-needed"]').exists()).toBe(false)
+    // My Campaigns stand at the side, each with what I am in it.
+    const campaigns = wrapper.findAll('[data-testid="dash-campaign"]')
+    expect(campaigns.map((c) => c.findAll('span').map((part) => part.text()))).toEqual([['Morvain', 'Dungeon Master'], ['Fire Reach', 'Player']])
+    expect(campaigns.map((c) => c.attributes('href'))).toEqual([`/campaigns/${CID}`, `/campaigns/${CID2}`])
+    expect(wrapper.get('[data-testid="dash-new-campaign"]').text()).toBe('All Campaigns')
     await expectAccessible(wrapper.element as Element)
   })
 
   it('says so when nothing is under way and nothing needs me', async () => {
-    const { wrapper } = await mountApp('/', { '/api/v1/dashboard': () => quiet })
+    const { wrapper } = await mountApp('/', { '/api/v1/dashboard': () => quiet, '/api/v1/campaigns': () => ({ items: [] }) })
     expect(wrapper.find('[data-testid="dashboard"]').exists()).toBe(true)
+    expect(wrapper.get('[data-testid="greeting"]').text()).toMatch(/^Good (morning|afternoon|evening)\.$/)
+    expect(wrapper.get('h1').text()).toBe('Nothing needs you')
     expect(wrapper.find('[data-testid="live-sessions"]').exists()).toBe(false)
     expect(wrapper.find('[data-testid="live-session"]').exists()).toBe(false)
     expect(wrapper.get('[data-testid="nothing-needed"]').text()).toBe('Nothing needs you before the next Session.')
+    // With no Campaign yet, the side offers to start one.
+    expect(wrapper.find('[data-testid="dash-campaign"]').exists()).toBe(false)
+    expect(wrapper.get('[data-testid="dash-new-campaign"]').text()).toBe('New Campaign')
+    expect(wrapper.get('[data-testid="dash-new-campaign"]').attributes('href')).toBe('/campaigns')
+  })
+
+  it('counts one thing as one thing, and more than nine in figures', async () => {
+    const one = await mountApp('/', { '/api/v1/dashboard': () => ({ live: [], needs: busy.needs.slice(0, 1) }) })
+    expect(one.wrapper.get('h1').text()).toBe('One thing needs you')
+    unmountAll()
+    const many = await mountApp('/', { '/api/v1/dashboard': () => ({ live: [], needs: Array.from({ length: 11 }, () => busy.needs[0]) }) })
+    expect(many.wrapper.get('h1').text()).toBe('11 things need you')
   })
 
   it('shows nothing of it to somebody signed out', async () => {

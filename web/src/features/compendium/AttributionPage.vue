@@ -6,8 +6,11 @@ const sources = useQuery({ ...listSourcesOptions(), retry: false })
 </script>
 
 <template>
-  <main class="attribution">
-    <h1>Attribution</h1>
+  <main class="g-page attribution">
+    <header class="g-headline">
+      <span class="g-eyebrow">About</span>
+      <h1>Attribution</h1>
+    </header>
     <p>
       Grimoire is created by <a href="https://jorisjonkers.dev">Joris Jonkers</a> and licensed under the
       Attribution Assurance License.
@@ -27,10 +30,6 @@ const sources = useQuery({ ...listSourcesOptions(), retry: false })
   padding: 24px var(--gutter);
   box-sizing: border-box;
   width: 100%;
-}
-h1,
-h2 {
-  font-family: var(--font-display);
 }
 a {
   color: var(--color-gold-high);

@@ -42,7 +42,10 @@ const count = computed(() => {
 
 <template>
   <main class="g-page">
-    <h1>Search</h1>
+    <header class="g-headline">
+      <span class="g-eyebrow">Everywhere</span>
+      <h1>Search</h1>
+    </header>
     <label class="g-field">
       <span>Search the compendium, your Library, your Campaigns and your Friends</span>
       <input ref="box" v-model="typed" type="search" maxlength="80" autocomplete="off" aria-keyshortcuts="/" data-testid="search-input" />

@@ -48,7 +48,10 @@ function drop(s: DiceSet) {
 
 <template>
   <main class="g-page">
-    <h1>Dice Sets</h1>
+    <header class="g-headline">
+      <span class="g-eyebrow">Your dice</span>
+      <h1>Dice Sets</h1>
+    </header>
     <p v-if="noAccount" role="alert" class="g-alert" data-testid="dice-sets-no-account">Dice Sets need a Grimoire Account; sign in with one first.</p>
     <p v-else-if="mine.isError.value" role="alert" class="g-alert">Your Dice Sets could not be read.</p>
     <template v-else-if="mine.data.value">
@@ -114,7 +117,6 @@ function drop(s: DiceSet) {
 }
 h2 {
   margin: 0;
-  font-size: 18px;
 }
 .rows {
   display: flex;
@@ -130,7 +132,7 @@ h2 {
   justify-content: space-between;
   gap: 8px;
   padding: 10px 0;
-  border-bottom: 1px solid var(--color-line);
+  border-bottom: 1px solid var(--color-rule);
 }
 .pick {
   display: flex;

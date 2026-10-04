@@ -53,7 +53,10 @@ function updated(r: RollRequest) {
 <template>
   <main class="g-page">
     <RouterLink :to="{ name: 'campaign', params: { id } }" class="back">← Campaign</RouterLink>
-    <h1>Dice</h1>
+    <header class="g-headline">
+      <span class="g-eyebrow">Campaign</span>
+      <h1>Dice</h1>
+    </header>
     <p v-if="campaign.isError.value" role="alert" class="g-alert" data-testid="dice-missing">This campaign does not exist, or you are not one of its members.</p>
     <template v-else>
       <form class="g-card build" data-testid="roll-form" @submit.prevent="request">
@@ -156,8 +159,6 @@ function updated(r: RollRequest) {
 }
 h2 {
   margin: 0 0 8px;
-  font-family: var(--font-display);
-  font-size: 17px;
 }
 .past {
   display: flex;

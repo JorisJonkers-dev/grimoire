@@ -7,8 +7,11 @@ const coverage = useQuery(getAutomationCoverageOptions())
 </script>
 
 <template>
-  <main class="automation">
-    <h1>Automation coverage</h1>
+  <main class="g-page automation">
+    <header class="g-headline">
+      <span class="g-eyebrow">About</span>
+      <h1>Automation coverage</h1>
+    </header>
     <p>
       How much of each kind of entry the rules compute. Anything not yet automated is resolved by the DM from a prompt at the
       table.
@@ -46,9 +49,6 @@ const coverage = useQuery(getAutomationCoverageOptions())
   padding: 24px var(--gutter);
   box-sizing: border-box;
 }
-h1 {
-  font-family: var(--font-display);
-}
 /* A table wider than a phone scrolls on its own, not the page. */
 .scroll {
   overflow-x: auto;
@@ -60,7 +60,7 @@ table {
 th,
 td {
   padding: 8px 6px;
-  border-bottom: 1px solid var(--color-line);
+  border-bottom: 1px solid var(--color-rule);
   text-align: right;
 }
 th[scope='row'],

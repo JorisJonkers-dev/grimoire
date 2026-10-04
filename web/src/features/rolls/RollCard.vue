@@ -176,8 +176,6 @@ function rest() {
 }
 h2 {
   margin: 0;
-  font-family: var(--font-display);
-  font-size: 19px;
 }
 .who {
   margin: 2px 0 0;

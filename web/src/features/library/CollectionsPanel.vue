@@ -92,8 +92,6 @@ const count = (c: LibraryCollection) => `${String(c.entryIds.length)} ${c.entryI
 <style scoped>
 h2 {
   margin: 0;
-  font-family: var(--font-display);
-  font-size: 17px;
 }
 .hint {
   margin: 0;

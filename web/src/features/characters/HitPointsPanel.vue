@@ -61,7 +61,7 @@ strong {
 }
 .bar {
   height: 8px;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-chip);
   background: var(--color-raised);
   overflow: hidden;
 }

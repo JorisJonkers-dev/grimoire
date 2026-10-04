@@ -92,7 +92,10 @@ function logLine(c: EncounterCheck): string {
 <template>
   <main class="g-page encounters">
     <RouterLink :to="{ name: 'campaign', params: { id: campaignId } }" class="back">← Campaign</RouterLink>
-    <h1>Random encounters</h1>
+    <header class="g-headline">
+      <span class="g-eyebrow">Campaign prep</span>
+      <h1>Random encounters</h1>
+    </header>
     <p v-if="pools.isError.value" role="alert" class="g-alert" data-testid="encounters-refused">Only the DM can prepare encounters.</p>
     <template v-else>
       <p v-if="failed" role="alert" class="g-alert" data-testid="prep-error">{{ failed }}</p>
@@ -170,7 +173,6 @@ function logLine(c: EncounterCheck): string {
 }
 h2 {
   margin: 0;
-  font-size: 18px;
 }
 p {
   margin: 0;

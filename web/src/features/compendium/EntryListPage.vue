@@ -4,7 +4,7 @@ import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { listEntriesInfiniteOptions } from '@/infrastructure/api/@tanstack/vue-query.gen'
 import type { EntryPage, ListEntriesData, Ruleset } from '@/infrastructure/api/types.gen'
-import { GButton, GField, GRow } from '@/shared/ui'
+import { GButton, GField, GPageHead, GRow } from '@/shared/ui'
 import CompendiumTabs from './CompendiumTabs.vue'
 import { isEntryKind, kindLabel } from './kinds'
 
@@ -46,10 +46,10 @@ const items = computed(() => entries.data.value?.pages.flatMap((p) => p.items) ?
 
 <template>
   <main class="g-page">
+    <GPageHead eyebrow="Compendium" :title="(known && kindLabel(kind)) || 'Compendium'" />
     <CompendiumTabs :current="kind" />
     <p v-if="!known" role="alert" data-testid="entry-kind-missing">There is no such section in this grimoire.</p>
     <template v-else>
-      <h1>{{ kindLabel(kind) }}</h1>
       <form class="filters" role="search" @submit.prevent>
         <GField v-model="search" type="search" label="Search by name" data-testid="entry-search" />
         <label class="g-field">
@@ -74,7 +74,7 @@ const items = computed(() => entries.data.value?.pages.flatMap((p) => p.items) ?
               :data-testid="`entry-${entry.slug}`"
             >
               <template #trailing>
-                <span class="g-tag">{{ entry.ruleset === 'srd-2024' ? '2024' : '2014' }}</span>
+                <span class="rules">{{ entry.ruleset === 'srd-2024' ? '2024' : '2014' }}</span>
               </template>
             </GRow>
           </li>
@@ -90,11 +90,12 @@ const items = computed(() => entries.data.value?.pages.flatMap((p) => p.items) ?
 <style scoped>
 .filters {
   display: grid;
-  grid-template-columns: 1fr minmax(140px, auto);
+  grid-template-columns: 1fr minmax(160px, auto);
   gap: 10px;
   align-items: start;
 }
-.rows {
-  gap: 0;
+.rules {
+  font-size: 13px;
+  color: var(--color-text-3);
 }
 </style>

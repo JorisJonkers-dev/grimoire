@@ -30,7 +30,10 @@ function submit() {
 
 <template>
   <main class="g-page">
-    <h1>Campaigns</h1>
+    <header class="g-headline">
+      <span class="g-eyebrow">Your tables</span>
+      <h1>Campaigns</h1>
+    </header>
     <p v-if="campaigns.isPending.value">Gathering your tables…</p>
     <p v-else-if="campaigns.isError.value" role="alert" class="g-alert">Your campaigns could not be loaded. Try again shortly.</p>
     <template v-else>
@@ -39,7 +42,7 @@ function submit() {
         <li v-for="c in items" :key="c.id">
           <GRow :to="{ name: 'campaign', params: { id: c.id } }" :title="c.name" :subtitle="`${c.memberCount} ${c.memberCount === 1 ? 'member' : 'members'}`">
             <template #leading><GAvatar :name="c.name" /></template>
-            <template #trailing><span class="g-tag">{{ c.myRole === 'dm' ? 'DM' : 'Player' }}</span></template>
+            <template #trailing><span :class="['g-role', { 'g-role--dm': c.myRole === 'dm' }]">{{ c.myRole === 'dm' ? 'Dungeon Master' : 'Player' }}</span></template>
           </GRow>
         </li>
       </ul>
@@ -59,17 +62,10 @@ function submit() {
 </template>
 
 <style scoped>
-.g-list {
-  gap: 0;
-}
 .create {
   display: flex;
   flex-direction: column;
   gap: 12px;
-}
-.create h2 {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: 18px;
+  max-width: 560px;
 }
 </style>

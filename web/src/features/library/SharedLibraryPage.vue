@@ -16,7 +16,10 @@ const list = computed(() => (shared.data.value ?? []).filter((e) => shown.value 
 <template>
   <main class="g-page shared">
     <RouterLink :to="{ name: 'library' }" class="back">← Library</RouterLink>
-    <h1>Shared Library</h1>
+    <header class="g-headline">
+      <span class="g-eyebrow">Homebrew</span>
+      <h1>Shared Library</h1>
+    </header>
     <p class="hint">Entries other DMs shared, checked by an Admin to hold no non-SRD text. Open one to link it into a Campaign you run; it stays read-only.</p>
     <p v-if="shared.isError.value" role="alert" class="g-alert" data-testid="shared-error">The Shared Library could not be opened.</p>
     <template v-else>
@@ -42,7 +45,6 @@ const list = computed(() => (shared.data.value ?? []).filter((e) => shown.value 
 }
 h1 {
   margin: 0;
-  font-family: var(--font-display);
 }
 .hint {
   margin: 0;

@@ -110,8 +110,6 @@ function save() {
 }
 h2 {
   margin: 0;
-  font-family: var(--font-display);
-  font-size: 17px;
 }
 fieldset {
   display: flex;

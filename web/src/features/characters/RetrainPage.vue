@@ -92,7 +92,10 @@ const when = (iso: string) => new Date(iso).toLocaleDateString()
 <template>
   <main class="g-page retrain">
     <RouterLink :to="{ name: 'character', params: { id: ids.campaignId, characterId: ids.characterId } }" class="back">← Sheet</RouterLink>
-    <h1>Retrain</h1>
+    <header class="g-headline">
+      <span class="g-eyebrow">Character</span>
+      <h1>Retrain</h1>
+    </header>
     <p v-if="sheet.isError.value || choices.isError.value" role="alert" class="g-alert" data-testid="retrain-error">Only the Character's player can retrain it.</p>
     <p v-else-if="!s || !options.data.value || !choices.data.value">Gathering the build…</p>
     <template v-else>
@@ -183,10 +186,6 @@ const when = (iso: string) => new Date(iso).toLocaleDateString()
 h1,
 h2 {
   margin: 0;
-  font-family: var(--font-display);
-}
-h2 {
-  font-size: 17px;
 }
 .hint {
   margin: 0;

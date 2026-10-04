@@ -26,7 +26,10 @@ function send() {
 
 <template>
   <main class="g-page">
-    <h1>Admin</h1>
+    <header class="g-headline">
+      <span class="g-eyebrow">Grimoire</span>
+      <h1>Admin</h1>
+    </header>
     <RouterLink :to="{ name: 'admin-shared' }" data-testid="admin-shared-link">Shared Library requests</RouterLink>
     <RouterLink :to="{ name: 'admin-dice' }" data-testid="admin-dice-link">Dice Set pictures</RouterLink>
     <p v-if="forbidden" role="alert" class="g-alert" data-testid="admin-forbidden">
@@ -99,7 +102,6 @@ function send() {
 }
 h2 {
   margin: 0;
-  font-size: 18px;
 }
 .search {
   min-width: min(100%, 260px);
@@ -118,7 +120,7 @@ h2 {
   justify-content: space-between;
   gap: 8px;
   padding: 10px 0;
-  border-bottom: 1px solid var(--color-line);
+  border-bottom: 1px solid var(--color-rule);
 }
 .who {
   color: inherit;

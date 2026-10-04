@@ -172,24 +172,34 @@ const expires = (iso: string) => new Date(iso).toLocaleDateString(undefined, { d
 
 <template>
   <main class="g-page">
-    <RouterLink :to="{ name: 'campaigns' }" class="back">← Campaigns</RouterLink>
+    <nav aria-label="Breadcrumb" class="g-crumbs">
+      <RouterLink :to="{ name: 'campaigns' }" class="back">Campaigns</RouterLink> <span aria-hidden="true">›</span>
+      <span aria-current="page">{{ campaign.data.value?.name ?? 'Campaign' }}</span>
+    </nav>
     <p v-if="campaign.isPending.value">Opening the campaign…</p>
     <p v-else-if="campaign.isError.value" role="alert" class="g-alert" data-testid="campaign-missing">
       This campaign does not exist, or you are not one of its members.
     </p>
     <template v-else-if="campaign.data.value">
-      <header>
-        <h1>{{ campaign.data.value.name }}</h1>
-        <p class="sub">
-          SRD 5.2 · you are
-          {{ isDM ? 'a DM' : 'a Player' }}
-        </p>
+      <header class="g-detail-head">
+        <div>
+          <span class="g-eyebrow">{{ isDM ? 'Dungeon Master' : 'Player' }}</span>
+          <h1>{{ campaign.data.value.name }}</h1>
+          <p class="g-meta sub">
+            SRD 5.2 · you are
+            {{ isDM ? 'a DM' : 'a Player' }}
+            <span>{{ campaign.data.value.members.length }} {{ campaign.data.value.members.length === 1 ? 'member' : 'members' }}</span>
+          </p>
+        </div>
+        <div class="g-acts">
+          <GButton v-if="isDM" variant="primary" data-testid="start-session" @click="startSession()">Start a session</GButton>
+        </div>
       </header>
       <p v-if="failed" role="alert" class="g-alert" data-testid="campaign-error">{{ failed }}</p>
       <ul v-if="rules.length" class="g-card rules" aria-label="How this table plays" data-testid="table-rules">
         <li v-for="rule in rules" :key="rule">{{ rule }}</li>
       </ul>
-      <nav class="prep" aria-label="Campaign tools">
+      <nav class="g-tabsnav prep" aria-label="Campaign tools">
         <RouterLink :to="{ name: 'dice', params: { id } }" data-testid="dice-link">Dice</RouterLink>
         <RouterLink :to="{ name: 'proposals', params: { id } }" data-testid="proposals-link">Proposals</RouterLink>
         <RouterLink v-if="isDM" :to="{ name: 'npcs', params: { id } }" data-testid="npcs-link">NPCs</RouterLink>
@@ -216,8 +226,7 @@ const expires = (iso: string) => new Date(iso).toLocaleDateString(undefined, { d
             <RouterLink :to="{ name: 'table', params: { id, sid: s.id } }">Table display</RouterLink>
           </li>
         </ul>
-        <p v-if="liveSessions.length === 0" class="hint">No session is running.</p>
-        <GButton v-if="isDM" variant="primary" data-testid="start-session" @click="startSession()">Start a session</GButton>
+        <p v-if="liveSessions.length === 0" class="g-hint hint">No session is running.</p>
       </section>
 
       <section class="g-card" data-testid="party">
@@ -234,7 +243,7 @@ const expires = (iso: string) => new Date(iso).toLocaleDateString(undefined, { d
             </RouterLink>
           </li>
         </ul>
-        <RouterLink :to="{ name: 'character-new', params: { id } }" class="build" data-testid="build-character">Build a character</RouterLink>
+        <RouterLink :to="{ name: 'character-new', params: { id } }" class="g-button-link build" data-testid="build-character">Build a character</RouterLink>
       </section>
 
       <CompanionsSection :campaign-id="id" :dm="isDM" :members="campaign.data.value.members" />
@@ -246,7 +255,7 @@ const expires = (iso: string) => new Date(iso).toLocaleDateString(undefined, { d
             <span class="who">
               {{ m.displayName }}<template v-if="m.isMe"> (you)</template>
             </span>
-            <span class="g-tag">{{ m.role === 'dm' ? 'DM' : 'Player' }}</span>
+            <span :class="['g-role', { 'g-role--dm': m.role === 'dm' }]">{{ m.role === 'dm' ? 'DM' : 'Player' }}</span>
             <span v-if="isDM" class="actions">
               <GButton v-if="m.role === 'player'" @click="changeRole(m, 'dm')">Make co-DM</GButton>
               <GButton v-else @click="changeRole(m, 'player')">Make Player</GButton>
@@ -349,9 +358,12 @@ const expires = (iso: string) => new Date(iso).toLocaleDateString(undefined, { d
 </template>
 
 <style scoped>
+.g-page {
+  padding-top: 40px;
+}
 .rules {
   margin: 0;
-  padding-left: 32px;
+  padding: 16px 0 0 20px;
   color: var(--color-text-2);
 }
 .methods {
@@ -362,32 +374,16 @@ const expires = (iso: string) => new Date(iso).toLocaleDateString(undefined, { d
   padding: 0;
   border: 0;
 }
-.back {
-  color: var(--color-gold-high);
-}
-.sub {
-  margin: 4px 0 0;
-  font-family: var(--font-flavour);
-  font-style: italic;
-  color: var(--color-text-2);
-}
-h2 {
-  margin: 0 0 10px;
-  font-family: var(--font-display);
-  font-size: 18px;
-}
 section {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 .member {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-  padding: 6px 0;
-  border-bottom: 1px solid var(--color-line);
+  gap: 8px 16px;
 }
 .who {
   flex: 1 1 140px;
@@ -403,40 +399,23 @@ section {
   align-items: end;
   gap: 8px;
 }
-.prep {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0 16px;
-}
-.prep a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  color: var(--color-gold-high);
-}
 .character {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px 10px;
+  gap: 4px 12px;
   min-height: 44px;
   color: var(--color-text);
   text-decoration: none;
 }
-.hint {
-  color: var(--color-text-2);
-  font-size: 14px;
+.character .who {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 17px;
 }
-.build {
-  display: inline-flex;
-  align-items: center;
-  align-self: flex-start;
-  min-height: 44px;
-  padding: 0 16px;
-  border: 1px solid var(--color-gold);
-  border-radius: var(--radius-md);
-  color: var(--color-gold-high);
-  text-decoration: none;
+.hint {
+  color: var(--color-text-3);
+  font-size: 14px;
 }
 .link .g-field {
   flex: 1 1 240px;
@@ -445,7 +424,7 @@ section {
 .check {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   min-height: 44px;
 }
 .inspired {

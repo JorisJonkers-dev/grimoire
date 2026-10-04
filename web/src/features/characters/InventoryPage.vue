@@ -268,10 +268,6 @@ const key = (c: ItemCard) => c.instanceId ?? c.slug
 h1,
 h2 {
   margin: 0;
-  font-family: var(--font-display);
-}
-h2 {
-  font-size: 17px;
 }
 .hint,
 .label,
@@ -289,7 +285,7 @@ h2 {
 }
 .bar {
   height: 8px;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-chip);
   background: var(--color-raised);
   overflow: hidden;
 }

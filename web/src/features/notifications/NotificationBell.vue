@@ -93,7 +93,7 @@ function act(n: NotificationEntry) {
   height: 16px;
   padding: 0 4px;
   box-sizing: border-box;
-  border-radius: 8px;
+  border-radius: var(--radius-control);
   background: var(--color-badge);
   color: var(--color-badge-text);
   font-size: 10px;
@@ -128,7 +128,7 @@ ul {
 }
 li {
   padding: 8px 0;
-  border-top: 1px solid var(--color-line);
+  border-top: 1px solid var(--color-rule);
 }
 li.unread .title {
   color: var(--color-gold-high);
