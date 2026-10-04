@@ -192,3 +192,73 @@ func TestRateLimiterKeysAnonymousByTheClientBehindTrustedProxies(t *testing.T) {
 		t.Fatalf("a signed-in caller: %d %d", a.Code, b.Code)
 	}
 }
+
+// with makes an anonymous request from a peer with several X-Forwarded-For header lines.
+func with(h http.Handler, peer string, lines ...string) int {
+	r := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/api", nil)
+	r.RemoteAddr = peer
+	for _, line := range lines {
+		r.Header.Add("X-Forwarded-For", line)
+	}
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, r)
+	return rec.Code
+}
+
+// A proxy may add a header line of its own instead of appending to the caller's: the lines read as
+// one list, so the caller's own line never stands in for what the proxy saw.
+func TestRateLimiterReadsEveryForwardedLine(t *testing.T) {
+	t.Parallel()
+	const proxy, busy = "10.0.0.1:443", http.StatusTooManyRequests
+	one := (&httpx.RateLimiter{Limit: 1, Window: time.Minute, Now: time.Now, ProxyHops: 1}).Wrap(ok)
+	if got := with(one, proxy, "203.0.113.7"); got != 200 {
+		t.Fatalf("first: %d", got)
+	}
+	for _, forged := range []string{"1.1.1.1", "2.2.2.2", "3.3.3.3, 4.4.4.4"} {
+		if got := with(one, proxy, forged, "203.0.113.7"); got != busy {
+			t.Fatalf("a line of the caller's own (%q) before the proxy's: %d", forged, got)
+		}
+	}
+	two := (&httpx.RateLimiter{Limit: 1, Window: time.Minute, Now: time.Now, ProxyHops: 2}).Wrap(ok)
+	if a, b := with(two, proxy, "9.9.9.9", "203.0.113.7", "172.16.0.1"), with(two, proxy, "8.8.8.8, 203.0.113.7", "172.16.0.2"); a != 200 || b != busy {
+		t.Fatalf("two proxies, a line each: %d %d", a, b)
+	}
+}
+
+// Whoever holds an IPv6 network holds every address in it: they are one caller, by their /64. An IPv4
+// address written the IPv6 way is the IPv4 caller it is.
+func TestRateLimiterKeysIPv6ByNetwork(t *testing.T) {
+	t.Parallel()
+	const proxy, busy = "10.0.0.1:443", http.StatusTooManyRequests
+	one := (&httpx.RateLimiter{Limit: 1, Window: time.Minute, Now: time.Now, ProxyHops: 1}).Wrap(ok)
+	if got := from(one, proxy, "2001:db8:aa:bb::1"); got != 200 {
+		t.Fatalf("first: %d", got)
+	}
+	for _, same := range []string{"2001:db8:aa:bb::2", "2001:db8:aa:bb:ffff:ffff:ffff:ffff", "2001:DB8:AA:BB:1:2:3:4"} {
+		if got := from(one, proxy, same); got != busy {
+			t.Fatalf("%s is the same network: %d", same, got)
+		}
+	}
+	if got := from(one, proxy, "2001:db8:aa:bc::1"); got != 200 {
+		t.Fatalf("the network next door: %d", got)
+	}
+	if a, b := from(one, proxy, "192.0.2.44"), from(one, proxy, "::ffff:192.0.2.44"); a != 200 || b != busy {
+		t.Fatalf("an IPv4 caller written both ways: %d %d", a, b)
+	}
+	if got := from(one, proxy, "192.0.2.45"); got != 200 {
+		t.Fatalf("IPv4 callers stay apart by address: %d", got)
+	}
+
+	// With no proxy the peer is keyed the same way.
+	none := (&httpx.RateLimiter{Limit: 1, Window: time.Minute, Now: time.Now}).Wrap(ok)
+	if a, b, c := from(none, "[2001:db8:1:2::a]:5000", ""), from(none, "[2001:db8:1:2::b]:5001", ""), from(none, "[2001:db8:1:3::a]:5000", ""); a != 200 || b != busy || c != 200 {
+		t.Fatalf("IPv6 peers: %d %d %d", a, b, c)
+	}
+	// A zone names the interface the address was seen on, not another caller.
+	if a, b, c := from(none, "[fe80::1%eth0]:1", ""), from(none, "[fe80::2%eth1]:1", ""), from(none, "[fe80:0:0:1::1%eth0]:1", ""); a != 200 || b != busy || c != 200 {
+		t.Fatalf("zoned peers: %d %d %d", a, b, c)
+	}
+	if a, b := from(none, "192.0.2.1:1", ""), from(none, "[::ffff:192.0.2.1]:2", ""); a != 200 || b != busy {
+		t.Fatalf("an IPv4 peer written both ways: %d %d", a, b)
+	}
+}

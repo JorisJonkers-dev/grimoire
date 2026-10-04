@@ -107,14 +107,32 @@ func (l *RateLimiter) key(r *http.Request) string {
 	if id := r.Header.Get(IdentityHeader); id != "" {
 		return "id:" + id
 	}
-	if client, ok := forwardedClient(r.Header.Get("X-Forwarded-For"), l.ProxyHops); ok {
+	// A proxy may append to the caller's header line or add one of its own: every line is read, in order.
+	if client, ok := forwardedClient(strings.Join(r.Header.Values("X-Forwarded-For"), ","), l.ProxyHops); ok {
 		return "ip:" + client
 	}
 	host, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {
 		host = r.RemoteAddr
 	}
+	if addr, err := netip.ParseAddr(host); err == nil {
+		host = network(addr)
+	}
 	return "ip:" + host
+}
+
+// callerBits is how much of an IPv6 address names the caller's network: the rest is theirs to choose.
+const callerBits = 64
+
+// network is the caller an address stands for: an IPv4 address is one caller, an IPv6 address one of
+// the many its holder can use, so its /64 is. An IPv4 address written as IPv6 is the IPv4 caller.
+func network(addr netip.Addr) string {
+	addr = addr.Unmap()
+	if addr.Is4() {
+		return addr.String()
+	}
+	prefix, _ := addr.Prefix(callerBits)
+	return prefix.String()
 }
 
 // forwardedClient is the address the outermost of hops trusted proxies saw its caller at: each proxy
@@ -130,5 +148,5 @@ func forwardedClient(header string, hops int) (string, bool) {
 	if err != nil {
 		return "", false
 	}
-	return addr.String(), true
+	return network(addr), true
 }
