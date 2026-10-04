@@ -28,6 +28,8 @@ const dieState = (d: RollDie) =>
   d.no in tumbling.value ? 'rolling' : d.value === undefined ? 'idle' : props.roll.groups[d.group]?.keep ? (d.kept ? 'kept' : 'dropped') : 'idle'
 const shown = (d: RollDie) => tumbling.value[d.no] ?? d.value ?? null
 const resolved = computed(() => props.roll.status === 'resolved')
+// A karmic d20 says what it let go, so nobody has to wonder what the dice did.
+const karmic = computed(() => props.roll.dice.filter((d) => d.karmicDropped !== undefined))
 // A natural 20 or 1 on the d20 that counts is celebrated once the roll is in.
 const natural = computed(() => (resolved.value ? criticalOf(shownOf(props.roll)) : null))
 /** The face typed for a die, when it is one the die has. */
@@ -149,6 +151,9 @@ function rest() {
     <ul v-else class="breakdown" aria-label="Modifiers">
       <li v-for="m in roll.modifiers" :key="m.label"><span>{{ m.label }}</span><span v-if="m.value !== 0">{{ signed(m.value) }}</span></li>
     </ul>
+    <p v-for="d in karmic" :key="d.no" class="who" data-testid="karmic-note">
+      Karmic dice: the app rolled {{ d.value }} and {{ d.karmicDropped }} and kept the {{ d.value }}.
+    </p>
     <p v-if="natural" class="natural" data-testid="roll-natural">{{ natural === 'hit' ? 'Natural 20!' : 'Natural 1' }}</p>
     <p v-if="roll.status === 'resolved'" class="total" data-testid="roll-total">
       Total <strong>{{ roll.total }}</strong>

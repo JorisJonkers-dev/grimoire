@@ -62,7 +62,7 @@ func (q *Queries) CountDMs(ctx context.Context, campaignID uuid.UUID) (int32, er
 const createCampaign = `-- name: CreateCampaign :one
 INSERT INTO campaign.campaigns (name, ruleset_pref, created_by, created_at, updated_at)
 VALUES ($1, $2, $3, $4, $4)
-RETURNING id, name, ruleset_pref, reaction_timeout_s, high_ground, rest_supplies, initiative_mode, share_initiative, creation_methods, starting_level, hold_level_ups, no_undo, exhaustion_variant, show_dcs, created_at
+RETURNING id, name, ruleset_pref, reaction_timeout_s, high_ground, rest_supplies, initiative_mode, share_initiative, creation_methods, starting_level, hold_level_ups, no_undo, exhaustion_variant, show_dcs, difficulty, karmic_dice, created_at
 `
 
 type CreateCampaignParams struct {
@@ -87,6 +87,8 @@ type CreateCampaignRow struct {
 	NoUndo            bool
 	ExhaustionVariant string
 	ShowDcs           bool
+	Difficulty        string
+	KarmicDice        bool
 	CreatedAt         time.Time
 }
 
@@ -113,6 +115,8 @@ func (q *Queries) CreateCampaign(ctx context.Context, arg CreateCampaignParams) 
 		&i.NoUndo,
 		&i.ExhaustionVariant,
 		&i.ShowDcs,
+		&i.Difficulty,
+		&i.KarmicDice,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -184,7 +188,7 @@ func (q *Queries) FindInvite(ctx context.Context, arg FindInviteParams) (FindInv
 }
 
 const getCampaign = `-- name: GetCampaign :one
-SELECT id, name, ruleset_pref, reaction_timeout_s, high_ground, rest_supplies, initiative_mode, share_initiative, creation_methods, starting_level, hold_level_ups, no_undo, exhaustion_variant, show_dcs, created_at FROM campaign.campaigns WHERE id = $1
+SELECT id, name, ruleset_pref, reaction_timeout_s, high_ground, rest_supplies, initiative_mode, share_initiative, creation_methods, starting_level, hold_level_ups, no_undo, exhaustion_variant, show_dcs, difficulty, karmic_dice, created_at FROM campaign.campaigns WHERE id = $1
 `
 
 type GetCampaignRow struct {
@@ -202,6 +206,8 @@ type GetCampaignRow struct {
 	NoUndo            bool
 	ExhaustionVariant string
 	ShowDcs           bool
+	Difficulty        string
+	KarmicDice        bool
 	CreatedAt         time.Time
 }
 
@@ -223,6 +229,8 @@ func (q *Queries) GetCampaign(ctx context.Context, id uuid.UUID) (GetCampaignRow
 		&i.NoUndo,
 		&i.ExhaustionVariant,
 		&i.ShowDcs,
+		&i.Difficulty,
+		&i.KarmicDice,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -277,7 +285,7 @@ func (q *Queries) GetMembership(ctx context.Context, arg GetMembershipParams) (C
 }
 
 const listCampaignsForSubject = `-- name: ListCampaignsForSubject :many
-SELECT c.id, c.name, c.ruleset_pref, c.reaction_timeout_s, c.high_ground, c.rest_supplies, c.initiative_mode, c.share_initiative, c.creation_methods, c.starting_level, c.hold_level_ups, c.no_undo, c.exhaustion_variant, c.show_dcs, c.created_at, m.role,
+SELECT c.id, c.name, c.ruleset_pref, c.reaction_timeout_s, c.high_ground, c.rest_supplies, c.initiative_mode, c.share_initiative, c.creation_methods, c.starting_level, c.hold_level_ups, c.no_undo, c.exhaustion_variant, c.show_dcs, c.difficulty, c.karmic_dice, c.created_at, m.role,
        (SELECT count(*) FROM campaign.members x WHERE x.campaign_id = c.id)::int AS member_count
 FROM campaign.campaigns c
 JOIN campaign.members m ON m.campaign_id = c.id AND m.auth_subject = $1
@@ -309,6 +317,8 @@ type ListCampaignsForSubjectRow struct {
 	NoUndo            bool
 	ExhaustionVariant string
 	ShowDcs           bool
+	Difficulty        string
+	KarmicDice        bool
 	CreatedAt         time.Time
 	Role              string
 	MemberCount       int32
@@ -343,6 +353,8 @@ func (q *Queries) ListCampaignsForSubject(ctx context.Context, arg ListCampaigns
 			&i.NoUndo,
 			&i.ExhaustionVariant,
 			&i.ShowDcs,
+			&i.Difficulty,
+			&i.KarmicDice,
 			&i.CreatedAt,
 			&i.Role,
 			&i.MemberCount,
@@ -504,10 +516,12 @@ SET name = coalesce($1::text, name),
     hold_level_ups = coalesce($10::boolean, hold_level_ups),
     no_undo = coalesce($11::boolean, no_undo),
     show_dcs = coalesce($12::boolean, show_dcs),
-    exhaustion_variant = coalesce($13::text, exhaustion_variant),
-    updated_at = $14
-WHERE id = $15
-RETURNING id, name, ruleset_pref, reaction_timeout_s, high_ground, rest_supplies, initiative_mode, share_initiative, creation_methods, starting_level, hold_level_ups, no_undo, exhaustion_variant, show_dcs, created_at
+    difficulty = coalesce($13::text, difficulty),
+    karmic_dice = coalesce($14::boolean, karmic_dice),
+    exhaustion_variant = coalesce($15::text, exhaustion_variant),
+    updated_at = $16
+WHERE id = $17
+RETURNING id, name, ruleset_pref, reaction_timeout_s, high_ground, rest_supplies, initiative_mode, share_initiative, creation_methods, starting_level, hold_level_ups, no_undo, exhaustion_variant, show_dcs, difficulty, karmic_dice, created_at
 `
 
 type UpdateCampaignParams struct {
@@ -523,6 +537,8 @@ type UpdateCampaignParams struct {
 	HoldLevelUps      pgtype.Bool
 	NoUndo            pgtype.Bool
 	ShowDcs           pgtype.Bool
+	Difficulty        pgtype.Text
+	KarmicDice        pgtype.Bool
 	ExhaustionVariant pgtype.Text
 	Now               time.Time
 	ID                uuid.UUID
@@ -543,6 +559,8 @@ type UpdateCampaignRow struct {
 	NoUndo            bool
 	ExhaustionVariant string
 	ShowDcs           bool
+	Difficulty        string
+	KarmicDice        bool
 	CreatedAt         time.Time
 }
 
@@ -560,6 +578,8 @@ func (q *Queries) UpdateCampaign(ctx context.Context, arg UpdateCampaignParams) 
 		arg.HoldLevelUps,
 		arg.NoUndo,
 		arg.ShowDcs,
+		arg.Difficulty,
+		arg.KarmicDice,
 		arg.ExhaustionVariant,
 		arg.Now,
 		arg.ID,
@@ -580,6 +600,8 @@ func (q *Queries) UpdateCampaign(ctx context.Context, arg UpdateCampaignParams) 
 		&i.NoUndo,
 		&i.ExhaustionVariant,
 		&i.ShowDcs,
+		&i.Difficulty,
+		&i.KarmicDice,
 		&i.CreatedAt,
 	)
 	return i, err

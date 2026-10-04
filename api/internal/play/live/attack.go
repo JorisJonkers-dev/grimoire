@@ -75,6 +75,8 @@ type aim struct {
 	prof             effects.AttackProfile
 	// bonus is added to the attack roll, from high ground.
 	bonus int
+	// preset is what the Campaign's difficulty preset adds to an enemy's attack roll.
+	preset domain.Modifier
 	// advantages and disadvantages count the sources of each the attack has.
 	advantages, disadvantages int
 }
@@ -116,6 +118,7 @@ func (r *runtime) aimAt(m domain.Member, cmd Command) (aim, string) {
 	if reason == "" {
 		r.highGround(&p)
 		r.flanking(&p)
+		r.difficulty(&p)
 	}
 	return p, reason
 }
@@ -261,7 +264,7 @@ func (r *runtime) previewAttack(req request) {
 	_, critMost := attack.DamageRange(attack.CriticalDice(spec), p.with.DamageBonus)
 	r.send(req.from, Update{Kind: UpdAttackPreview, Seq: r.st.session.Seq, Nonce: req.cmd.Nonce, Preview: &AttackPreview{
 		TokenID: req.cmd.TokenID, TargetID: req.cmd.TargetID, AttackNo: p.no, Name: p.with.Name,
-		HitChance: attack.HitChanceDice(p.with.ToHit+p.bonus-p.prof.Penalty, joinDice("", p.prof.AttackDice), r.st.armor(p.target)+p.cover, p.mode), Mode: p.mode.String(),
+		HitChance: attack.HitChanceDice(p.with.ToHit+p.bonus+p.preset.Value-p.prof.Penalty, joinDice("", p.prof.AttackDice), r.st.armor(p.target)+p.cover, p.mode), Mode: p.mode.String(),
 		DamageMin: least, DamageMax: most, CritMax: critMost, Reasons: p.reasons,
 	}})
 }
@@ -274,7 +277,7 @@ func (r *runtime) planAttack(m domain.Member, cmd Command) (Write, string) {
 	}
 	notation := strings.Join(append([]string{attack.D20(p.mode)}, p.prof.AttackDice...), "+")
 	roll := r.request(m, p.attacker, p.with.Name+" attack against "+p.target.Label, notation, domain.Modifier{Label: p.with.Name, Value: p.with.ToHit},
-		domain.Modifier{Label: "High ground", Value: p.bonus}, domain.Modifier{Label: "Exhaustion", Value: -p.prof.Penalty})
+		domain.Modifier{Label: "High ground", Value: p.bonus}, p.preset, domain.Modifier{Label: "Exhaustion", Value: -p.prof.Penalty})
 	x, _ := r.st.combatantOf(p.attacker.ID)
 	pending := &domain.PendingAttack{
 		ID: uuid.New(), Attacker: p.attacker.ID, Target: p.target.ID, AttackNo: p.no, Mode: p.mode, CoverBonus: p.cover,
@@ -292,9 +295,11 @@ func (r *runtime) request(dm domain.Member, t domain.Token, purpose, notation st
 		}
 	}
 	spec, _ := dice.Parse(notation)
+	// Only a roll a fight asks for is asked of its roller. A check taken at will outside one is of
+	// the roller's own making, so karmic dice neither lean it nor count it.
 	roll := domain.Roll{
 		ID: domain.RollID(uuid.New()), CampaignID: r.st.session.CampaignID, Purpose: purpose, Notation: notation,
-		RequestedBy: dm.Name, Roller: roller, Status: domain.StatusPending,
+		RequestedBy: dm.Name, Roller: roller, Status: domain.StatusPending, Asked: r.st.combat != nil,
 	}
 	for g, group := range spec.Groups {
 		for range group.Count {

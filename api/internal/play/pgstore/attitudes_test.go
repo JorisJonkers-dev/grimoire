@@ -86,6 +86,15 @@ func TestAttitudesAreKept(t *testing.T) {
 	if got := read(); len(got) != 1 || got[0].Value != "hostile" {
 		t.Fatalf("after the strays = %+v", got)
 	}
+	if preset, err := store.Difficulty(ctx, tb.campaign); err != nil || preset != "standard" {
+		t.Fatalf("a Campaign starts at standard = %q %v", preset, err)
+	}
+	if _, err := tb.pool.Exec(ctx, "UPDATE campaign.campaigns SET difficulty = 'story' WHERE id = $1", tb.campaign); err != nil {
+		t.Fatal(err)
+	}
+	if preset, err := store.Difficulty(ctx, tb.campaign); err != nil || preset != "story" {
+		t.Fatalf("set to story = %q %v", preset, err)
+	}
 	if shown, err := store.ShowDCs(ctx, tb.campaign); err != nil || shown {
 		t.Fatalf("DCs shown to begin with = %v %v", shown, err)
 	}
@@ -96,9 +105,10 @@ func TestAttitudesAreKept(t *testing.T) {
 		t.Fatalf("DCs shown once set = %v %v", shown, err)
 	}
 	for name, op := range map[string]func(repo *pgstore.Store) error{
-		"settle":    func(repo *pgstore.Store) error { return commit(repo, settle(aria, keeper.ID, "indifferent")) },
-		"attitudes": func(repo *pgstore.Store) error { _, err := repo.LoadAttitudes(ctx, s.ID); return err },
-		"show dcs":  func(repo *pgstore.Store) error { _, err := repo.ShowDCs(ctx, tb.campaign); return err },
+		"settle":     func(repo *pgstore.Store) error { return commit(repo, settle(aria, keeper.ID, "indifferent")) },
+		"attitudes":  func(repo *pgstore.Store) error { _, err := repo.LoadAttitudes(ctx, s.ID); return err },
+		"show dcs":   func(repo *pgstore.Store) error { _, err := repo.ShowDCs(ctx, tb.campaign); return err },
+		"difficulty": func(repo *pgstore.Store) error { _, err := repo.Difficulty(ctx, tb.campaign); return err },
 	} {
 		pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
 			err := op(pgstore.NewFaulty(tb.pool, f))

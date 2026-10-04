@@ -40,7 +40,13 @@ type Repository interface {
 	LockRoll(ctx context.Context, campaign uuid.UUID, id domain.RollID) (string, error)
 	Roll(ctx context.Context, campaign uuid.UUID, id domain.RollID) (domain.Roll, error)
 	Rolls(ctx context.Context, campaign uuid.UUID, limit int) ([]domain.Roll, error)
-	SetDie(ctx context.Context, id domain.RollID, no, value int, mode string) (bool, error)
+	// SetDie records a face for an empty die; dropped is the face a karmic d20 let go, nil for any other die.
+	SetDie(ctx context.Context, id domain.RollID, no, value int, mode string, dropped *int) (bool, error)
+	// KarmicDice reads whether the Campaign's dice are karmic; Karma and SetKarma read and keep a
+	// roller's latest d20s rolled by the server, newest first.
+	KarmicDice(ctx context.Context, campaign uuid.UUID) (bool, error)
+	Karma(ctx context.Context, campaign, member uuid.UUID) ([]int, error)
+	SetKarma(ctx context.Context, campaign, member uuid.UUID, recent []int) error
 	ResolveRoll(ctx context.Context, id domain.RollID, total int, now time.Time) error
 	SetRollChoice(ctx context.Context, id domain.RollID, choosing, rerolled bool) error
 	RerollDie(ctx context.Context, id domain.RollID, no, value int) error
@@ -122,7 +128,7 @@ func (s *Rolls) Create(ctx context.Context, c caller.Caller, campaign uuid.UUID,
 	}
 	r := domain.Roll{
 		CampaignID: campaign, Purpose: in.Purpose, Notation: in.Notation, Labels: in.Labels, Modifiers: in.Modifiers,
-		RequestedBy: me.Name, Roller: roller, Status: domain.StatusPending,
+		RequestedBy: me.Name, Roller: roller, Status: domain.StatusPending, Asked: roller.ID != me.ID,
 	}
 	for g, group := range spec.Groups {
 		for range group.Count {
@@ -272,6 +278,10 @@ func (s *Rolls) fill(ctx context.Context, c caller.Caller, campaign uuid.UUID, i
 
 func (s *Rolls) apply(ctx context.Context, tx Repository, c caller.Caller, me domain.Member, r domain.Roll, fills map[int]Fill) error {
 	now := s.Now()
+	luck, err := s.luck(ctx, tx, r, fills)
+	if err != nil {
+		return err
+	}
 	for i := range r.Dice {
 		f, ok := fills[i]
 		if !ok {
@@ -279,14 +289,16 @@ func (s *Rolls) apply(ctx context.Context, tx Repository, c caller.Caller, me do
 		}
 		d := &r.Dice[i]
 		entry := LogEntry{Kind: domain.ActionDieEntered, Actor: me, Caller: c, RollID: r.ID, DieNo: &d.No, At: now}
+		var dropped *int
 		if f.Auto {
 			seed := s.Seed()
-			f.Value, entry.Kind, entry.Seed = dice.Face(s.Source(seed), d.Faces), domain.ActionDieRolled, &seed
+			f.Value, dropped = luck.roll(s.Source(seed), d.Faces)
+			entry.Kind, entry.Seed = domain.ActionDieRolled, &seed
 		} else if err := dice.CheckFace(d.Faces, f.Value); err != nil {
 			return invalidNotation(err)
 		}
 		mode := map[bool]string{true: domain.ModeAuto, false: domain.ModeManual}[f.Auto]
-		if _, err := tx.SetDie(ctx, r.ID, d.No, f.Value, mode); err != nil {
+		if _, err := tx.SetDie(ctx, r.ID, d.No, f.Value, mode, dropped); err != nil {
 			return err
 		}
 		d.Value, entry.Value = f.Value, f.Value
@@ -294,7 +306,65 @@ func (s *Rolls) apply(ctx context.Context, tx Repository, c caller.Caller, me do
 			return err
 		}
 	}
+	if luck.grew {
+		if err := tx.SetKarma(ctx, r.CampaignID, r.Roller.ID, luck.recent[:min(len(luck.recent), dice.KarmaRun)]); err != nil {
+			return err
+		}
+	}
 	return s.resolve(ctx, tx, c, me, r, now, true)
+}
+
+// luck is a roller's latest d20s rolled by the server, newest first, and which way karmic dice make
+// the next ones lean. A die a player throws is no part of it.
+type luck struct {
+	recent []int
+	lean   int
+	grew   bool
+	// asked is whether the roll is one karmic dice apply to.
+	asked bool
+}
+
+// luck reads the roller's run when the server is about to roll a d20 for them; the lean is the one
+// the run before this roll gives, for every d20 of it.
+func (s *Rolls) luck(ctx context.Context, tx Repository, r domain.Roll, fills map[int]Fill) (luck, error) {
+	rolls := false
+	for i, f := range fills {
+		rolls = rolls || (f.Auto && r.Dice[i].Faces == karmicFaces)
+	}
+	// Nobody makes their own luck: a roll a Member made for themself is plain and no part of a run.
+	if !rolls || !r.Asked {
+		return luck{}, nil
+	}
+	recent, err := tx.Karma(ctx, r.CampaignID, r.Roller.ID)
+	if err != nil {
+		return luck{}, err
+	}
+	on, err := tx.KarmicDice(ctx, r.CampaignID)
+	if err != nil {
+		return luck{}, err
+	}
+	out := luck{recent: recent, lean: 0, grew: false, asked: true}
+	if on {
+		out.lean = dice.Karma(recent)
+	}
+	return out, nil
+}
+
+// karmicFaces is the die karmic dice smooth: the d20.
+const karmicFaces = 20
+
+// roll rolls one die for the server. A d20 joins the run and leans as the run says; the face a
+// leaning d20 let go comes back with it.
+func (l *luck) roll(src dice.Source, faces int) (int, *int) {
+	if faces != karmicFaces || !l.asked {
+		return dice.Face(src, faces), nil
+	}
+	kept, let := dice.KarmicFace(src, faces, l.lean)
+	l.recent, l.grew = append([]int{kept}, l.recent...), true
+	if l.lean == 0 {
+		return kept, nil
+	}
+	return kept, &let
 }
 
 // resolve totals a roll once every die is set. When offer is set, a roller holding Heroic Inspiration

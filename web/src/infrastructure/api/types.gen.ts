@@ -63,9 +63,14 @@ export type CampaignSummary = {
      */
     noUndo?: boolean;
     /**
-     * The DC of a check is shown on its Roll Card; without it the DC is the DM's to know.
+     * The DC of a check or a save is shown on its Roll Card; without it the DC is the DM's to know.
      */
     showDcs?: boolean;
+    difficulty?: Difficulty;
+    /**
+     * The d20s the server rolls for rolls a fight or the DM asks of a roller are karmic: after two low ones in a row the roller's next leans high, and after two high ones it leans low. A die a player throws is never karmic, nor is a roll a Member makes for themself or a check taken outside a fight.
+     */
+    karmicDice?: boolean;
     /**
      * The exhaustion the Campaign plays with: srd-2024, gentle, grim or off.
      */
@@ -132,9 +137,14 @@ export type Campaign = {
      */
     noUndo?: boolean;
     /**
-     * The DC of a check is shown on its Roll Card; without it the DC is the DM's to know.
+     * The DC of a check or a save is shown on its Roll Card; without it the DC is the DM's to know.
      */
     showDcs?: boolean;
+    difficulty?: Difficulty;
+    /**
+     * The d20s the server rolls for rolls a fight or the DM asks of a roller are karmic: after two low ones in a row the roller's next leans high, and after two high ones it leans low. A die a player throws is never karmic, nor is a roll a Member makes for themself or a check taken outside a fight.
+     */
+    karmicDice?: boolean;
     /**
      * The exhaustion the Campaign plays with: srd-2024, gentle, grim or off.
      */
@@ -189,9 +199,14 @@ export type CampaignUpdate = {
      */
     noUndo?: boolean;
     /**
-     * The DC of a check is shown on its Roll Card; without it the DC is the DM's to know.
+     * The DC of a check or a save is shown on its Roll Card; without it the DC is the DM's to know.
      */
     showDcs?: boolean;
+    difficulty?: Difficulty;
+    /**
+     * The d20s the server rolls for rolls a fight or the DM asks of a roller are karmic: after two low ones in a row the roller's next leans high, and after two high ones it leans low. A die a player throws is never karmic, nor is a roll a Member makes for themself or a check taken outside a fight.
+     */
+    karmicDice?: boolean;
     /**
      * The exhaustion the Campaign plays with: srd-2024, gentle, grim or off.
      */
@@ -2220,6 +2235,11 @@ export type DiceGroup = {
 };
 
 /**
+ * The Campaign's difficulty preset. story: enemies come with three quarters of their hit points and attack at −2. standard: the rules as written. hard: enemies come with a quarter more hit points and attack at +2.
+ */
+export type Difficulty = 'story' | 'standard' | 'hard';
+
+/**
  * One die of a Roll Request.
  */
 export type RollDie = {
@@ -2229,6 +2249,10 @@ export type RollDie = {
     value?: number;
     mode?: 'auto' | 'manual';
     kept: boolean;
+    /**
+     * Set on a karmic d20: the other face the server rolled and let go.
+     */
+    karmicDropped?: number;
 };
 
 /**
@@ -4344,7 +4368,10 @@ export type LiveSave = {
     rollId: Id;
     tokenId: Id;
     effect: string;
-    dc: number;
+    /**
+     * The save's DC. The DM always has it; the party only while the Campaign shows DCs.
+     */
+    dc?: number;
 };
 
 /**

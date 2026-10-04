@@ -69,9 +69,20 @@ func (q *Queries) ActionLog(ctx context.Context, arg ActionLogParams) ([]ActionL
 	return items, nil
 }
 
+const campaignKarmicDice = `-- name: CampaignKarmicDice :one
+SELECT karmic_dice FROM campaign.campaigns WHERE id = $1
+`
+
+func (q *Queries) CampaignKarmicDice(ctx context.Context, id uuid.UUID) (bool, error) {
+	row := q.db.QueryRow(ctx, campaignKarmicDice, id)
+	var karmic_dice bool
+	err := row.Scan(&karmic_dice)
+	return karmic_dice, err
+}
+
 const getRoll = `-- name: GetRoll :one
 SELECT id, campaign_id, purpose, notation, requested_by_name, roller_member_id, roller_subject, roller_name, status, total,
-       created_at, resolved_at, choosing, rerolled
+       created_at, resolved_at, choosing, rerolled, asked
 FROM play.roll_requests WHERE campaign_id = $1 AND id = $2
 `
 
@@ -98,6 +109,7 @@ func (q *Queries) GetRoll(ctx context.Context, arg GetRollParams) (PlayRollReque
 		&i.ResolvedAt,
 		&i.Choosing,
 		&i.Rerolled,
+		&i.Asked,
 	)
 	return i, err
 }
@@ -139,9 +151,9 @@ func (q *Queries) InsertAction(ctx context.Context, arg InsertActionParams) (uui
 
 const insertRoll = `-- name: InsertRoll :one
 INSERT INTO play.roll_requests (id, campaign_id, purpose, notation, requested_by_name, roller_member_id, roller_subject,
-    roller_name, status, created_at)
+    roller_name, status, created_at, asked)
 VALUES (COALESCE($1::uuid, gen_random_uuid()), $2, $3, $4, $5,
-    $6, $7, $8, 'pending', $9)
+    $6, $7, $8, 'pending', $9, $10)
 RETURNING id
 `
 
@@ -155,6 +167,7 @@ type InsertRollParams struct {
 	RollerSubject   string
 	RollerName      string
 	Now             time.Time
+	Asked           bool
 }
 
 func (q *Queries) InsertRoll(ctx context.Context, arg InsertRollParams) (uuid.UUID, error) {
@@ -168,6 +181,7 @@ func (q *Queries) InsertRoll(ctx context.Context, arg InsertRollParams) (uuid.UU
 		arg.RollerSubject,
 		arg.RollerName,
 		arg.Now,
+		arg.Asked,
 	)
 	var id uuid.UUID
 	err := row.Scan(&id)
@@ -335,7 +349,7 @@ func (q *Queries) NextActionSeq(ctx context.Context, campaignID uuid.UUID) (int3
 }
 
 const rerollDie = `-- name: RerollDie :execrows
-UPDATE play.roll_dice SET value = $1, mode = 'auto' WHERE roll_id = $2 AND die_no = $3 AND value IS NOT NULL
+UPDATE play.roll_dice SET value = $1, mode = 'auto', karmic_dropped = NULL WHERE roll_id = $2 AND die_no = $3 AND value IS NOT NULL
 `
 
 type RerollDieParams struct {
@@ -368,15 +382,16 @@ func (q *Queries) ResolveRoll(ctx context.Context, arg ResolveRollParams) error 
 }
 
 const rollDice = `-- name: RollDice :many
-SELECT die_no, group_no, faces, value, mode FROM play.roll_dice WHERE roll_id = $1 ORDER BY die_no
+SELECT die_no, group_no, faces, value, mode, karmic_dropped FROM play.roll_dice WHERE roll_id = $1 ORDER BY die_no
 `
 
 type RollDiceRow struct {
-	DieNo   int32
-	GroupNo int32
-	Faces   int32
-	Value   pgtype.Int4
-	Mode    pgtype.Text
+	DieNo         int32
+	GroupNo       int32
+	Faces         int32
+	Value         pgtype.Int4
+	Mode          pgtype.Text
+	KarmicDropped pgtype.Int4
 }
 
 func (q *Queries) RollDice(ctx context.Context, rollID uuid.UUID) ([]RollDiceRow, error) {
@@ -394,6 +409,7 @@ func (q *Queries) RollDice(ctx context.Context, rollID uuid.UUID) ([]RollDiceRow
 			&i.Faces,
 			&i.Value,
 			&i.Mode,
+			&i.KarmicDropped,
 		); err != nil {
 			return nil, err
 		}
@@ -403,6 +419,22 @@ func (q *Queries) RollDice(ctx context.Context, rollID uuid.UUID) ([]RollDiceRow
 		return nil, err
 	}
 	return items, nil
+}
+
+const rollKarma = `-- name: RollKarma :one
+SELECT recent FROM play.roll_karma WHERE campaign_id = $1 AND member_id = $2 FOR UPDATE
+`
+
+type RollKarmaParams struct {
+	CampaignID uuid.UUID
+	MemberID   uuid.UUID
+}
+
+func (q *Queries) RollKarma(ctx context.Context, arg RollKarmaParams) ([]int32, error) {
+	row := q.db.QueryRow(ctx, rollKarma, arg.CampaignID, arg.MemberID)
+	var recent []int32
+	err := row.Scan(&recent)
+	return recent, err
 }
 
 const rollLabels = `-- name: RollLabels :many
@@ -479,20 +511,22 @@ func (q *Queries) SetRollChoice(ctx context.Context, arg SetRollChoiceParams) er
 }
 
 const setRollDie = `-- name: SetRollDie :execrows
-UPDATE play.roll_dice SET value = $1, mode = $2 WHERE roll_id = $3 AND die_no = $4 AND value IS NULL
+UPDATE play.roll_dice SET value = $1, mode = $2, karmic_dropped = $3 WHERE roll_id = $4 AND die_no = $5 AND value IS NULL
 `
 
 type SetRollDieParams struct {
-	Value  pgtype.Int4
-	Mode   pgtype.Text
-	RollID uuid.UUID
-	DieNo  int32
+	Value         pgtype.Int4
+	Mode          pgtype.Text
+	KarmicDropped pgtype.Int4
+	RollID        uuid.UUID
+	DieNo         int32
 }
 
 func (q *Queries) SetRollDie(ctx context.Context, arg SetRollDieParams) (int64, error) {
 	result, err := q.db.Exec(ctx, setRollDie,
 		arg.Value,
 		arg.Mode,
+		arg.KarmicDropped,
 		arg.RollID,
 		arg.DieNo,
 	)
@@ -500,6 +534,22 @@ func (q *Queries) SetRollDie(ctx context.Context, arg SetRollDieParams) (int64, 
 		return 0, err
 	}
 	return result.RowsAffected(), nil
+}
+
+const setRollKarma = `-- name: SetRollKarma :exec
+INSERT INTO play.roll_karma (campaign_id, member_id, recent) VALUES ($1, $2, $3)
+ON CONFLICT (campaign_id, member_id) DO UPDATE SET recent = EXCLUDED.recent
+`
+
+type SetRollKarmaParams struct {
+	CampaignID uuid.UUID
+	MemberID   uuid.UUID
+	Recent     []int32
+}
+
+func (q *Queries) SetRollKarma(ctx context.Context, arg SetRollKarmaParams) error {
+	_, err := q.db.Exec(ctx, setRollKarma, arg.CampaignID, arg.MemberID, arg.Recent)
+	return err
 }
 
 const spendMemberInspiration = `-- name: SpendMemberInspiration :execrows

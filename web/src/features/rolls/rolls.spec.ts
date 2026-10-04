@@ -111,6 +111,21 @@ describe('roll card', () => {
     expect(rollBreakdown(plain(12, { modifiers: [allied, friendly] }) as RollRequest).slice(-2)).toEqual([{ label: allied.label, value: '' }, { label: friendly.label, value: '+2' }])
   })
 
+  it('says of a karmic die what the server rolled and which face it kept', () => {
+    const die = { no: 0, group: 0, faces: 20, value: 14, mode: 'auto', kept: false }
+    const karmic = show(plain(14, { dice: [{ ...die, karmicDropped: 6 }] }))
+    expect(karmic.get('[data-testid="karmic-note"]').text()).toBe('Karmic dice: the app rolled 14 and 6 and kept the 14.')
+    // Leaning down, it kept the lower face.
+    const low = show(plain(3, { dice: [{ ...die, value: 3, karmicDropped: 18 }] }))
+    expect(low.get('[data-testid="karmic-note"]').text()).toBe('Karmic dice: the app rolled 3 and 18 and kept the 3.')
+    expect(show(plain(14, { dice: [die] })).find('[data-testid="karmic-note"]').exists()).toBe(false)
+    // Two karmic d20s of one roll each say theirs.
+    const pair = show(withDice([12, 9, 3], { status: 'resolved', total: 18, dice: withDice([12, 9, 3]).dice.map((d, i) => (i < 2 ? { ...d, mode: 'auto', karmicDropped: [4, 2][i] } : d)) }))
+    expect(pair.findAll('[data-testid="karmic-note"]').map((n) => n.text())).toEqual([
+      'Karmic dice: the app rolled 12 and 4 and kept the 12.', 'Karmic dice: the app rolled 9 and 2 and kept the 9.',
+    ])
+  })
+
   it('celebrates a natural 20 and a natural 1 on the d20 that counts', () => {
     const hit = show(plain(20))
     expect(hit.get('[data-testid="roll-natural"]').text()).toBe('Natural 20!')

@@ -3776,8 +3776,13 @@ type Campaign struct {
 	// The Campaign is played without undo: nothing is taken back, no Checkpoint is kept and there is no
 	// rewind.
 	NoUndo OptBool `json:"noUndo"`
-	// The DC of a check is shown on its Roll Card; without it the DC is the DM's to know.
-	ShowDcs OptBool `json:"showDcs"`
+	// The DC of a check or a save is shown on its Roll Card; without it the DC is the DM's to know.
+	ShowDcs    OptBool       `json:"showDcs"`
+	Difficulty OptDifficulty `json:"difficulty"`
+	// The d20s the server rolls for rolls a fight or the DM asks of a roller are karmic: after two low
+	// ones in a row the roller's next leans high, and after two high ones it leans low. A die a player
+	// throws is never karmic, nor is a roll a Member makes for themself or a check taken outside a fight.
+	KarmicDice OptBool `json:"karmicDice"`
 	// The exhaustion the Campaign plays with: srd-2024, gentle, grim or off.
 	Exhaustion OptString `json:"exhaustion"`
 	// Identical monsters share one initiative roll.
@@ -3859,6 +3864,16 @@ func (s *Campaign) GetNoUndo() OptBool {
 // GetShowDcs returns the value of ShowDcs.
 func (s *Campaign) GetShowDcs() OptBool {
 	return s.ShowDcs
+}
+
+// GetDifficulty returns the value of Difficulty.
+func (s *Campaign) GetDifficulty() OptDifficulty {
+	return s.Difficulty
+}
+
+// GetKarmicDice returns the value of KarmicDice.
+func (s *Campaign) GetKarmicDice() OptBool {
+	return s.KarmicDice
 }
 
 // GetExhaustion returns the value of Exhaustion.
@@ -3954,6 +3969,16 @@ func (s *Campaign) SetNoUndo(val OptBool) {
 // SetShowDcs sets the value of ShowDcs.
 func (s *Campaign) SetShowDcs(val OptBool) {
 	s.ShowDcs = val
+}
+
+// SetDifficulty sets the value of Difficulty.
+func (s *Campaign) SetDifficulty(val OptDifficulty) {
+	s.Difficulty = val
+}
+
+// SetKarmicDice sets the value of KarmicDice.
+func (s *Campaign) SetKarmicDice(val OptBool) {
+	s.KarmicDice = val
 }
 
 // SetExhaustion sets the value of Exhaustion.
@@ -4358,8 +4383,13 @@ type CampaignSummary struct {
 	// The Campaign is played without undo: nothing is taken back, no Checkpoint is kept and there is no
 	// rewind.
 	NoUndo OptBool `json:"noUndo"`
-	// The DC of a check is shown on its Roll Card; without it the DC is the DM's to know.
-	ShowDcs OptBool `json:"showDcs"`
+	// The DC of a check or a save is shown on its Roll Card; without it the DC is the DM's to know.
+	ShowDcs    OptBool       `json:"showDcs"`
+	Difficulty OptDifficulty `json:"difficulty"`
+	// The d20s the server rolls for rolls a fight or the DM asks of a roller are karmic: after two low
+	// ones in a row the roller's next leans high, and after two high ones it leans low. A die a player
+	// throws is never karmic, nor is a roll a Member makes for themself or a check taken outside a fight.
+	KarmicDice OptBool `json:"karmicDice"`
 	// The exhaustion the Campaign plays with: srd-2024, gentle, grim or off.
 	Exhaustion OptString `json:"exhaustion"`
 	// Identical monsters share one initiative roll.
@@ -4439,6 +4469,16 @@ func (s *CampaignSummary) GetNoUndo() OptBool {
 // GetShowDcs returns the value of ShowDcs.
 func (s *CampaignSummary) GetShowDcs() OptBool {
 	return s.ShowDcs
+}
+
+// GetDifficulty returns the value of Difficulty.
+func (s *CampaignSummary) GetDifficulty() OptDifficulty {
+	return s.Difficulty
+}
+
+// GetKarmicDice returns the value of KarmicDice.
+func (s *CampaignSummary) GetKarmicDice() OptBool {
+	return s.KarmicDice
 }
 
 // GetExhaustion returns the value of Exhaustion.
@@ -4526,6 +4566,16 @@ func (s *CampaignSummary) SetShowDcs(val OptBool) {
 	s.ShowDcs = val
 }
 
+// SetDifficulty sets the value of Difficulty.
+func (s *CampaignSummary) SetDifficulty(val OptDifficulty) {
+	s.Difficulty = val
+}
+
+// SetKarmicDice sets the value of KarmicDice.
+func (s *CampaignSummary) SetKarmicDice(val OptBool) {
+	s.KarmicDice = val
+}
+
 // SetExhaustion sets the value of Exhaustion.
 func (s *CampaignSummary) SetExhaustion(val OptString) {
 	s.Exhaustion = val
@@ -4606,8 +4656,13 @@ type CampaignUpdate struct {
 	// The Campaign is played without undo: nothing is taken back, no Checkpoint is kept and there is no
 	// rewind.
 	NoUndo OptBool `json:"noUndo"`
-	// The DC of a check is shown on its Roll Card; without it the DC is the DM's to know.
-	ShowDcs OptBool `json:"showDcs"`
+	// The DC of a check or a save is shown on its Roll Card; without it the DC is the DM's to know.
+	ShowDcs    OptBool       `json:"showDcs"`
+	Difficulty OptDifficulty `json:"difficulty"`
+	// The d20s the server rolls for rolls a fight or the DM asks of a roller are karmic: after two low
+	// ones in a row the roller's next leans high, and after two high ones it leans low. A die a player
+	// throws is never karmic, nor is a roll a Member makes for themself or a check taken outside a fight.
+	KarmicDice OptBool `json:"karmicDice"`
 	// The exhaustion the Campaign plays with: srd-2024, gentle, grim or off.
 	Exhaustion OptString `json:"exhaustion"`
 	// Identical monsters share one initiative roll.
@@ -4667,6 +4722,16 @@ func (s *CampaignUpdate) GetNoUndo() OptBool {
 // GetShowDcs returns the value of ShowDcs.
 func (s *CampaignUpdate) GetShowDcs() OptBool {
 	return s.ShowDcs
+}
+
+// GetDifficulty returns the value of Difficulty.
+func (s *CampaignUpdate) GetDifficulty() OptDifficulty {
+	return s.Difficulty
+}
+
+// GetKarmicDice returns the value of KarmicDice.
+func (s *CampaignUpdate) GetKarmicDice() OptBool {
+	return s.KarmicDice
 }
 
 // GetExhaustion returns the value of Exhaustion.
@@ -4732,6 +4797,16 @@ func (s *CampaignUpdate) SetNoUndo(val OptBool) {
 // SetShowDcs sets the value of ShowDcs.
 func (s *CampaignUpdate) SetShowDcs(val OptBool) {
 	s.ShowDcs = val
+}
+
+// SetDifficulty sets the value of Difficulty.
+func (s *CampaignUpdate) SetDifficulty(val OptDifficulty) {
+	s.Difficulty = val
+}
+
+// SetKarmicDice sets the value of KarmicDice.
+func (s *CampaignUpdate) SetKarmicDice(val OptBool) {
+	s.KarmicDice = val
 }
 
 // SetExhaustion sets the value of Exhaustion.
@@ -10315,6 +10390,58 @@ func (s *DiffNpcRevisionsOKHeaders) SetResponse(val []FieldChange) {
 }
 
 func (*DiffNpcRevisionsOKHeaders) diffNpcRevisionsRes() {}
+
+// The Campaign's difficulty preset. story: enemies come with three quarters of their hit points and
+// attack at −2. standard: the rules as written. hard: enemies come with a quarter more hit points
+// and attack at +2.
+// Ref: #/components/schemas/Difficulty
+type Difficulty string
+
+const (
+	DifficultyStory    Difficulty = "story"
+	DifficultyStandard Difficulty = "standard"
+	DifficultyHard     Difficulty = "hard"
+)
+
+// AllValues returns all Difficulty values.
+func (Difficulty) AllValues() []Difficulty {
+	return []Difficulty{
+		DifficultyStory,
+		DifficultyStandard,
+		DifficultyHard,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s Difficulty) MarshalText() ([]byte, error) {
+	switch s {
+	case DifficultyStory:
+		return []byte(s), nil
+	case DifficultyStandard:
+		return []byte(s), nil
+	case DifficultyHard:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *Difficulty) UnmarshalText(data []byte) error {
+	switch Difficulty(data) {
+	case DifficultyStory:
+		*s = DifficultyStory
+		return nil
+	case DifficultyStandard:
+		*s = DifficultyStandard
+		return nil
+	case DifficultyHard:
+		*s = DifficultyHard
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
 
 // DisableTwoStepNoContent is response for DisableTwoStep operation.
 type DisableTwoStepNoContent struct {
@@ -28428,7 +28555,8 @@ type LiveSave struct {
 	RollId  ID     `json:"rollId"`
 	TokenId ID     `json:"tokenId"`
 	Effect  string `json:"effect"`
-	DC      int32  `json:"dc"`
+	// The save's DC. The DM always has it; the party only while the Campaign shows DCs.
+	DC OptInt32 `json:"dc"`
 }
 
 // GetRollId returns the value of RollId.
@@ -28447,7 +28575,7 @@ func (s *LiveSave) GetEffect() string {
 }
 
 // GetDC returns the value of DC.
-func (s *LiveSave) GetDC() int32 {
+func (s *LiveSave) GetDC() OptInt32 {
 	return s.DC
 }
 
@@ -28467,7 +28595,7 @@ func (s *LiveSave) SetEffect(val string) {
 }
 
 // SetDC sets the value of DC.
-func (s *LiveSave) SetDC(val int32) {
+func (s *LiveSave) SetDC(val OptInt32) {
 	s.DC = val
 }
 
@@ -35539,6 +35667,52 @@ func (o OptDiePlacement) Get() (v DiePlacement, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptDiePlacement) Or(d DiePlacement) DiePlacement {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptDifficulty returns new OptDifficulty with value set to v.
+func NewOptDifficulty(v Difficulty) OptDifficulty {
+	return OptDifficulty{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptDifficulty is optional Difficulty.
+type OptDifficulty struct {
+	Value Difficulty
+	Set   bool
+}
+
+// IsSet returns true if OptDifficulty was set.
+func (o OptDifficulty) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptDifficulty) Reset() {
+	var v Difficulty
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptDifficulty) SetTo(v Difficulty) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptDifficulty) Get() (v Difficulty, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptDifficulty) Or(d Difficulty) Difficulty {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -43790,6 +43964,8 @@ type RollDie struct {
 	Value OptInt32       `json:"value"`
 	Mode  OptRollDieMode `json:"mode"`
 	Kept  bool           `json:"kept"`
+	// Set on a karmic d20: the other face the server rolled and let go.
+	KarmicDropped OptInt32 `json:"karmicDropped"`
 }
 
 // GetNo returns the value of No.
@@ -43822,6 +43998,11 @@ func (s *RollDie) GetKept() bool {
 	return s.Kept
 }
 
+// GetKarmicDropped returns the value of KarmicDropped.
+func (s *RollDie) GetKarmicDropped() OptInt32 {
+	return s.KarmicDropped
+}
+
 // SetNo sets the value of No.
 func (s *RollDie) SetNo(val int32) {
 	s.No = val
@@ -43850,6 +44031,11 @@ func (s *RollDie) SetMode(val OptRollDieMode) {
 // SetKept sets the value of Kept.
 func (s *RollDie) SetKept(val bool) {
 	s.Kept = val
+}
+
+// SetKarmicDropped sets the value of KarmicDropped.
+func (s *RollDie) SetKarmicDropped(val OptInt32) {
+	s.KarmicDropped = val
 }
 
 type RollDieMode string

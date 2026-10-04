@@ -386,6 +386,7 @@ func TestARiderFallsOff(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 	w, tb, ids, fighters := stable(t)
+	showDCs(t, w)
 	aria, steed, goblin := ids["Aria"], ids["Steed"], ids["Goblin"]
 	mount := func() {
 		t.Helper()

@@ -255,7 +255,7 @@ func (r *runtime) answer(p *domain.ReactionPrompt, use bool, m domain.Member) Wr
 	if p.Kind == domain.PromptReadied {
 		purpose = "Readied attack against "
 	}
-	roll := r.request(m, reactor, purpose+trigger.Label+" with "+with.Name, "1d20", domain.Modifier{Label: with.Name, Value: with.ToHit})
+	roll := r.request(m, reactor, purpose+trigger.Label+" with "+with.Name, "1d20", domain.Modifier{Label: with.Name, Value: with.ToHit}, r.attackModifier(reactor))
 	w.Rolls = []domain.Roll{roll}
 	w.attack = &domain.PendingAttack{
 		ID: uuid.New(), Attacker: reactor.ID, Target: trigger.ID, AttackNo: p.AttackNo, Stage: domain.StageToHit, RollID: roll.ID, Opportunity: true,

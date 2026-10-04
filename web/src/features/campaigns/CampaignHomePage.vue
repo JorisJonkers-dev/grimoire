@@ -14,7 +14,8 @@ import {
   updateCampaignMutation,
   updateMemberMutation,
 } from '@/infrastructure/api/@tanstack/vue-query.gen'
-import type { Member, Role } from '@/infrastructure/api/types.gen'
+import type { Difficulty, Member, Role } from '@/infrastructure/api/types.gen'
+import { difficulties, tableRules } from './difficulty'
 import { GButton, TokenBadge } from '@/shared/ui'
 import CompanionsSection from './CompanionsSection.vue'
 
@@ -95,6 +96,18 @@ const exhaustion = computed({
   get: () => exhaustionChoice.value ?? campaign.data.value?.exhaustion ?? 'srd-2024',
   set: (v: string) => (exhaustionChoice.value = v),
 })
+const difficultyChoice = ref<Difficulty | null>(null)
+const difficulty = computed({
+  get: () => difficultyChoice.value ?? campaign.data.value?.difficulty ?? 'standard',
+  set: (v: Difficulty) => (difficultyChoice.value = v),
+})
+const karmicChoice = ref<boolean | null>(null)
+const karmicDice = computed({
+  get: () => karmicChoice.value ?? campaign.data.value?.karmicDice ?? false,
+  set: (v: boolean) => (karmicChoice.value = v),
+})
+// What every Member is told of the table's difficulty and dice, as the Campaign has them now.
+const rules = computed(() => tableRules(campaign.data.value?.difficulty, campaign.data.value?.karmicDice))
 const settings = useMutation(updateCampaignMutation())
 function saveSettings() {
   failed.value = ''
@@ -102,6 +115,7 @@ function saveSettings() {
     reactionTimeoutS: timeout.value, highGround: highGround.value, restSupplies: restSupplies.value, initiativeMode: initiativeMode.value,
     shareInitiative: shareInitiative.value, creationMethods: creationMethods.value, startingLevel: startingLevel.value,
     holdLevelUps: holdLevelUps.value, noUndo: noUndo.value, showDcs: showDcs.value, exhaustion: exhaustion.value,
+    difficulty: difficulty.value, karmicDice: karmicDice.value,
   } }, { onSuccess: refresh, onError: onError('The settings could not be saved.') })
 }
 const failed = ref('')
@@ -172,6 +186,9 @@ const expires = (iso: string) => new Date(iso).toLocaleDateString(undefined, { d
         </p>
       </header>
       <p v-if="failed" role="alert" class="g-alert" data-testid="campaign-error">{{ failed }}</p>
+      <ul v-if="rules.length" class="g-card rules" aria-label="How this table plays" data-testid="table-rules">
+        <li v-for="rule in rules" :key="rule">{{ rule }}</li>
+      </ul>
       <nav class="prep" aria-label="Campaign tools">
         <RouterLink :to="{ name: 'dice', params: { id } }" data-testid="dice-link">Dice</RouterLink>
         <RouterLink :to="{ name: 'proposals', params: { id } }" data-testid="proposals-link">Proposals</RouterLink>
@@ -303,7 +320,17 @@ const expires = (iso: string) => new Date(iso).toLocaleDateString(undefined, { d
         </label>
         <label class="check">
           <input v-model="showDcs" type="checkbox" data-testid="show-dcs-setting" />
-          <span>Show the DC of a check on its Roll Card. Without it the DC is yours to know. It takes effect when the next Session starts</span>
+          <span>Show the DC of a check or a save on its Roll Card. Without it the DC is yours to know</span>
+        </label>
+        <label class="g-field">
+          <span>Difficulty</span>
+          <select v-model="difficulty" data-testid="difficulty-setting">
+            <option v-for="d in difficulties" :key="d.value" :value="d.value">{{ d.name }}: {{ d.changes }}</option>
+          </select>
+        </label>
+        <label class="check">
+          <input v-model="karmicDice" type="checkbox" data-testid="karmic-dice-setting" />
+          <span>Karmic dice: after two low d20s in a row that a fight or you asked of a roller, the next one the app rolls for them leans high, and after two high ones it leans low. Dice thrown by hand, rolls a Member makes for themself and checks outside a fight are never changed, and every Member is told</span>
         </label>
         <label class="g-field">
           <span>Exhaustion</span>
@@ -322,6 +349,11 @@ const expires = (iso: string) => new Date(iso).toLocaleDateString(undefined, { d
 </template>
 
 <style scoped>
+.rules {
+  margin: 0;
+  padding-left: 32px;
+  color: var(--color-text-2);
+}
 .methods {
   display: flex;
   flex-direction: column;

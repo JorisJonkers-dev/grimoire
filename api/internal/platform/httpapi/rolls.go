@@ -57,6 +57,9 @@ func rollOut(r playdomain.Roll, c caller.Caller, dm bool) oas.RollRequest {
 			die.Value = oas.NewOptInt32(int32(d.Value))
 			die.Mode = oas.NewOptRollDieMode(oas.RollDieMode(d.Mode))
 		}
+		if d.KarmicDropped != nil {
+			die.KarmicDropped = oas.NewOptInt32(int32(*d.KarmicDropped)) //nolint:gosec // a d20's face
+		}
 		out.Dice = append(out.Dice, die)
 	}
 	for _, m := range r.Modifiers {

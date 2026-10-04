@@ -38,6 +38,8 @@ type Die struct {
 	Value int
 	Mode  string
 	Kept  bool
+	// KarmicDropped is set on a karmic d20: the other face the server rolled and let go.
+	KarmicDropped *int
 }
 
 // Roll statuses.
@@ -65,6 +67,10 @@ type Roll struct {
 	// spends it to reroll a die; Rerolled means it was spent on this roll.
 	Choosing bool
 	Rerolled bool
+	// Asked means the roll was asked of its roller, by a fight or by a DM, rather than made by the
+	// roller for themself: from the dice tray, or as a check taken at will outside a fight. Only an
+	// asked roll can be karmic or count towards a run.
+	Asked bool
 }
 
 // Action kinds in the Action Log.

@@ -5877,6 +5877,24 @@ func (s *Campaign) Validate() error {
 		})
 	}
 	if err := func() error {
+		if value, ok := s.Difficulty.Get(); ok {
+			if err := func() error {
+				if err := value.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "difficulty",
+			Error: err,
+		})
+	}
+	if err := func() error {
 		if value, ok := s.Exhaustion.Get(); ok {
 			if err := func() error {
 				if err := (validate.String{
@@ -6713,6 +6731,24 @@ func (s *CampaignSummary) Validate() error {
 		})
 	}
 	if err := func() error {
+		if value, ok := s.Difficulty.Get(); ok {
+			if err := func() error {
+				if err := value.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "difficulty",
+			Error: err,
+		})
+	}
+	if err := func() error {
 		if value, ok := s.Exhaustion.Get(); ok {
 			if err := func() error {
 				if err := (validate.String{
@@ -6997,6 +7033,24 @@ func (s *CampaignUpdate) Validate() error {
 	}(); err != nil {
 		failures = append(failures, validate.FieldError{
 			Name:  "startingLevel",
+			Error: err,
+		})
+	}
+	if err := func() error {
+		if value, ok := s.Difficulty.Get(); ok {
+			if err := func() error {
+				if err := value.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "difficulty",
 			Error: err,
 		})
 	}
@@ -16584,6 +16638,19 @@ func (s *DiffNpcRevisionsOKHeaders) Validate() error {
 		return &validate.Error{Fields: failures}
 	}
 	return nil
+}
+
+func (s Difficulty) Validate() error {
+	switch s {
+	case "story":
+		return nil
+	case "standard":
+		return nil
+	case "hard":
+		return nil
+	default:
+		return errors.Errorf("invalid value: %v", s)
+	}
 }
 
 func (s *DisableTwoStepNoContent) Validate() error {
@@ -44131,18 +44198,25 @@ func (s *LiveSave) Validate() error {
 		})
 	}
 	if err := func() error {
-		if err := (validate.Int{
-			MinSet:        true,
-			Min:           1,
-			MaxSet:        true,
-			Max:           40,
-			MinExclusive:  false,
-			MaxExclusive:  false,
-			MultipleOfSet: false,
-			MultipleOf:    0,
-			Pattern:       nil,
-		}).Validate(int64(s.DC)); err != nil {
-			return errors.Wrap(err, "int")
+		if value, ok := s.DC.Get(); ok {
+			if err := func() error {
+				if err := (validate.Int{
+					MinSet:        true,
+					Min:           1,
+					MaxSet:        true,
+					Max:           40,
+					MinExclusive:  false,
+					MaxExclusive:  false,
+					MultipleOfSet: false,
+					MultipleOf:    0,
+					Pattern:       nil,
+				}).Validate(int64(value)); err != nil {
+					return errors.Wrap(err, "int")
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
 		}
 		return nil
 	}(); err != nil {
@@ -60540,6 +60614,34 @@ func (s *RollDie) Validate() error {
 	}(); err != nil {
 		failures = append(failures, validate.FieldError{
 			Name:  "mode",
+			Error: err,
+		})
+	}
+	if err := func() error {
+		if value, ok := s.KarmicDropped.Get(); ok {
+			if err := func() error {
+				if err := (validate.Int{
+					MinSet:        true,
+					Min:           1,
+					MaxSet:        true,
+					Max:           20,
+					MinExclusive:  false,
+					MaxExclusive:  false,
+					MultipleOfSet: false,
+					MultipleOf:    0,
+					Pattern:       nil,
+				}).Validate(int64(value)); err != nil {
+					return errors.Wrap(err, "int")
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "karmicDropped",
 			Error: err,
 		})
 	}

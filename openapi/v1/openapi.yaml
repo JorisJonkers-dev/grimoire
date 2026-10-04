@@ -9627,7 +9627,9 @@ components:
         startingLevel: { type: integer, format: int32, minimum: 1, maximum: 20, description: "The level new Characters start at." }
         holdLevelUps: { type: boolean, description: "Long rests stop unlocking the next level; the DM grants levels instead." }
         noUndo: { type: boolean, description: "The Campaign is played without undo: nothing is taken back, no Checkpoint is kept and there is no rewind." }
-        showDcs: { type: boolean, description: "The DC of a check is shown on its Roll Card; without it the DC is the DM's to know." }
+        showDcs: { type: boolean, description: "The DC of a check or a save is shown on its Roll Card; without it the DC is the DM's to know." }
+        difficulty: { $ref: "#/components/schemas/Difficulty" }
+        karmicDice: { type: boolean, description: "The d20s the server rolls for rolls a fight or the DM asks of a roller are karmic: after two low ones in a row the roller's next leans high, and after two high ones it leans low. A die a player throws is never karmic, nor is a roll a Member makes for themself or a check taken outside a fight." }
         exhaustion: { type: string, maxLength: 40, description: "The exhaustion the Campaign plays with: srd-2024, gentle, grim or off." }
         shareInitiative: { type: boolean, description: "Identical monsters share one initiative roll." }
     CampaignPage:
@@ -9681,7 +9683,9 @@ components:
         startingLevel: { type: integer, format: int32, minimum: 1, maximum: 20, description: "The level new Characters start at." }
         holdLevelUps: { type: boolean, description: "Long rests stop unlocking the next level; the DM grants levels instead." }
         noUndo: { type: boolean, description: "The Campaign is played without undo: nothing is taken back, no Checkpoint is kept and there is no rewind." }
-        showDcs: { type: boolean, description: "The DC of a check is shown on its Roll Card; without it the DC is the DM's to know." }
+        showDcs: { type: boolean, description: "The DC of a check or a save is shown on its Roll Card; without it the DC is the DM's to know." }
+        difficulty: { $ref: "#/components/schemas/Difficulty" }
+        karmicDice: { type: boolean, description: "The d20s the server rolls for rolls a fight or the DM asks of a roller are karmic: after two low ones in a row the roller's next leans high, and after two high ones it leans low. A die a player throws is never karmic, nor is a roll a Member makes for themself or a check taken outside a fight." }
         exhaustion: { type: string, maxLength: 40, description: "The exhaustion the Campaign plays with: srd-2024, gentle, grim or off." }
         shareInitiative: { type: boolean, description: "Identical monsters share one initiative roll." }
         me: { $ref: "#/components/schemas/Member" }
@@ -9719,7 +9723,9 @@ components:
         startingLevel: { type: integer, format: int32, minimum: 1, maximum: 20, description: "The level new Characters start at." }
         holdLevelUps: { type: boolean, description: "Long rests stop unlocking the next level; the DM grants levels instead." }
         noUndo: { type: boolean, description: "The Campaign is played without undo: nothing is taken back, no Checkpoint is kept and there is no rewind." }
-        showDcs: { type: boolean, description: "The DC of a check is shown on its Roll Card; without it the DC is the DM's to know." }
+        showDcs: { type: boolean, description: "The DC of a check or a save is shown on its Roll Card; without it the DC is the DM's to know." }
+        difficulty: { $ref: "#/components/schemas/Difficulty" }
+        karmicDice: { type: boolean, description: "The d20s the server rolls for rolls a fight or the DM asks of a roller are karmic: after two low ones in a row the roller's next leans high, and after two high ones it leans low. A die a player throws is never karmic, nor is a roll a Member makes for themself or a check taken outside a fight." }
         exhaustion: { type: string, maxLength: 40, description: "The exhaustion the Campaign plays with: srd-2024, gentle, grim or off." }
         shareInitiative: { type: boolean, description: "Identical monsters share one initiative roll." }
     Account:
@@ -11917,6 +11923,10 @@ components:
         sign: { type: integer, format: int32, minimum: -1, maximum: 1 }
         keep: { type: string, enum: [highest, lowest] }
         keepCount: { type: integer, format: int32, minimum: 1, maximum: 19 }
+    Difficulty:
+      type: string
+      description: "The Campaign's difficulty preset. story: enemies come with three quarters of their hit points and attack at −2. standard: the rules as written. hard: enemies come with a quarter more hit points and attack at +2."
+      enum: [story, standard, hard]
     RollDie:
       type: object
       description: One die of a Roll Request.
@@ -11929,6 +11939,7 @@ components:
         value: { type: integer, format: int32, minimum: 1, maximum: 100 }
         mode: { type: string, enum: [auto, manual] }
         kept: { type: boolean }
+        karmicDropped: { type: integer, format: int32, minimum: 1, maximum: 20, description: "Set on a karmic d20: the other face the server rolled and let go." }
     MemberRef:
       type: object
       description: A Member by id and name.
@@ -14250,12 +14261,12 @@ components:
       type: object
       description: A saving throw waiting on its Roll Card to end an Effect.
       additionalProperties: false
-      required: [rollId, tokenId, effect, dc]
+      required: [rollId, tokenId, effect]
       properties:
         rollId: { $ref: "#/components/schemas/Id" }
         tokenId: { $ref: "#/components/schemas/Id" }
         effect: { type: string, maxLength: 80 }
-        dc: { type: integer, format: int32, minimum: 1, maximum: 40 }
+        dc: { type: integer, format: int32, minimum: 1, maximum: 40, description: "The save's DC. The DM always has it; the party only while the Campaign shows DCs." }
     Tactics:
       type: string
       description: How a creature picks Suggested Actions; auto follows its Intelligence (Cunning from 12).

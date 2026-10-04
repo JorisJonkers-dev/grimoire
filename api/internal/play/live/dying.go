@@ -153,7 +153,7 @@ func (r *runtime) planStabilise(m domain.Member, cmd Command) (Write, string) {
 		w.Dying = &d
 		return w, ""
 	}
-	roll := r.request(m, h, "Wisdom (Medicine) check to stabilise "+t.Label+" (DC 10)", "1d20")
+	roll := r.request(m, h, "Wisdom (Medicine) check to stabilise "+t.Label+r.dcNote(dying.StabiliseDC), "1d20")
 	target := t.ID
 	w.Rolls, w.Pending = []domain.Roll{roll}, &domain.PendingAction{RollID: roll.ID, Actor: h.ID, Target: &target, Action: stabilising, DC: dying.StabiliseDC}
 	return w, ""

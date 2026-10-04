@@ -49,6 +49,8 @@ type state struct {
 	minute int
 	// standings are how the Campaign's Factions regard the party, as last read.
 	standings []domain.Standing
+	// dcsShown is whether the Campaign showed DCs when a check or save last asked.
+	dcsShown bool
 	// march is the Marching Order: the Characters that have a place in it, from the front.
 	march []uuid.UUID
 	// observed is the ranged damage each creature has seen each other creature deal.
@@ -97,6 +99,7 @@ func (s *state) clone() *state {
 	next.rest, next.pending, next.dying = s.rest.Clone(), slices.Clone(s.pending), maps.Clone(s.dying)
 	next.attitudes, next.tableResult = slices.Clone(s.attitudes), s.tableResult
 	next.inventory, next.day, next.minute, next.march, next.standings = cloneInventory(s.inventory), s.day, s.minute, slices.Clone(s.march), s.standings
+	next.dcsShown = s.dcsShown
 	if s.sneak != nil {
 		next.sneak = &domain.Sneak{Rolls: slices.Clone(s.sneak.Rolls)}
 	}
@@ -289,7 +292,11 @@ func (s *state) projectPending(v *View, a Audience, seen map[hex.Coord]bool) {
 		i := slices.IndexFunc(s.fx.Active, func(e domain.Effect) bool { return e.ID == p.Effect })
 		e := s.fx.Active[i]
 		if a == AudienceDM || s.shows(s.tokens[e.Target], seen) {
-			v.Saves = append(v.Saves, SaveView{RollID: uuid.UUID(p.RollID).String(), TokenID: uuid.UUID(e.Target).String(), Effect: e.Name, DC: p.DC})
+			save := SaveView{RollID: uuid.UUID(p.RollID).String(), TokenID: uuid.UUID(e.Target).String(), Effect: e.Name, DC: 0}
+			if a == AudienceDM || s.dcsShown {
+				save.DC = p.DC
+			}
+			v.Saves = append(v.Saves, save)
 		}
 	}
 	if a == AudienceDM {

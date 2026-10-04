@@ -348,6 +348,14 @@ _Avoid_: Formation, party order
 An optional or house rule a DM switches on for a Campaign, such as flanking or critical fumbles, built in or authored from hook points that apply Effects or Roll Tables.
 _Avoid_: House rule (as the model term), setting, option
 
+**Difficulty Preset**:
+How hard a Campaign's enemies are, chosen by its DM: Story, Standard or Hard. It changes the hit points an enemy comes onto the map with and what its attacks roll at, and every Member can see it.
+_Avoid_: Difficulty level, game mode
+
+**Karmic Dice**:
+An optional smoothing of the d20s the server rolls: after two low ones in a row a roller's next leans high, after two high ones it leans low, and the Roll Card says which face was let go. A die a player throws is never karmic, and neither is a roll a Member makes for themself from the dice tray or a check taken at will outside a fight: only rolls that a fight or the DM asks of a roller are.
+_Avoid_: Luck, fudging, weighted dice
+
 **Roll Table**:
 A Library table of dice ranges whose results can apply Effects or give Items, used for fumbles, injuries, surges, madness, trinkets, weather and rumours.
 _Avoid_: Random table, d100 table

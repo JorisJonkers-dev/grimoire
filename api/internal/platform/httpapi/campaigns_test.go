@@ -207,6 +207,37 @@ func TestCampaignLifecycleOverHTTP(t *testing.T) {
 		body["initiativeMode"] != "side" || body["shareInitiative"] != true {
 		t.Fatalf("update: %d %s", rec.Code, rec.Body.String())
 	}
+	// A Campaign starts at the rules as written with plain dice; the DM picks a difficulty preset and
+	// karmic dice, and every Member can read both.
+	if home["difficulty"] != "standard" || home["karmicDice"] != false {
+		t.Fatalf("a new Campaign's difficulty and dice = %v %v", home["difficulty"], home["karmicDice"])
+	}
+	rec = call(h, http.MethodPatch, "/api/v1/campaigns/"+id, "dm", `{"difficulty":"story","karmicDice":true}`)
+	if body := decode(t, rec); rec.Code != 200 || body["difficulty"] != "story" || body["karmicDice"] != true || body["highGround"] != true || body["name"] != "Greyfen" {
+		t.Fatalf("difficulty: %d %s", rec.Code, rec.Body.String())
+	}
+	rec = call(h, http.MethodPatch, "/api/v1/campaigns/"+id, "dm", `{"difficulty":"hard"}`)
+	if body := decode(t, rec); rec.Code != 200 || body["difficulty"] != "hard" || body["karmicDice"] != true {
+		t.Fatalf("difficulty alone: %d %s", rec.Code, rec.Body.String())
+	}
+	rec = call(h, http.MethodPatch, "/api/v1/campaigns/"+id, "dm", `{"karmicDice":false}`)
+	if body := decode(t, rec); rec.Code != 200 || body["difficulty"] != "hard" || body["karmicDice"] != false {
+		t.Fatalf("dice alone: %d %s", rec.Code, rec.Body.String())
+	}
+	if rec := call(h, http.MethodPatch, "/api/v1/campaigns/"+id, "dm", `{"difficulty":"nightmare"}`); rec.Code != http.StatusBadRequest {
+		t.Fatalf("unknown difficulty: %d %s", rec.Code, rec.Body.String())
+	}
+	if rec := call(h, http.MethodPatch, "/api/v1/campaigns/"+id, "player", `{"difficulty":"story"}`); rec.Code != http.StatusForbidden {
+		t.Fatalf("a Player sets the difficulty: %d %s", rec.Code, rec.Body.String())
+	}
+	rec = call(h, http.MethodGet, "/api/v1/campaigns/"+id, "player", "")
+	if body := decode(t, rec); rec.Code != 200 || body["difficulty"] != "hard" || body["karmicDice"] != false {
+		t.Fatalf("a Player reads the difficulty: %d %s", rec.Code, rec.Body.String())
+	}
+	rec = call(h, http.MethodGet, "/api/v1/campaigns", "player", "")
+	if rec.Code != 200 || !strings.Contains(rec.Body.String(), `"difficulty":"hard"`) {
+		t.Fatalf("list: %d %s", rec.Code, rec.Body.String())
+	}
 	rec = call(h, http.MethodPatch, "/api/v1/campaigns/"+id+"/members/"+playerID, "dm", `{"role":"dm"}`)
 	if rec.Code != 200 || decode(t, rec)["role"] != "dm" {
 		t.Fatalf("co-DM: %d %s", rec.Code, rec.Body.String())

@@ -151,3 +151,35 @@ func TestRollErrorsBecomeProblems(t *testing.T) {
 		}
 	}
 }
+
+// karmicRolls answers every read with one resolved roll whose first d20 was karmic.
+type karmicRolls struct{ brokenRolls }
+
+func (karmicRolls) Get(_ context.Context, _ caller.Caller, campaign uuid.UUID, id playdomain.RollID) (playdomain.Roll, error) {
+	let := 6
+	return playdomain.Roll{
+		ID: id, CampaignID: campaign, Purpose: "Save", Notation: "1d20+1d4", Status: playdomain.StatusResolved, Total: 17,
+		Dice: []playdomain.Die{
+			{No: 0, Group: 0, Faces: 20, Value: 14, Mode: playdomain.ModeAuto, Kept: false, KarmicDropped: &let},
+			{No: 1, Group: 1, Faces: 4, Value: 3, Mode: playdomain.ModeAuto, Kept: false, KarmicDropped: nil},
+		},
+	}, nil
+}
+
+// A karmic d20 says on the wire which face it let go; a die that is not karmic says nothing of it.
+func TestAKarmicDieSaysWhatItLetGo(t *testing.T) {
+	t.Parallel()
+	h := campaignServer(t, brokenCampaigns{}, httpapi.RollService(karmicRolls{brokenRolls: brokenRolls{err: nil}}))
+	rec := call(h, http.MethodGet, "/api/v1/campaigns/0190c7a8-0000-7000-8000-000000000001/rolls/0190c7a8-0000-7000-8000-000000000002", "u", "")
+	dice, _ := decode(t, rec)["dice"].([]any)
+	if rec.Code != 200 || len(dice) != 2 {
+		t.Fatalf("roll: %d %s", rec.Code, rec.Body.String())
+	}
+	karmic, plain := dice[0].(map[string]any), dice[1].(map[string]any)
+	if karmic["karmicDropped"] != float64(6) || karmic["value"] != float64(14) {
+		t.Fatalf("karmic die = %v", karmic)
+	}
+	if _, said := plain["karmicDropped"]; said {
+		t.Fatalf("plain die = %v", plain)
+	}
+}

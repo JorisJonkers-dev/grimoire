@@ -59,7 +59,7 @@ func notFound(err error) error {
 func (s *Store) InsertRoll(ctx context.Context, r domain.Roll, now time.Time) (domain.RollID, error) {
 	id, err := s.q.InsertRoll(ctx, queries.InsertRollParams{
 		ID: pgtype.UUID{Bytes: r.ID, Valid: r.ID != domain.RollID{}}, CampaignID: r.CampaignID, Purpose: r.Purpose, Notation: r.Notation, RequestedByName: r.RequestedBy,
-		RollerMemberID: r.Roller.ID, RollerSubject: r.Roller.Subject, RollerName: r.Roller.Name, Now: now,
+		RollerMemberID: r.Roller.ID, RollerSubject: r.Roller.Subject, RollerName: r.Roller.Name, Now: now, Asked: r.Asked,
 	})
 	if err != nil {
 		return domain.RollID{}, err
@@ -98,7 +98,7 @@ func (s *Store) Roll(ctx context.Context, campaign uuid.UUID, id domain.RollID) 
 		ID: domain.RollID(r.ID), CampaignID: r.CampaignID, Purpose: r.Purpose, Notation: r.Notation, Labels: map[int]string{},
 		Modifiers: []domain.Modifier{}, RequestedBy: r.RequestedByName, Status: r.Status, Total: int(r.Total.Int32),
 		Roller: domain.Member{ID: r.RollerMemberID, Subject: r.RollerSubject, Name: r.RollerName}, CreatedAt: r.CreatedAt,
-		ResolvedAt: r.ResolvedAt.Time, Choosing: r.Choosing, Rerolled: r.Rerolled,
+		ResolvedAt: r.ResolvedAt.Time, Choosing: r.Choosing, Rerolled: r.Rerolled, Asked: r.Asked,
 	}
 	labels, err := s.q.RollLabels(ctx, r.ID)
 	if err != nil {
@@ -119,7 +119,12 @@ func (s *Store) Roll(ctx context.Context, campaign uuid.UUID, id domain.RollID) 
 		return domain.Roll{}, err
 	}
 	for _, d := range dice {
-		out.Dice = append(out.Dice, domain.Die{No: int(d.DieNo), Group: int(d.GroupNo), Faces: int(d.Faces), Value: int(d.Value.Int32), Mode: d.Mode.String})
+		die := domain.Die{No: int(d.DieNo), Group: int(d.GroupNo), Faces: int(d.Faces), Value: int(d.Value.Int32), Mode: d.Mode.String, Kept: false, KarmicDropped: nil}
+		if d.KarmicDropped.Valid {
+			let := int(d.KarmicDropped.Int32)
+			die.KarmicDropped = &let
+		}
+		out.Dice = append(out.Dice, die)
 	}
 	return out, nil
 }
@@ -141,13 +146,45 @@ func (s *Store) Rolls(ctx context.Context, campaign uuid.UUID, limit int) ([]dom
 	return out, nil
 }
 
-// SetDie records a face for an empty die and reports whether it was empty.
-func (s *Store) SetDie(ctx context.Context, id domain.RollID, no, value int, mode string) (bool, error) {
-	n, err := s.q.SetRollDie(ctx, queries.SetRollDieParams{
+// SetDie records a face for an empty die and reports whether it was empty; dropped is the face a
+// karmic d20 let go.
+func (s *Store) SetDie(ctx context.Context, id domain.RollID, no, value int, mode string, dropped *int) (bool, error) {
+	p := queries.SetRollDieParams{
 		RollID: uuid.UUID(id), DieNo: int32(no), Value: pgtype.Int4{Int32: int32(value), Valid: true}, //nolint:gosec // die faces
-		Mode: pgtype.Text{String: mode, Valid: true},
-	})
+		Mode: pgtype.Text{String: mode, Valid: true}, KarmicDropped: pgtype.Int4{Int32: 0, Valid: false},
+	}
+	if dropped != nil {
+		p.KarmicDropped = pgtype.Int4{Int32: int32(*dropped), Valid: true} //nolint:gosec // a d20's face
+	}
+	n, err := s.q.SetRollDie(ctx, p)
 	return n == 1, err
+}
+
+// KarmicDice reads whether the Campaign's dice are karmic.
+func (s *Store) KarmicDice(ctx context.Context, campaign uuid.UUID) (bool, error) {
+	return s.q.CampaignKarmicDice(ctx, campaign)
+}
+
+// Karma reads a roller's latest d20s rolled by the server, newest first; a roller with none has no run.
+func (s *Store) Karma(ctx context.Context, campaign, member uuid.UUID) ([]int, error) {
+	recent, err := s.q.RollKarma(ctx, queries.RollKarmaParams{CampaignID: campaign, MemberID: member})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+	out := make([]int, 0, len(recent))
+	for _, face := range recent {
+		out = append(out, int(face))
+	}
+	return out, err
+}
+
+// SetKarma keeps a roller's latest d20s rolled by the server.
+func (s *Store) SetKarma(ctx context.Context, campaign, member uuid.UUID, recent []int) error {
+	faces := make([]int32, 0, len(recent))
+	for _, face := range recent {
+		faces = append(faces, int32(face)) //nolint:gosec // a d20's face
+	}
+	return s.q.SetRollKarma(ctx, queries.SetRollKarmaParams{CampaignID: campaign, MemberID: member, Recent: faces})
 }
 
 // ResolveRoll records the total.
