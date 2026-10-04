@@ -63,6 +63,7 @@ const MapCalibrationPage = () => import('@/features/live/MapCalibrationPage.vue'
 const SignInPage = () => import('@/features/account/SignInPage.vue')
 const AccountInvitePage = () => import('@/features/account/AccountInvitePage.vue')
 const SignInLinkPage = () => import('@/features/account/SignInLinkPage.vue')
+const AccessibilityPage = () => import('@/features/account/AccessibilityPage.vue')
 const AccountPage = () => import('@/features/account/AccountPage.vue')
 const OidcCallbackPage = () => import('@/features/account/OidcCallbackPage.vue')
 const AdminPage = () => import('@/features/admin/AdminPage.vue')
@@ -133,6 +134,7 @@ export function createAppRouter(history: RouterHistory = createWebHistory()) {
       { path: '/account-invite', name: 'account-invite', component: AccountInvitePage },
       { path: '/sign-in-link', name: 'sign-in-link', component: SignInLinkPage },
       { path: '/account', name: 'account', component: AccountPage },
+      { path: '/accessibility', name: 'accessibility', component: AccessibilityPage },
       { path: '/oidc/callback', name: 'oidc-callback', component: OidcCallbackPage },
       { path: '/admin', name: 'admin', component: AdminPage },
       { path: '/characters', name: 'my-characters', component: MyCharactersPage },

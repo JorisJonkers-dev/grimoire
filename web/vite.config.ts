@@ -2,6 +2,7 @@ import { fileURLToPath, URL } from 'node:url'
 import vue from '@vitejs/plugin-vue'
 import { VitePWA } from 'vite-plugin-pwa'
 import { defineConfig } from 'vitest/config'
+import { accessibleCss } from './src/shared/a11y/css.ts'
 
 const api = process.env.GRIMOIRE_API_ORIGIN ?? 'http://localhost:8080'
 const proxy = { '/api': { target: api, ws: true }, '/mcp': api, '/.well-known': api, '/healthz': api, '/readyz': api }
@@ -37,6 +38,7 @@ const pwa = VitePWA({
 export default defineConfig({
   plugins: [vue(), ...(process.env.VITEST ? [] : [pwa])],
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
+  css: { postcss: { plugins: [accessibleCss()] } },
   server: { proxy },
   preview: { proxy },
   test: {

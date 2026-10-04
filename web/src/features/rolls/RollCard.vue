@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, ref } from 'vue'
 import type { RollDie, RollRequest } from '@/infrastructure/api/types.gen'
 import { keepRoll, rerollDie, rollRest, setDie } from '@/infrastructure/api/sdk.gen'
+import { buzz, reducedMotion } from '@/shared/a11y/settings'
 import { DieFace, GButton } from '@/shared/ui'
 import { criticalOf, shownOf } from '@/features/dice/choreography'
 import { throwDice } from '@/features/dice/stage'
@@ -21,7 +22,6 @@ onBeforeUnmount(() => {
   timers.forEach(clearInterval)
 })
 
-const reduced = () => typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 const pending = computed(() => props.roll.status === 'pending')
 const modifierTotal = computed(() => props.roll.modifiers.reduce((sum, m) => sum + m.value, 0))
 const dieState = (d: RollDie) =>
@@ -40,7 +40,7 @@ const path = computed(() => ({ campaignId: props.campaignId, rollId: props.roll.
 
 /** Flickers random faces until the server's result lands; with reduced motion it just waits. */
 function tumble(dice: RollDie[]): () => void {
-  if (reduced()) return () => undefined
+  if (reducedMotion()) return () => undefined
   const faces = (d: RollDie) => 1 + Math.floor(Math.random() * d.faces)
   tumbling.value = { ...tumbling.value, ...Object.fromEntries(dice.map((d) => [d.no, faces(d)])) }
   const timer = setInterval(() => {
@@ -60,10 +60,13 @@ async function run(dice: RollDie[], call: () => Promise<RollRequest>) {
   failed.value = ''
   const land = tumble(dice)
   try {
-    const updated = reduced() ? await call() : (await Promise.all([call(), new Promise((r) => setTimeout(r, 450))]))[0]
+    const updated = reducedMotion() ? await call() : (await Promise.all([call(), new Promise((r) => setTimeout(r, 450))]))[0]
     emit('updated', updated)
     // The server has the result: throw it on this screen's dice stage.
-    if (updated.status === 'resolved' && !updated.choosing) throwDice(shownOf(updated), updated.id, true)
+    if (updated.status === 'resolved' && !updated.choosing) {
+      throwDice(shownOf(updated), updated.id, true)
+      buzz(40)
+    }
   } catch {
     failed.value = 'That roll could not be saved. Try again.'
   } finally {
