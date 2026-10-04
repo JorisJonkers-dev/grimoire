@@ -9,7 +9,7 @@ test('a DM keeps a creature in the Library, links it, overrides it and pins a Re
   await page.getByTestId('campaign-name').fill(campaign)
   await page.getByTestId('campaign-display-name').fill('DM')
   await page.getByRole('button', { name: 'Start as DM' }).click()
-  await expect(page.getByTestId('library-link')).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Library', exact: true }).filter({ visible: true })).toHaveCount(1)
 
   await page.goto('/library')
   await page.getByTestId('library-kind').selectOption('creature')

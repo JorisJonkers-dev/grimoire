@@ -39,11 +39,14 @@ export function press(key: string, root: ParentNode = document): boolean {
   return true
 }
 
+// What a control is called: its label, the label a field stands in, or its own words.
+const named = (el: Element) => el.getAttribute('aria-label') ?? (el as HTMLInputElement).labels?.[0]?.textContent ?? el.textContent
+
 /** What the page answers to now: each key once, by what its control is called. */
 export function listed(root: ParentNode = document): { keys: string; what: string }[] {
   const rows = answering(root).map((el) => ({
     keys: keysOf(el).join(' or '),
-    what: (el.getAttribute('aria-label') ?? el.textContent).trim().replace(/\s+/g, ' '),
+    what: named(el).trim().replace(/\s+/g, ' '),
   }))
   return rows.filter((row, i) => rows.findIndex((r) => r.keys === row.keys) === i)
 }

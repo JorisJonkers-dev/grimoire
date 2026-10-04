@@ -32,7 +32,7 @@ describe('Conversations', () => {
       '/api/v1/friends': () => friends,
       '/api/v1/account': () => me,
     })
-    expect(wrapper.get('[data-testid="conversations-link"]').text()).toBe('Talk')
+    expect(wrapper.get('[data-testid="conversations-link"]').attributes('aria-label')).toBe('Talk')
     const row = wrapper.get(`[data-testid="conversation-${talk}"]`).text()
     expect(row).toContain('Aria, Bram')
     expect(row).toContain('See you Friday')

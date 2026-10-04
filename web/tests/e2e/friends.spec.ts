@@ -8,6 +8,7 @@ test('two people become Friends from the Friends page', async ({ browser, reques
   const asker = await account(browser, request, `ask-${stamp}`, 'Asker')
   const friend = await account(browser, request, `fri-${stamp}`, 'Friendly')
 
+  await asker.page.getByTestId('account-menu-toggle').click()
   await asker.page.getByTestId('friends-link').click()
   await asker.page.getByTestId('friend-username').fill(`fri-${stamp}`)
   await asker.page.getByRole('button', { name: 'Send a request' }).click()

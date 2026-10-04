@@ -28,11 +28,13 @@ const initials = computed(
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  border: 1px solid var(--color-bronze);
+  box-sizing: border-box;
+  border: 1px solid var(--color-party);
   border-radius: 50%;
-  background: var(--color-raised);
-  color: var(--color-gold-high);
+  background: var(--color-party-fill);
+  color: var(--color-text);
   font-family: var(--font-display);
+  font-weight: 700;
 }
 img {
   width: 100%;

@@ -18,6 +18,7 @@ test('an invitee sets up an Account, signs out and signs back in with a password
   await page.getByRole('button', { name: 'Create my Account' }).click()
   await expect(page.getByTestId('account-link')).toHaveText('Tamsin')
 
+  await page.getByTestId('account-menu-toggle').click()
   await page.getByTestId('sign-out').click()
   await expect(page.getByRole('heading', { level: 1, name: 'Sign in' })).toBeVisible()
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])

@@ -108,6 +108,8 @@ describe('a gamepad', () => {
     await press(12)
     expect(at()).toBe(wrapper.get('a.brand').element)
     await press(13)
+    await press(13)
+    expect(at()).toBe(wrapper.get('[data-testid="campaigns-link"]').element)
     // A presses what has the focus.
     await press(0)
     await vi.waitFor(() => { expect(router.currentRoute.value.name).toBe('campaigns') })

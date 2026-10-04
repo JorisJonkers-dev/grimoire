@@ -200,7 +200,7 @@ function decide(ch: StandingChange, confirm: boolean) {
 .tier {
   padding: 2px 10px;
   border-radius: 999px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-line);
   font-weight: 700;
 }
 .tier--hostile,

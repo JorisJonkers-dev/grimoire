@@ -14,38 +14,41 @@ withDefaults(defineProps<{ variant?: 'primary' | 'secondary' | 'danger'; type?: 
 
 <style scoped>
 .g-button {
-  min-height: 48px;
-  padding: 0 20px;
-  border-radius: var(--radius-md);
-  font-family: var(--font-ui);
-  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: var(--size-control);
+  padding: 0 18px;
+  border-radius: var(--radius-control);
+  font-family: var(--font-label);
   font-size: 16px;
   cursor: pointer;
   transition: filter var(--motion-max);
 }
+.g-button:hover:not(:disabled) {
+  filter: brightness(1.12);
+}
+/* Out of use it is drawn hollow, with a dashed edge, rather than faded: faded text is hard to read. */
 .g-button:disabled {
+  border: 1px dashed var(--color-line);
+  background: var(--color-inset);
+  color: var(--color-text-3);
   cursor: not-allowed;
-  opacity: 0.55;
 }
 .g-button--primary {
-  border: 1px solid var(--color-gold-high);
-  background: var(--color-gold);
-  color: #1a130c;
-  font-family: var(--font-display);
-  letter-spacing: 0.06em;
+  border: 1px solid var(--color-brass-edge);
+  background: var(--color-brass);
+  color: var(--color-brass-text);
 }
 .g-button--secondary {
-  border: 1px solid var(--color-bronze);
+  border: 1px solid var(--color-edge);
   background: var(--color-raised);
   color: var(--color-text);
 }
 .g-button--danger {
-  border: 1px solid var(--color-enemy);
-  background: var(--color-enemy-fill);
-  color: var(--color-enemy-soft);
-}
-.g-button:focus-visible {
-  outline: 3px solid var(--color-gold-high);
-  outline-offset: 2px;
+  border: 1px solid var(--color-danger-edge);
+  background: var(--color-danger-fill);
+  color: var(--color-danger-text);
 }
 </style>

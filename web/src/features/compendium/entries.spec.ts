@@ -41,7 +41,7 @@ describe('entry list', () => {
     })
     expect(wrapper.get('h1').text()).toBe('Monsters')
     expect(wrapper.get('[data-testid="entry-list"]').text()).toContain('CR 1/4 · Humanoid')
-    expect(wrapper.get('[aria-current="page"]').text()).toBe('Monsters')
+    expect(wrapper.get('nav[aria-label="Compendium"] [aria-current="page"]').text()).toBe('Monsters')
     await wrapper.get('button.g-button').trigger('click')
     await flushPromises()
     expect(wrapper.get('[data-testid="entry-list"]').text()).toContain('Orc')

@@ -23,8 +23,14 @@ test('the Dashboard shows a Session under way one click away, and the search fin
 
   // The header's search box finds the Campaign by its name, with a line that says what it is.
   await page.goto('/')
-  await page.getByTestId('header-search-input').fill(stamp)
-  await page.getByTestId('header-search-input').press('Enter')
+  // The bar holds the search box where there is room for it, and the way to the search page where not.
+  if (await page.getByTestId('header-search-input').isVisible()) {
+    await page.getByTestId('header-search-input').fill(stamp)
+    await page.getByTestId('header-search-input').press('Enter')
+  } else {
+    await page.getByTestId('search-link').click()
+    await page.getByTestId('search-input').fill(stamp)
+  }
   await expect(page.getByTestId('search-count')).toHaveText(`1 result for “${stamp}”.`)
   const hit = page.getByTestId('search-hit')
   await expect(hit).toContainText(name)

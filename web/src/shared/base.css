@@ -2,6 +2,7 @@
 @import '@fontsource/cinzel/700.css';
 @import '@fontsource/alegreya/400.css';
 @import '@fontsource/alegreya/400-italic.css';
+@import '@fontsource/marcellus/400.css';
 @import '@fontsource/alegreya-sans/400.css';
 @import '@fontsource/alegreya-sans/700.css';
 @import '@fontsource/alegreya-sans/800.css';
@@ -10,14 +11,22 @@
 @import './tokens.css';
 @import './a11y/accessibility.css';
 
+/* The Soft component system: design/tokens.json names every value, the design canvas draws every part. */
 :root {
   color-scheme: dark;
+  --gutter: 48px;
+}
+@media (max-width: 899px) {
+  :root {
+    --gutter: 22px;
+  }
 }
 body {
   margin: 0;
   background: var(--color-ground);
   color: var(--color-text);
   font-family: var(--font-ui);
+  line-height: 1.4;
 }
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -28,28 +37,103 @@ body {
   }
 }
 
-/* Pages fill the width between the shell's gutters: 48px, 16px on a phone. */
-:root {
-  --gutter: 48px;
+/* Links are gold. In a line of text a thin rule under them tells them from the words around, since
+   colour alone does not; a link that stands by itself (a place, a row, an action) carries none. */
+a {
+  color: var(--color-gold-high);
+  text-decoration: underline;
+  text-decoration-color: var(--color-brass-line);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
 }
-@media (max-width: 600px) {
-  :root {
-    --gutter: 16px;
-  }
+a:hover {
+  color: var(--color-gold-hover);
 }
+:where(nav, h1, h2, h3, th) a,
+a:where(.g-action, .g-row, .g-button) {
+  text-decoration: none;
+}
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-gold-high);
+  outline-offset: 2px;
+}
+.g-action {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-gold-high);
+  font-family: var(--font-label);
+  font-size: 16px;
+  cursor: pointer;
+}
+.g-action:hover {
+  color: var(--color-gold-hover);
+}
+
+/* A page: the width between the gutters, a small-caps line over its name, sections under it. */
 .g-page {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 28px;
   width: 100%;
-  padding: 24px var(--gutter);
+  padding: 48px var(--gutter) 64px;
   box-sizing: border-box;
 }
 .g-page h1 {
   margin: 0;
   font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 36px;
+  line-height: 1.2;
 }
-/* A labelled native control, drawn like GField with its label floated inside the box. */
+.g-eyebrow,
+.g-page h2 {
+  margin: 0;
+  font-family: var(--font-label);
+  font-weight: 400;
+  font-size: 15px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-gold);
+}
+.g-page h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 17px;
+}
+.g-lede {
+  margin: 0;
+  font-size: 15px;
+  color: var(--color-text-2);
+}
+.g-flavour {
+  margin: 0;
+  font-family: var(--font-flavour);
+  font-style: italic;
+  font-size: 18px;
+  color: var(--color-text-2);
+}
+@media (max-width: 899px) {
+  .g-page {
+    padding: 28px var(--gutter) 40px;
+  }
+  .g-page h1 {
+    font-size: 25px;
+  }
+  .g-eyebrow,
+  .g-page h2 {
+    font-size: 14px;
+  }
+}
+
+/* A section stands under a rule, not in a box: rows rather than cards. */
+.g-card {
+  padding: 20px 0 0;
+  border-top: 1px solid var(--color-rule);
+}
+
+/* A labelled native control, drawn like GField: filled, its label inside, a rule under it. */
 .g-field {
   position: relative;
   display: flex;
@@ -59,11 +143,12 @@ body {
 }
 .g-field > span:first-child {
   position: absolute;
-  top: 6px;
-  left: 13px;
+  top: 7px;
+  left: 14px;
   z-index: 1;
+  font-family: var(--font-label);
   font-size: 12px;
-  color: var(--color-gold-high);
+  color: var(--color-text-2);
   pointer-events: none;
 }
 .g-field input:not([type='range'], [type='file'], [type='checkbox'], [type='radio']),
@@ -71,11 +156,12 @@ body {
 .g-field textarea {
   box-sizing: border-box;
   width: 100%;
-  min-height: 52px;
-  padding: 20px 12px 4px;
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface);
+  min-height: 56px;
+  padding: 22px 14px 6px;
+  border: 0;
+  border-radius: var(--radius-control) var(--radius-control) 0 0;
+  background: var(--color-field);
+  box-shadow: inset 0 -1px 0 var(--color-line);
   color: var(--color-text);
   font: inherit;
   font-size: 16px;
@@ -84,33 +170,112 @@ body {
 .g-field select:focus,
 .g-field textarea:focus {
   outline: none;
-  border-color: var(--color-gold);
+  box-shadow: inset 0 -2px 0 var(--color-brass-edge);
+}
+.g-field:focus-within > span:first-child {
+  color: var(--color-gold-high);
 }
 /* A slider or file chooser keeps its label above it. */
 .g-field:has(input[type='range'], input[type='file']) > span:first-child {
   position: static;
 }
-.g-card {
-  padding: 14px 16px;
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface);
+input[type='checkbox'],
+input[type='radio'],
+input[type='range'] {
+  accent-color: var(--color-brass-edge);
 }
+::placeholder {
+  color: var(--color-text-3);
+}
+
+/* Lists are rows under rules; a table is the same with columns. */
 .g-list {
   margin: 0;
   padding: 0;
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 6px;
 }
+.g-list > li {
+  padding: 12px 0;
+  border-top: 1px solid var(--color-rule);
+}
+.g-list > li:last-child {
+  border-bottom: 1px solid var(--color-rule);
+}
+/* A row brings its own rule: the item around it adds none. */
+.g-list > li:has(> .g-row) {
+  padding: 0;
+  border: 0;
+}
+.g-list > li:last-child > .g-row,
+.g-row:last-child {
+  border-bottom: 1px solid var(--color-rule);
+}
+.g-page table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+.g-page th {
+  padding: 0 12px 10px;
+  font-family: var(--font-label);
+  font-weight: 400;
+  font-size: 14px;
+  text-align: left;
+  color: var(--color-text-3);
+}
+.g-page td {
+  padding: 14px 12px;
+  border-top: 1px solid var(--color-rule);
+}
+.g-page :where(th, td):first-child {
+  padding-left: 0;
+}
+.g-page tbody tr:last-child td {
+  border-bottom: 1px solid var(--color-rule);
+}
+.g-page tbody th {
+  padding: 14px 12px 14px 0;
+  border-top: 1px solid var(--color-rule);
+  font-family: var(--font-ui);
+  font-size: 15px;
+  color: var(--color-text);
+}
+.g-page dl {
+  margin: 0;
+}
+
+/* Tags and what they say about a thing. */
 .g-tag {
-  padding: 2px 8px;
-  border-radius: var(--radius-pill);
+  padding: 4px 10px;
+  border-radius: var(--radius-chip);
   border: 1px solid var(--color-bronze);
-  font-size: 12px;
-  color: var(--color-text-2);
+  font-size: 14px;
+  color: var(--color-gold-high);
+}
+.g-tag--homebrew {
+  border-color: var(--color-homebrew-edge);
+  color: var(--color-homebrew);
+}
+.g-tag--pending {
+  border-style: dashed;
+  border-color: var(--color-brass-line);
+}
+.g-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  box-sizing: border-box;
+  border-radius: 9px;
+  background: var(--color-badge);
+  color: var(--color-badge-text);
+  font-size: 11px;
+  font-weight: 800;
 }
 .g-alert {
-  color: var(--color-enemy-soft);
+  color: var(--color-danger-text);
 }

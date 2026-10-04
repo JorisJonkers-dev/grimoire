@@ -39,6 +39,7 @@ test('two-step sign-in asks for one numeric code after the password', async ({ b
   await page.getByRole('button', { name: 'Turn on two-step' }).click()
   await expect(page.getByTestId('recovery-codes').locator('li')).toHaveCount(10)
 
+  await page.getByTestId('account-menu-toggle').click()
   await page.getByTestId('sign-out').click()
   await page.getByTestId('sign-in-username').fill(username)
   await page.getByTestId('sign-in-password').fill('correct horse battery')
