@@ -215,7 +215,7 @@ legend {
 }
 .row-item {
   padding: 10px 0;
-  border-top: 1px solid var(--color-line);
+  border-top: 1px solid var(--color-rule);
 }
 .nested {
   flex-basis: 100%;

@@ -183,7 +183,7 @@ h2 {
   justify-content: space-between;
   gap: 8px;
   padding: 6px 0;
-  border-bottom: 1px solid var(--color-line);
+  border-bottom: 1px solid var(--color-rule);
 }
 .pick {
   display: flex;
@@ -200,7 +200,7 @@ h2 {
 .diff th,
 .diff td {
   padding: 6px;
-  border-bottom: 1px solid var(--color-line);
+  border-bottom: 1px solid var(--color-rule);
   text-align: left;
   vertical-align: top;
   overflow-wrap: anywhere;

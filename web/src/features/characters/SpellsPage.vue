@@ -198,7 +198,7 @@ h3 {
 .chips li {
   padding: 4px 10px;
   border: 1px solid var(--color-line);
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-chip);
   background: var(--color-raised);
 }
 .chips small {

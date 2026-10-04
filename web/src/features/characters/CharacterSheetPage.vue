@@ -436,7 +436,7 @@ strong.small {
 .parts {
   display: flex;
   gap: 4px;
-  border-bottom: 1px solid var(--color-line);
+  border-bottom: 1px solid var(--color-rule);
 }
 .parts button {
   flex: 1;
@@ -547,7 +547,7 @@ h2 {
 .attacks th,
 .attacks td {
   padding: 6px 4px;
-  border-bottom: 1px solid var(--color-line);
+  border-bottom: 1px solid var(--color-rule);
   text-align: left;
   vertical-align: top;
 }
@@ -562,7 +562,7 @@ h2 {
   color: var(--color-text-2);
 }
 .trait {
-  border-bottom: 1px solid var(--color-line);
+  border-bottom: 1px solid var(--color-rule);
   padding: 6px 0;
 }
 .trait summary {

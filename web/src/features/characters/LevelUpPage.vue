@@ -287,7 +287,7 @@ h2 {
 }
 .steps li {
   padding: 4px 10px;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-chip);
   border: 1px solid var(--color-line);
 }
 .steps li[aria-current='step'] {

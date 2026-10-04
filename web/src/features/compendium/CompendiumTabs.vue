@@ -25,7 +25,7 @@ defineProps<{ current: string }>()
   display: flex;
   gap: 6px;
   overflow-x: auto;
-  border-bottom: 1px solid var(--color-line);
+  border-bottom: 1px solid var(--color-rule);
   scrollbar-width: thin;
 }
 .tabs a {

@@ -30,8 +30,8 @@ describe('your Characters', () => {
     })
     expect(wrapper.get('[data-testid="characters-link"]').attributes('href')).toBe('/characters')
     const list = wrapper.get('[data-testid="my-characters"]').text()
-    expect(list).toContain('Morvain (level 3)')
-    expect(list).toContain('Not in a Campaign')
+    expect(list).toContain('Morvain · level 3')
+    expect(list).toContain('Not in a Campaign yet')
   })
 
   it('says when there are none', async () => {

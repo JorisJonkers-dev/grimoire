@@ -136,7 +136,7 @@ table {
 th,
 td {
   padding: 6px 10px;
-  border-bottom: 1px solid var(--color-line);
+  border-bottom: 1px solid var(--color-rule);
   text-align: left;
   white-space: nowrap;
 }

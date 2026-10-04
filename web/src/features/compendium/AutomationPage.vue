@@ -60,7 +60,7 @@ table {
 th,
 td {
   padding: 8px 6px;
-  border-bottom: 1px solid var(--color-line);
+  border-bottom: 1px solid var(--color-rule);
   text-align: right;
 }
 th[scope='row'],

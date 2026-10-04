@@ -123,7 +123,7 @@ legend {
 .chip {
   padding: 4px 12px;
   border: 1px solid currentcolor;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-chip);
   font-size: 14px;
 }
 .chip--party {

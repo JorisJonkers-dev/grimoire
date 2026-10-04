@@ -257,7 +257,7 @@ legend {
   align-items: end;
   gap: 8px 12px;
   padding: 10px 0;
-  border-top: 1px solid var(--color-line);
+  border-top: 1px solid var(--color-rule);
 }
 .small {
   max-width: 110px;
@@ -291,7 +291,7 @@ legend {
 .level-table th,
 .level-table td {
   padding: 2px 4px;
-  border-bottom: 1px solid var(--color-line);
+  border-bottom: 1px solid var(--color-rule);
   text-align: center;
 }
 .level-table input {

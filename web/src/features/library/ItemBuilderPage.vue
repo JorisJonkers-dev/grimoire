@@ -262,7 +262,7 @@ legend {
   align-items: end;
   gap: 8px 12px;
   padding: 10px 0;
-  border-top: 1px solid var(--color-line);
+  border-top: 1px solid var(--color-rule);
 }
 .kind {
   min-width: 90px;
@@ -289,6 +289,6 @@ select {
   flex-direction: column;
   gap: 6px;
   padding-top: 8px;
-  border-top: 1px solid var(--color-line);
+  border-top: 1px solid var(--color-rule);
 }
 </style>

@@ -42,7 +42,7 @@ function submit() {
         <li v-for="c in items" :key="c.id">
           <GRow :to="{ name: 'campaign', params: { id: c.id } }" :title="c.name" :subtitle="`${c.memberCount} ${c.memberCount === 1 ? 'member' : 'members'}`">
             <template #leading><GAvatar :name="c.name" /></template>
-            <template #trailing><span class="g-tag">{{ c.myRole === 'dm' ? 'DM' : 'Player' }}</span></template>
+            <template #trailing><span :class="['g-role', { 'g-role--dm': c.myRole === 'dm' }]">{{ c.myRole === 'dm' ? 'Dungeon Master' : 'Player' }}</span></template>
           </GRow>
         </li>
       </ul>
@@ -62,17 +62,10 @@ function submit() {
 </template>
 
 <style scoped>
-.g-list {
-  gap: 0;
-}
 .create {
   display: flex;
   flex-direction: column;
   gap: 12px;
-}
-.create h2 {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: 18px;
+  max-width: 560px;
 }
 </style>
