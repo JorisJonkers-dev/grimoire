@@ -82,7 +82,7 @@ func (q *Queries) CampaignKarmicDice(ctx context.Context, id uuid.UUID) (bool, e
 
 const getRoll = `-- name: GetRoll :one
 SELECT id, campaign_id, purpose, notation, requested_by_name, roller_member_id, roller_subject, roller_name, status, total,
-       created_at, resolved_at, choosing, rerolled
+       created_at, resolved_at, choosing, rerolled, asked
 FROM play.roll_requests WHERE campaign_id = $1 AND id = $2
 `
 
@@ -109,6 +109,7 @@ func (q *Queries) GetRoll(ctx context.Context, arg GetRollParams) (PlayRollReque
 		&i.ResolvedAt,
 		&i.Choosing,
 		&i.Rerolled,
+		&i.Asked,
 	)
 	return i, err
 }
@@ -150,9 +151,9 @@ func (q *Queries) InsertAction(ctx context.Context, arg InsertActionParams) (uui
 
 const insertRoll = `-- name: InsertRoll :one
 INSERT INTO play.roll_requests (id, campaign_id, purpose, notation, requested_by_name, roller_member_id, roller_subject,
-    roller_name, status, created_at)
+    roller_name, status, created_at, asked)
 VALUES (COALESCE($1::uuid, gen_random_uuid()), $2, $3, $4, $5,
-    $6, $7, $8, 'pending', $9)
+    $6, $7, $8, 'pending', $9, $10)
 RETURNING id
 `
 
@@ -166,6 +167,7 @@ type InsertRollParams struct {
 	RollerSubject   string
 	RollerName      string
 	Now             time.Time
+	Asked           bool
 }
 
 func (q *Queries) InsertRoll(ctx context.Context, arg InsertRollParams) (uuid.UUID, error) {
@@ -179,6 +181,7 @@ func (q *Queries) InsertRoll(ctx context.Context, arg InsertRollParams) (uuid.UU
 		arg.RollerSubject,
 		arg.RollerName,
 		arg.Now,
+		arg.Asked,
 	)
 	var id uuid.UUID
 	err := row.Scan(&id)

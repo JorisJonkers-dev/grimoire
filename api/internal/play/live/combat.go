@@ -147,7 +147,7 @@ func (r *runtime) initiativeRoll(dm domain.Member, t domain.Token, bonus int) do
 	}
 	roll := domain.Roll{
 		ID: domain.RollID(uuid.New()), CampaignID: r.st.session.CampaignID, Purpose: "Initiative for " + t.Label, Notation: "1d20",
-		RequestedBy: dm.Name, Roller: roller, Status: domain.StatusPending, Dice: []domain.Die{{No: 0, Group: 0, Faces: 20}},
+		RequestedBy: dm.Name, Roller: roller, Status: domain.StatusPending, Dice: []domain.Die{{No: 0, Group: 0, Faces: 20}}, Asked: true,
 	}
 	if bonus != 0 {
 		roll.Modifiers = []domain.Modifier{{Label: "Initiative", Value: bonus}}

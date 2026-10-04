@@ -353,7 +353,7 @@ How hard a Campaign's enemies are, chosen by its DM: Story, Standard or Hard. It
 _Avoid_: Difficulty level, game mode
 
 **Karmic Dice**:
-An optional smoothing of the d20s the server rolls: after two low ones in a row a roller's next leans high, after two high ones it leans low, and the Roll Card says which face was let go. A die a player throws is never karmic.
+An optional smoothing of the d20s the server rolls: after two low ones in a row a roller's next leans high, after two high ones it leans low, and the Roll Card says which face was let go. A die a player throws is never karmic, and neither is a roll a Member makes for themself from the dice tray: only rolls that play or the DM asks of a roller are.
 _Avoid_: Luck, fudging, weighted dice
 
 **Roll Table**:

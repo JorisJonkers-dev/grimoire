@@ -258,11 +258,7 @@ func TestEveryPlayDatabaseFaultSurfaces(t *testing.T) {
 		"create": func(r *app.Rolls) error { _, err := r.Create(ctx, player, tb.campaign, attack()); return err },
 		"auto d20": func(r *app.Rolls) error {
 			n++
-			fresh, err := base.Create(ctx, dm, tb.campaign, app.RollInput{Purpose: "Luck " + strconv.Itoa(n), Notation: "1d20"})
-			if err != nil {
-				t.Fatal(err)
-			}
-			_, err = r.SetDie(ctx, dm, tb.campaign, fresh.ID, 0, app.Fill{Auto: true})
+			_, err := r.SetDie(ctx, dm, tb.campaign, asked(t, tb, dm, "Luck "+strconv.Itoa(n), "1d20"), 0, app.Fill{Auto: true})
 			return err
 		},
 		"get":  func(r *app.Rolls) error { _, err := r.Get(ctx, player, tb.campaign, resolved.ID); return err },

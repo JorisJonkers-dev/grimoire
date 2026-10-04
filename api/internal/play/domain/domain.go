@@ -67,6 +67,9 @@ type Roll struct {
 	// spends it to reroll a die; Rerolled means it was spent on this roll.
 	Choosing bool
 	Rerolled bool
+	// Asked means the roll was asked of its roller, by live play or by a DM, rather than made by the
+	// roller for themself. Only an asked roll can be karmic or count towards a run.
+	Asked bool
 }
 
 // Action kinds in the Action Log.

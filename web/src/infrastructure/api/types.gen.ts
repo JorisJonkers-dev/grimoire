@@ -68,7 +68,7 @@ export type CampaignSummary = {
     showDcs?: boolean;
     difficulty?: Difficulty;
     /**
-     * The d20s the server rolls are karmic: after two low ones in a row a roller's next leans high, and after two high ones it leans low. A die a player throws is never karmic.
+     * The d20s the server rolls for rolls asked of a roller are karmic: after two low ones in a row the roller's next leans high, and after two high ones it leans low. A die a player throws is never karmic, nor is a roll a Member makes for themself.
      */
     karmicDice?: boolean;
     /**
@@ -142,7 +142,7 @@ export type Campaign = {
     showDcs?: boolean;
     difficulty?: Difficulty;
     /**
-     * The d20s the server rolls are karmic: after two low ones in a row a roller's next leans high, and after two high ones it leans low. A die a player throws is never karmic.
+     * The d20s the server rolls for rolls asked of a roller are karmic: after two low ones in a row the roller's next leans high, and after two high ones it leans low. A die a player throws is never karmic, nor is a roll a Member makes for themself.
      */
     karmicDice?: boolean;
     /**
@@ -204,7 +204,7 @@ export type CampaignUpdate = {
     showDcs?: boolean;
     difficulty?: Difficulty;
     /**
-     * The d20s the server rolls are karmic: after two low ones in a row a roller's next leans high, and after two high ones it leans low. A die a player throws is never karmic.
+     * The d20s the server rolls for rolls asked of a roller are karmic: after two low ones in a row the roller's next leans high, and after two high ones it leans low. A die a player throws is never karmic, nor is a roll a Member makes for themself.
      */
     karmicDice?: boolean;
     /**

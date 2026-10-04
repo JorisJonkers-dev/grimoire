@@ -128,7 +128,7 @@ func (s *Rolls) Create(ctx context.Context, c caller.Caller, campaign uuid.UUID,
 	}
 	r := domain.Roll{
 		CampaignID: campaign, Purpose: in.Purpose, Notation: in.Notation, Labels: in.Labels, Modifiers: in.Modifiers,
-		RequestedBy: me.Name, Roller: roller, Status: domain.StatusPending,
+		RequestedBy: me.Name, Roller: roller, Status: domain.StatusPending, Asked: roller.ID != me.ID,
 	}
 	for g, group := range spec.Groups {
 		for range group.Count {
@@ -320,6 +320,8 @@ type luck struct {
 	recent []int
 	lean   int
 	grew   bool
+	// asked is whether the roll is one karmic dice apply to.
+	asked bool
 }
 
 // luck reads the roller's run when the server is about to roll a d20 for them; the lean is the one
@@ -329,7 +331,8 @@ func (s *Rolls) luck(ctx context.Context, tx Repository, r domain.Roll, fills ma
 	for i, f := range fills {
 		rolls = rolls || (f.Auto && r.Dice[i].Faces == karmicFaces)
 	}
-	if !rolls {
+	// Nobody makes their own luck: a roll a Member made for themself is plain and no part of a run.
+	if !rolls || !r.Asked {
 		return luck{}, nil
 	}
 	recent, err := tx.Karma(ctx, r.CampaignID, r.Roller.ID)
@@ -340,7 +343,7 @@ func (s *Rolls) luck(ctx context.Context, tx Repository, r domain.Roll, fills ma
 	if err != nil {
 		return luck{}, err
 	}
-	out := luck{recent: recent, lean: 0, grew: false}
+	out := luck{recent: recent, lean: 0, grew: false, asked: true}
 	if on {
 		out.lean = dice.Karma(recent)
 	}
@@ -353,7 +356,7 @@ const karmicFaces = 20
 // roll rolls one die for the server. A d20 joins the run and leans as the run says; the face a
 // leaning d20 let go comes back with it.
 func (l *luck) roll(src dice.Source, faces int) (int, *int) {
-	if faces != karmicFaces {
+	if faces != karmicFaces || !l.asked {
 		return dice.Face(src, faces), nil
 	}
 	kept, let := dice.KarmicFace(src, faces, l.lean)

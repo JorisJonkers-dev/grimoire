@@ -59,7 +59,7 @@ func notFound(err error) error {
 func (s *Store) InsertRoll(ctx context.Context, r domain.Roll, now time.Time) (domain.RollID, error) {
 	id, err := s.q.InsertRoll(ctx, queries.InsertRollParams{
 		ID: pgtype.UUID{Bytes: r.ID, Valid: r.ID != domain.RollID{}}, CampaignID: r.CampaignID, Purpose: r.Purpose, Notation: r.Notation, RequestedByName: r.RequestedBy,
-		RollerMemberID: r.Roller.ID, RollerSubject: r.Roller.Subject, RollerName: r.Roller.Name, Now: now,
+		RollerMemberID: r.Roller.ID, RollerSubject: r.Roller.Subject, RollerName: r.Roller.Name, Now: now, Asked: r.Asked,
 	})
 	if err != nil {
 		return domain.RollID{}, err
@@ -98,7 +98,7 @@ func (s *Store) Roll(ctx context.Context, campaign uuid.UUID, id domain.RollID) 
 		ID: domain.RollID(r.ID), CampaignID: r.CampaignID, Purpose: r.Purpose, Notation: r.Notation, Labels: map[int]string{},
 		Modifiers: []domain.Modifier{}, RequestedBy: r.RequestedByName, Status: r.Status, Total: int(r.Total.Int32),
 		Roller: domain.Member{ID: r.RollerMemberID, Subject: r.RollerSubject, Name: r.RollerName}, CreatedAt: r.CreatedAt,
-		ResolvedAt: r.ResolvedAt.Time, Choosing: r.Choosing, Rerolled: r.Rerolled,
+		ResolvedAt: r.ResolvedAt.Time, Choosing: r.Choosing, Rerolled: r.Rerolled, Asked: r.Asked,
 	}
 	labels, err := s.q.RollLabels(ctx, r.ID)
 	if err != nil {

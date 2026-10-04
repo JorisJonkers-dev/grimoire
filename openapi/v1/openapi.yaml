@@ -9629,7 +9629,7 @@ components:
         noUndo: { type: boolean, description: "The Campaign is played without undo: nothing is taken back, no Checkpoint is kept and there is no rewind." }
         showDcs: { type: boolean, description: "The DC of a check or a save is shown on its Roll Card; without it the DC is the DM's to know." }
         difficulty: { $ref: "#/components/schemas/Difficulty" }
-        karmicDice: { type: boolean, description: "The d20s the server rolls are karmic: after two low ones in a row a roller's next leans high, and after two high ones it leans low. A die a player throws is never karmic." }
+        karmicDice: { type: boolean, description: "The d20s the server rolls for rolls asked of a roller are karmic: after two low ones in a row the roller's next leans high, and after two high ones it leans low. A die a player throws is never karmic, nor is a roll a Member makes for themself." }
         exhaustion: { type: string, maxLength: 40, description: "The exhaustion the Campaign plays with: srd-2024, gentle, grim or off." }
         shareInitiative: { type: boolean, description: "Identical monsters share one initiative roll." }
     CampaignPage:
@@ -9685,7 +9685,7 @@ components:
         noUndo: { type: boolean, description: "The Campaign is played without undo: nothing is taken back, no Checkpoint is kept and there is no rewind." }
         showDcs: { type: boolean, description: "The DC of a check or a save is shown on its Roll Card; without it the DC is the DM's to know." }
         difficulty: { $ref: "#/components/schemas/Difficulty" }
-        karmicDice: { type: boolean, description: "The d20s the server rolls are karmic: after two low ones in a row a roller's next leans high, and after two high ones it leans low. A die a player throws is never karmic." }
+        karmicDice: { type: boolean, description: "The d20s the server rolls for rolls asked of a roller are karmic: after two low ones in a row the roller's next leans high, and after two high ones it leans low. A die a player throws is never karmic, nor is a roll a Member makes for themself." }
         exhaustion: { type: string, maxLength: 40, description: "The exhaustion the Campaign plays with: srd-2024, gentle, grim or off." }
         shareInitiative: { type: boolean, description: "Identical monsters share one initiative roll." }
         me: { $ref: "#/components/schemas/Member" }
@@ -9725,7 +9725,7 @@ components:
         noUndo: { type: boolean, description: "The Campaign is played without undo: nothing is taken back, no Checkpoint is kept and there is no rewind." }
         showDcs: { type: boolean, description: "The DC of a check or a save is shown on its Roll Card; without it the DC is the DM's to know." }
         difficulty: { $ref: "#/components/schemas/Difficulty" }
-        karmicDice: { type: boolean, description: "The d20s the server rolls are karmic: after two low ones in a row a roller's next leans high, and after two high ones it leans low. A die a player throws is never karmic." }
+        karmicDice: { type: boolean, description: "The d20s the server rolls for rolls asked of a roller are karmic: after two low ones in a row the roller's next leans high, and after two high ones it leans low. A die a player throws is never karmic, nor is a roll a Member makes for themself." }
         exhaustion: { type: string, maxLength: 40, description: "The exhaustion the Campaign plays with: srd-2024, gentle, grim or off." }
         shareInitiative: { type: boolean, description: "Identical monsters share one initiative roll." }
     Account:

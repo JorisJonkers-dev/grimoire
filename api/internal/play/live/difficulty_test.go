@@ -167,6 +167,12 @@ func TestADifficultyPresetChangesEnemiesHitPointsAndAttacks(t *testing.T) {
 	// Aria walked off: the Raider closes in again.
 	tb.dmSays(live.Command{Kind: live.CmdWalk, TokenID: ids["Raider"], Q: 0, R: 0})
 
+	// Every roll live play opened, initiative and attacks alike, was asked of its roller: karmic dice go by those.
+	var asked, all int
+	if err := w.pool.QueryRow(ctx, "SELECT count(*) FILTER (WHERE asked), count(*) FROM play.roll_requests WHERE campaign_id = $1", w.session.CampaignID).Scan(&asked, &all); err != nil || all < 5 || asked != all {
+		t.Fatalf("asked rolls = %d of %d %v", asked, all, err)
+	}
+
 	// A preset that cannot be read plays by the rules as written.
 	w.hub.Close(w.session.ID)
 	w.hub.Store = unreadableDifficulty{Store: w.hub.Store}

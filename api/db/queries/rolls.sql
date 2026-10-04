@@ -14,9 +14,9 @@ INSERT INTO play.action_roll_events (action_id, roll_id, die_no, value) VALUES (
 
 -- name: InsertRoll :one
 INSERT INTO play.roll_requests (id, campaign_id, purpose, notation, requested_by_name, roller_member_id, roller_subject,
-    roller_name, status, created_at)
+    roller_name, status, created_at, asked)
 VALUES (COALESCE(sqlc.narg(id)::uuid, gen_random_uuid()), @campaign_id, @purpose, @notation, @requested_by_name,
-    @roller_member_id, @roller_subject, @roller_name, 'pending', @now)
+    @roller_member_id, @roller_subject, @roller_name, 'pending', @now, @asked)
 RETURNING id;
 
 -- name: InsertRollLabel :exec
@@ -30,7 +30,7 @@ INSERT INTO play.roll_dice (roll_id, die_no, group_no, faces) VALUES (@roll_id, 
 
 -- name: GetRoll :one
 SELECT id, campaign_id, purpose, notation, requested_by_name, roller_member_id, roller_subject, roller_name, status, total,
-       created_at, resolved_at, choosing, rerolled
+       created_at, resolved_at, choosing, rerolled, asked
 FROM play.roll_requests WHERE campaign_id = @campaign_id AND id = @id;
 
 -- name: LockRoll :one

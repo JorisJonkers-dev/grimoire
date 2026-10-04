@@ -309,7 +309,7 @@ describe('table settings', () => {
     const both = await mountApp(`/campaigns/${ID}`, routes({ difficulty: 'hard', karmicDice: true }))
     expect(both.wrapper.findAll('[data-testid="table-rules"] li').map((li) => li.text())).toEqual([
       'Hard difficulty: enemies come with a quarter more hit points and attack at +2.',
-      'Karmic dice: after two low d20s in a row, the next d20 the app rolls for you leans high; after two high ones it leans low. A die you throw yourself is never changed.',
+      'Karmic dice: after two low d20s in a row that play asked of you, the next one the app rolls for you leans high; after two high ones it leans low. A die you throw yourself is never changed, nor is a roll you make for yourself.',
     ])
     await expectAccessible(both.wrapper.element as Element)
     unmountAll()

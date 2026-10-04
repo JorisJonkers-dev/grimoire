@@ -297,7 +297,7 @@ func (r *runtime) request(dm domain.Member, t domain.Token, purpose, notation st
 	spec, _ := dice.Parse(notation)
 	roll := domain.Roll{
 		ID: domain.RollID(uuid.New()), CampaignID: r.st.session.CampaignID, Purpose: purpose, Notation: notation,
-		RequestedBy: dm.Name, Roller: roller, Status: domain.StatusPending,
+		RequestedBy: dm.Name, Roller: roller, Status: domain.StatusPending, Asked: true,
 	}
 	for g, group := range spec.Groups {
 		for range group.Count {

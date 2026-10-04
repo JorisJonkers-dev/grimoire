@@ -1777,6 +1777,7 @@ type PlayRollRequest struct {
 	ResolvedAt      pgtype.Timestamptz
 	Choosing        bool
 	Rerolled        bool
+	Asked           bool
 }
 
 type PlayRollRequestLabel struct {

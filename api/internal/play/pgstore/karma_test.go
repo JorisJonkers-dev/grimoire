@@ -3,9 +3,11 @@ package pgstore_test
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 
+	campaignpg "github.com/JorisJonkers-dev/grimoire/api/internal/campaign/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/rng"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/app"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
@@ -30,15 +32,35 @@ func (tb table) karmic(t *testing.T, on bool) {
 	}
 }
 
-// d20 rolls one d20 for a caller: by the server, or thrown by hand when a face is given.
-func d20(t *testing.T, r *app.Rolls, tb table, c caller.Caller, thrown int) domain.Die {
+// asked opens a roll the way live play asks one of a roller: it is theirs to roll, and not of their own making.
+func asked(t *testing.T, tb table, c caller.Caller, purpose, notation string) domain.RollID {
 	t.Helper()
 	ctx := context.Background()
-	roll, err := r.Create(ctx, c, tb.campaign, app.RollInput{Purpose: "Check", Notation: "1d20"})
+	roller, err := pgstore.CampaignMembers{Store: campaignpg.New(tb.pool)}.Membership(ctx, tb.campaign, c.Subject)
 	if err != nil {
 		t.Fatal(err)
 	}
-	roll, err = r.SetDie(ctx, c, tb.campaign, roll.ID, 0, app.Fill{Auto: thrown == 0, Value: thrown})
+	spec, err := dice.Parse(notation)
+	if err != nil {
+		t.Fatal(err)
+	}
+	roll := domain.Roll{CampaignID: tb.campaign, Purpose: purpose, Notation: notation, RequestedBy: "Joris", Roller: roller, Status: domain.StatusPending, Asked: true}
+	for g, group := range spec.Groups {
+		for range group.Count {
+			roll.Dice = append(roll.Dice, domain.Die{No: len(roll.Dice), Group: g, Faces: group.Faces})
+		}
+	}
+	id, err := pgstore.New(tb.pool).InsertRoll(ctx, roll, time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+	return id
+}
+
+// d20 rolls one d20 asked of a caller: by the server, or thrown by hand when a face is given.
+func d20(t *testing.T, r *app.Rolls, tb table, c caller.Caller, thrown int) domain.Die {
+	t.Helper()
+	roll, err := r.SetDie(context.Background(), c, tb.campaign, asked(t, tb, c, "Check", "1d20"), 0, app.Fill{Auto: thrown == 0, Value: thrown})
 	if err != nil || roll.Status != domain.StatusResolved {
 		t.Fatalf("roll = %+v %v", roll, err)
 	}
@@ -110,23 +132,15 @@ func TestKarmicDiceLeanAfterARunAndNeverTouchADieAPlayerThrew(t *testing.T) {
 	}
 
 	// Dice that are not d20s are no part of it, whatever they show.
-	other, err := r.Create(ctx, dm, tb.campaign, app.RollInput{Purpose: "Damage", Notation: "2d6"})
-	if err != nil {
-		t.Fatal(err)
-	}
 	auto(dm, 2)
 	script.faces = []int{1, 1}
-	other, err = r.RollRest(ctx, dm, tb.campaign, other.ID)
+	other, err := r.RollRest(ctx, dm, tb.campaign, asked(t, tb, dm, "Damage", "2d6"))
 	if err != nil || other.Dice[0].KarmicDropped != nil || other.Dice[1].KarmicDropped != nil || other.Total != 2 || len(script.faces) != 0 {
 		t.Fatalf("d6s = %+v %v", other.Dice, err)
 	}
 	// Both d20s of one roll lean the way the run before it says.
-	both, err := r.Create(ctx, dm, tb.campaign, app.RollInput{Purpose: "Attack", Notation: "2d20kh1+1d4"})
-	if err != nil {
-		t.Fatal(err)
-	}
 	script.faces = []int{4, 12, 9, 2, 3}
-	both, err = r.RollRest(ctx, dm, tb.campaign, both.ID)
+	both, err := r.RollRest(ctx, dm, tb.campaign, asked(t, tb, dm, "Attack", "2d20kh1+1d4"))
 	if err != nil || both.Dice[0].Value != 12 || dropped(both.Dice[0]) != 4 || both.Dice[1].Value != 9 || dropped(both.Dice[1]) != 2 ||
 		both.Dice[2].Value != 3 || both.Dice[2].KarmicDropped != nil || len(script.faces) != 0 {
 		t.Fatalf("two d20s = %+v %v", both.Dice, err)
@@ -203,12 +217,8 @@ func TestARerolledDieIsNoLongerKarmic(t *testing.T) {
 		ability_method, hp_max, hp_current, level, heroic_inspiration) VALUES ($1, $1, $2, $3, 'Aria', 'srd-2024', 'human', 'fighter', 'soldier', 'standard-array', 20, 5, 4, true)`, char, tb.campaign, tb.playerID); err != nil {
 		t.Fatal(err)
 	}
-	roll, err := r.Create(ctx, player, tb.campaign, app.RollInput{Purpose: "Save", Notation: "1d20"})
-	if err != nil {
-		t.Fatal(err)
-	}
 	script.faces = []int{6, 14}
-	roll, err = r.RollRest(ctx, player, tb.campaign, roll.ID)
+	roll, err := r.RollRest(ctx, player, tb.campaign, asked(t, tb, player, "Save", "1d20"))
 	if err != nil || !roll.Choosing || roll.Dice[0].Value != 14 || dropped(roll.Dice[0]) != 6 {
 		t.Fatalf("held = %+v %v", roll, err)
 	}
@@ -216,5 +226,97 @@ func TestARerolledDieIsNoLongerKarmic(t *testing.T) {
 	roll, err = r.Reroll(ctx, player, tb.campaign, roll.ID, 0)
 	if err != nil || roll.Dice[0].Value != 8 || roll.Dice[0].KarmicDropped != nil || len(script.faces) != 0 {
 		t.Fatalf("rerolled = %+v %v", roll.Dice, err)
+	}
+}
+
+// Nobody makes their own luck: a roll a Member makes for themself is plain, whatever the run, and is no
+// part of one. Otherwise free rolls from the dice tray could be thrown until the next real roll leans.
+func TestARollAMemberMakesForThemselfIsNeverKarmic(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	tb := setup(t)
+	tb.karmic(t, true)
+	r := rolls(tb, pgstore.New(tb.pool))
+	script := &scripted{faces: nil}
+	r.Source = func(uint64) dice.Source { return script }
+	free := func(c caller.Caller, in app.RollInput, faces ...int) domain.Die {
+		t.Helper()
+		script.faces = faces
+		roll, err := r.Create(ctx, c, tb.campaign, in)
+		if err != nil {
+			t.Fatal(err)
+		}
+		roll, err = r.RollRest(ctx, c, tb.campaign, roll.ID)
+		if err != nil || len(script.faces) != 0 {
+			t.Fatalf("free roll = %+v %v, undrawn %v", roll, err, script.faces)
+		}
+		return roll.Dice[0]
+	}
+	own := app.RollInput{Purpose: "Luck", Notation: "1d20"}
+	// Two low rolls of the player's own making are no run.
+	free(player, own, 2)
+	free(player, own, 3)
+	script.faces = []int{4}
+	if d := d20(t, r, tb, player, 0); d.Value != 4 || d.KarmicDropped != nil || len(script.faces) != 0 {
+		t.Fatalf("after two free lows = %+v", d)
+	}
+	// With a lean waiting, a roll of their own is still rolled once, and leaves the lean where it was.
+	script.faces = []int{5}
+	d20(t, r, tb, player, 0)
+	if d := free(player, own, 1); d.Value != 1 || d.KarmicDropped != nil {
+		t.Fatalf("a free roll under a lean = %+v", d)
+	}
+	if d := free(player, own, 20); d.Value != 20 || d.KarmicDropped != nil {
+		t.Fatalf("a free roll under a lean = %+v", d)
+	}
+	script.faces = []int{6, 15}
+	if d := d20(t, r, tb, player, 0); d.Value != 15 || dropped(d) != 6 || len(script.faces) != 0 {
+		t.Fatalf("the lean was still waiting = %+v", d)
+	}
+	// The DM's own rolls from the dice tray are no different.
+	free(dm, own, 1)
+	free(dm, own, 1)
+	if d := free(dm, own, 2); d.KarmicDropped != nil {
+		t.Fatalf("the DM's own roll = %+v", d)
+	}
+	// A roll the DM asks of a Player is asked: it is part of the Player's run.
+	theirs := app.RollInput{Purpose: "Stealth", Notation: "1d20", Roller: &tb.playerID}
+	script.faces = []int{3}
+	sent, err := r.Create(ctx, dm, tb.campaign, theirs)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, err := r.RollRest(ctx, player, tb.campaign, sent.ID); err != nil || got.Dice[0].Value != 3 || got.Dice[0].KarmicDropped != nil {
+		t.Fatalf("asked by the DM = %+v %v", got, err)
+	}
+	script.faces = []int{2}
+	d20(t, r, tb, player, 0)
+	script.faces = []int{8, 11}
+	sent, err = r.Create(ctx, dm, tb.campaign, theirs)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, err := r.RollRest(ctx, player, tb.campaign, sent.ID); err != nil || got.Dice[0].Value != 11 || dropped(got.Dice[0]) != 8 {
+		t.Fatalf("asked by the DM after two lows = %+v %v", got, err)
+	}
+}
+
+// A roll asked of a Member who has since left the Campaign still rolls: the DM finishes it.
+func TestARollOfAMemberWhoLeftStillRolls(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	tb := setup(t)
+	tb.karmic(t, true)
+	r := rolls(tb, pgstore.New(tb.pool))
+	first, pending := asked(t, tb, player, "Save", "1d20"), asked(t, tb, player, "Check", "1d20")
+	if _, err := r.RollRest(ctx, player, tb.campaign, first); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := tb.pool.Exec(ctx, "DELETE FROM campaign.members WHERE id = $1", tb.playerID); err != nil {
+		t.Fatal(err)
+	}
+	got, err := r.RollRest(ctx, dm, tb.campaign, pending)
+	if err != nil || got.Status != domain.StatusResolved || got.Dice[0].Mode != domain.ModeAuto {
+		t.Fatalf("rolled for a Member who left = %+v %v", got, err)
 	}
 }
