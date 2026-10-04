@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import BuilderCrumbs from './BuilderCrumbs.vue'
 import { useMutation, useQuery } from '@tanstack/vue-query'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
@@ -41,7 +42,7 @@ const parts = [
 
 <template>
   <main class="g-page builder">
-    <RouterLink :to="{ name: 'library-entry', params: { entryId } }" class="back">← Entry</RouterLink>
+    <BuilderCrumbs :entry-id="entryId" here="Condition builder" />
     <p v-if="condition.isError.value" role="alert" class="g-alert" data-testid="condition-error">This entry cannot be opened in the condition builder.</p>
     <p v-else-if="!design">Opening the condition…</p>
     <template v-else>

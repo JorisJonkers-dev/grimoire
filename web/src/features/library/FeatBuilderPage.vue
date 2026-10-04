@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import BuilderCrumbs from './BuilderCrumbs.vue'
 import { useMutation, useQuery } from '@tanstack/vue-query'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
@@ -33,7 +34,7 @@ const kinds = [
 
 <template>
   <main class="g-page builder">
-    <RouterLink :to="{ name: 'library-entry', params: { entryId: String(route.params.entryId) } }" class="back">← Entry</RouterLink>
+    <BuilderCrumbs :entry-id="String(route.params.entryId)" here="Feat builder" />
     <p v-if="feat.isError.value" role="alert" class="g-alert" data-testid="feat-error">This entry cannot be opened in the feat builder.</p>
     <p v-else-if="!design">Opening the feat…</p>
     <template v-else>
