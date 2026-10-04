@@ -105,6 +105,16 @@ describe('setting up an Account', () => {
     expect(router.currentRoute.value.name).toBe('home')
   })
 
+  it('sets the invite, the emailed link and the external login in the same frame as signing in, without the app\'s bar', async () => {
+    for (const path of [`/account-invite#${token}`, `/sign-in-link#${token}`, '/oidc/callback?error=access_denied']) {
+      const { wrapper } = await mountApp(path, {})
+      expect(wrapper.find('[data-testid="auth-brand"]').exists(), path).toBe(true)
+      expect(wrapper.find('[data-testid="auth-column"] h1').exists(), path).toBe(true)
+      expect(wrapper.find('nav[aria-label="Main"]').exists(), path).toBe(false)
+      unmountAll()
+    }
+  })
+
   it('says when an invite is used, expired or malformed', async () => {
     const { wrapper } = await mountApp('/account-invite#short', {})
     expect(wrapper.get('[data-testid="account-invite-invalid"]').text()).toContain('used or has expired')
