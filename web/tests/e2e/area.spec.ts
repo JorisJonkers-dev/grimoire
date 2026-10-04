@@ -46,6 +46,7 @@ test('burning hands catches a creature, its player rolls the save, and the greas
   await enter(player.getByTestId('roll-card'), '5')
   await expect(page.getByTestId('rail-Grik')).toHaveAttribute('aria-current', 'step')
 
+  await page.getByTestId('hotbar-Grik').getByTestId('hotbar-more').locator('summary').click()
   await page.getByTestId('hotbar-Grik').getByTestId('area-spell').selectOption('burning-hands')
   await page.locator('[data-hex="1,0"]').click()
   const preview = page.getByTestId('area-preview')

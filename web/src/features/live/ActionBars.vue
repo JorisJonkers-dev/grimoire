@@ -188,13 +188,13 @@ onBeforeUnmount(() => {
 .quick {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 4px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 .bar {
-  min-height: 52px;
+  min-height: 44px;
 }
 .place {
   position: relative;
@@ -205,11 +205,11 @@ onBeforeUnmount(() => {
   display: grid;
   align-content: center;
   justify-items: start;
-  min-width: 76px;
-  min-height: 48px;
-  padding: 6px 10px;
-  border: 2px solid var(--color-line);
-  border-radius: 10px;
+  min-width: 64px;
+  min-height: 44px;
+  padding: 2px 10px;
+  border: 1px solid var(--color-edge);
+  border-radius: var(--radius-control);
   color: var(--color-text);
   background: var(--color-raised);
   cursor: pointer;
@@ -223,8 +223,10 @@ onBeforeUnmount(() => {
 }
 .tile--armed,
 .tile--picked {
-  border-color: var(--color-gold-high);
-  box-shadow: 0 0 0 2px rgb(212 175 55 / 35%);
+  border-color: var(--color-brass-edge);
+  background: var(--color-selected);
+  outline: 2px solid var(--color-gold-high);
+  outline-offset: -1px;
 }
 .tile--add {
   justify-items: center;
@@ -237,10 +239,13 @@ onBeforeUnmount(() => {
   justify-items: start;
 }
 .name {
-  font-weight: 700;
+  font-family: var(--font-label);
+  font-size: 14px;
+  line-height: 1.2;
 }
 .stat {
-  font-size: 12px;
+  font-size: 11px;
+  line-height: 1.2;
   color: var(--color-text-2);
 }
 .mastery {

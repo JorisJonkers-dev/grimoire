@@ -43,29 +43,49 @@ const what = (a: SessionAction) => a.kind.replaceAll('_', ' ')
   flex-direction: column;
   gap: 8px;
 }
-h2,
 h3 {
   margin: 0;
 }
-h2 {
-  font-size: 18px;
+section.creature > h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--color-text);
 }
 h3 {
-  font-size: 15px;
-  color: var(--color-text-2);
+  font-family: var(--font-label);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-gold);
 }
 .stats,
 .none,
 .suggestion p {
   margin: 0;
+  font-size: 13px;
 }
+.stats,
 .none {
   color: var(--color-text-2);
+}
+.suggestion strong {
+  font-family: var(--font-label);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-gold);
 }
 .note {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  font-size: 13px;
 }
 </style>

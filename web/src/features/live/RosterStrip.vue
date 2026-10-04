@@ -70,7 +70,7 @@ watch(acting, async (id) => {
 
 <template>
   <section :class="['roster', { 'roster--reveal': phase, 'roster--settle': phase === 'settle' }]" aria-label="Roster" data-testid="roster-strip">
-    <h2 v-if="combat" class="round" data-testid="initiative-rail">{{ combat.status === 'rolling' ? 'Rolling initiative' : `Round ${String(combat.round)}` }}</h2>
+    <h2 v-if="combat" :class="['round', { 'round--quiet': combat.status !== 'rolling' }]" data-testid="initiative-rail">{{ combat.status === 'rolling' ? 'Rolling initiative' : `Round ${String(combat.round)}` }}</h2>
     <!-- The strip scrolls sideways when it is wider than the screen, so the keyboard has to be able to reach it. -->
     <TransitionGroup ref="strip" tag="ol" name="slot" tabindex="0" aria-label="Creatures, in order">
       <li
@@ -117,42 +117,56 @@ watch(acting, async (id) => {
 
 <style scoped>
 .roster {
+  --token: 34px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
   max-width: 100%;
   margin: 0 auto;
 }
 .round {
   margin: 0;
-  font-size: 14px;
-  color: var(--color-text-2);
+  font-family: var(--font-label);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-gold-high);
+  text-shadow: 0 1px 3px #000, 0 0 2px #000;
+}
+/* The bar already says which round it is; the strip says so only to a screen reader. */
+.round--quiet {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
 }
 ol:focus-visible {
   outline: 2px solid var(--color-gold-high);
   outline-offset: 2px;
 }
+/* The creatures stand straight on the map, with a shadow rather than a box to lift them off it. */
 ol {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   max-width: 100%;
   margin: 0;
-  padding: 4px 4px 6px;
+  padding: 6px 12px 4px;
   overflow-x: auto;
   scroll-snap-type: x proximity;
+  scrollbar-width: none;
   list-style: none;
+  filter: drop-shadow(0 2px 5px rgb(0 0 0 / 90%)) drop-shadow(0 0 1px rgb(0 0 0 / 90%));
 }
 .slot {
   display: grid;
+  align-content: start;
   justify-items: center;
   gap: 2px;
-  min-width: 76px;
-  padding: 6px;
-  border: 2px solid var(--color-line);
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--color-surface) 82%, transparent);
-  backdrop-filter: blur(6px);
+  width: calc(var(--token) * 1.75);
+  flex-shrink: 0;
   scroll-snap-align: center;
 }
 .slot-move {
@@ -184,49 +198,58 @@ ol {
     animation: none;
   }
 }
-.slot--acting {
-  border-color: var(--color-gold-high);
-  box-shadow: 0 0 0 2px rgb(212 175 55 / 35%);
+.slot--acting .badge {
+  box-shadow: 0 0 0 2px rgb(14 11 9 / 90%), 0 0 0 3.5px var(--color-gold-high);
+}
+.slot--acting .name {
+  color: var(--color-gold-high);
 }
 .slot--done {
   opacity: 0.6;
 }
-.slot--hidden {
+.slot--hidden .badge {
   border-style: dashed;
 }
 .badge {
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
+  width: var(--token);
+  height: var(--token);
+  margin: 4px 0 2px;
   border-radius: 50%;
   font-family: var(--font-display);
+  font-size: calc(var(--token) * 0.42);
   font-weight: 700;
   background: var(--color-enemy-fill);
-  border: 2px solid var(--color-enemy);
+  border: 2px solid var(--color-danger-edge);
 }
 .slot--party .badge {
   background: var(--color-party-fill);
   border-color: var(--color-party);
 }
 .name {
-  max-width: 88px;
+  max-width: 100%;
   overflow: hidden;
-  font-size: 13px;
+  font-size: max(11px, calc(var(--token) * 0.32));
+  font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
+  text-shadow: 0 1px 3px #000, 0 0 2px #000;
 }
 .bar {
-  width: 64px;
-  height: 5px;
+  width: calc(var(--token) * 1.15);
+  height: max(3px, calc(var(--token) * 0.09));
   overflow: hidden;
   border-radius: 3px;
-  background: rgb(255 255 255 / 12%);
+  background: rgb(0 0 0 / 50%);
 }
 .fill {
   display: block;
   height: 100%;
-  background: var(--color-success);
+  background: var(--color-danger-edge);
+}
+.slot--party .fill {
+  background: var(--color-party);
 }
 .fill--bloodied,
 .fill--down {
@@ -237,7 +260,8 @@ ol {
 }
 .init,
 .summoned {
-  font-size: 11px;
+  font-size: max(10px, calc(var(--token) * 0.27));
+  text-align: center;
   color: var(--color-text-2);
 }
 .note {

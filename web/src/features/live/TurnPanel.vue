@@ -34,25 +34,50 @@ const pips: { key: Resource; field: 'action' | 'bonusAction' | 'reaction'; label
 </template>
 
 <style scoped>
+/* One line: whose turn, what is left of it, and the way out. */
 .turn {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  margin: 0;
+  padding: 0;
+  border: 0;
 }
 h2 {
   margin: 0;
-  font-size: 18px;
+  font-family: var(--font-label);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-gold);
 }
 .pips {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
+}
+.pip {
+  min-height: 30px;
+  padding: 0 10px;
+  font-size: 13px;
 }
 .pip--spent {
   text-decoration: line-through;
 }
 .move {
+  margin-left: 8px;
+  font-size: 12px;
   color: var(--color-text-2);
+}
+.turn > :deep(.g-button:last-child) {
+  margin-left: auto;
+}
+@media (pointer: coarse) {
+  .pip {
+    min-height: 44px;
+  }
 }
 </style>

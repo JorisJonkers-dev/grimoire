@@ -53,29 +53,43 @@ const held = (id: string) => props.inHand.includes(id)
 .switcher {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.switcher > .row:first-of-type {
+  align-items: center;
 }
 h2 {
   margin: 0;
-  font-size: 18px;
+  font-family: var(--font-label);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-gold);
 }
 .row {
   display: flex;
   flex-wrap: wrap;
   align-items: end;
-  gap: 8px;
+  gap: 6px;
 }
 .creature {
-  min-height: 44px;
-  padding: 6px 12px;
-  border: 2px solid var(--color-line);
-  border-radius: 999px;
-  color: var(--color-text);
-  background: var(--color-raised);
+  min-height: 28px;
+  padding: 0 9px;
+  border: 1px solid rgb(217 190 126 / 22%);
+  border-radius: var(--radius-chip);
+  font-size: 13px;
+  color: var(--color-text-2);
+  background: transparent;
   cursor: pointer;
 }
 .creature--held {
-  border-color: var(--color-gold-high);
+  border-color: var(--color-brass-edge);
+  color: var(--color-gold-high);
+  background: rgb(217 190 126 / 14%);
 }
 .acting {
   color: var(--color-gold-high);
@@ -84,9 +98,17 @@ h2 {
   display: flex;
   align-items: center;
   gap: 6px;
-  min-height: 44px;
+  min-height: 28px;
+  font-size: 13px;
+  color: var(--color-text-2);
 }
 .amount input {
   width: 80px;
+}
+@media (pointer: coarse) {
+  .creature,
+  .check {
+    min-height: 44px;
+  }
 }
 </style>

@@ -167,123 +167,183 @@ function play(key: string) {
         Swap weapons
       </GButton>
     </div>
-    <form v-if="interaction" class="interact" @submit.prevent="what.trim() && (emit('interact', what.trim()), (what = ''))">
-      <label class="g-field grow">
-        <span>Free object interaction</span>
-        <input v-model="what" maxlength="200" placeholder="draws a dagger" data-testid="interact-what" />
-      </label>
-      <GButton type="submit" :disabled="blocked !== ''" data-testid="interact">Use</GButton>
-    </form>
-    <label class="g-field tactics">
-      <span>Ready an attack</span>
-      <select :disabled="blocked !== ''" data-testid="ready" @change="emit('ready', Number(($event.target as HTMLSelectElement).value))">
-        <option value="">When a creature comes within reach…</option>
-        <option v-for="(a, i) in token.attacks ?? []" v-show="a.reachFt > 0" :key="a.name + String(i)" :value="i">{{ a.name }}</option>
-      </select>
-    </label>
-    <template v-if="!bars.layout.value">
-      <GButton data-testid="jump" title="Leap as far as your Strength score in feet with a run-up." @click="emit('jump')">Jump</GButton>
-      <GButton data-testid="ride" title="Get onto a willing creature next to you, or off the one you ride: half your Speed." @click="emit('ride')">{{ token.mountId ? 'Dismount' : 'Mount' }}</GButton>
-      <GButton :disabled="blocked !== ''" data-testid="throw" title="Throw the creature you grapple, or a barrel or chest next to you." @click="emit('throw')">Throw</GButton>
-      <GButton :disabled="blocked !== ''" data-testid="misty-step" title="Bonus Action: teleport up to 30 feet to a free hex." @click="emit('teleport')">Misty Step</GButton>
-    </template>
-    <label v-if="!bars.layout.value" class="g-field tactics">
-      <span>Area spell</span>
-      <select :disabled="blocked !== ''" data-testid="area-spell" @change="emit('area', ($event.target as HTMLSelectElement).value, slot)">
-        <option value="">Choose to aim…</option>
-        <option v-for="s in spells" :key="s.slug" :value="s.slug">{{ s.name }}</option>
-      </select>
-    </label>
-    <label v-if="!bars.layout.value" class="g-field tactics">
-      <span>Summon</span>
-      <select :disabled="blocked !== ''" data-testid="summon" @change="emit('summon', ($event.target as HTMLSelectElement).value)">
-        <option value="">Choose to place…</option>
-        <option v-for="s in summonings" :key="s.slug" :value="s.slug">{{ s.name }}</option>
-      </select>
-    </label>
-    <GButton
-      v-for="s in summons"
-      :key="s.tokenId"
-      :data-testid="`command-${s.label}`"
-      title="Bonus Action: command the creature you summoned."
-      @click="emit('command', s.tokenId)"
-    >
-      Command {{ s.label }}
-    </GButton>
-    <label class="g-field tactics">
-      <span>Spell slot</span>
-      <select v-model.number="slot" data-testid="area-slot">
-        <option :value="0">Lowest</option>
-        <option v-for="n in 9" :key="n" :value="n">Level {{ n }}</option>
-      </select>
-    </label>
-    <label v-if="tactics" class="g-field tactics">
-      <span>Tactics</span>
-      <select :value="tactics" data-testid="tactics" @change="emit('tactics', ($event.target as HTMLSelectElement).value as Tactics)">
-        <option v-for="s in styles" :key="s.value" :value="s.value">{{ s.label }}</option>
-      </select>
-    </label>
-    <GButton v-if="bars.available.value && !bars.layout.value" data-testid="arrange-bars" @click="arrangeBars">Arrange my bars</GButton>
+    <details class="more" data-testid="hotbar-more">
+      <summary>More</summary>
+      <div class="more-body">
+        <form v-if="interaction" class="interact" @submit.prevent="what.trim() && (emit('interact', what.trim()), (what = ''))">
+          <label class="g-field grow">
+            <span>Free object interaction</span>
+            <input v-model="what" maxlength="200" placeholder="draws a dagger" data-testid="interact-what" />
+          </label>
+          <GButton type="submit" :disabled="blocked !== ''" data-testid="interact">Use</GButton>
+        </form>
+        <label class="g-field tactics">
+          <span>Ready an attack</span>
+          <select :disabled="blocked !== ''" data-testid="ready" @change="emit('ready', Number(($event.target as HTMLSelectElement).value))">
+            <option value="">When a creature comes within reach…</option>
+            <option v-for="(a, i) in token.attacks ?? []" v-show="a.reachFt > 0" :key="a.name + String(i)" :value="i">{{ a.name }}</option>
+          </select>
+        </label>
+        <template v-if="!bars.layout.value">
+          <GButton data-testid="jump" title="Leap as far as your Strength score in feet with a run-up." @click="emit('jump')">Jump</GButton>
+          <GButton data-testid="ride" title="Get onto a willing creature next to you, or off the one you ride: half your Speed." @click="emit('ride')">{{ token.mountId ? 'Dismount' : 'Mount' }}</GButton>
+          <GButton :disabled="blocked !== ''" data-testid="throw" title="Throw the creature you grapple, or a barrel or chest next to you." @click="emit('throw')">Throw</GButton>
+          <GButton :disabled="blocked !== ''" data-testid="misty-step" title="Bonus Action: teleport up to 30 feet to a free hex." @click="emit('teleport')">Misty Step</GButton>
+        </template>
+        <label v-if="!bars.layout.value" class="g-field tactics">
+          <span>Area spell</span>
+          <select :disabled="blocked !== ''" data-testid="area-spell" @change="emit('area', ($event.target as HTMLSelectElement).value, slot)">
+            <option value="">Choose to aim…</option>
+            <option v-for="s in spells" :key="s.slug" :value="s.slug">{{ s.name }}</option>
+          </select>
+        </label>
+        <label v-if="!bars.layout.value" class="g-field tactics">
+          <span>Summon</span>
+          <select :disabled="blocked !== ''" data-testid="summon" @change="emit('summon', ($event.target as HTMLSelectElement).value)">
+            <option value="">Choose to place…</option>
+            <option v-for="s in summonings" :key="s.slug" :value="s.slug">{{ s.name }}</option>
+          </select>
+        </label>
+        <GButton
+          v-for="s in summons"
+          :key="s.tokenId"
+          :data-testid="`command-${s.label}`"
+          title="Bonus Action: command the creature you summoned."
+          @click="emit('command', s.tokenId)"
+        >
+          Command {{ s.label }}
+        </GButton>
+        <label class="g-field tactics">
+          <span>Spell slot</span>
+          <select v-model.number="slot" data-testid="area-slot">
+            <option :value="0">Lowest</option>
+            <option v-for="n in 9" :key="n" :value="n">Level {{ n }}</option>
+          </select>
+        </label>
+        <label v-if="tactics" class="g-field tactics">
+          <span>Tactics</span>
+          <select :value="tactics" data-testid="tactics" @change="emit('tactics', ($event.target as HTMLSelectElement).value as Tactics)">
+            <option v-for="s in styles" :key="s.value" :value="s.value">{{ s.label }}</option>
+          </select>
+        </label>
+        <GButton v-if="bars.available.value && !bars.layout.value" data-testid="arrange-bars" @click="arrangeBars">Arrange my bars</GButton>
+      </div>
+    </details>
     <p v-if="blocked" class="blocked" data-testid="hotbar-blocked">{{ blocked }}</p>
     <p v-else-if="armed !== null" class="hint" role="status">Tap a creature to aim.</p>
   </section>
 </template>
 
 <style scoped>
+.hotbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+/* A slot is a tile 44 high: the name over what it does. */
+.slot {
+  display: grid;
+  gap: 0;
+  min-height: 44px;
+  padding: 2px 10px;
+  border-color: var(--color-edge);
+  text-align: left;
+  background: var(--color-raised);
+}
+.slot--armed {
+  border-color: var(--color-brass-edge);
+  background: var(--color-selected);
+  outline: 2px solid var(--color-gold-high);
+  outline-offset: -1px;
+}
+.name {
+  font-family: var(--font-label);
+  font-size: 14px;
+  line-height: 1.2;
+}
+.stat,
+.blocked,
+.hint {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  line-height: 1.2;
+  color: var(--color-text-2);
+}
+.blocked,
+.hint {
+  width: 100%;
+  font-size: 12px;
+}
 .mastery {
   text-transform: capitalize;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  width: 100%;
+}
+.action,
+.more-body :deep(.g-button) {
+  min-height: 30px;
+  padding: 0 10px;
+  font-size: 13px;
+}
+.suggestion {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  font-size: 13px;
+}
+.suggestion p {
+  margin: 0;
+}
+.suggestion strong {
+  margin-right: 4px;
+  font-family: var(--font-label);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-gold);
+}
+.more {
+  width: 100%;
+}
+.more summary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 4px;
+  font-family: var(--font-label);
+  font-size: 13px;
+  color: var(--color-gold-high);
+  cursor: pointer;
+}
+.more-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: end;
+  padding-top: 4px;
 }
 .interact {
   display: flex;
   gap: 6px;
   align-items: end;
 }
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  width: 100%;
-}
-.action {
-  min-height: 40px;
-  padding: 0 12px;
-  font-size: 14px;
-}
-.hotbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-}
-.slot {
-  display: grid;
-  gap: 2px;
-  text-align: left;
-}
-.slot--armed {
-  outline: 3px solid var(--color-gold-high);
-}
-.name {
-  font-weight: 600;
-}
-.suggestion {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-  width: 100%;
-}
-.suggestion p {
-  margin: 0;
-}
 .tactics {
-  min-width: 160px;
+  min-width: 150px;
 }
-.stat,
-.blocked,
-.hint {
-  margin: 0;
-  font-size: 13px;
-  color: var(--color-text-2);
+@media (pointer: coarse) {
+  .action,
+  .more summary,
+  .more-body :deep(.g-button) {
+    min-height: 44px;
+  }
 }
 </style>
