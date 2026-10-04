@@ -3620,6 +3620,29 @@ export const zSearchResults = z.object({
 });
 
 /**
+ * The monsters of one Challenge Rating and what their attacks look like.
+ */
+export const zGuideChallenge = z.object({
+    challenge: z.string().max(10),
+    monsters: z.int().gte(0).lte(100000),
+    attacks: z.int().gte(0).lte(100000),
+    toHitLow: z.int().gte(-20).lte(40),
+    toHit: z.int().gte(-20).lte(40),
+    toHitHigh: z.int().gte(-20).lte(40),
+    damage: z.int().gte(0).lte(10000)
+});
+
+/**
+ * A tier of play and the magic item rarities that suit a party in it.
+ */
+export const zGuideTier = z.object({
+    tier: z.int().gte(1).lte(4),
+    fromLevel: z.int().gte(1).lte(20),
+    toLevel: z.int().gte(1).lte(20),
+    rarities: z.array(z.string().max(20)).max(10)
+});
+
+/**
  * What a vehicle travels over. A ship or an airship travels round the clock; a land vehicle a day's eight hours.
  */
 export const zVehicleKind = z.enum([
@@ -5311,6 +5334,50 @@ export const zFactionArchetype = z.object({
 });
 
 /**
+ * A spell as the spells-by-level guide lists it.
+ */
+export const zGuideSpell = z.object({
+    slug: zSlug,
+    name: z.string().max(120),
+    school: zSlug
+});
+
+/**
+ * The spells of one spell level, by name; level 0 holds the cantrips.
+ */
+export const zGuideSpellLevel = z.object({
+    level: z.int().gte(0).lte(9),
+    spells: z.array(zGuideSpell).max(2000)
+});
+
+/**
+ * A magic item as the loot guide lists it.
+ */
+export const zGuideItem = z.object({
+    slug: zSlug,
+    name: z.string().max(120)
+});
+
+/**
+ * The magic items of one rarity, by name, and the first tier of play they suit.
+ */
+export const zGuideRarity = z.object({
+    rarity: z.string().max(20),
+    firstTier: z.int().gte(1).lte(4),
+    items: z.array(zGuideItem).max(5000)
+});
+
+/**
+ * The compendium's guides, worked out of its SRD entries.
+ */
+export const zCompendiumGuides = z.object({
+    spellsByLevel: z.array(zGuideSpellLevel).max(10),
+    attacksByChallenge: z.array(zGuideChallenge).max(100),
+    lootTiers: z.array(zGuideTier).max(4),
+    lootByRarity: z.array(zGuideRarity).max(10)
+});
+
+/**
  * What one audience may see now. With fog, a hex is visible now, remembered, or in neither list because the party never saw it; nothing in it is sent. Walls, lights and ambient go to the DM only.
  */
 export const zLiveView = z.object({
@@ -5972,6 +6039,15 @@ export const zGetBuilderOptionsResponse = zBuilderOptions;
  * Every source document.
  */
 export const zListSourcesResponse = z.array(zSource).max(100);
+
+export const zGetCompendiumGuidesQuery = z.object({
+    ruleset: zRuleset.optional()
+});
+
+/**
+ * The guides.
+ */
+export const zGetCompendiumGuidesResponse = zCompendiumGuides;
 
 export const zListCampaignsQuery = z.object({
     cursor: z.string().min(1).max(200).regex(/^[A-Za-z0-9_-]+$/).optional(),

@@ -333,6 +333,10 @@ type GetClassBuildRes interface {
 	getClassBuildRes()
 }
 
+type GetCompendiumGuidesRes interface {
+	getCompendiumGuidesRes()
+}
+
 type GetConditionBuildRes interface {
 	getConditionBuildRes()
 }

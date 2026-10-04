@@ -301,6 +301,11 @@ type Querier interface {
 	// A downtime given to the whole party is a new one: every Character starts it having lived through none of it.
 	GrantDowntimeToAll(ctx context.Context, arg GrantDowntimeToAllParams) error
 	GrantDowntimeToOne(ctx context.Context, arg GrantDowntimeToOneParams) (int64, error)
+	GuideAttacks(ctx context.Context, ruleset pgtype.Text) ([]GuideAttacksRow, error)
+	GuideChallenges(ctx context.Context, ruleset pgtype.Text) ([]GuideChallengesRow, error)
+	GuideMagicItems(ctx context.Context, ruleset pgtype.Text) ([]GuideMagicItemsRow, error)
+	// The guides of the public compendium read SRD documents only.
+	GuideSpells(ctx context.Context, ruleset pgtype.Text) ([]GuideSpellsRow, error)
 	HealCharacter(ctx context.Context, arg HealCharacterParams) error
 	HomeDowntime(ctx context.Context, subject string) ([]HomeDowntimeRow, error)
 	HomeFriendRequests(ctx context.Context, subject string) (int64, error)

@@ -7003,6 +7003,86 @@ func decodeGetClassBuildParams(args [1]string, argsEscaped bool, r *http.Request
 	return params, nil
 }
 
+// GetCompendiumGuidesParams is parameters of getCompendiumGuides operation.
+type GetCompendiumGuidesParams struct {
+	// One ruleset alone; without it the newest rules each entry has.
+	Ruleset OptRuleset `json:",omitempty,omitzero"`
+}
+
+func unpackGetCompendiumGuidesParams(packed middleware.Parameters) (params GetCompendiumGuidesParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "ruleset",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.Ruleset = v.(OptRuleset)
+		}
+	}
+	return params
+}
+
+func decodeGetCompendiumGuidesParams(args [0]string, argsEscaped bool, r *http.Request) (params GetCompendiumGuidesParams, _ error) {
+	q := uri.NewQueryDecoder(r.URL.Query())
+	// Decode query: ruleset.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "ruleset",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotRulesetVal Ruleset
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotRulesetVal = Ruleset(c)
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.Ruleset.SetTo(paramsDotRulesetVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+			if err := func() error {
+				if value, ok := params.Ruleset.Get(); ok {
+					if err := func() error {
+						if err := value.Validate(); err != nil {
+							return err
+						}
+						return nil
+					}(); err != nil {
+						return err
+					}
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "ruleset",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
 // GetConditionBuildParams is parameters of getConditionBuild operation.
 type GetConditionBuildParams struct {
 	// Library entry id.

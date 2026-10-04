@@ -4,6 +4,7 @@ import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { getSpellOptions } from '@/infrastructure/api/@tanstack/vue-query.gen'
 import type { ConditionRef, Ruleset } from '@/infrastructure/api/types.gen'
+import CopyLink from './CopyLink.vue'
 import { highlight, levelLabel, titleCase } from './highlight'
 
 const route = useRoute()
@@ -43,6 +44,7 @@ const paragraphs = (text: string) => text.split(/\n+/).filter((p) => p.trim() !=
           <RouterLink :to="{ name: 'spell', params: { slug }, query: { ruleset: 'srd-2024' } }" :aria-current="spell.data.value.ruleset === 'srd-2024' ? 'page' : undefined">2024</RouterLink>
           <RouterLink :to="{ name: 'spell', params: { slug }, query: { ruleset: 'srd-2014' } }" :aria-current="spell.data.value.ruleset === 'srd-2014' ? 'page' : undefined">2014</RouterLink>
         </nav>
+        <CopyLink :to="{ name: 'spell', params: { slug }, query: { ruleset: spell.data.value.ruleset } }" />
       </header>
       <dl class="props">
         <dt>Casting time</dt>

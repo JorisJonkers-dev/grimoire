@@ -89,6 +89,7 @@ const (
 	GetCharacterOperation                  OperationName = "GetCharacter"
 	GetCharacterDraftOperation             OperationName = "GetCharacterDraft"
 	GetClassBuildOperation                 OperationName = "GetClassBuild"
+	GetCompendiumGuidesOperation           OperationName = "GetCompendiumGuides"
 	GetConditionBuildOperation             OperationName = "GetConditionBuild"
 	GetDashboardOperation                  OperationName = "GetDashboard"
 	GetDiceSetImageOperation               OperationName = "GetDiceSetImage"

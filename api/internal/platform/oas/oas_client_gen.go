@@ -1314,6 +1314,16 @@ type ReadInvoker interface {
 	//
 	// GET /api/v1/builders/classes/{entryId}
 	GetClassBuild(ctx context.Context, params GetClassBuildParams) (GetClassBuildRes, error)
+	// GetCompendiumGuides invokes getCompendiumGuides operation.
+	//
+	// Guides worked out of the SRD entries of the compendium, and of nothing else: every spell by its
+	// level, what the attacks of monsters of each Challenge Rating look like (how many, the lowest, middle
+	// and highest bonus to hit, and the middle damage of a hit), and loot by party level: the tiers of
+	// play, the magic item rarities that suit each, and the magic items of each rarity. Open to anyone,
+	// without an Account.
+	//
+	// GET /api/v1/compendium/guides
+	GetCompendiumGuides(ctx context.Context, params GetCompendiumGuidesParams) (GetCompendiumGuidesRes, error)
 	// GetConditionBuild invokes getConditionBuild operation.
 	//
 	// A homebrew condition's design, read back: one of the caller's, or a Shared Library copy.
@@ -12677,39 +12687,6 @@ func (c *Client) sendGetAutomationCoverage(ctx context.Context, params GetAutoma
 		}
 	}
 
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:ForwardAuth"
-			switch err := c.securityForwardAuth(ctx, GetAutomationCoverageOperation, r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"ForwardAuth\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
 	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
@@ -13597,6 +13574,111 @@ func (c *Client) sendGetClassBuild(ctx context.Context, params GetClassBuildPara
 	return result, nil
 }
 
+// GetCompendiumGuides invokes getCompendiumGuides operation.
+//
+// Guides worked out of the SRD entries of the compendium, and of nothing else: every spell by its
+// level, what the attacks of monsters of each Challenge Rating look like (how many, the lowest, middle
+// and highest bonus to hit, and the middle damage of a hit), and loot by party level: the tiers of
+// play, the magic item rarities that suit each, and the magic items of each rarity. Open to anyone,
+// without an Account.
+//
+// GET /api/v1/compendium/guides
+func (c *Client) GetCompendiumGuides(ctx context.Context, params GetCompendiumGuidesParams) (GetCompendiumGuidesRes, error) {
+	res, err := c.sendGetCompendiumGuides(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendGetCompendiumGuides(ctx context.Context, params GetCompendiumGuidesParams) (res GetCompendiumGuidesRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getCompendiumGuides"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.URLTemplateKey.String("/api/v1/compendium/guides"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, GetCompendiumGuidesOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/api/v1/compendium/guides"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeQueryParams"
+	q := uri.NewQueryEncoder()
+	{
+		// Encode "ruleset" parameter.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "ruleset",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.Ruleset.Get(); ok {
+				return e.EncodeValue(conv.StringToString(string(val)))
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode query")
+		}
+	}
+	u.RawQuery = q.Values().Encode()
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeGetCompendiumGuidesResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
 // GetConditionBuild invokes getConditionBuild operation.
 //
 // A homebrew condition's design, read back: one of the caller's, or a Shared Library copy.
@@ -14273,39 +14355,6 @@ func (c *Client) sendGetEntry(ctx context.Context, params GetEntryParams) (res G
 			return nil
 		}); err != nil {
 			return res, errors.Wrap(err, "encode header")
-		}
-	}
-
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:ForwardAuth"
-			switch err := c.securityForwardAuth(ctx, GetEntryOperation, r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"ForwardAuth\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
 		}
 	}
 
@@ -17711,39 +17760,6 @@ func (c *Client) sendGetSpell(ctx context.Context, params GetSpellParams) (res G
 			return nil
 		}); err != nil {
 			return res, errors.Wrap(err, "encode header")
-		}
-	}
-
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:ForwardAuth"
-			switch err := c.securityForwardAuth(ctx, GetSpellOperation, r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"ForwardAuth\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
 		}
 	}
 
@@ -21943,39 +21959,6 @@ func (c *Client) sendListEntries(ctx context.Context, params ListEntriesParams) 
 			return nil
 		}); err != nil {
 			return res, errors.Wrap(err, "encode header")
-		}
-	}
-
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:ForwardAuth"
-			switch err := c.securityForwardAuth(ctx, ListEntriesOperation, r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"ForwardAuth\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
 		}
 	}
 
@@ -26497,39 +26480,6 @@ func (c *Client) sendListSources(ctx context.Context) (res ListSourcesRes, err e
 		return res, errors.Wrap(err, "create request")
 	}
 
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:ForwardAuth"
-			switch err := c.securityForwardAuth(ctx, ListSourcesOperation, r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"ForwardAuth\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
 	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
@@ -26753,39 +26703,6 @@ func (c *Client) sendListSpells(ctx context.Context, params ListSpellsParams) (r
 			return nil
 		}); err != nil {
 			return res, errors.Wrap(err, "encode header")
-		}
-	}
-
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:ForwardAuth"
-			switch err := c.securityForwardAuth(ctx, ListSpellsOperation, r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"ForwardAuth\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
 		}
 	}
 

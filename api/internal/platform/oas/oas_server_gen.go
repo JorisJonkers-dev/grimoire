@@ -1292,6 +1292,16 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/builders/classes/{entryId}
 	GetClassBuild(ctx context.Context, params GetClassBuildParams) (GetClassBuildRes, error)
+	// GetCompendiumGuides implements getCompendiumGuides operation.
+	//
+	// Guides worked out of the SRD entries of the compendium, and of nothing else: every spell by its
+	// level, what the attacks of monsters of each Challenge Rating look like (how many, the lowest, middle
+	// and highest bonus to hit, and the middle damage of a hit), and loot by party level: the tiers of
+	// play, the magic item rarities that suit each, and the magic items of each rarity. Open to anyone,
+	// without an Account.
+	//
+	// GET /api/v1/compendium/guides
+	GetCompendiumGuides(ctx context.Context, params GetCompendiumGuidesParams) (GetCompendiumGuidesRes, error)
 	// GetConditionBuild implements getConditionBuild operation.
 	//
 	// A homebrew condition's design, read back: one of the caller's, or a Shared Library copy.

@@ -4,6 +4,7 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { getEntryOptions } from '@/infrastructure/api/@tanstack/vue-query.gen'
 import type { Ruleset } from '@/infrastructure/api/types.gen'
+import CopyLink from './CopyLink.vue'
 import { isEntryKind, kindLabel } from './kinds'
 import RulesText from './RulesText.vue'
 
@@ -37,6 +38,7 @@ const missing = computed(() => !isEntryKind(kind.value) || entry.isError.value)
           <RouterLink :to="{ name: 'entry', params: { kind, slug }, query: { ruleset: 'srd-2024' } }" :aria-current="entry.data.value.ruleset === 'srd-2024' ? 'page' : undefined">2024</RouterLink>
           <RouterLink :to="{ name: 'entry', params: { kind, slug }, query: { ruleset: 'srd-2014' } }" :aria-current="entry.data.value.ruleset === 'srd-2014' ? 'page' : undefined">2014</RouterLink>
         </nav>
+        <CopyLink :to="{ name: 'entry', params: { kind, slug }, query: { ruleset: entry.data.value.ruleset } }" />
       </header>
       <dl v-if="entry.data.value.facts.length" class="facts" data-testid="entry-facts">
         <template v-for="fact in entry.data.value.facts" :key="fact.label">

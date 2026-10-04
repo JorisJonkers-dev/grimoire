@@ -7468,6 +7468,105 @@ func (s *CompanionKind) UnmarshalText(data []byte) error {
 	}
 }
 
+// The compendium's guides, worked out of its SRD entries.
+// Ref: #/components/schemas/CompendiumGuides
+type CompendiumGuides struct {
+	SpellsByLevel      []GuideSpellLevel `json:"spellsByLevel"`
+	AttacksByChallenge []GuideChallenge  `json:"attacksByChallenge"`
+	LootTiers          []GuideTier       `json:"lootTiers"`
+	LootByRarity       []GuideRarity     `json:"lootByRarity"`
+}
+
+// GetSpellsByLevel returns the value of SpellsByLevel.
+func (s *CompendiumGuides) GetSpellsByLevel() []GuideSpellLevel {
+	return s.SpellsByLevel
+}
+
+// GetAttacksByChallenge returns the value of AttacksByChallenge.
+func (s *CompendiumGuides) GetAttacksByChallenge() []GuideChallenge {
+	return s.AttacksByChallenge
+}
+
+// GetLootTiers returns the value of LootTiers.
+func (s *CompendiumGuides) GetLootTiers() []GuideTier {
+	return s.LootTiers
+}
+
+// GetLootByRarity returns the value of LootByRarity.
+func (s *CompendiumGuides) GetLootByRarity() []GuideRarity {
+	return s.LootByRarity
+}
+
+// SetSpellsByLevel sets the value of SpellsByLevel.
+func (s *CompendiumGuides) SetSpellsByLevel(val []GuideSpellLevel) {
+	s.SpellsByLevel = val
+}
+
+// SetAttacksByChallenge sets the value of AttacksByChallenge.
+func (s *CompendiumGuides) SetAttacksByChallenge(val []GuideChallenge) {
+	s.AttacksByChallenge = val
+}
+
+// SetLootTiers sets the value of LootTiers.
+func (s *CompendiumGuides) SetLootTiers(val []GuideTier) {
+	s.LootTiers = val
+}
+
+// SetLootByRarity sets the value of LootByRarity.
+func (s *CompendiumGuides) SetLootByRarity(val []GuideRarity) {
+	s.LootByRarity = val
+}
+
+// CompendiumGuidesHeaders wraps CompendiumGuides with response headers.
+type CompendiumGuidesHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           CompendiumGuides
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *CompendiumGuidesHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *CompendiumGuidesHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *CompendiumGuidesHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *CompendiumGuidesHeaders) GetResponse() CompendiumGuides {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *CompendiumGuidesHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *CompendiumGuidesHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *CompendiumGuidesHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *CompendiumGuidesHeaders) SetResponse(val CompendiumGuides) {
+	s.Response = val
+}
+
+func (*CompendiumGuidesHeaders) getCompendiumGuidesRes() {}
+
 // A homebrew condition in its builder, the slug it is known by, and how it reads back.
 // Ref: #/components/schemas/ConditionBuild
 type ConditionBuild struct {
@@ -14487,6 +14586,271 @@ func (s *GroupLabel) SetGroup(val int32) {
 // SetLabel sets the value of Label.
 func (s *GroupLabel) SetLabel(val string) {
 	s.Label = val
+}
+
+// The monsters of one Challenge Rating and what their attacks look like.
+// Ref: #/components/schemas/GuideChallenge
+type GuideChallenge struct {
+	// The Challenge Rating as the books write it, such as 1/4 or 5.
+	Challenge string `json:"challenge"`
+	Monsters  int32  `json:"monsters"`
+	// How many attacks those monsters have between them.
+	Attacks  int32 `json:"attacks"`
+	ToHitLow int32 `json:"toHitLow"`
+	// The middle bonus to hit.
+	ToHit     int32 `json:"toHit"`
+	ToHitHigh int32 `json:"toHitHigh"`
+	// The middle damage of one hit, on average dice, rounded down.
+	Damage int32 `json:"damage"`
+}
+
+// GetChallenge returns the value of Challenge.
+func (s *GuideChallenge) GetChallenge() string {
+	return s.Challenge
+}
+
+// GetMonsters returns the value of Monsters.
+func (s *GuideChallenge) GetMonsters() int32 {
+	return s.Monsters
+}
+
+// GetAttacks returns the value of Attacks.
+func (s *GuideChallenge) GetAttacks() int32 {
+	return s.Attacks
+}
+
+// GetToHitLow returns the value of ToHitLow.
+func (s *GuideChallenge) GetToHitLow() int32 {
+	return s.ToHitLow
+}
+
+// GetToHit returns the value of ToHit.
+func (s *GuideChallenge) GetToHit() int32 {
+	return s.ToHit
+}
+
+// GetToHitHigh returns the value of ToHitHigh.
+func (s *GuideChallenge) GetToHitHigh() int32 {
+	return s.ToHitHigh
+}
+
+// GetDamage returns the value of Damage.
+func (s *GuideChallenge) GetDamage() int32 {
+	return s.Damage
+}
+
+// SetChallenge sets the value of Challenge.
+func (s *GuideChallenge) SetChallenge(val string) {
+	s.Challenge = val
+}
+
+// SetMonsters sets the value of Monsters.
+func (s *GuideChallenge) SetMonsters(val int32) {
+	s.Monsters = val
+}
+
+// SetAttacks sets the value of Attacks.
+func (s *GuideChallenge) SetAttacks(val int32) {
+	s.Attacks = val
+}
+
+// SetToHitLow sets the value of ToHitLow.
+func (s *GuideChallenge) SetToHitLow(val int32) {
+	s.ToHitLow = val
+}
+
+// SetToHit sets the value of ToHit.
+func (s *GuideChallenge) SetToHit(val int32) {
+	s.ToHit = val
+}
+
+// SetToHitHigh sets the value of ToHitHigh.
+func (s *GuideChallenge) SetToHitHigh(val int32) {
+	s.ToHitHigh = val
+}
+
+// SetDamage sets the value of Damage.
+func (s *GuideChallenge) SetDamage(val int32) {
+	s.Damage = val
+}
+
+// A magic item as the loot guide lists it.
+// Ref: #/components/schemas/GuideItem
+type GuideItem struct {
+	Slug Slug   `json:"slug"`
+	Name string `json:"name"`
+}
+
+// GetSlug returns the value of Slug.
+func (s *GuideItem) GetSlug() Slug {
+	return s.Slug
+}
+
+// GetName returns the value of Name.
+func (s *GuideItem) GetName() string {
+	return s.Name
+}
+
+// SetSlug sets the value of Slug.
+func (s *GuideItem) SetSlug(val Slug) {
+	s.Slug = val
+}
+
+// SetName sets the value of Name.
+func (s *GuideItem) SetName(val string) {
+	s.Name = val
+}
+
+// The magic items of one rarity, by name, and the first tier of play they suit.
+// Ref: #/components/schemas/GuideRarity
+type GuideRarity struct {
+	Rarity    string      `json:"rarity"`
+	FirstTier int32       `json:"firstTier"`
+	Items     []GuideItem `json:"items"`
+}
+
+// GetRarity returns the value of Rarity.
+func (s *GuideRarity) GetRarity() string {
+	return s.Rarity
+}
+
+// GetFirstTier returns the value of FirstTier.
+func (s *GuideRarity) GetFirstTier() int32 {
+	return s.FirstTier
+}
+
+// GetItems returns the value of Items.
+func (s *GuideRarity) GetItems() []GuideItem {
+	return s.Items
+}
+
+// SetRarity sets the value of Rarity.
+func (s *GuideRarity) SetRarity(val string) {
+	s.Rarity = val
+}
+
+// SetFirstTier sets the value of FirstTier.
+func (s *GuideRarity) SetFirstTier(val int32) {
+	s.FirstTier = val
+}
+
+// SetItems sets the value of Items.
+func (s *GuideRarity) SetItems(val []GuideItem) {
+	s.Items = val
+}
+
+// A spell as the spells-by-level guide lists it.
+// Ref: #/components/schemas/GuideSpell
+type GuideSpell struct {
+	Slug   Slug   `json:"slug"`
+	Name   string `json:"name"`
+	School Slug   `json:"school"`
+}
+
+// GetSlug returns the value of Slug.
+func (s *GuideSpell) GetSlug() Slug {
+	return s.Slug
+}
+
+// GetName returns the value of Name.
+func (s *GuideSpell) GetName() string {
+	return s.Name
+}
+
+// GetSchool returns the value of School.
+func (s *GuideSpell) GetSchool() Slug {
+	return s.School
+}
+
+// SetSlug sets the value of Slug.
+func (s *GuideSpell) SetSlug(val Slug) {
+	s.Slug = val
+}
+
+// SetName sets the value of Name.
+func (s *GuideSpell) SetName(val string) {
+	s.Name = val
+}
+
+// SetSchool sets the value of School.
+func (s *GuideSpell) SetSchool(val Slug) {
+	s.School = val
+}
+
+// The spells of one spell level, by name; level 0 holds the cantrips.
+// Ref: #/components/schemas/GuideSpellLevel
+type GuideSpellLevel struct {
+	Level  int32        `json:"level"`
+	Spells []GuideSpell `json:"spells"`
+}
+
+// GetLevel returns the value of Level.
+func (s *GuideSpellLevel) GetLevel() int32 {
+	return s.Level
+}
+
+// GetSpells returns the value of Spells.
+func (s *GuideSpellLevel) GetSpells() []GuideSpell {
+	return s.Spells
+}
+
+// SetLevel sets the value of Level.
+func (s *GuideSpellLevel) SetLevel(val int32) {
+	s.Level = val
+}
+
+// SetSpells sets the value of Spells.
+func (s *GuideSpellLevel) SetSpells(val []GuideSpell) {
+	s.Spells = val
+}
+
+// A tier of play and the magic item rarities that suit a party in it.
+// Ref: #/components/schemas/GuideTier
+type GuideTier struct {
+	Tier      int32    `json:"tier"`
+	FromLevel int32    `json:"fromLevel"`
+	ToLevel   int32    `json:"toLevel"`
+	Rarities  []string `json:"rarities"`
+}
+
+// GetTier returns the value of Tier.
+func (s *GuideTier) GetTier() int32 {
+	return s.Tier
+}
+
+// GetFromLevel returns the value of FromLevel.
+func (s *GuideTier) GetFromLevel() int32 {
+	return s.FromLevel
+}
+
+// GetToLevel returns the value of ToLevel.
+func (s *GuideTier) GetToLevel() int32 {
+	return s.ToLevel
+}
+
+// GetRarities returns the value of Rarities.
+func (s *GuideTier) GetRarities() []string {
+	return s.Rarities
+}
+
+// SetTier sets the value of Tier.
+func (s *GuideTier) SetTier(val int32) {
+	s.Tier = val
+}
+
+// SetFromLevel sets the value of FromLevel.
+func (s *GuideTier) SetFromLevel(val int32) {
+	s.FromLevel = val
+}
+
+// SetToLevel sets the value of ToLevel.
+func (s *GuideTier) SetToLevel(val int32) {
+	s.ToLevel = val
+}
+
+// SetRarities sets the value of Rarities.
+func (s *GuideTier) SetRarities(val []string) {
+	s.Rarities = val
 }
 
 // Probe result.
@@ -40126,6 +40490,7 @@ func (*ProblemStatusCodeWithHeaders) getCampaignRes()                   {}
 func (*ProblemStatusCodeWithHeaders) getCharacterDraftRes()             {}
 func (*ProblemStatusCodeWithHeaders) getCharacterRes()                  {}
 func (*ProblemStatusCodeWithHeaders) getClassBuildRes()                 {}
+func (*ProblemStatusCodeWithHeaders) getCompendiumGuidesRes()           {}
 func (*ProblemStatusCodeWithHeaders) getConditionBuildRes()             {}
 func (*ProblemStatusCodeWithHeaders) getDashboardRes()                  {}
 func (*ProblemStatusCodeWithHeaders) getDiceSetImageRes()               {}
