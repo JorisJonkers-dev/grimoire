@@ -100,7 +100,12 @@ describe('proposal page', () => {
       },
       [`/api/v1/campaigns/${CAMP}`]: () => campaign('dm'),
     })
-    expect(wrapper.get('[data-testid="proposal-diff"] h2').text()).toBe('Now')
+    expect(wrapper.findAll('[data-testid="proposal-diff"] h3').map((h) => h.text())).toEqual(['Now', 'Proposed'])
+    // The page sits in the Campaign's frame, is headed by what is proposed, and keeps the decision to one side.
+    expect(wrapper.get('nav[aria-label="Breadcrumb"] [aria-current="page"]').text()).toBe('Proposals')
+    expect(wrapper.get('[data-testid="page-eyebrow"], .g-eyebrow').text()).toMatch(/^Proposal · /)
+    expect(wrapper.get('aside').find('[data-testid="proposal-review"]').exists()).toBe(true)
+    expect(wrapper.get('aside').find('[data-testid="proposal-diff"]').exists()).toBe(false)
     expect(wrapper.get('[data-testid="now-Damage"]').classes()).toContain('changed')
     expect(wrapper.get('[data-testid="proposed-Range"]').classes()).not.toContain('changed')
     expect(wrapper.get('[data-testid="proposal-note-shown"]').text()).toBe('Tamsin: For my wizard')
@@ -138,7 +143,8 @@ describe('proposal page', () => {
       },
       [`/api/v1/campaigns/${CAMP}`]: () => campaign('player'),
     })
-    expect(wrapper.get('[data-testid="proposal-diff"] h2').text()).toBe('A new entry')
+    expect(wrapper.get('[data-testid="proposal-diff"] h3').text()).toBe('A new entry')
+    expect(wrapper.get('aside').find('[data-testid="proposal-resubmit"]').exists()).toBe(true)
     expect(wrapper.get('[data-testid="proposal-message"]').text()).toBe('The DM: Lower the damage')
     expect(wrapper.get('[data-testid="proposal-steps"]').text()).toContain('Changes asked for by Joris')
     expect(wrapper.find('[data-testid="proposal-review"]').exists()).toBe(false)
