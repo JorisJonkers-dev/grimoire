@@ -53,6 +53,7 @@ test('a player arranges their Character\'s action bars, and finds them the same 
 
   // Until arranged the hotbar shows everything; arranging starts from that order, in edit mode.
   const hotbar = player.getByTestId('hotbar-Mira')
+  await hotbar.getByTestId('hotbar-more').locator('summary').click()
   await expect(hotbar.getByTestId('area-spell')).toBeVisible()
   await hotbar.getByTestId('arrange-bars').click()
   const bars = player.getByTestId('action-bars')

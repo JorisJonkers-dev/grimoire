@@ -45,6 +45,7 @@ test('the DM attacks through the hotbar and hit points change on every screen', 
 
   const bar = page.getByTestId('hotbar-Grik')
   await expect(bar.getByTestId('suggestion')).toContainText('Shortbow attack against Ally. Simple: Ally is the nearest enemy, 15 ft away.')
+  await bar.getByTestId('hotbar-more').locator('summary').click()
   await bar.getByTestId('tactics').selectOption('off')
   await expect(bar.getByTestId('suggestion')).toHaveCount(0)
   await bar.getByTestId('attack-0').click()

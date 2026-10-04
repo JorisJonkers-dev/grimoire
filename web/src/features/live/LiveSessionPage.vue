@@ -167,6 +167,9 @@ const cardEntry = computed(() => roster.value.find((e) => e.tokenId === card.val
 // On a phone everyone swipes between pages over the map and pinches to zoom it; the DM's pages are a remote.
 const pages = computed(() => (isDM.value ? DM_PAGES : PLAYER_PAGES))
 const shell = usePhoneShell(() => pages.value)
+// On a wide screen the drawer folds away to leave the map alone.
+const folded = ref(false)
+const actor = computed(() => combat.value?.combatants.find((c) => c.acting)?.label)
 const chips = [
   { key: 'action', field: 'action', label: 'Action' },
   { key: 'bonus', field: 'bonusAction', label: 'Bonus' },
@@ -531,7 +534,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
 </script>
 
 <template>
-  <main class="live live--phone">
+  <main :class="['live', 'live--phone', { 'live--folded': folded }]">
     <p v-if="campaign.isError.value" role="alert" class="g-alert" data-testid="live-missing">This session is not available to you.</p>
     <template v-else-if="state">
       <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -- a pinch is the touch shortcut; the zoom buttons do the same -->
@@ -544,10 +547,12 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         @pointercancel="shell.pinchEnd"
         @pointerleave="shell.pinchEnd"
       >
-        <div class="zoomer" data-testid="zoomer" :style="{ width: `${String(Math.round(shell.zoom.value * 100))}%` }">
-          <WorldPanel v-if="scope === 'world'" :world="view?.world" :dm="isDM" :maps="worldMaps" :local-maps="localMaps" :measure="state?.measure ?? null" :game-day="view?.gameDay ?? 0" :game-minute="view?.gameMinute ?? 0" :marching-order="view?.marchingOrder ?? []" :vehicles="fleet.data.value?.vehicles ?? []" @send="(cmd) => live?.send(cmd)" />
-          <MapBoard v-else-if="view?.map" :map="view.map" :view="view" :dm="isDM" :selected="selected" :path="walkPath" :danger="walkDanger" :captions="suggestions" :area="areaHexes" :zone="zoneCells" :reach="view.sneak?.reach ?? []" :title="view.map.name" :home="home" @select="pick" />
-          <HexGrid v-else :cells="cells" :title="`Session ${String(state.session?.number ?? '')} map`" :home="home" @select="pick" />
+        <div class="scroller">
+          <div class="zoomer" data-testid="zoomer" :style="{ width: `${String(Math.round(shell.zoom.value * 100))}%` }">
+            <WorldPanel v-if="scope === 'world'" :world="view?.world" :dm="isDM" :maps="worldMaps" :local-maps="localMaps" :measure="state?.measure ?? null" :game-day="view?.gameDay ?? 0" :game-minute="view?.gameMinute ?? 0" :marching-order="view?.marchingOrder ?? []" :vehicles="fleet.data.value?.vehicles ?? []" @send="(cmd) => live?.send(cmd)" />
+            <MapBoard v-else-if="view?.map" :map="view.map" :view="view" :dm="isDM" :selected="selected" :path="walkPath" :danger="walkDanger" :captions="suggestions" :area="areaHexes" :zone="zoneCells" :reach="view.sneak?.reach ?? []" :title="view.map.name" :home="home" @select="pick" />
+            <HexGrid v-else :cells="cells" :title="`Session ${String(state.session?.number ?? '')} map`" :home="home" @select="pick" />
+          </div>
         </div>
         <div class="zoom" role="group" aria-label="Map zoom">
           <button type="button" aria-label="Zoom out" :disabled="!shell.canZoomOut.value" data-testid="zoom-out" @click="shell.zoomOut">−</button>
@@ -555,34 +560,41 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
           <button type="button" aria-label="Zoom in" :disabled="!shell.canZoomIn.value" data-testid="zoom-in" @click="shell.zoomIn">+</button>
         </div>
         <div id="quick-bar-slot" class="quick-slot" />
-        <WalkPlan v-if="state.path" :path="state.path" :mover="tokenById(state.path.tokenId)?.label ?? 'it'" @confirm="confirmWalk" @cancel="live?.dropPath()" />
-        <p v-else-if="!isDM && walker" class="walk" data-testid="walker">Tap a hex to walk {{ walker.label }} there.</p>
       </div>
-      <header class="head">
-        <RouterLink :to="{ name: 'campaign', params: { id: campaignId } }" class="back">← Campaign</RouterLink>
-        <h1>Session {{ state.session?.number ?? '' }}</h1>
-        <span class="g-tag" :class="`conn--${state.connection}`" data-testid="connection" role="status">{{ status }}</span>
-        <RouterLink :to="{ name: 'table', params: { id: campaignId, sid: sessionId } }" class="table-link">Table display</RouterLink>
-        <NotifyToggle />
-      </header>
-      <p v-if="state.rejection" role="alert" class="g-alert" data-testid="rejection">{{ state.rejection }}</p>
+      <div class="chrome">
+        <header class="head" data-testid="live-bar">
+          <RouterLink :to="{ name: 'home' }" class="brand">Grimoire<template v-if="isDM"> · DM</template></RouterLink>
+          <RouterLink :to="{ name: 'campaign', params: { id: campaignId } }" class="back">← Campaign</RouterLink>
+          <div class="where"><span>{{ campaign.data.value?.name }} · </span><h1>Session {{ state.session?.number ?? '' }}</h1></div>
+          <span class="g-tag" :class="`conn--${state.connection}`" data-testid="connection" role="status">{{ status }}</span>
+          <strong v-if="combat?.status === 'active'" class="turn" data-testid="bar-turn">Round {{ combat.round }}<template v-if="actor"> · {{ actor }}</template></strong>
+          <span class="acts">
+            <RouterLink :to="{ name: 'table', params: { id: campaignId, sid: sessionId } }" class="table-link">Table display</RouterLink>
+            <NotifyToggle />
+            <button type="button" class="fold" :aria-expanded="!folded" aria-controls="live-drawer" data-testid="panels-toggle" @click="folded = !folded">Panels</button>
+          </span>
+        </header>
+        <p v-if="state.rejection" role="alert" class="g-alert" data-testid="rejection">{{ state.rejection }}</p>
+        <div class="top">
+          <RosterStrip v-if="roster.length || combat" :roster="roster" :combat="combat ?? undefined" :tokens="view?.tokens ?? []" :reveal="state.reveal" @effects="(id) => (card = id)" />
+          <EffectsCard v-if="cardEntry" :entry="cardEntry" @close="card = ''" />
+          <WalkPlan v-if="state.path" :path="state.path" :mover="tokenById(state.path.tokenId)?.label ?? 'it'" @confirm="confirmWalk" @cancel="live?.dropPath()" />
+          <p v-else-if="!isDM && walker" class="walk" data-testid="walker">Tap a hex to walk {{ walker.label }} there.</p>
+          <fieldset class="scope" data-testid="scope">
+            <legend class="sr-only">Which map</legend>
+            <label v-for="s in (['local', 'world'] as const)" :key="s" :class="['scope-option', { on: scope === s }]">
+              <input v-model="scope" type="radio" :value="s" :data-testid="`scope-${s}`" />
+              <span>{{ s === 'local' ? 'Local' : 'World' }}</span>
+            </label>
+          </fieldset>
+        </div>
+      </div>
       <div class="sr-only" role="log" aria-live="polite" aria-label="What is happening" data-testid="announcer">
         <p v-for="l in lines" :key="l.no">{{ l.text }}</p>
       </div>
       <button v-if="banner" type="button" class="turn-banner" data-testid="turn-banner" @click="dismissBanner">
         <strong>It's your turn</strong> <span>{{ banner }}</span>
       </button>
-      <div class="top">
-        <RosterStrip v-if="roster.length || combat" :roster="roster" :combat="combat ?? undefined" :tokens="view?.tokens ?? []" :reveal="state.reveal" @effects="(id) => (card = id)" />
-        <EffectsCard v-if="cardEntry" :entry="cardEntry" @close="card = ''" />
-        <fieldset class="scope" data-testid="scope">
-          <legend class="sr-only">Which map</legend>
-          <label v-for="s in (['local', 'world'] as const)" :key="s" :class="['scope-option', { on: scope === s }]">
-            <input v-model="scope" type="radio" :value="s" :data-testid="`scope-${s}`" />
-            <span>{{ s === 'local' ? 'Local' : 'World' }}</span>
-          </label>
-        </fieldset>
-      </div>
       <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -- a swipe is the touch shortcut; the page buttons do the same -->
       <div
         :class="['dock', `dock--page-${shell.page.value}`]"
@@ -590,438 +602,442 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         @pointerdown="shell.swipeStart"
         @pointerup="shell.swipeEnd"
       >
-        <p v-if="!isDM && turns.length > 0" data-page="always" class="banner" data-testid="your-turn">Your turn</p>
-        <p v-if="view?.tableResult" data-page="always" role="status" class="walk" data-testid="table-result">{{ tableResultLine(view.tableResult) }}</p>
-        <div v-if="view && !combat && (isDM || view.exploration)" data-page="actions" class="row" data-testid="exploration">
-          <GButton v-if="isDM" :data-testid="view.exploration ? 'stop-turns' : 'start-turns'" @click="live?.send({ kind: 'explore', on: !view.exploration })">
-            {{ view.exploration ? 'End exploration turns' : 'Explore in turns' }}
-          </GButton>
-          <template v-if="view.exploration">
-            <span role="status" data-testid="exploration-turn">
-              {{ names[view.exploration.turn] ?? 'Someone' }} explores · {{ view.exploration.leftFt }} ft left
-            </span>
-            <GButton
-              v-if="isDM || tokenById(view.exploration.turn)?.controllerId === campaign.data.value?.me.id"
-              data-testid="pass-turn"
-              @click="live?.send({ kind: 'pass_turn' })"
-            >
-              Pass the turn
+        <div class="tray" data-testid="tray">
+          <p v-if="!isDM && turns.length > 0" data-page="always" class="banner" data-testid="your-turn">Your turn</p>
+          <p v-if="view?.tableResult" data-page="always" role="status" class="walk" data-testid="table-result">{{ tableResultLine(view.tableResult) }}</p>
+          <div v-if="view && !combat && (isDM || view.exploration)" data-page="actions" class="row" data-testid="exploration">
+            <GButton v-if="isDM" :data-testid="view.exploration ? 'stop-turns' : 'start-turns'" @click="live?.send({ kind: 'explore', on: !view.exploration })">
+              {{ view.exploration ? 'End exploration turns' : 'Explore in turns' }}
             </GButton>
-          </template>
-        </div>
-        <div v-if="view && !combat" data-page="actions" class="row" data-testid="sneak">
-          <GButton :data-testid="view.sneak ? 'stop-sneaking' : 'start-sneaking'" @click="live?.send({ kind: 'sneak', on: !view.sneak })">
-            {{ view.sneak ? 'Stop sneaking' : 'Sneak' }}
-          </GButton>
-          <span v-if="view.sneak" role="status" data-testid="sneak-status">
-            {{ view.sneak.waiting ? 'Sneaking: roll Stealth.' : 'Sneaking. Tinted hexes are watched.' }}
-          </span>
-        </div>
-        <section v-if="toRoll.length > 0" data-page="always" class="rolls" aria-label="Initiative to roll">
-          <GButton v-if="isDM && toRoll.length > 1" data-testid="roll-all" @click="rollAll()">Roll every initiative for me</GButton>
-          <LiveRoll v-for="c in toRoll" :key="c.rollId" :campaign-id="campaignId" :roll-id="c.rollId" />
-        </section>
-        <p v-if="isDM && pointing" data-page="always" role="status" class="walk" data-testid="pointing">
-          {{ pointing }}
-          <GButton data-testid="stop-pointing" @click="tool = 'tokens'">Done</GButton>
-        </p>
-        <ControlSwitcher
-          v-if="isDM && creatures.length"
-          data-page="actions"
-          :creatures="creatures"
-          :in-hand="inHand"
-          :acting="actingCreatures"
-          :several="several"
-          @take="(id) => (inHand = taken(inHand, id, several))"
-          @several="setSeveral"
-          @tactics="(t) => t && held.forEach((x) => live?.send({ kind: 'set_tactics', tokenId: x.id, tactics: t }))"
-          @hp="(d) => held.forEach((x) => live?.send({ kind: 'adjust_hp', tokenId: x.id, hpDelta: d }))"
-        />
-        <template v-if="isDM">
-          <CreaturePanel
-            v-for="t in held"
-            :key="`creature-${t.id}`"
-            data-page="actions"
-            :token="t"
-            :combatant="combatantOf(t.id)"
-            :suggestion="suggestions[t.id]?.sentence"
-            :notes="notesFor(t.id)"
-            :no-undo="view?.noUndo ?? false"
-            @tactics="(v) => live?.send({ kind: 'set_tactics', tokenId: t.id, tactics: v })"
-            @use="useSuggestion(t.id, combatantOf(t.id)?.suggestion)"
-            @undo="(seq) => live?.send({ kind: 'undo', seq })"
-          />
-        </template>
-        <TurnPanel
-          v-for="c in turns"
-          :key="c.id"
-          data-page="actions"
-          :combatant="c"
-          @spend="(r) => live?.send({ kind: 'spend', combatantId: c.id, resource: r })"
-          @end="live?.send({ kind: 'end_turn', combatantId: c.id })"
-        />
-        <label v-if="bars.length > 0 && swayable.length > 0" class="g-field" data-page="actions">
-          <span>Whom Influence is aimed at</span>
-          <select v-model="swayed" data-testid="influence-target">
-            <option value="">Nobody in particular</option>
-            <option v-for="t in swayable" :key="t.id" :value="t.id">{{ t.label }}{{ t.factionId ? ` (${factionName(t.factionId)})` : '' }}</option>
-          </select>
-        </label>
-        <Hotbar
-          v-for="b in bars"
-          :key="b.token.id"
-          data-page="actions"
-          :token="b.token"
-          :armed="aiming?.tokenId === b.token.id ? aiming.attackNo : null"
-          :blocked="blockedFor(b.c)"
-          :suggestion="b.c.suggestion"
-          :target="b.c.suggestion ? tokenById(b.c.suggestion.targetId)?.label : undefined"
-          :tactics="b.c.tactics"
-          :attacks-left="b.c.attacksLeft ?? 0"
-          :off-hand="b.c.offHand ?? false"
-          :interaction="b.c.interaction ?? false"
-          :cleave="b.c.cleave ?? false"
-          :summons="awaitingOrders(b.c.id)"
-          :own="b.token.controllerId !== undefined && b.token.controllerId === campaign.data.value?.me.id"
-          @arm="(n) => arm(b.token, n)"
-          @use="useSuggestion(b.token.id, b.c.suggestion)"
-          @tactics="(t) => live?.send({ kind: 'set_tactics', tokenId: b.token.id, tactics: t })"
-          @area="(e, n) => aimArea(b.token, e, n)"
-          @action="(a) => live?.send({ kind: 'take_action', tokenId: b.token.id, action: a as 'dash', ...(a === 'influence' && swayed ? { targetId: swayed } : {}) })"
-          @ready="(n) => live?.send({ kind: 'take_action', tokenId: b.token.id, action: 'ready', trigger: 'enters_reach', attackNo: n })"
-          @unarmed="(o) => (grabbing = { tokenId: b.token.id, option: o })"
-          @off-hand="(n) => armOffHand(b.token, n)"
-          @cleave="(n) => armCleave(b.token, n)"
-          @interact="(d) => live?.send({ kind: 'interact', tokenId: b.token.id, detail: d })"
-          @swap="live?.send({ kind: 'swap_weapons', tokenId: b.token.id })"
-          @teleport="teleporting = b.token.id"
-          @jump="jumping = b.token.id"
-          @ride="riding = { tokenId: b.token.id, off: b.token.mountId !== undefined }"
-          @throw="throwing = { tokenId: b.token.id }"
-          @summon="(e) => (summoning = e ? { tokenId: b.token.id, effect: e } : null)"
-          @command="(id) => live?.send({ kind: 'command', tokenId: b.token.id, targetId: id })"
-        />
-        <template v-if="!isDM">
-          <SpellList
-            v-for="b in bars"
-            :key="`spells-${b.token.id}`"
-            data-page="spells"
-            :token="b.token"
-            :blocked="blockedFor(b.c)"
-            @area="(e, n) => (aimArea(b.token, e, n), (shell.page.value = 'map'))"
-            @summon="(e) => ((summoning = { tokenId: b.token.id, effect: e }), (shell.page.value = 'map'))"
-          />
-        </template>
-        <p v-if="summoning" data-page="always" role="status" class="walk" data-testid="summoning">Tap where they appear.</p>
-        <p v-if="teleporting" data-page="always" role="status" class="walk" data-testid="teleporting">Tap a free hex within 30 feet.</p>
-        <p v-if="jumping" data-page="always" role="status" class="walk" data-testid="jumping">Tap where to land.</p>
-        <div v-if="riding" data-page="always" role="status" class="walk" data-testid="riding">
-          <template v-if="riding.off">Tap a free hex next to your mount.</template>
-          <template v-else>
-            Tap the creature to ride.
-            <label class="check"><input v-model="steer" type="checkbox" data-testid="ride-control" /><span>Control it</span></label>
-          </template>
-        </div>
-        <p v-if="throwing" data-page="always" role="status" class="walk" data-testid="throwing">
-          {{ throwing.targetId || throwing.objectId ? 'Tap where it lands.' : 'Tap the creature or object to throw.' }}
-        </p>
-        <p v-if="grabbing" data-page="always" role="status" class="walk" data-testid="grabbing">Tap the creature to grapple or shove.</p>
-        <p v-if="areaAiming && !areaPreview" data-page="always" role="status" class="walk" data-testid="area-aiming">Tap where the spell goes.</p>
-        <AreaPreviewCard v-if="areaPreview" data-page="always" :preview="areaPreview" :names="names" @confirm="castArea()" @cancel="areaAiming = null" />
-        <LiveRoll v-for="id in areaRolls" :key="id" data-page="always" :campaign-id="campaignId" :roll-id="id" />
-        <AttackPreview
-          v-if="preview"
-          data-page="always"
-          :preview="preview"
-          :target="tokenById(preview.targetId)?.label ?? 'the target'"
-          @confirm="confirmAttack(preview)"
-          @cancel="aiming = null"
-        />
-        <ReactionPrompt
-          v-if="prompt"
-          data-page="always"
-          :prompt="prompt"
-          :reactor="tokenById(prompt.reactorId)?.label ?? 'A creature'"
-          :answerable="answerable"
-          @answer="(use) => live?.send({ kind: 'react', use })"
-        />
-        <p v-if="pending" data-page="always" role="status" class="walk" data-testid="pending-attack">
-          {{ pending.name }}{{ pending.critical ? ' (critical)' : '' }}: waiting for {{ { to_hit: 'the attack roll', reaction: 'a reaction', damage: 'the damage roll' }[pending.stage] }}.
-        </p>
-        <LiveRoll v-if="attackRoll" :key="attackRoll" data-page="always" :campaign-id="campaignId" :roll-id="attackRoll" />
-        <LiveRoll v-for="s in mySaves" :key="s.rollId" data-page="always" :campaign-id="campaignId" :roll-id="s.rollId" />
-        <LiveRoll v-for="p in myChecks" :key="p.rollId" data-page="always" :campaign-id="campaignId" :roll-id="p.rollId" />
-        <LiveRoll v-for="id in checkRolls" :key="id" data-page="always" :campaign-id="campaignId" :roll-id="id" />
-        <p v-if="view?.resolving" data-page="always" role="status" class="walk" data-testid="resolving">The DM is resolving an effect.</p>
-        <section v-if="view?.manual?.length" data-page="party" class="g-card manual" aria-label="Resolve by hand" data-testid="manual">
-          <h2>Resolve by hand</h2>
-          <ul class="g-list">
-            <li v-for="m in view.manual" :key="m.id" class="row">
-              <span>{{ m.text }}</span>
-              <GButton :data-testid="`manual-done-${m.id}`" @click="live?.send({ kind: 'resolve_manual', manualId: m.id })">Done</GButton>
-            </li>
-          </ul>
-        </section>
-        <section v-if="isDM" v-show="scope === 'local'" data-page="tools" class="g-card controls" data-testid="dm-controls">
-          <div class="row">
-            <label class="g-field grow">
-              <span>Map</span>
-              <select v-model="mapChoice" data-testid="map-choice">
-                <option value="">No map (open grid)</option>
-                <option v-for="m in localMaps" :key="m.id" :value="m.id">{{ m.name }}</option>
-              </select>
-            </label>
-            <GButton data-testid="use-map" @click="useMap()">Use map</GButton>
-            <RouterLink :to="{ name: 'maps', params: { id: campaignId } }" class="manage">Manage maps</RouterLink>
-          </div>
-          <fieldset class="tools">
-            <legend>Tap the map to</legend>
-            <label v-for="t in (['tokens', 'reveal', 'conceal', 'wall', 'unwall', 'light', 'surface', 'elevation', 'zone', 'object', 'camera', 'ping'] as const)" :key="t" class="tool">
-              <input v-model="tool" type="radio" :value="t" :data-testid="`tool-${t}`" />
-              <span>{{ { tokens: 'Place or walk tokens', reveal: 'Reveal', conceal: 'Conceal', wall: 'Build walls', unwall: 'Clear walls', light: 'Place or remove light', surface: 'Paint surfaces', elevation: 'Raise or lower ground', zone: 'Draw an encounter zone', object: 'Place objects', camera: 'Point the table camera', ping: 'Ping the table' }[t] }}</span>
-            </label>
-          </fieldset>
-          <div v-if="view?.map" class="row">
-            <span>Ambient light</span>
-            <GButton v-for="a in (['bright', 'dim', 'dark'] as const)" :key="a" :data-testid="`ambient-${a}`" @click="setAmbient(a)">
-              {{ a }}{{ view.ambient === a ? ' ✓' : '' }}
-            </GButton>
-          </div>
-          <div v-if="tool === 'surface'" class="row">
-            <label class="g-field">
-              <span>Surface</span>
-              <select v-model="surfaceKind" data-testid="surface-kind">
-                <option value="">Clear</option>
-                <option v-for="k in surfaceKinds" :key="k.kind" :value="k.kind">{{ k.name }}</option>
-              </select>
-            </label>
-            <label class="g-field"><span>Rounds</span><input v-model.number="surfaceRounds" type="number" min="0" max="100" data-testid="surface-rounds" /></label>
-          </div>
-          <div v-if="tool === 'zone'" class="row">
-            <label class="g-field grow"><span>Zone name</span><input v-model="zoneName" maxlength="40" data-testid="zone-name" /></label>
-            <label class="g-field"><span>Reach (hexes)</span><input v-model.number="zoneRadius" type="number" min="1" max="20" data-testid="zone-radius" /></label>
-            <label class="check"><input v-model="zoneDMOnly" type="checkbox" data-testid="zone-dm-only" /><span>Only when I spring it</span></label>
-          </div>
-          <ZonesPanel v-if="view?.zones?.length" :zones="view.zones" :names="names" @send="(cmd) => live?.send(cmd)" />
-          <div v-if="tool === 'object'" class="row">
-            <label class="g-field">
-              <span>Object</span>
-              <select v-model="objectForm.kind" data-testid="object-kind">
-                <option v-for="k in ['door', 'lever', 'chest', 'barrel', 'curtain', 'destructible', 'trap'] as const" :key="k" :value="k">{{ k }}</option>
-              </select>
-            </label>
-            <label class="g-field"><span>Name</span><input v-model="objectForm.name" maxlength="40" data-testid="object-name" /></label>
-            <label class="g-field"><span>Triggers</span><input v-model="objectForm.effect" maxlength="80" placeholder="prone" data-testid="object-effect" /></label>
-            <label class="g-field"><span>Reach (ft)</span><input v-model.number="objectForm.radiusFt" type="number" min="0" max="60" step="5" data-testid="object-radius" /></label>
-            <label class="check"><input v-model="objectForm.secret" type="checkbox" data-testid="object-secret" /><span>Secret</span></label>
-            <label class="g-field"><span>Spot DC</span><input v-model.number="objectForm.detectDc" type="number" min="0" max="40" data-testid="object-detect" /></label>
-            <label class="g-field"><span>Disarm DC</span><input v-model.number="objectForm.disarmDc" type="number" min="0" max="40" data-testid="object-disarm" /></label>
-            <label class="g-field"><span>Sets off within (ft)</span><input v-model.number="objectForm.triggerFt" type="number" min="0" max="60" step="5" data-testid="object-trigger" /></label>
-            <label class="g-field"><span>Lock DC</span><input v-model.number="objectForm.lockDc" type="number" min="0" max="40" data-testid="object-lock" /></label>
-            <label class="g-field"><span>Key</span><input v-model="objectForm.key" maxlength="80" placeholder="iron-key" data-testid="object-key" /></label>
-          </div>
-          <div v-if="tool === 'elevation'" class="row">
-            <label class="g-field"><span>Height (ft)</span><input v-model.number="elevationFt" type="number" min="-100" max="100" step="5" data-testid="elevation-ft" /></label>
-          </div>
-          <div v-if="tool === 'light'" class="row">
-            <label class="g-field"><span>Bright (ft)</span><input v-model.number="brightFt" type="number" min="0" max="600" /></label>
-            <label class="g-field"><span>Dim (ft)</span><input v-model.number="dimFt" type="number" min="0" max="600" /></label>
-          </div>
-          <div v-if="tool === 'tokens'" class="row">
-            <label class="g-field grow"><span>Name</span><input v-model="label" maxlength="40" data-testid="token-label" /></label>
-            <label class="g-field">
-              <span>Kind</span>
-              <select v-model="kind" data-testid="token-kind">
-                <option value="party">Party</option>
-                <option value="enemy">Enemy</option>
-                <option value="npc">NPC</option>
-                <option value="object">Object</option>
-              </select>
-            </label>
-            <label class="g-field">
-              <span>Controlled by</span>
-              <select v-model="controller" data-testid="token-controller">
-                <option value="">Only the DM</option>
-                <option v-for="m in players" :key="m.id" :value="m.id">{{ m.displayName }}</option>
-              </select>
-            </label>
-            <label class="g-field">
-              <span>Monster</span>
-              <input v-model="monster" placeholder="goblin" maxlength="80" data-testid="token-monster" />
-            </label>
-            <label class="g-field">
-              <span>Character</span>
-              <select v-model="character" data-testid="token-character">
-                <option value="">None</option>
-                <option v-for="ch in characters.data.value ?? []" :key="ch.id" :value="ch.id">{{ ch.name }}</option>
-              </select>
-            </label>
-            <label v-if="isDM" class="g-field">
-              <span>Faction</span>
-              <select v-model="faction" data-testid="token-faction">
-                <option value="">No Faction</option>
-                <option v-for="f in factions.data.value ?? []" :key="f.id" :value="f.id">{{ f.name }}</option>
-              </select>
-            </label>
-            <label v-if="isDM" class="g-field">
-              <span>Companion</span>
-              <select v-model="companion" data-testid="token-companion">
-                <option value="">None</option>
-                <option v-for="c in offMap" :key="c.id" :value="c.id">{{ c.name }}</option>
-              </select>
-            </label>
-            <label class="g-field"><span>Darkvision (ft)</span><input v-model.number="darkvision" type="number" min="0" max="300" data-testid="token-darkvision" /></label>
-            <label class="check"><input v-model="hidden" type="checkbox" data-testid="token-hidden" /><span>Hidden</span></label>
-            <label class="check"><input v-model="knowsShield" type="checkbox" data-testid="token-shield" /><span>Knows Shield</span></label>
-          </div>
-          <LegendPanel v-if="chosen?.legend && isDM" :key="`legend-${chosen.id}`" :token="chosen" :legend="chosen.legend" @send="(c) => live?.send(c)" />
-          <EffectsPanel
-            v-if="chosen"
-            :key="chosen.id"
-            :token="chosen"
-            :tokens="view?.tokens ?? []"
-            :conditions="view?.conditions ?? []"
-            @apply="(e) => live?.send({ kind: 'apply_effect', targetId: chosen!.id, ...e })"
-            @end="(id, cured) => live?.send({ kind: 'end_effect', effectId: id, ...(cured ? { cured } : {}) })"
-          />
-          <VisibilityPanel
-            v-if="chosen && isDM"
-            :key="`vis-${chosen.id}`"
-            :token="chosen"
-            @set="(v) => live?.send({ kind: 'set_visibility', tokenId: chosen!.id, ...v })"
-          />
-          <div v-if="chosen" class="row" data-testid="selected-token">
-            <span>{{ chosen.label }}{{ chosen.hidden ? ' (hidden)' : '' }}</span>
-            <p v-if="chosen.factionId" class="hint" data-testid="token-faction-line">
-              Of {{ factionName(chosen.factionId) }}.<template v-if="chosen.firstReaction"> First reaction: {{ chosen.firstReaction }}.</template>
-            </p>
-            <ul v-if="chosen.attitudes?.length" class="g-list" aria-label="Attitudes">
-              <li v-for="a in chosen.attitudes" :key="a.characterId" data-testid="token-attitude">{{ attitudeNames[a.attitude] }} towards {{ characterName(a.characterId) }}</li>
-            </ul>
-            <label v-if="isDM && chosen.companionId" class="g-field">
-              <span>Run by</span>
-              <select
-                :value="chosen.controllerId ?? ''"
-                data-testid="token-hand"
-                @change="live?.send({ kind: 'assign_control', tokenId: chosen.id, ...(($event.target as HTMLSelectElement).value ? { controllerId: ($event.target as HTMLSelectElement).value } : {}) })"
+            <template v-if="view.exploration">
+              <span role="status" data-testid="exploration-turn">
+                {{ names[view.exploration.turn] ?? 'Someone' }} explores · {{ view.exploration.leftFt }} ft left
+              </span>
+              <GButton
+                v-if="isDM || tokenById(view.exploration.turn)?.controllerId === campaign.data.value?.me.id"
+                data-testid="pass-turn"
+                @click="live?.send({ kind: 'pass_turn' })"
               >
-                <option value="">The DM</option>
-                <option v-for="m in campaign.data.value?.members ?? []" :key="m.id" :value="m.id">{{ m.displayName }}</option>
-              </select>
-            </label>
-            <GButton
-              v-if="isDM && chosen.hp !== undefined"
-              data-testid="ride-token"
-              title="Put the creature on a willing creature next to it, or take it off the one it rides."
-              @click="riding = { tokenId: chosen.id, off: chosen.mountId !== undefined }"
-            >
-              {{ chosen.mountId ? 'Dismount' : 'Mount' }}
-            </GButton>
-            <GButton data-testid="toggle-hidden" @click="toggleHidden()">{{ chosen.hidden ? 'Reveal' : 'Hide' }}</GButton>
-            <GButton variant="danger" data-testid="remove-token" @click="remove()">Remove</GButton>
+                Pass the turn
+              </GButton>
+            </template>
           </div>
-          <div class="row">
-            <GButton v-if="!view?.noUndo" data-testid="undo-damage" @click="live?.send({ kind: 'undo_damage' })">Undo last damage</GButton>
-            <template v-if="combat">
-              <label class="g-field">
-                <span>Loot when it ends</span>
-                <select v-model="fightLoot" data-testid="fight-loot">
-                  <option value="">None</option>
-                  <option v-for="t in lootTables.data.value ?? []" :key="t.id" :value="t.id">{{ t.name }}</option>
+          <div v-if="view && !combat" data-page="actions" class="row" data-testid="sneak">
+            <GButton :data-testid="view.sneak ? 'stop-sneaking' : 'start-sneaking'" @click="live?.send({ kind: 'sneak', on: !view.sneak })">
+              {{ view.sneak ? 'Stop sneaking' : 'Sneak' }}
+            </GButton>
+            <span v-if="view.sneak" role="status" data-testid="sneak-status">
+              {{ view.sneak.waiting ? 'Sneaking: roll Stealth.' : 'Sneaking. Tinted hexes are watched.' }}
+            </span>
+          </div>
+          <section v-if="toRoll.length > 0" data-page="always" class="rolls" aria-label="Initiative to roll">
+            <GButton v-if="isDM && toRoll.length > 1" data-testid="roll-all" @click="rollAll()">Roll every initiative for me</GButton>
+            <LiveRoll v-for="c in toRoll" :key="c.rollId" :campaign-id="campaignId" :roll-id="c.rollId" />
+          </section>
+          <p v-if="isDM && pointing" data-page="always" role="status" class="walk" data-testid="pointing">
+            {{ pointing }}
+            <GButton data-testid="stop-pointing" @click="tool = 'tokens'">Done</GButton>
+          </p>
+          <p v-if="summoning" data-page="always" role="status" class="walk" data-testid="summoning">Tap where they appear.</p>
+          <p v-if="teleporting" data-page="always" role="status" class="walk" data-testid="teleporting">Tap a free hex within 30 feet.</p>
+          <p v-if="jumping" data-page="always" role="status" class="walk" data-testid="jumping">Tap where to land.</p>
+          <div v-if="riding" data-page="always" role="status" class="walk" data-testid="riding">
+            <template v-if="riding.off">Tap a free hex next to your mount.</template>
+            <template v-else>
+              Tap the creature to ride.
+              <label class="check"><input v-model="steer" type="checkbox" data-testid="ride-control" /><span>Control it</span></label>
+            </template>
+          </div>
+          <p v-if="throwing" data-page="always" role="status" class="walk" data-testid="throwing">
+            {{ throwing.targetId || throwing.objectId ? 'Tap where it lands.' : 'Tap the creature or object to throw.' }}
+          </p>
+          <p v-if="grabbing" data-page="always" role="status" class="walk" data-testid="grabbing">Tap the creature to grapple or shove.</p>
+          <p v-if="areaAiming && !areaPreview" data-page="always" role="status" class="walk" data-testid="area-aiming">Tap where the spell goes.</p>
+          <AreaPreviewCard v-if="areaPreview" data-page="always" :preview="areaPreview" :names="names" @confirm="castArea()" @cancel="areaAiming = null" />
+          <LiveRoll v-for="id in areaRolls" :key="id" data-page="always" :campaign-id="campaignId" :roll-id="id" />
+          <AttackPreview
+            v-if="preview"
+            data-page="always"
+            :preview="preview"
+            :target="tokenById(preview.targetId)?.label ?? 'the target'"
+            @confirm="confirmAttack(preview)"
+            @cancel="aiming = null"
+          />
+          <ReactionPrompt
+            v-if="prompt"
+            data-page="always"
+            :prompt="prompt"
+            :reactor="tokenById(prompt.reactorId)?.label ?? 'A creature'"
+            :answerable="answerable"
+            @answer="(use) => live?.send({ kind: 'react', use })"
+          />
+          <p v-if="pending" data-page="always" role="status" class="walk" data-testid="pending-attack">
+            {{ pending.name }}{{ pending.critical ? ' (critical)' : '' }}: waiting for {{ { to_hit: 'the attack roll', reaction: 'a reaction', damage: 'the damage roll' }[pending.stage] }}.
+          </p>
+          <LiveRoll v-if="attackRoll" :key="attackRoll" data-page="always" :campaign-id="campaignId" :roll-id="attackRoll" />
+          <LiveRoll v-for="s in mySaves" :key="s.rollId" data-page="always" :campaign-id="campaignId" :roll-id="s.rollId" />
+          <LiveRoll v-for="p in myChecks" :key="p.rollId" data-page="always" :campaign-id="campaignId" :roll-id="p.rollId" />
+          <LiveRoll v-for="id in checkRolls" :key="id" data-page="always" :campaign-id="campaignId" :roll-id="id" />
+          <p v-if="view?.resolving" data-page="always" role="status" class="walk" data-testid="resolving">The DM is resolving an effect.</p>
+          <ControlSwitcher
+            v-if="isDM && creatures.length"
+            data-page="actions"
+            :creatures="creatures"
+            :in-hand="inHand"
+            :acting="actingCreatures"
+            :several="several"
+            @take="(id) => (inHand = taken(inHand, id, several))"
+            @several="setSeveral"
+            @tactics="(t) => t && held.forEach((x) => live?.send({ kind: 'set_tactics', tokenId: x.id, tactics: t }))"
+            @hp="(d) => held.forEach((x) => live?.send({ kind: 'adjust_hp', tokenId: x.id, hpDelta: d }))"
+          />
+          <TurnPanel
+            v-for="c in turns"
+            :key="c.id"
+            data-page="actions"
+            :combatant="c"
+            @spend="(r) => live?.send({ kind: 'spend', combatantId: c.id, resource: r })"
+            @end="live?.send({ kind: 'end_turn', combatantId: c.id })"
+          />
+          <label v-if="bars.length > 0 && swayable.length > 0" class="g-field" data-page="actions">
+            <span>Whom Influence is aimed at</span>
+            <select v-model="swayed" data-testid="influence-target">
+              <option value="">Nobody in particular</option>
+              <option v-for="t in swayable" :key="t.id" :value="t.id">{{ t.label }}{{ t.factionId ? ` (${factionName(t.factionId)})` : '' }}</option>
+            </select>
+          </label>
+          <Hotbar
+            v-for="b in bars"
+            :key="b.token.id"
+            data-page="actions"
+            :token="b.token"
+            :armed="aiming?.tokenId === b.token.id ? aiming.attackNo : null"
+            :blocked="blockedFor(b.c)"
+            :suggestion="b.c.suggestion"
+            :target="b.c.suggestion ? tokenById(b.c.suggestion.targetId)?.label : undefined"
+            :tactics="b.c.tactics"
+            :attacks-left="b.c.attacksLeft ?? 0"
+            :off-hand="b.c.offHand ?? false"
+            :interaction="b.c.interaction ?? false"
+            :cleave="b.c.cleave ?? false"
+            :summons="awaitingOrders(b.c.id)"
+            :own="b.token.controllerId !== undefined && b.token.controllerId === campaign.data.value?.me.id"
+            @arm="(n) => arm(b.token, n)"
+            @use="useSuggestion(b.token.id, b.c.suggestion)"
+            @tactics="(t) => live?.send({ kind: 'set_tactics', tokenId: b.token.id, tactics: t })"
+            @area="(e, n) => aimArea(b.token, e, n)"
+            @action="(a) => live?.send({ kind: 'take_action', tokenId: b.token.id, action: a as 'dash', ...(a === 'influence' && swayed ? { targetId: swayed } : {}) })"
+            @ready="(n) => live?.send({ kind: 'take_action', tokenId: b.token.id, action: 'ready', trigger: 'enters_reach', attackNo: n })"
+            @unarmed="(o) => (grabbing = { tokenId: b.token.id, option: o })"
+            @off-hand="(n) => armOffHand(b.token, n)"
+            @cleave="(n) => armCleave(b.token, n)"
+            @interact="(d) => live?.send({ kind: 'interact', tokenId: b.token.id, detail: d })"
+            @swap="live?.send({ kind: 'swap_weapons', tokenId: b.token.id })"
+            @teleport="teleporting = b.token.id"
+            @jump="jumping = b.token.id"
+            @ride="riding = { tokenId: b.token.id, off: b.token.mountId !== undefined }"
+            @throw="throwing = { tokenId: b.token.id }"
+            @summon="(e) => (summoning = e ? { tokenId: b.token.id, effect: e } : null)"
+            @command="(id) => live?.send({ kind: 'command', tokenId: b.token.id, targetId: id })"
+          />
+        </div>
+        <div id="live-drawer" class="drawer" data-testid="drawer">
+          <template v-if="isDM">
+            <CreaturePanel
+              v-for="t in held"
+              :key="`creature-${t.id}`"
+              data-page="actions"
+              :token="t"
+              :combatant="combatantOf(t.id)"
+              :suggestion="suggestions[t.id]?.sentence"
+              :notes="notesFor(t.id)"
+              :no-undo="view?.noUndo ?? false"
+              @tactics="(v) => live?.send({ kind: 'set_tactics', tokenId: t.id, tactics: v })"
+              @use="useSuggestion(t.id, combatantOf(t.id)?.suggestion)"
+              @undo="(seq) => live?.send({ kind: 'undo', seq })"
+            />
+          </template>
+          <template v-if="!isDM">
+            <SpellList
+              v-for="b in bars"
+              :key="`spells-${b.token.id}`"
+              data-page="spells"
+              :token="b.token"
+              :blocked="blockedFor(b.c)"
+              @area="(e, n) => (aimArea(b.token, e, n), (shell.page.value = 'map'))"
+              @summon="(e) => ((summoning = { tokenId: b.token.id, effect: e }), (shell.page.value = 'map'))"
+            />
+          </template>
+          <section v-if="view?.manual?.length" data-page="party" class="g-card manual" aria-label="Resolve by hand" data-testid="manual">
+            <h2>Resolve by hand</h2>
+            <ul class="g-list">
+              <li v-for="m in view.manual" :key="m.id" class="row">
+                <span>{{ m.text }}</span>
+                <GButton :data-testid="`manual-done-${m.id}`" @click="live?.send({ kind: 'resolve_manual', manualId: m.id })">Done</GButton>
+              </li>
+            </ul>
+          </section>
+          <section v-if="isDM" v-show="scope === 'local'" data-page="tools" class="g-card controls" data-testid="dm-controls">
+            <div class="row">
+              <label class="g-field grow">
+                <span>Map</span>
+                <select v-model="mapChoice" data-testid="map-choice">
+                  <option value="">No map (open grid)</option>
+                  <option v-for="m in localMaps" :key="m.id" :value="m.id">{{ m.name }}</option>
                 </select>
               </label>
-              <GButton variant="danger" data-testid="end-combat" @click="live?.send(fightLoot ? { kind: 'end_combat', lootTableId: fightLoot } : { kind: 'end_combat' })">End combat</GButton>
-            </template>
-            <GButton v-else-if="!choosing" data-testid="choose-combatants" :disabled="!view?.tokens.length" @click="choosing = true">
-              Start combat…
-            </GButton>
-          </div>
-          <StartCombat v-if="choosing && !combat" :tokens="view?.tokens ?? []" @start="startCombat" />
-        </section>
-        <section v-if="isDM" data-page="table" class="g-card controls">
-          <div class="row" role="group" aria-label="Point at the map">
-            <GButton data-testid="remote-ping" @click="point('ping')">Ping the map</GButton>
-            <GButton data-testid="remote-camera" @click="point('camera')">Point the Table Display</GButton>
-          </div>
-          <TableRemote
-            :table="view?.table"
-            :maps="worldMaps"
-            @camera="(camera, zoomPct) => live?.send({ kind: 'table_camera', camera, zoomPct, q: view?.table?.q ?? 0, r: view?.table?.r ?? 0 })"
-            @scene="(s) => live?.send({ kind: 'table_scene', ...s })"
-            @blackout="(on) => live?.send({ kind: 'table_blackout', on })"
-            @caption="(text) => live?.send({ kind: 'table_caption', caption: text })"
+              <GButton data-testid="use-map" @click="useMap()">Use map</GButton>
+              <RouterLink :to="{ name: 'maps', params: { id: campaignId } }" class="manage">Manage maps</RouterLink>
+            </div>
+            <fieldset class="tools">
+              <legend>Tap the map to</legend>
+              <label v-for="t in (['tokens', 'reveal', 'conceal', 'wall', 'unwall', 'light', 'surface', 'elevation', 'zone', 'object', 'camera', 'ping'] as const)" :key="t" class="tool">
+                <input v-model="tool" type="radio" :value="t" :data-testid="`tool-${t}`" />
+                <span>{{ { tokens: 'Place or walk tokens', reveal: 'Reveal', conceal: 'Conceal', wall: 'Build walls', unwall: 'Clear walls', light: 'Place or remove light', surface: 'Paint surfaces', elevation: 'Raise or lower ground', zone: 'Draw an encounter zone', object: 'Place objects', camera: 'Point the table camera', ping: 'Ping the table' }[t] }}</span>
+              </label>
+            </fieldset>
+            <div v-if="view?.map" class="row">
+              <span>Ambient light</span>
+              <GButton v-for="a in (['bright', 'dim', 'dark'] as const)" :key="a" :data-testid="`ambient-${a}`" @click="setAmbient(a)">
+                {{ a }}{{ view.ambient === a ? ' ✓' : '' }}
+              </GButton>
+            </div>
+            <div v-if="tool === 'surface'" class="row">
+              <label class="g-field">
+                <span>Surface</span>
+                <select v-model="surfaceKind" data-testid="surface-kind">
+                  <option value="">Clear</option>
+                  <option v-for="k in surfaceKinds" :key="k.kind" :value="k.kind">{{ k.name }}</option>
+                </select>
+              </label>
+              <label class="g-field"><span>Rounds</span><input v-model.number="surfaceRounds" type="number" min="0" max="100" data-testid="surface-rounds" /></label>
+            </div>
+            <div v-if="tool === 'zone'" class="row">
+              <label class="g-field grow"><span>Zone name</span><input v-model="zoneName" maxlength="40" data-testid="zone-name" /></label>
+              <label class="g-field"><span>Reach (hexes)</span><input v-model.number="zoneRadius" type="number" min="1" max="20" data-testid="zone-radius" /></label>
+              <label class="check"><input v-model="zoneDMOnly" type="checkbox" data-testid="zone-dm-only" /><span>Only when I spring it</span></label>
+            </div>
+            <ZonesPanel v-if="view?.zones?.length" :zones="view.zones" :names="names" @send="(cmd) => live?.send(cmd)" />
+            <div v-if="tool === 'object'" class="row">
+              <label class="g-field">
+                <span>Object</span>
+                <select v-model="objectForm.kind" data-testid="object-kind">
+                  <option v-for="k in ['door', 'lever', 'chest', 'barrel', 'curtain', 'destructible', 'trap'] as const" :key="k" :value="k">{{ k }}</option>
+                </select>
+              </label>
+              <label class="g-field"><span>Name</span><input v-model="objectForm.name" maxlength="40" data-testid="object-name" /></label>
+              <label class="g-field"><span>Triggers</span><input v-model="objectForm.effect" maxlength="80" placeholder="prone" data-testid="object-effect" /></label>
+              <label class="g-field"><span>Reach (ft)</span><input v-model.number="objectForm.radiusFt" type="number" min="0" max="60" step="5" data-testid="object-radius" /></label>
+              <label class="check"><input v-model="objectForm.secret" type="checkbox" data-testid="object-secret" /><span>Secret</span></label>
+              <label class="g-field"><span>Spot DC</span><input v-model.number="objectForm.detectDc" type="number" min="0" max="40" data-testid="object-detect" /></label>
+              <label class="g-field"><span>Disarm DC</span><input v-model.number="objectForm.disarmDc" type="number" min="0" max="40" data-testid="object-disarm" /></label>
+              <label class="g-field"><span>Sets off within (ft)</span><input v-model.number="objectForm.triggerFt" type="number" min="0" max="60" step="5" data-testid="object-trigger" /></label>
+              <label class="g-field"><span>Lock DC</span><input v-model.number="objectForm.lockDc" type="number" min="0" max="40" data-testid="object-lock" /></label>
+              <label class="g-field"><span>Key</span><input v-model="objectForm.key" maxlength="80" placeholder="iron-key" data-testid="object-key" /></label>
+            </div>
+            <div v-if="tool === 'elevation'" class="row">
+              <label class="g-field"><span>Height (ft)</span><input v-model.number="elevationFt" type="number" min="-100" max="100" step="5" data-testid="elevation-ft" /></label>
+            </div>
+            <div v-if="tool === 'light'" class="row">
+              <label class="g-field"><span>Bright (ft)</span><input v-model.number="brightFt" type="number" min="0" max="600" /></label>
+              <label class="g-field"><span>Dim (ft)</span><input v-model.number="dimFt" type="number" min="0" max="600" /></label>
+            </div>
+            <div v-if="tool === 'tokens'" class="row">
+              <label class="g-field grow"><span>Name</span><input v-model="label" maxlength="40" data-testid="token-label" /></label>
+              <label class="g-field">
+                <span>Kind</span>
+                <select v-model="kind" data-testid="token-kind">
+                  <option value="party">Party</option>
+                  <option value="enemy">Enemy</option>
+                  <option value="npc">NPC</option>
+                  <option value="object">Object</option>
+                </select>
+              </label>
+              <label class="g-field">
+                <span>Controlled by</span>
+                <select v-model="controller" data-testid="token-controller">
+                  <option value="">Only the DM</option>
+                  <option v-for="m in players" :key="m.id" :value="m.id">{{ m.displayName }}</option>
+                </select>
+              </label>
+              <label class="g-field">
+                <span>Monster</span>
+                <input v-model="monster" placeholder="goblin" maxlength="80" data-testid="token-monster" />
+              </label>
+              <label class="g-field">
+                <span>Character</span>
+                <select v-model="character" data-testid="token-character">
+                  <option value="">None</option>
+                  <option v-for="ch in characters.data.value ?? []" :key="ch.id" :value="ch.id">{{ ch.name }}</option>
+                </select>
+              </label>
+              <label v-if="isDM" class="g-field">
+                <span>Faction</span>
+                <select v-model="faction" data-testid="token-faction">
+                  <option value="">No Faction</option>
+                  <option v-for="f in factions.data.value ?? []" :key="f.id" :value="f.id">{{ f.name }}</option>
+                </select>
+              </label>
+              <label v-if="isDM" class="g-field">
+                <span>Companion</span>
+                <select v-model="companion" data-testid="token-companion">
+                  <option value="">None</option>
+                  <option v-for="c in offMap" :key="c.id" :value="c.id">{{ c.name }}</option>
+                </select>
+              </label>
+              <label class="g-field"><span>Darkvision (ft)</span><input v-model.number="darkvision" type="number" min="0" max="300" data-testid="token-darkvision" /></label>
+              <label class="check"><input v-model="hidden" type="checkbox" data-testid="token-hidden" /><span>Hidden</span></label>
+              <label class="check"><input v-model="knowsShield" type="checkbox" data-testid="token-shield" /><span>Knows Shield</span></label>
+            </div>
+            <LegendPanel v-if="chosen?.legend && isDM" :key="`legend-${chosen.id}`" :token="chosen" :legend="chosen.legend" @send="(c) => live?.send(c)" />
+            <EffectsPanel
+              v-if="chosen"
+              :key="chosen.id"
+              :token="chosen"
+              :tokens="view?.tokens ?? []"
+              :conditions="view?.conditions ?? []"
+              @apply="(e) => live?.send({ kind: 'apply_effect', targetId: chosen!.id, ...e })"
+              @end="(id, cured) => live?.send({ kind: 'end_effect', effectId: id, ...(cured ? { cured } : {}) })"
+            />
+            <VisibilityPanel
+              v-if="chosen && isDM"
+              :key="`vis-${chosen.id}`"
+              :token="chosen"
+              @set="(v) => live?.send({ kind: 'set_visibility', tokenId: chosen!.id, ...v })"
+            />
+            <div v-if="chosen" class="row" data-testid="selected-token">
+              <span>{{ chosen.label }}{{ chosen.hidden ? ' (hidden)' : '' }}</span>
+              <p v-if="chosen.factionId" class="hint" data-testid="token-faction-line">
+                Of {{ factionName(chosen.factionId) }}.<template v-if="chosen.firstReaction"> First reaction: {{ chosen.firstReaction }}.</template>
+              </p>
+              <ul v-if="chosen.attitudes?.length" class="g-list" aria-label="Attitudes">
+                <li v-for="a in chosen.attitudes" :key="a.characterId" data-testid="token-attitude">{{ attitudeNames[a.attitude] }} towards {{ characterName(a.characterId) }}</li>
+              </ul>
+              <label v-if="isDM && chosen.companionId" class="g-field">
+                <span>Run by</span>
+                <select
+                  :value="chosen.controllerId ?? ''"
+                  data-testid="token-hand"
+                  @change="live?.send({ kind: 'assign_control', tokenId: chosen.id, ...(($event.target as HTMLSelectElement).value ? { controllerId: ($event.target as HTMLSelectElement).value } : {}) })"
+                >
+                  <option value="">The DM</option>
+                  <option v-for="m in campaign.data.value?.members ?? []" :key="m.id" :value="m.id">{{ m.displayName }}</option>
+                </select>
+              </label>
+              <GButton
+                v-if="isDM && chosen.hp !== undefined"
+                data-testid="ride-token"
+                title="Put the creature on a willing creature next to it, or take it off the one it rides."
+                @click="riding = { tokenId: chosen.id, off: chosen.mountId !== undefined }"
+              >
+                {{ chosen.mountId ? 'Dismount' : 'Mount' }}
+              </GButton>
+              <GButton data-testid="toggle-hidden" @click="toggleHidden()">{{ chosen.hidden ? 'Reveal' : 'Hide' }}</GButton>
+              <GButton variant="danger" data-testid="remove-token" @click="remove()">Remove</GButton>
+            </div>
+            <div class="row">
+              <GButton v-if="!view?.noUndo" data-testid="undo-damage" @click="live?.send({ kind: 'undo_damage' })">Undo last damage</GButton>
+              <template v-if="combat">
+                <label class="g-field">
+                  <span>Loot when it ends</span>
+                  <select v-model="fightLoot" data-testid="fight-loot">
+                    <option value="">None</option>
+                    <option v-for="t in lootTables.data.value ?? []" :key="t.id" :value="t.id">{{ t.name }}</option>
+                  </select>
+                </label>
+                <GButton variant="danger" data-testid="end-combat" @click="live?.send(fightLoot ? { kind: 'end_combat', lootTableId: fightLoot } : { kind: 'end_combat' })">End combat</GButton>
+              </template>
+              <GButton v-else-if="!choosing" data-testid="choose-combatants" :disabled="!view?.tokens.length" @click="choosing = true">
+                Start combat…
+              </GButton>
+            </div>
+            <StartCombat v-if="choosing && !combat" :tokens="view?.tokens ?? []" @start="startCombat" />
+          </section>
+          <section v-if="isDM" data-page="table" class="g-card controls">
+            <div class="row" role="group" aria-label="Point at the map">
+              <GButton data-testid="remote-ping" @click="point('ping')">Ping the map</GButton>
+              <GButton data-testid="remote-camera" @click="point('camera')">Point the Table Display</GButton>
+            </div>
+            <TableRemote
+              :table="view?.table"
+              :maps="worldMaps"
+              @camera="(camera, zoomPct) => live?.send({ kind: 'table_camera', camera, zoomPct, q: view?.table?.q ?? 0, r: view?.table?.r ?? 0 })"
+              @scene="(s) => live?.send({ kind: 'table_scene', ...s })"
+              @blackout="(on) => live?.send({ kind: 'table_blackout', on })"
+              @caption="(text) => live?.send({ kind: 'table_caption', caption: text })"
+            />
+            <GButton variant="danger" data-testid="end-session" @click="endSession()">End session</GButton>
+          </section>
+          <InventoryPanel
+            v-if="view?.inventory?.length"
+            data-page="party"
+            :containers="view.inventory"
+            :dm="isDM"
+            :me="campaign.data.value?.me.id ?? ''"
+            :loot-tables="lootTables.data.value ?? []"
+            @send="(cmd) => live?.send(cmd)"
           />
-          <GButton variant="danger" data-testid="end-session" @click="endSession()">End session</GButton>
-        </section>
-        <InventoryPanel
-          v-if="view?.inventory?.length"
-          data-page="party"
-          :containers="view.inventory"
-          :dm="isDM"
-          :me="campaign.data.value?.me.id ?? ''"
-          :loot-tables="lootTables.data.value ?? []"
-          @send="(cmd) => live?.send(cmd)"
-        />
-        <ShopPanel
-          v-if="isDM || view?.shop"
-          data-page="party"
-          :shop="view?.shop"
-          :shops="shops.data.value ?? []"
-          :containers="view?.inventory ?? []"
-          :dm="isDM"
-          :me="campaign.data.value?.me.id ?? ''"
-          :campaign-id="campaignId"
-          :game-day="view?.gameDay ?? 0"
-          @send="(cmd) => live?.send(cmd)"
-        />
-        <DyingPanel v-if="view" data-page="character" :tokens="view.tokens" :dm="isDM" :helper="walker" @send="(cmd) => live?.send(cmd)" />
-        <ReactionSettings
-          v-if="walker?.attacks"
-          data-page="character"
-          :token="walker"
-          @set="(kind, mode, condition) => live?.send({ kind: 'set_reaction', tokenId: walker?.id ?? '', reactionKind: kind, reactionMode: mode, condition })"
-        />
-        <ObjectsPanel v-if="view?.objects?.length" data-page="party" :objects="view.objects" :dm="isDM" :user="walker?.id" @send="(cmd) => live?.send(cmd)" />
-        <RestPanel
-          v-if="view"
-          data-page="character"
-          :rest="view.rest"
-          :dm="isDM"
-          :me="campaign.data.value?.me.id ?? ''"
-          :tokens="view.tokens"
-          :in-combat="Boolean(view.combat)"
-          :hit-dice-in-long-rest="slowHealing"
-          @send="(cmd) => live?.send(cmd)"
-        />
-        <EncounterChecks
-          v-if="isDM || (view?.checks?.length ?? 0) > 0"
-          data-page="party"
-          :checks="view?.checks ?? []"
-          :dm="isDM"
-          :tables="encounterTables.data.value ?? []"
-          @send="(cmd) => live?.send(cmd)"
-        />
-        <GroupsPanel
-          v-if="isDM"
-          data-page="tools"
-          :campaign-id="campaignId"
-          :groups="view?.groups ?? []"
-          :tokens="view?.tokens ?? []"
-          :maps="maps.data.value ?? []"
-          @send="(cmd) => live?.send(cmd)"
-        />
-        <CheckpointPanel
-          v-if="isDM"
-          data-page="tools"
-          :checkpoints="view?.checkpoints ?? []"
-          :no-undo="view?.noUndo ?? false"
-          :split="(view?.groups?.length ?? 0) > 1"
-          @send="(cmd) => live?.send(cmd)"
-        />
-        <ActionLog v-if="isDM" data-page="party" :campaign-id="campaignId" :session-id="sessionId" :view="view" :no-undo="view?.noUndo ?? false" @undo="(seq) => live?.send({ kind: 'undo', seq })" />
-        <ul data-page="party" class="g-list tokens" aria-label="Tokens in view" data-testid="tokens">
-          <li v-for="t in view?.tokens ?? []" :key="t.id">{{ describe(t) }} · {{ t.kind }}</li>
-        </ul>
+          <ShopPanel
+            v-if="isDM || view?.shop"
+            data-page="party"
+            :shop="view?.shop"
+            :shops="shops.data.value ?? []"
+            :containers="view?.inventory ?? []"
+            :dm="isDM"
+            :me="campaign.data.value?.me.id ?? ''"
+            :campaign-id="campaignId"
+            :game-day="view?.gameDay ?? 0"
+            @send="(cmd) => live?.send(cmd)"
+          />
+          <DyingPanel v-if="view" data-page="character" :tokens="view.tokens" :dm="isDM" :helper="walker" @send="(cmd) => live?.send(cmd)" />
+          <ReactionSettings
+            v-if="walker?.attacks"
+            data-page="character"
+            :token="walker"
+            @set="(kind, mode, condition) => live?.send({ kind: 'set_reaction', tokenId: walker?.id ?? '', reactionKind: kind, reactionMode: mode, condition })"
+          />
+          <ObjectsPanel v-if="view?.objects?.length" data-page="party" :objects="view.objects" :dm="isDM" :user="walker?.id" @send="(cmd) => live?.send(cmd)" />
+          <RestPanel
+            v-if="view"
+            data-page="character"
+            :rest="view.rest"
+            :dm="isDM"
+            :me="campaign.data.value?.me.id ?? ''"
+            :tokens="view.tokens"
+            :in-combat="Boolean(view.combat)"
+            :hit-dice-in-long-rest="slowHealing"
+            @send="(cmd) => live?.send(cmd)"
+          />
+          <EncounterChecks
+            v-if="isDM || (view?.checks?.length ?? 0) > 0"
+            data-page="party"
+            :checks="view?.checks ?? []"
+            :dm="isDM"
+            :tables="encounterTables.data.value ?? []"
+            @send="(cmd) => live?.send(cmd)"
+          />
+          <GroupsPanel
+            v-if="isDM"
+            data-page="tools"
+            :campaign-id="campaignId"
+            :groups="view?.groups ?? []"
+            :tokens="view?.tokens ?? []"
+            :maps="maps.data.value ?? []"
+            @send="(cmd) => live?.send(cmd)"
+          />
+          <CheckpointPanel
+            v-if="isDM"
+            data-page="tools"
+            :checkpoints="view?.checkpoints ?? []"
+            :no-undo="view?.noUndo ?? false"
+            :split="(view?.groups?.length ?? 0) > 1"
+            @send="(cmd) => live?.send(cmd)"
+          />
+          <ActionLog v-if="isDM" data-page="party" :campaign-id="campaignId" :session-id="sessionId" :view="view" :no-undo="view?.noUndo ?? false" @undo="(seq) => live?.send({ kind: 'undo', seq })" />
+          <ul data-page="party" class="g-list tokens" aria-label="Tokens in view" data-testid="tokens">
+            <li v-for="t in view?.tokens ?? []" :key="t.id">{{ describe(t) }} · {{ t.kind }}</li>
+          </ul>
+        </div>
       </div>
       <div v-if="!isDM && turns.length" class="resources" role="group" aria-label="This turn" data-testid="resources">
         <template v-for="c in turns" :key="c.id">
@@ -1058,133 +1074,523 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
 </template>
 
 <style scoped>
+/* The map is the page: it fills the screen, and everything else floats over it on smoked glass. */
 .live {
+  --glass: rgb(14 11 9 / 58%);
+  --glass-deep: rgb(14 11 9 / 78%);
+  --glass-edge: rgb(217 190 126 / 16%);
+  --glass-line: rgb(217 190 126 / 28%);
+  --aside: 408px;
   position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  min-height: calc(100dvh - 64px);
-  padding: 12px 16px;
+  height: 100dvh;
+  overflow: hidden;
+  background: #0b0908;
+}
+.live--folded {
+  --aside: 14px;
+}
+.live > p {
+  margin: 0;
+  padding: 24px;
 }
 .stage {
-  position: relative;
-  display: flex;
-  flex-direction: column;
+  position: absolute;
+  inset: 0;
+}
+/* Padding lets every hex scroll out from under the bar, the roster, the tray and the drawer. */
+.scroller {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  padding: 172px var(--aside) 140px 14px;
   overflow: auto;
-  order: 2;
-  border-radius: var(--radius-md);
-  background: var(--color-ground);
-}
-.dock {
-  display: flex;
-  flex-direction: column;
-  order: 3;
-  gap: 10px;
-}
-.top {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
 }
 .zoomer {
   min-width: 50%;
+  margin: 0 auto;
+}
+.zoomer :deep(.hex-scroll),
+.zoomer :deep(.board-scroll) {
+  width: fit-content;
+  margin: 0 auto;
 }
 .zoom {
-  position: sticky;
-  bottom: 8px;
-  left: 8px;
-  display: inline-flex;
-  align-self: flex-start;
+  position: absolute;
+  bottom: 14px;
+  left: 14px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column-reverse;
   gap: 4px;
-  margin: 8px;
+}
+.zoom button,
+.fold,
+.table-link,
+.head :deep(button) {
+  min-height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--glass-line);
+  border-radius: var(--radius-control);
+  font-family: var(--font-label);
+  font-size: 13px;
+  color: var(--color-text);
+  background: rgb(33 26 20 / 70%);
+  white-space: nowrap;
+  cursor: pointer;
 }
 .zoom button {
   min-width: 44px;
-  min-height: 44px;
-  border: 1px solid var(--color-line);
-  border-radius: 10px;
-  color: var(--color-text);
-  background: var(--color-surface);
-  cursor: pointer;
+  min-height: 36px;
+  padding: 0 6px;
+  backdrop-filter: blur(10px) saturate(1.15);
 }
 .zoom button:disabled {
   cursor: not-allowed;
   opacity: 0.6;
 }
+.chrome {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  left: 14px;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+.chrome > * {
+  pointer-events: auto;
+}
+.head,
+.tray,
+.drawer {
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--radius-panel);
+  background: var(--glass);
+  backdrop-filter: blur(10px) saturate(1.15);
+}
+.head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 40px;
+  padding: 0 6px 0 12px;
+  font-size: 13px;
+}
+.brand {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--color-bar-brand);
+  white-space: nowrap;
+}
+.back {
+  color: var(--color-gold-high);
+  white-space: nowrap;
+}
+.where {
+  overflow: hidden;
+  font-size: 12px;
+  color: var(--color-text-2);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.where h1 {
+  display: inline;
+  margin: 0;
+  font: inherit;
+  letter-spacing: 0;
+  color: inherit;
+}
+.turn {
+  color: var(--color-gold-high);
+  white-space: nowrap;
+}
+.acts {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+.table-link {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+.fold[aria-expanded='true'] {
+  border-color: var(--color-brass-edge);
+  color: var(--color-brass-text);
+  background: var(--color-brass);
+}
+.conn--open {
+  border-color: var(--color-success);
+  color: var(--color-success);
+}
+.conn--reconnecting,
+.conn--ended {
+  border-color: var(--color-enemy);
+  color: var(--color-enemy-soft);
+}
+.chrome > .g-alert {
+  align-self: center;
+  margin: 0;
+  background: var(--glass-deep);
+}
+/* The roster, a walk waiting for its yes, and the choice of map hang under the bar, clear of the drawer. */
+.top {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-right: calc(var(--aside) - 14px);
+  pointer-events: none;
+}
+.top > * {
+  pointer-events: auto;
+}
+.top > :deep(.plan),
+.top > :deep(.card),
+.walk {
+  margin: 0;
+  padding: 6px 10px;
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--radius-panel);
+  background: var(--glass-deep);
+  backdrop-filter: blur(12px);
+}
+.walk {
+  color: var(--color-gold-high);
+}
+.scope {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: inline-flex;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--radius-panel);
+  font-family: var(--font-label);
+  font-size: 13px;
+  background: var(--glass);
+  backdrop-filter: blur(10px) saturate(1.15);
+}
+.scope-option {
+  display: flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 12px;
+  color: var(--color-text-2);
+  cursor: pointer;
+}
+.scope-option input {
+  position: absolute;
+  opacity: 0;
+}
+.scope-option.on {
+  color: var(--color-gold-high);
+  background: rgb(217 190 126 / 16%);
+}
+.scope-option:has(input:focus-visible) {
+  outline: 2px solid var(--color-gold-high);
+  outline-offset: -2px;
+}
+/* The dock is two things on a wide screen: the turn in a tray at the foot of the map, and a drawer of
+   everything else down the right-hand side. */
+.dock {
+  display: contents;
+}
+.tray {
+  position: absolute;
+  right: var(--aside);
+  bottom: 14px;
+  left: 14px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  width: fit-content;
+  max-width: min(860px, calc(100% - var(--aside) - 142px));
+  max-height: 46dvh;
+  margin: 0 auto;
+  padding: 8px 12px;
+  overflow-y: auto;
+}
+.tray:not(:has(> *)) {
+  display: none;
+}
+.tray > :deep(.g-card) {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.tray > :deep(* + .g-card),
+.tray > :deep(.g-card + *) {
+  padding-top: 7px;
+  border-top: 1px solid var(--glass-edge);
+}
+.tray :deep(h2) {
+  margin: 0;
+  font-family: var(--font-label);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-gold);
+}
+/* In the tray a field is one short line: its name, then the choice. */
+.tray :deep(.g-field) {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+.tray :deep(.g-field > span:first-child) {
+  position: static;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-gold);
+  white-space: nowrap;
+}
+.tray :deep(.g-field select),
+.tray :deep(.g-field input:not([type='checkbox'], [type='radio'])) {
+  width: auto;
+  min-width: 0;
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--glass-line);
+  border-radius: var(--radius-control);
+  font-size: 13px;
+  background: rgb(33 26 20 / 70%);
+  box-shadow: none;
+}
+.drawer {
+  position: absolute;
+  top: 62px;
+  right: 14px;
+  bottom: 14px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: 380px;
+  padding: 0 14px 14px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-edge) transparent;
+}
+.live--folded .drawer {
+  display: none;
+}
+.drawer > :deep(*) {
+  margin: 0;
+  padding: 12px 0;
+  border: 0;
+  border-top: 1px solid var(--glass-edge);
+  border-radius: 0;
+  background: none;
+}
+.drawer > :deep(:first-child) {
+  border-top: 0;
+}
+.drawer :deep(.g-button) {
+  min-height: 34px;
+  padding: 0 12px;
+  font-size: 14px;
+}
+.drawer :deep(.g-field) {
+  flex: 1 1 130px;
+  min-width: 0;
+}
+.drawer :deep(.g-field input:not([type='range'], [type='file'], [type='checkbox'], [type='radio'])),
+.drawer :deep(.g-field select) {
+  min-height: 48px;
+  padding: 20px 10px 4px;
+  font-size: 15px;
+}
+.drawer :deep(.g-field > span:first-child) {
+  top: 5px;
+  left: 10px;
+  right: 6px;
+  overflow: hidden;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.drawer :deep(h2) {
+  margin: 0 0 8px;
+  font-family: var(--font-label);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-gold);
+}
 .pagebar,
 .resources {
   display: none;
 }
-/* A player's phone: the map fills the screen, the dock is a sheet attached to a bar that runs edge to
+@media (min-width: 900px) and (max-width: 1199px) {
+  .live:not(.live--folded) {
+    --aside: 368px;
+  }
+  .drawer {
+    width: 340px;
+  }
+  .where span {
+    display: none;
+  }
+}
+@media (pointer: coarse) {
+  .zoom button,
+  .fold,
+  .table-link,
+  .head :deep(button),
+  .scope-option,
+  .tool,
+  .tray :deep(.g-field select),
+  .tray :deep(.g-field input:not([type='checkbox'], [type='radio'])),
+  .drawer :deep(.g-button) {
+    min-height: 44px;
+  }
+}
+/* A phone: the dock is a sheet over the foot of the map, attached to a bar of pages that runs edge to
    edge, and the turn's resources float above the bar. */
 @media (max-width: 899px) {
-  .live--phone {
-    padding-bottom: calc(104px + env(safe-area-inset-bottom));
+  .live {
+    --aside: 8px;
   }
-  .live--phone .stage {
-    max-height: none;
-    height: calc(100dvh - 250px);
+  .scroller {
+    padding: 204px 8px calc(170px + env(safe-area-inset-bottom));
     touch-action: pan-x pan-y;
   }
-  .live--phone .dock {
+  .chrome {
+    top: 8px;
+    right: 8px;
+    left: 8px;
+  }
+  .head {
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    padding: 4px 6px 4px 10px;
+  }
+  .brand,
+  .where span,
+  .fold {
+    display: none;
+  }
+  .top {
+    margin-right: 0;
+  }
+  .scope {
+    position: static;
+    align-self: flex-start;
+  }
+  /* The sheet rises from the foot of the screen, so the zoom keeps to the side, above it. */
+  .zoom {
+    top: 212px;
+    right: 8px;
+    bottom: auto;
+    left: auto;
+  }
+  .quick-slot {
+    position: absolute;
+    right: 8px;
+    bottom: calc(104px + env(safe-area-inset-bottom));
+    left: 64px;
+    z-index: 2;
+  }
+  .dock {
     position: fixed;
     right: 0;
     bottom: calc(96px + env(safe-area-inset-bottom));
     left: 0;
     z-index: 3;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
     max-height: 55dvh;
     padding: 10px 12px;
     overflow-y: auto;
-    border-radius: 16px 16px 0 0;
-    background: color-mix(in srgb, var(--color-surface) 94%, transparent);
-    box-shadow: 0 -8px 24px rgb(0 0 0 / 35%);
+    border-top: 1px solid rgb(217 190 126 / 20%);
+    border-radius: 10px 10px 0 0;
+    background: rgb(14 11 9 / 82%);
+    backdrop-filter: blur(12px);
     /* Sideways movement is ours, to turn the page; up and down still scrolls the sheet. */
     touch-action: pan-y;
   }
-  .live--phone .dock--page-map {
+  /* On the Map page the sheet is only what needs an answer: the map shows, and takes taps, around it. */
+  .dock--page-map {
+    border-top: 0;
     background: transparent;
-    box-shadow: none;
+    backdrop-filter: none;
+    pointer-events: none;
   }
-  .dock--page-map > :not([data-page~='always']),
-  .dock--page-actions > :not([data-page~='actions'], [data-page~='always']),
-  .dock--page-spells > :not([data-page~='spells'], [data-page~='always']),
-  .dock--page-character > :not([data-page~='character'], [data-page~='always']),
-  .dock--page-party > :not([data-page~='party'], [data-page~='always']),
-  .dock--page-table > :not([data-page~='table'], [data-page~='always']),
-  .dock--page-tools > :not([data-page~='tools'], [data-page~='always']) {
+  .dock--page-map > * > * {
+    padding: 6px 10px;
+    border: 1px solid var(--glass-edge);
+    border-radius: var(--radius-panel);
+    background: var(--glass-deep);
+    backdrop-filter: blur(12px);
+    pointer-events: auto;
+  }
+  /* Neither part has a box here, but each must still pass the sheet's touch rule on to what it holds. */
+  .tray,
+  .drawer {
+    display: contents;
+    overflow: visible;
+    touch-action: pan-y;
+  }
+  .live--folded .drawer {
+    display: contents;
+  }
+  .dock--page-map > * > :not([data-page~='always']),
+  .dock--page-actions > * > :not([data-page~='actions'], [data-page~='always']),
+  .dock--page-spells > * > :not([data-page~='spells'], [data-page~='always']),
+  .dock--page-character > * > :not([data-page~='character'], [data-page~='always']),
+  .dock--page-party > * > :not([data-page~='party'], [data-page~='always']),
+  .dock--page-table > * > :not([data-page~='table'], [data-page~='always']),
+  .dock--page-tools > * > :not([data-page~='tools'], [data-page~='always']) {
     display: none;
   }
-  .live--phone .resources {
+  .resources {
     position: fixed;
     right: 0;
-    bottom: calc(56px + env(safe-area-inset-bottom));
+    bottom: calc(60px + env(safe-area-inset-bottom));
     left: 0;
     z-index: 4;
     display: flex;
     justify-content: center;
     gap: 6px;
     padding: 6px 8px;
-    background: var(--color-surface);
+    background: rgb(14 11 9 / 82%);
+    backdrop-filter: blur(12px);
   }
-  .live--phone .pagebar {
+  .pagebar {
     position: fixed;
     right: 0;
     bottom: 0;
     left: 0;
     z-index: 4;
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-auto-columns: 1fr;
+    grid-auto-flow: column;
     padding-bottom: env(safe-area-inset-bottom);
-    border-top: 1px solid var(--color-line);
-    background: var(--color-surface);
+    border-top: 1px solid var(--color-rule);
+    background: var(--color-bar);
     touch-action: pan-y;
   }
 }
 .chip {
   padding: 2px 8px;
   border: 1px solid var(--color-success);
-  border-radius: 999px;
+  border-radius: var(--radius-chip);
   font-size: 13px;
 }
 .chip--spent {
@@ -1196,39 +1602,49 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
   border-color: var(--color-line);
 }
 .page {
-  min-height: 56px;
+  min-height: 60px;
   border: 0;
-  color: var(--color-text-2);
+  font-family: var(--font-label);
+  font-size: 13px;
+  color: var(--color-bar-text);
   background: transparent;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
 .page--on {
   color: var(--color-gold-high);
-  box-shadow: inset 0 3px 0 var(--color-gold-high);
+  box-shadow: inset 0 2px 0 var(--color-gold-high);
 }
 .turn-banner {
   position: fixed;
-  top: 30%;
+  top: 46%;
   left: 50%;
   z-index: 5;
   display: grid;
   justify-items: center;
-  gap: 4px;
-  padding: 20px 36px;
-  border: 2px solid var(--color-gold-high);
-  border-radius: var(--radius-md);
+  gap: 9px;
+  padding: 0;
+  border: 0;
+  font-family: var(--font-label);
+  font-size: 15px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   color: var(--color-text);
-  background: color-mix(in srgb, var(--color-surface) 92%, transparent);
-  box-shadow: 0 12px 40px rgb(0 0 0 / 50%);
+  text-shadow: 0 1px 3px #000, 0 0 2px #000;
+  background: none;
   transform: translate(-50%, -50%);
   animation: banner 2800ms ease forwards;
   cursor: pointer;
 }
 .turn-banner strong {
   font-family: var(--font-display);
-  font-size: clamp(28px, 6vw, 56px);
+  font-size: clamp(34px, 6vw, 72px);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: none;
   color: var(--color-gold-high);
+  text-shadow: 0 3px 0 var(--color-bar), 0 8px 22px rgb(0 0 0 / 90%);
 }
 /* The banner grows in and shrinks out rather than fading: half-faded text would be too faint to read. */
 @keyframes banner {
@@ -1247,64 +1663,6 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
   .turn-banner {
     animation: none;
   }
-}
-.dock > :deep(*),
-.head {
-  border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--color-surface) 80%, transparent);
-  backdrop-filter: blur(6px);
-}
-/* The map takes the room the dock leaves; nothing floats over it, so every hex stays in reach. */
-@media (min-width: 900px) {
-  .live {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) min(420px, 40vw);
-    align-items: start;
-    background: var(--color-ground);
-  }
-  .live > * {
-    grid-column: 1 / -1;
-  }
-  /* The map stays in view while the page scrolls the dock past it: the dock has no scroll of its own,
-     so dragging between its panels never fights a moving list. */
-  .stage {
-    grid-column: 1;
-    position: sticky;
-    top: 12px;
-    max-height: calc(100dvh - 24px);
-    min-height: calc(100dvh - 240px);
-  }
-  .dock {
-    grid-column: 2;
-  }
-}
-@media (max-width: 899px) {
-  .stage {
-    max-height: 60dvh;
-  }
-}
-.back {
-  color: var(--color-gold-high);
-}
-.head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 12px;
-  padding: 4px 10px;
-}
-.conn--open {
-  border-color: var(--color-success);
-  color: var(--color-success);
-}
-.conn--reconnecting,
-.conn--ended {
-  border-color: var(--color-enemy);
-  color: var(--color-enemy-soft);
-}
-.table-link {
-  margin-left: auto;
-  color: var(--color-gold-high);
 }
 .controls {
   display: flex;
@@ -1329,47 +1687,55 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
 .tools {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 14px;
+  gap: 4px;
   margin: 0;
   padding: 0;
   border: 0;
 }
 .tools legend {
   margin-bottom: 4px;
+  font-family: var(--font-label);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-gold);
 }
-.tool,
 .check {
   display: flex;
   align-items: center;
   gap: 6px;
   min-height: 44px;
 }
-.scope {
-  display: inline-flex;
-  align-self: flex-start;
-  margin: 0;
-  padding: 2px;
-  border: 1px solid var(--color-line);
-  border-radius: 999px;
-}
-.scope-option {
+/* What a tap on the map does is one chip of a set. */
+.tool {
+  position: relative;
   display: flex;
   align-items: center;
-  min-height: 44px;
-  padding: 0 16px;
-  border-radius: 999px;
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid rgb(217 190 126 / 22%);
+  border-radius: var(--radius-chip);
+  font-size: 13px;
+  color: var(--color-text-2);
   cursor: pointer;
 }
-.scope-option input {
+.tool input {
   position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
   opacity: 0;
+  cursor: pointer;
 }
-.scope-option.on {
-  background: var(--color-raised);
+.tool:has(input:checked) {
+  border-color: var(--color-brass-edge);
   color: var(--color-gold-high);
+  background: rgb(217 190 126 / 14%);
 }
-.scope-option:has(input:focus-visible) {
+.tool:has(input:focus-visible) {
   outline: 2px solid var(--color-gold-high);
+  outline-offset: 2px;
 }
 .sr-only {
   position: absolute;
@@ -1381,7 +1747,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
 .banner {
   margin: 0;
   font-family: var(--font-display);
-  font-size: 22px;
+  font-size: 18px;
   color: var(--color-gold-high);
 }
 .rolls {
@@ -1389,9 +1755,12 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
   flex-direction: column;
   gap: 8px;
 }
-.walk {
-  margin: 0;
-  color: var(--color-gold-high);
+.tray .walk,
+.drawer .walk {
+  padding: 0;
+  border: 0;
+  background: none;
+  backdrop-filter: none;
 }
 .tokens {
   font-size: 14px;

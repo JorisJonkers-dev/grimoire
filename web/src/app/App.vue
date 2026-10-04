@@ -448,13 +448,14 @@ router.afterEach(() => { menu.value = false })
   .tabs .on .mark {
     border-color: var(--color-bar-brand);
   }
-  /* Live play fills a phone: its own bar sits on the bottom edge, so the places and the footer go. */
-  .shell--live {
-    padding-bottom: 0;
-  }
-  .shell--live .tabs,
-  .shell--live .credit {
-    display: none;
-  }
+}
+/* Live play is the map and nothing else: it carries its own bar, so the shell's bar, places and footer go. */
+.shell--live {
+  padding-bottom: 0;
+}
+.shell--live > .bar,
+.shell--live .tabs,
+.shell--live .credit {
+  display: none;
 }
 </style>

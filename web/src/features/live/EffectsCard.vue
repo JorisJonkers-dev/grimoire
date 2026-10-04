@@ -28,8 +28,6 @@ const emit = defineEmits<{ close: [] }>()
   flex-direction: column;
   gap: 8px;
   width: min(320px, calc(100vw - 32px));
-  background: color-mix(in srgb, var(--color-surface) 88%, transparent);
-  backdrop-filter: blur(8px);
 }
 .head {
   display: flex;
@@ -39,7 +37,8 @@ const emit = defineEmits<{ close: [] }>()
 h2 {
   margin: 0;
   font-family: var(--font-display);
-  font-size: 17px;
+  font-size: 15px;
+  font-weight: 700;
 }
 .close {
   min-width: 44px;

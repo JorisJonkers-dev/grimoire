@@ -94,7 +94,8 @@ test('on a phone a player swipes between pages over the map, with a sheet on an 
   const zoomer = page.getByTestId('zoomer')
   await expect(zoomer).toHaveAttribute('style', /width: 100%/)
   const stage = await page.getByTestId('stage').boundingBox()
-  const mid = { x: (stage?.x ?? 0) + (stage?.width ?? 0) / 2, y: (stage?.y ?? 0) + 120 }
+  // The map fills the screen behind the bar and the roster, so the fingers go where it shows: its middle.
+  const mid = { x: (stage?.x ?? 0) + (stage?.width ?? 0) / 2, y: (stage?.y ?? 0) + (stage?.height ?? 0) / 2 }
   await touch(cdp, 'touchStart', [{ x: mid.x - 30, y: mid.y, id: 1 }, { x: mid.x + 30, y: mid.y, id: 2 }])
   for (const spread of [50, 70, 90]) await touch(cdp, 'touchMove', [{ x: mid.x - spread, y: mid.y, id: 1 }, { x: mid.x + spread, y: mid.y, id: 2 }])
   await touch(cdp, 'touchEnd', [])

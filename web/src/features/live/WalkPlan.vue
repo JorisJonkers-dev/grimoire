@@ -27,32 +27,51 @@ const sightLine = (s: LivePathSight) => (s.visible ? `${s.label} sees ${props.mo
 </template>
 
 <style scoped>
+/* A short note beside the map: what the walk costs and risks, and the yes or no. */
 .plan {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin: 8px;
-  align-self: center;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 2px 12px;
+  max-width: min(520px, 100%);
+  margin: 0;
 }
 .cost {
   margin: 0;
-  font-family: var(--font-display);
-  font-size: 17px;
+  font-size: 14px;
+  font-weight: 700;
 }
 ul {
+  grid-column: 1;
   margin: 0;
-  padding-left: 18px;
+  padding-left: 16px;
+  font-size: 12px;
 }
 .threats {
   color: var(--color-enemy-soft);
 }
 .safe,
 .sight {
+  grid-column: 1;
   margin: 0;
+  font-size: 12px;
   color: var(--color-text-2);
 }
 .row {
   display: flex;
-  gap: 8px;
+  grid-row: 1 / span 3;
+  grid-column: 2;
+  flex-direction: row-reverse;
+  gap: 6px;
+}
+.row :deep(.g-button) {
+  min-height: 30px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+@media (pointer: coarse) {
+  .row :deep(.g-button) {
+    min-height: 44px;
+  }
 }
 </style>

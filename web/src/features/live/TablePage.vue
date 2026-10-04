@@ -132,6 +132,7 @@ const worldBoard = computed(() => ({ tokens: [], fog: world.value !== null, visi
 </template>
 
 <style scoped>
+/* The table is read from across a room: big type straight on the map, smoked glass behind the rest. */
 .turn,
 .roll,
 .result,
@@ -139,20 +140,25 @@ const worldBoard = computed(() => ({ tokens: [], fog: world.value !== null, visi
   position: fixed;
   z-index: 3;
   margin: 0;
-  border-radius: 14px;
   color: var(--color-text);
-  background: color-mix(in srgb, var(--color-surface) 90%, transparent);
-  box-shadow: 0 8px 28px rgb(0 0 0 / 45%);
+}
+.roll,
+.result,
+.caption,
+.check {
+  border: 1px solid rgb(217 190 126 / 16%);
+  border-radius: var(--radius-panel);
+  background: rgb(14 11 9 / 62%);
+  backdrop-filter: blur(10px) saturate(1.15);
 }
 .turn {
-  top: 22%;
-  left: 50%;
-  padding: 14px 40px;
-  border: 2px solid var(--color-gold-high);
+  top: 28px;
+  left: 32px;
   font-family: var(--font-display);
-  font-size: clamp(28px, 4vw, 64px);
-  color: var(--color-gold-high);
-  transform: translateX(-50%);
+  font-size: clamp(24px, 2.1vw, 40px);
+  font-weight: 700;
+  line-height: 1.05;
+  text-shadow: 0 1px 3px #000, 0 0 2px #000;
 }
 /* The roll keeps to the top corner and the caption to the bottom, so neither covers the other. */
 .roll {
@@ -168,22 +174,28 @@ const worldBoard = computed(() => ({ tokens: [], fog: world.value !== null, visi
 }
 .who {
   flex: 1 0 100%;
-  color: var(--color-text-2);
+  font-family: var(--font-label);
+  font-size: 0.6em;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-gold);
 }
 .die {
   display: grid;
   place-items: center;
   min-width: 2.2em;
   min-height: 2.2em;
-  border: 2px solid var(--color-gold-high);
-  border-radius: 10px;
+  border: 1px solid var(--color-brass-edge);
+  border-radius: var(--radius-control);
   font-family: var(--font-display);
   font-weight: 700;
+  background: var(--color-selected);
 }
 .die--dropped {
   border-color: var(--color-line);
   color: var(--color-text-2);
   text-decoration: line-through;
+  background: none;
 }
 .total {
   font-family: var(--font-display);
@@ -203,7 +215,9 @@ const worldBoard = computed(() => ({ tokens: [], fog: world.value !== null, visi
   left: 50%;
   max-width: 70vw;
   padding: 14px 28px;
+  font-family: var(--font-flavour, var(--font-ui));
   font-size: clamp(20px, 2vw, 40px);
+  font-style: italic;
   text-align: center;
   transform: translateX(-50%);
 }
@@ -211,7 +225,7 @@ const worldBoard = computed(() => ({ tokens: [], fog: world.value !== null, visi
   display: grid;
   place-items: center;
   min-height: 100vh;
-  background: var(--color-ground);
+  background: #0b0908;
   overflow: hidden;
 }
 .stage {
@@ -225,12 +239,22 @@ const worldBoard = computed(() => ({ tokens: [], fog: world.value !== null, visi
   padding: 12px;
 }
 .table-roster {
+  --token: clamp(40px, 3.2vw, 60px);
   position: absolute;
   top: 12px;
   left: 50%;
   z-index: 2;
   max-width: calc(100% - 24px);
   transform: translateX(-50%);
+}
+/* There is no bar on the table, so the strip says which round it is. */
+.table-roster :deep(.round) {
+  position: static;
+  width: auto;
+  height: auto;
+  clip-path: none;
+  font-size: clamp(12px, 1vw, 18px);
+  letter-spacing: 0.16em;
 }
 .check {
   position: fixed;
@@ -254,6 +278,7 @@ const worldBoard = computed(() => ({ tokens: [], fog: world.value !== null, visi
   margin: 0 0 16px;
   font-family: var(--font-display);
   font-size: 56px;
+  font-weight: 700;
   color: var(--color-gold-high);
 }
 .card p {
