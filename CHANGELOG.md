@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.3.0](https://github.com/JorisJonkers-dev/grimoire/compare/v1.2.1...v1.3.0) (2026-10-06)
+
+
+### Features
+
+* a Character's own page and Level-up in the Soft design language ([#227](https://github.com/JorisJonkers-dev/grimoire/issues/227)) ([20c0506](https://github.com/JorisJonkers-dev/grimoire/commit/20c050665353dae94ba0fd2bb3159f238cfb4ef4))
+* a Proposal in the Soft design language ([#228](https://github.com/JorisJonkers-dev/grimoire/issues/228)) ([eb07243](https://github.com/JorisJonkers-dev/grimoire/commit/eb07243c5efc63365ea369a3ef740d5d6b644804))
+* Account, Admin, Friends and Conversations in the Soft design language ([#222](https://github.com/JorisJonkers-dev/grimoire/issues/222)) ([a977b9e](https://github.com/JorisJonkers-dev/grimoire/commit/a977b9ef9ce0f0ec380984e9ade83eb89b036ec3))
+* Admin account page, Access Tokens and Notifications in the Soft design language ([#226](https://github.com/JorisJonkers-dev/grimoire/issues/226)) ([b1887fc](https://github.com/JorisJonkers-dev/grimoire/commit/b1887fc2f5295e7b3231d5eb25b67224247e2eac))
+* Character sheet, Search and Campaign pages in the Soft design language ([#223](https://github.com/JorisJonkers-dev/grimoire/issues/223)) ([7857e10](https://github.com/JorisJonkers-dev/grimoire/commit/7857e10ec6459535c6aa8941bf574ee5fc249870))
+* Dashboard, Compendium and page heads in the Soft design language ([#220](https://github.com/JorisJonkers-dev/grimoire/issues/220)) ([81f945d](https://github.com/JorisJonkers-dev/grimoire/commit/81f945df658289ef077647917de3fd5f63aabea1))
+* Grimoire v2: difficulty presets, karmic dice and showing DCs ([#213](https://github.com/JorisJonkers-dev/grimoire/issues/213)) ([4e5e21c](https://github.com/JorisJonkers-dev/grimoire/commit/4e5e21c327cb2f3b92a4608b8e8443c4b8da6261)), closes [#172](https://github.com/JorisJonkers-dev/grimoire/issues/172)
+* Grimoire v2: keyboard shortcuts and gamepad navigation ([#218](https://github.com/JorisJonkers-dev/grimoire/issues/218)) ([12940c1](https://github.com/JorisJonkers-dev/grimoire/commit/12940c1a5fa23d6d842776d111b357040996ff87)), closes [#173](https://github.com/JorisJonkers-dev/grimoire/issues/173)
+* invite, emailed link and external login pages in the sign-in frame ([#225](https://github.com/JorisJonkers-dev/grimoire/issues/225)) ([2513bfe](https://github.com/JorisJonkers-dev/grimoire/commit/2513bfe31b7e957f95e6482cdf1e99b3a16ddc59))
+* Library entry, builders and the Character builder in the Soft design language ([#224](https://github.com/JorisJonkers-dev/grimoire/issues/224)) ([50b38d8](https://github.com/JorisJonkers-dev/grimoire/commit/50b38d8f85e1fd596915d7d1e133339913510e38))
+* live play over the map, in the Soft design language ([#221](https://github.com/JorisJonkers-dev/grimoire/issues/221)) ([e90d785](https://github.com/JorisJonkers-dev/grimoire/commit/e90d785496def4b9801ba48ca41a13dfd66316de))
+* the Soft component system and the app shell from the design canvas ([#219](https://github.com/JorisJonkers-dev/grimoire/issues/219)) ([02868be](https://github.com/JorisJonkers-dev/grimoire/commit/02868be281649ae1f17b1a36469913fd6c7c9dcb))
+
+
+### Bug Fixes
+
+* **deps:** update minor and patch dependencies ([#231](https://github.com/JorisJonkers-dev/grimoire/issues/231)) ([2ea0549](https://github.com/JorisJonkers-dev/grimoire/commit/2ea0549a434b0e49cfa01c592a46a7fc3b2653d1))
+
 ## [1.2.1](https://github.com/JorisJonkers-dev/grimoire/compare/v1.2.0...v1.2.1) (2026-10-04)
 
 
