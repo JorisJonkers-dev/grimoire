@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.26
+# syntax=docker/dockerfile:1.27
 # One image: the Go API serves the built web app (ARCHITECTURE.md §19.1).
 
 # Both build stages run on the build platform; only the Go binary is cross-compiled, so a
