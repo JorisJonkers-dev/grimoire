@@ -1,0 +1,964 @@
+slug,name,category,magic,requires_attunement,template,template_name,pattern
+acid,Acid,weapon,false,false,thrown-vial,"Acid, Holy Water",consumable-effect
+adamantine-armor-breastplate,Adamantine Armor (Breastplate),armor,true,false,adamantine-armor,Adamantine Armor,passive-ward
+adamantine-armor-chain-mail,Adamantine Armor (Chain Mail),armor,true,false,adamantine-armor,Adamantine Armor,passive-ward
+adamantine-armor-chain-shirt,Adamantine Armor (Chain Shirt),armor,true,false,adamantine-armor,Adamantine Armor,passive-ward
+adamantine-armor-half-plate-armor,Adamantine Armor (Half Plate),armor,true,false,adamantine-armor,Adamantine Armor,passive-ward
+adamantine-armor-plate,Adamantine Armor (Plate),armor,true,false,adamantine-armor,Adamantine Armor,passive-ward
+adamantine-armor-ring-mail,Adamantine Armor (Ring Mail),armor,true,false,adamantine-armor,Adamantine Armor,passive-ward
+adamantine-armor-scale-mail,Adamantine Armor (Scale Mail),armor,true,false,adamantine-armor,Adamantine Armor,passive-ward
+adamantine-armor-splint,Adamantine Armor (Splint),armor,true,false,adamantine-armor,Adamantine Armor,passive-ward
+airship,Airship,wondrous-item,false,false,excluded,excluded: vehicle,
+alchemists-fire,Alchemist's Fire,weapon,false,false,alchemists-fire,Alchemist's Fire,consumable-effect
+alchemists-supplies,Alchemist's Supplies (50 GP),tools,false,false,tools,"Artisan's tools, kits, gaming sets and musical instruments",tool-check
+ammunition-of-aberration-slaying,Ammunition of Aberration Slaying,weapon,true,false,ammunition-of-slaying,Ammunition of Slaying,consumable-effect
+ammunition-of-beast-slaying,Ammunition of Beast Slaying,weapon,true,false,ammunition-of-slaying,Ammunition of Slaying,consumable-effect
+ammunition-of-celestial-slaying,Ammunition of Celestial Slaying,weapon,true,false,ammunition-of-slaying,Ammunition of Slaying,consumable-effect
+ammunition-of-construct-slaying,Ammunition of Construct Slaying,weapon,true,false,ammunition-of-slaying,Ammunition of Slaying,consumable-effect
+ammunition-of-dragon-slaying,Ammunition of Dragon Slaying,weapon,true,false,ammunition-of-slaying,Ammunition of Slaying,consumable-effect
+ammunition-of-elemental-slaying,Ammunition of Elemental Slaying,weapon,true,false,ammunition-of-slaying,Ammunition of Slaying,consumable-effect
+ammunition-of-fey-slaying,Ammunition of Fey Slaying,weapon,true,false,ammunition-of-slaying,Ammunition of Slaying,consumable-effect
+ammunition-of-fiend-slaying,Ammunition of Fiend Slaying,weapon,true,false,ammunition-of-slaying,Ammunition of Slaying,consumable-effect
+ammunition-of-giant-slaying,Ammunition of Giant Slaying,weapon,true,false,ammunition-of-slaying,Ammunition of Slaying,consumable-effect
+ammunition-of-humanoid-slaying,Ammunition of Humanoid Slaying,weapon,true,false,ammunition-of-slaying,Ammunition of Slaying,consumable-effect
+ammunition-of-monstrosity-slaying,Ammunition of Monstrosity Slaying,weapon,true,false,ammunition-of-slaying,Ammunition of Slaying,consumable-effect
+ammunition-of-ooze-slaying,Ammunition of Ooze Slaying,weapon,true,false,ammunition-of-slaying,Ammunition of Slaying,consumable-effect
+ammunition-of-plant-slaying,Ammunition of Plant Slaying,weapon,true,false,ammunition-of-slaying,Ammunition of Slaying,consumable-effect
+ammunition-of-undead-slaying,Ammunition of Undead Slaying,weapon,true,false,ammunition-of-slaying,Ammunition of Slaying,consumable-effect
+ammunition-plus-one,Ammunition (+1),weapon,true,false,ammunition-plus,"Ammunition, +1, +2 or +3",flat-bonus
+ammunition-plus-three,Ammunition (+3),weapon,true,false,ammunition-plus,"Ammunition, +1, +2 or +3",flat-bonus
+ammunition-plus-two,Ammunition (+2),weapon,true,false,ammunition-plus,"Ammunition, +1, +2 or +3",flat-bonus
+amulet-of-health,Amulet of Health,wondrous-item,true,true,ability-19,Item that sets an ability score to 19,passive-trait
+amulet-of-proof-against-detection-and-location,Amulet of Proof against Detection and Location,wondrous-item,true,true,amulet-of-proof,Amulet of Proof against Detection and Location,passive-ward
+amulet-of-the-planes,Amulet of the Planes,wondrous-item,true,true,amulet-of-the-planes,Amulet of the Planes,planar-utility
+animated-shield,Animated Shield,armor,true,true,animated-shield,Animated Shield,activated-effect
+antitoxin,Antitoxin,potion,false,false,antitoxin,Antitoxin,consumable-effect
+apparatus-of-the-crab,Apparatus of the Crab,wondrous-item,true,false,apparatus-of-the-crab,Apparatus of the Crab,object-or-vehicle
+armor-of-invulnerability,Armor of Invulnerability,armor,true,true,armor-of-invulnerability,Armor of Invulnerability,passive-ward
+armor-of-resistance-breastplate,Armor of Resistance (Breastplate),armor,true,true,armor-of-resistance,Armor of Resistance,passive-ward
+armor-of-resistance-chain-mail,Armor of Resistance (Chain Mail),armor,true,true,armor-of-resistance,Armor of Resistance,passive-ward
+armor-of-resistance-chain-shirt,Armor of Resistance (Chain Shirt),armor,true,true,armor-of-resistance,Armor of Resistance,passive-ward
+armor-of-resistance-half-plate,Armor of Resistance (Half Plate),armor,true,true,armor-of-resistance,Armor of Resistance,passive-ward
+armor-of-resistance-hide-armor,Armor of Resistance (Hide Armor),armor,true,false,armor-of-resistance,Armor of Resistance,passive-ward
+armor-of-resistance-leather,Armor of Resistance (Leather Armor),armor,true,true,armor-of-resistance,Armor of Resistance,passive-ward
+armor-of-resistance-padded,Armor of Resistance (Padded),armor,true,true,armor-of-resistance,Armor of Resistance,passive-ward
+armor-of-resistance-plate,Armor of Resistance (Plate),armor,true,true,armor-of-resistance,Armor of Resistance,passive-ward
+armor-of-resistance-ring-mail,Armor of Resistance (Ring Mail),armor,true,false,armor-of-resistance,Armor of Resistance,passive-ward
+armor-of-resistance-scale-mail,Armor of Resistance (Scale Mail),armor,true,true,armor-of-resistance,Armor of Resistance,passive-ward
+armor-of-resistance-splint,Armor of Resistance (Splint),armor,true,false,armor-of-resistance,Armor of Resistance,passive-ward
+armor-of-resistance-studded-leather,Armor of Resistance (Studded Leather),armor,true,true,armor-of-resistance,Armor of Resistance,passive-ward
+armor-of-vulnerability-breastplate,Armor of Vulnerability (Breastplate),armor,true,true,armor-of-vulnerability,Armor of Vulnerability,passive-ward
+armor-of-vulnerability-chain-mail,Armor of Vulnerability (Chain Mail),armor,true,true,armor-of-vulnerability,Armor of Vulnerability,passive-ward
+armor-of-vulnerability-chain-shirt,Armor of Vulnerability (Chain Shirt),armor,true,true,armor-of-vulnerability,Armor of Vulnerability,passive-ward
+armor-of-vulnerability-half-plate-armor,Armor of Vulnerability (Half Plate Armor),armor,true,true,armor-of-vulnerability,Armor of Vulnerability,passive-ward
+armor-of-vulnerability-hide-armor,Armor of Vulnerability (Hide Armor),armor,true,true,armor-of-vulnerability,Armor of Vulnerability,passive-ward
+armor-of-vulnerability-leather-armor,Armor of Vulnerability (Leather Armor),armor,true,true,armor-of-vulnerability,Armor of Vulnerability,passive-ward
+armor-of-vulnerability-padded-armor,Armor of Vulnerability (Padded Armor),armor,true,false,armor-of-vulnerability,Armor of Vulnerability,passive-ward
+armor-of-vulnerability-plate-armor,Armor of Vulnerability (Plate Armor),armor,true,true,armor-of-vulnerability,Armor of Vulnerability,passive-ward
+armor-of-vulnerability-ring-mail,Armor of Vulnerability (Ring Mail),armor,true,true,armor-of-vulnerability,Armor of Vulnerability,passive-ward
+armor-of-vulnerability-scale-mail,Armor of Vulnerability (Scale Mail),armor,true,true,armor-of-vulnerability,Armor of Vulnerability,passive-ward
+armor-of-vulnerability-splint-armor,Armor of Vulnerability (Splint Armor),armor,true,true,armor-of-vulnerability,Armor of Vulnerability,passive-ward
+armor-of-vulnerability-studded-leather-armor,Armor of Vulnerability (Studded Leather Armor),armor,true,true,armor-of-vulnerability,Armor of Vulnerability,passive-ward
+arrow-catching-shield,Arrow-Catching Shield,armor,true,true,arrow-catching-shield,Arrow-Catching Shield,passive-ward
+arrows-20,Arrows (20),ammunition,false,false,excluded,excluded: ammunition,
+backpack,Backpack,equipment-pack,false,false,excluded,excluded: equipment pack,
+bag-of-beans,Bag of Beans,wondrous-item,true,false,bag-of-beans,Bag of Beans,random-table
+bag-of-devouring,Bag of Devouring,wondrous-item,true,false,bag-of-devouring,Bag of Devouring,container
+bag-of-holding,Bag of Holding,wondrous-item,true,false,extradimensional-container,"Bag of Holding, Handy Haversack",container
+bag-of-tricks,Bag of Tricks,wondrous-item,true,false,bag-of-tricks,Bag of Tricks,summon
+ball-bearings,Ball Bearings,adventuring-gear,false,false,ball-bearings,Ball Bearings,hazard-area
+barrel,Barrel,adventuring-gear,false,false,excluded,excluded: container,
+basket,Basket,adventuring-gear,false,false,excluded,excluded: container,
+battleaxe,Battleaxe,weapon,false,false,excluded,excluded: base weapon,
+battleaxe-plus-1,Battleaxe (+1),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+battleaxe-plus-2,Battleaxe (+2),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+battleaxe-plus-3,Battleaxe (+3),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+bead-of-force,Bead of Force,wondrous-item,true,false,bead-of-force,Bead of Force,consumable-effect
+bedroll,Bedroll,adventuring-gear,false,false,cold-weather-bedding,"Bedroll, Blanket",passive-ward
+bell,Bell,adventuring-gear,false,false,excluded,excluded: descriptive gear,
+belt-of-dwarvenkind,Belt of Dwarvenkind,wondrous-item,true,true,belt-of-dwarvenkind,Belt of Dwarvenkind,passive-trait
+belt-of-giant-strength-cloud,Belt of Giant Strength (Cloud),wondrous-item,true,true,belt-of-giant-strength,Belt of Giant Strength,passive-trait
+belt-of-giant-strength-fire,Belt of Giant Strength (Fire),wondrous-item,true,true,belt-of-giant-strength,Belt of Giant Strength,passive-trait
+belt-of-giant-strength-frost-or-stone,Belt of Giant Strength (Frost or Stone),wondrous-item,true,true,belt-of-giant-strength,Belt of Giant Strength,passive-trait
+belt-of-giant-strength-hill,Belt of Giant Strength (Hill),wondrous-item,true,true,belt-of-giant-strength,Belt of Giant Strength,passive-trait
+belt-of-giant-strength-storm,Belt of Giant Strength (Storm),wondrous-item,true,true,belt-of-giant-strength,Belt of Giant Strength,passive-trait
+berserker-battleaxe,Berserker Battleaxe,weapon,true,true,berserker,Berserker Axe,weapon-rider
+berserker-greataxe,Berserker Greataxe,weapon,true,true,berserker,Berserker Axe,weapon-rider
+berserker-halberd,Berserker Halberd,weapon,true,true,berserker,Berserker Axe,weapon-rider
+blanket,Blanket,adventuring-gear,false,false,cold-weather-bedding,"Bedroll, Blanket",passive-ward
+block-and-tackle,Block and Tackle,adventuring-gear,false,false,excluded,excluded: descriptive gear,
+blowgun,Blowgun,weapon,false,false,excluded,excluded: base weapon,
+blowgun-plus-1,Blowgun (+1),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+blowgun-plus-2,Blowgun (+2),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+blowgun-plus-3,Blowgun (+3),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+bolts-20,Bolts (20),ammunition,false,false,excluded,excluded: ammunition,
+book,Book,adventuring-gear,false,false,situational-gear,Gear that gives Advantage or a bonus on a fitting check,situational-check
+boots-of-elvenkind,Boots of Elvenkind,wondrous-item,true,false,boots-of-elvenkind,Boots of Elvenkind,passive-trait
+boots-of-levitation,Boots of Levitation,wondrous-item,true,true,boots-of-levitation,Boots of Levitation,grants-spell
+boots-of-speed,Boots of Speed,wondrous-item,true,true,boots-of-speed,Boots of Speed,activated-effect
+boots-of-striding-and-springing,Boots of Striding and Springing,wondrous-item,true,true,boots-of-striding,Boots of Striding and Springing,passive-trait
+boots-of-the-winterlands,Boots of the Winterlands,wondrous-item,true,true,boots-of-the-winterlands,Boots of the Winterlands,passive-ward
+bottle-glass,"Bottle, Glass",adventuring-gear,false,false,excluded,excluded: container,
+bowl-of-commanding-water-elementals,Bowl of Commanding Water Elementals,wondrous-item,true,false,elemental-summoner,"Bowl, Brazier, Censer or Stone that summons an elemental",summon
+bracers-of-archery,Bracers of Archery,wondrous-item,true,true,bracers-of-archery,Bracers of Archery,passive-trait
+bracers-of-defense,Bracers of Defense,wondrous-item,true,true,bracers-of-defense,Bracers of Defense,flat-bonus
+brazier-of-commanding-fire-elementals,Brazier of Commanding Fire Elementals,wondrous-item,true,false,elemental-summoner,"Bowl, Brazier, Censer or Stone that summons an elemental",summon
+breastplate,Breastplate,armor,false,false,excluded,excluded: base armor,
+breastplate-plus-1,Breastplate (+1),armor,true,false,armor-plus,"Armor, +1, +2 or +3",flat-bonus
+breastplate-plus-2,Breastplate (+2),armor,true,false,armor-plus,"Armor, +1, +2 or +3",flat-bonus
+breastplate-plus-3,Breastplate (+3),armor,true,false,armor-plus,"Armor, +1, +2 or +3",flat-bonus
+brewers-supplies,Brewer's Supplies (20 GP),tools,false,false,tools,"Artisan's tools, kits, gaming sets and musical instruments",tool-check
+brooch-of-shielding,Brooch of Shielding,wondrous-item,true,true,brooch-of-shielding,Brooch of Shielding,passive-ward
+broom-of-flying,Broom of Flying,wondrous-item,true,true,broom-of-flying,Broom of Flying,object-or-vehicle
+bucket,Bucket,adventuring-gear,false,false,excluded,excluded: container,
+bullets-firearm-10,"Bullets, Firearm (10)",ammunition,false,false,excluded,excluded: ammunition,
+bullets-sling-20,"Bullets, Sling (20)",ammunition,false,false,excluded,excluded: ammunition,
+burglars-pack,Burglar's Pack,equipment-pack,false,false,excluded,excluded: equipment pack,
+calligraphers-supplies,Calligrapher's Supplies (10 GP),tools,false,false,tools,"Artisan's tools, kits, gaming sets and musical instruments",tool-check
+caltrops,Caltrops,adventuring-gear,false,false,caltrops,Caltrops,hazard-area
+camel,Camel,mount,false,false,excluded,excluded: mount,
+candle,Candle,adventuring-gear,false,false,plain-light,"Candle, Lamp, Hooded Lantern",light-source
+candle-of-invocation,Candle of Invocation,wondrous-item,true,true,candle-of-invocation,Candle of Invocation,spell-plus
+cape-of-the-mountebank,Cape of the Mountebank,wondrous-item,true,false,cape-of-the-mountebank,Cape of the Mountebank,spell-plus
+carpenters-tools,Carpenter's Tools (8 GP),tools,false,false,tools,"Artisan's tools, kits, gaming sets and musical instruments",tool-check
+carpet-of-flying,Carpet of Flying,wondrous-item,true,false,carpet-of-flying,Carpet of Flying,object-or-vehicle
+carriage,Carriage,land-vehicle,false,false,excluded,excluded: vehicle,
+cart,Cart,land-vehicle,false,false,excluded,excluded: vehicle,
+cartographers-tools,Cartographer's Tools (15 GP),tools,false,false,tools,"Artisan's tools, kits, gaming sets and musical instruments",tool-check
+case-crossbow-bolt,"Case, Crossbow Bolt",adventuring-gear,false,false,excluded,excluded: container,
+case-map-or-scroll,"Case, Map or Scroll",scroll,false,false,excluded,excluded: container,
+censer-of-controlling-air-elementals,Censer of Controlling Air Elementals,wondrous-item,true,false,elemental-summoner,"Bowl, Brazier, Censer or Stone that summons an elemental",summon
+chain,Chain,adventuring-gear,false,false,binding-gear,"Chain, Manacles, Rope",restraint
+chain-mail,Chain Mail,armor,false,false,excluded,excluded: base armor,
+chain-mail-plus-1,Chain Mail (+1),armor,true,false,armor-plus,"Armor, +1, +2 or +3",flat-bonus
+chain-mail-plus-2,Chain Mail (+2),armor,true,false,armor-plus,"Armor, +1, +2 or +3",flat-bonus
+chain-mail-plus-3,Chain Mail (+3),armor,true,false,armor-plus,"Armor, +1, +2 or +3",flat-bonus
+chain-shirt,Chain Shirt,armor,false,false,excluded,excluded: base armor,
+chain-shirt-plus-1,Chain Shirt (+1),armor,true,false,armor-plus,"Armor, +1, +2 or +3",flat-bonus
+chain-shirt-plus-2,Chain Shirt (+2),armor,true,false,armor-plus,"Armor, +1, +2 or +3",flat-bonus
+chain-shirt-plus-3,Chain Shirt (+3),armor,true,false,armor-plus,"Armor, +1, +2 or +3",flat-bonus
+chariot,Chariot,land-vehicle,false,false,excluded,excluded: vehicle,
+chest,Chest,adventuring-gear,false,false,excluded,excluded: container,
+chime-of-opening,Chime of Opening,wondrous-item,true,false,chime-of-opening,Chime of Opening,grants-spell
+circlet-of-blasting,Circlet of Blasting,wondrous-item,true,false,circlet-of-blasting,Circlet of Blasting,grants-spell
+climbers-kit,Climber's Kit,tools,false,false,climbers-kit,Climber's Kit,utility-object
+cloak-of-arachnida,Cloak of Arachnida,wondrous-item,true,true,cloak-of-arachnida,Cloak of Arachnida,spell-plus
+cloak-of-displacement,Cloak of Displacement,wondrous-item,true,true,cloak-of-displacement,Cloak of Displacement,passive-ward
+cloak-of-elvenkind,Cloak of Elvenkind,wondrous-item,true,true,cloak-of-elvenkind,Cloak of Elvenkind,passive-trait
+cloak-of-protection,Cloak of Protection,wondrous-item,true,true,ring-of-protection,Ring or Cloak of Protection,flat-bonus
+cloak-of-the-bat,Cloak of the Bat,wondrous-item,true,true,cloak-of-the-bat,Cloak of the Bat,spell-plus
+cloak-of-the-manta-ray,Cloak of the Manta Ray,wondrous-item,true,true,cloak-of-the-manta-ray,Cloak of the Manta Ray,passive-trait
+clothes-fine,"Clothes, Fine",adventuring-gear,false,false,excluded,excluded: descriptive gear,
+clothes-travelers,"Clothes, Traveler's",adventuring-gear,false,false,excluded,excluded: descriptive gear,
+club,Club,weapon,false,false,excluded,excluded: base weapon,
+club-plus-1,Club (+1),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+club-plus-2,Club (+2),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+club-plus-3,Club (+3),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+cobblers-tools,Cobbler's Tools (5 GP),tools,false,false,tools,"Artisan's tools, kits, gaming sets and musical instruments",tool-check
+component-pouch,Component Pouch,adventuring-gear,false,false,spellcasting-focus,"Component Pouch, Holy Symbol, Druidic Focus",spellcasting-focus
+cooks-utensils,Cook's Utensils (1 GP),tools,false,false,tools,"Artisan's tools, kits, gaming sets and musical instruments",tool-check
+costume,Costume,adventuring-gear,false,false,situational-gear,Gear that gives Advantage or a bonus on a fitting check,situational-check
+crowbar,Crowbar,adventuring-gear,false,false,situational-gear,Gear that gives Advantage or a bonus on a fitting check,situational-check
+crystal-ball,Crystal Ball,wondrous-item,true,true,crystal-ball,Crystal Ball,grants-spell
+crystal-ball-of-mind-reading,Crystal Ball of Mind Reading,wondrous-item,true,true,crystal-ball,Crystal Ball,grants-spell
+crystal-ball-of-telepathy,Crystal Ball of Telepathy,wondrous-item,true,true,crystal-ball,Crystal Ball,grants-spell
+crystal-ball-of-true-seeing,Crystal Ball of True Seeing,wondrous-item,true,true,crystal-ball-of-true-seeing,Crystal Ball of True Seeing,spell-plus
+cube-of-force,Cube of Force,wondrous-item,true,true,cube-of-force,Cube of Force,grants-spell
+cubic-gate,Cubic Gate,wondrous-item,true,false,cubic-gate,Cubic Gate,grants-spell
+dagger,Dagger,weapon,false,false,excluded,excluded: base weapon,
+dagger-of-venom,Dagger of Venom,weapon,true,false,dagger-of-venom,Dagger of Venom,weapon-rider
+dagger-plus-1,Dagger (+1),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+dagger-plus-2,Dagger (+2),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+dagger-plus-3,Dagger (+3),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+dancing-greatsword,Dancing Greatsword,weapon,true,true,dancing,Dancing Sword,weapon-rider
+dancing-longsword,Dancing Longsword,weapon,true,true,dancing,Dancing Sword,weapon-rider
+dancing-rapier,Dancing Rapier,weapon,true,true,dancing,Dancing Sword,weapon-rider
+dancing-scimitar,Dancing Scimitar,weapon,true,true,dancing,Dancing Sword,weapon-rider
+dancing-shortsword,Dancing Shortsword,weapon,true,true,dancing,Dancing Sword,weapon-rider
+dart,Dart,weapon,false,false,excluded,excluded: base weapon,
+dart-plus-1,Dart (+1),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+dart-plus-2,Dart (+2),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+dart-plus-3,Dart (+3),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+decanter-of-endless-water,Decanter of Endless Water,wondrous-item,true,false,decanter-of-endless-water,Decanter of Endless Water,activated-effect
+deck-of-illusions,Deck of Illusions,wondrous-item,true,false,deck-of-illusions,Deck of Illusions,random-table
+defender,Defender,weapon,true,true,defender,Defender,weapon-rider
+defender-battleaxe,Defender (Battleaxe),weapon,true,true,defender,Defender,weapon-rider
+defender-blowgun,Defender (Blowgun),weapon,true,true,defender,Defender,weapon-rider
+defender-club,Defender (Club),weapon,true,true,defender,Defender,weapon-rider
+defender-dagger,Defender (Dagger),weapon,true,true,defender,Defender,weapon-rider
+defender-dart,Defender (Dart),weapon,true,true,defender,Defender,weapon-rider
+defender-flail,Defender (Flail),weapon,true,true,defender,Defender,weapon-rider
+defender-glaive,Defender (Glaive),weapon,true,true,defender,Defender,weapon-rider
+defender-greataxe,Defender (Greataxe),weapon,true,true,defender,Defender,weapon-rider
+defender-greatclub,Defender (Greatclub),weapon,true,true,defender,Defender,weapon-rider
+defender-greatsword,Defender (Greatsword),weapon,true,true,defender,Defender,weapon-rider
+defender-halberd,Defender (Halberd),weapon,true,true,defender,Defender,weapon-rider
+defender-hand-crossbow,Defender (Hand Crossbow),weapon,true,true,defender,Defender,weapon-rider
+defender-handaxe,Defender (Handaxe),weapon,true,true,defender,Defender,weapon-rider
+defender-heavy-crossbow,Defender (Heavy Crossbow),weapon,true,true,defender,Defender,weapon-rider
+defender-javelin,Defender (Javelin),weapon,true,true,defender,Defender,weapon-rider
+defender-lance,Defender (Lance),weapon,true,true,defender,Defender,weapon-rider
+defender-light-crossbow,Defender (Light Crossbow),weapon,true,true,defender,Defender,weapon-rider
+defender-light-hammer,Defender (Light Hammer),weapon,true,true,defender,Defender,weapon-rider
+defender-longbow,Defender (Longbow),weapon,true,true,defender,Defender,weapon-rider
+defender-longsword,Defender (Longsword),weapon,true,true,defender,Defender,weapon-rider
+defender-mace,Defender (Mace),weapon,true,true,defender,Defender,weapon-rider
+defender-maul,Defender (Maul),weapon,true,true,defender,Defender,weapon-rider
+defender-morningstar,Defender (Morningstar),weapon,true,true,defender,Defender,weapon-rider
+defender-musket,Defender (Musket),weapon,true,true,defender,Defender,weapon-rider
+defender-pike,Defender (Pike),weapon,true,true,defender,Defender,weapon-rider
+defender-pistol,Defender (Pistol),weapon,true,true,defender,Defender,weapon-rider
+defender-quarterstaff,Defender (Quarterstaff),weapon,true,true,defender,Defender,weapon-rider
+defender-rapier,Defender (Rapier),weapon,true,true,defender,Defender,weapon-rider
+defender-scimitar,Defender (Scimitar),weapon,true,true,defender,Defender,weapon-rider
+defender-shortbow,Defender (Shortbow),weapon,true,true,defender,Defender,weapon-rider
+defender-shortsword,Defender (Shortsword),weapon,true,true,defender,Defender,weapon-rider
+defender-sickle,Defender (Sickle),weapon,true,true,defender,Defender,weapon-rider
+defender-sling,Defender (Sling),weapon,true,true,defender,Defender,weapon-rider
+defender-spear,Defender (Spear),weapon,true,true,defender,Defender,weapon-rider
+defender-trident,Defender (Trident),weapon,true,true,defender,Defender,weapon-rider
+defender-war-pick,Defender (War Pick),weapon,true,true,defender,Defender,weapon-rider
+defender-warhammer,Defender (Warhammer),weapon,true,true,defender,Defender,weapon-rider
+defender-whip,Defender (Whip),weapon,true,true,defender,Defender,weapon-rider
+demon-breastplate,Demon Breastplate,armor,true,true,demon-armor,Demon Armor,passive-ward
+demon-chain-mail,Demon Chain Mail,armor,true,true,demon-armor,Demon Armor,passive-ward
+demon-chain-shirt,Demon Chain Shirt,armor,true,true,demon-armor,Demon Armor,passive-ward
+demon-half-plate-armor,Demon Half Plate Armor,armor,true,true,demon-armor,Demon Armor,passive-ward
+demon-hide-armor,Demon Hide Armor,armor,true,true,demon-armor,Demon Armor,passive-ward
+demon-leather-armor,Demon Leather Armor,armor,true,true,demon-armor,Demon Armor,passive-ward
+demon-padded-armor,Demon Padded Armor,armor,true,true,demon-armor,Demon Armor,passive-ward
+demon-plate-armor,Demon Plate Armor,armor,true,true,demon-armor,Demon Armor,passive-ward
+demon-ring-mail,Demon Ring Mail,armor,true,true,demon-armor,Demon Armor,passive-ward
+demon-scale-mail,Demon Scale Mail,armor,true,true,demon-armor,Demon Armor,passive-ward
+demon-splint-armor,Demon Splint Armor,armor,true,true,demon-armor,Demon Armor,passive-ward
+demon-studded-leather-armor,Demon Studded Leather Armor,armor,true,true,demon-armor,Demon Armor,passive-ward
+dimensional-shackles,Dimensional Shackles,wondrous-item,true,false,dimensional-shackles,Dimensional Shackles,restraint
+diplomats-pack,Diplomat's Pack,equipment-pack,false,false,excluded,excluded: equipment pack,
+disguise-kit,Disguise Kit,tools,false,false,tools,"Artisan's tools, kits, gaming sets and musical instruments",tool-check
+dragon-orb,Dragon Orb,wondrous-item,true,true,dragon-orb,Dragon Orb,spell-plus
+dragon-scale-mail,Dragon Scale Mail,armor,true,true,dragon-scale-mail,Dragon Scale Mail,passive-ward
+dragon-slayer,Dragon Slayer,weapon,true,false,dragon-slayer,Dragon Slayer,weapon-rider
+druidic-focus-sprig-of-mistletoe,"Druidic Focus, Sprig of Mistletoe",spellcasting-focus,false,false,spellcasting-focus,"Component Pouch, Holy Symbol, Druidic Focus",spellcasting-focus
+druidic-focus-wooden-staff,"Druidic Focus, Wooden Staff",spellcasting-focus,false,false,spellcasting-focus,"Component Pouch, Holy Symbol, Druidic Focus",spellcasting-focus
+druidic-focus-yew-wand,"Druidic Focus, Yew Wand",spellcasting-focus,false,false,spellcasting-focus,"Component Pouch, Holy Symbol, Druidic Focus",spellcasting-focus
+dungeoneers-pack,Dungeoneer's Pack,equipment-pack,false,false,excluded,excluded: equipment pack,
+dust-of-disappearance,Dust of Disappearance,wondrous-item,true,false,dust-of-disappearance,Dust of Disappearance,consumable-effect
+dust-of-dryness,Dust of Dryness,wondrous-item,true,false,dust-of-dryness,Dust of Dryness,consumable-effect
+dust-of-sneezing-and-choking,Dust of Sneezing and Choking,wondrous-item,true,false,dust-of-sneezing,Dust of Sneezing and Choking,consumable-effect
+dwarven-half-plate,Dwarven Half Plate,armor,true,false,dwarven-plate,Dwarven Plate,passive-ward
+dwarven-plate,Dwarven Plate,armor,true,false,dwarven-plate,Dwarven Plate,passive-ward
+dwarven-thrower,Dwarven Thrower,weapon,true,true,dwarven-thrower,Dwarven Thrower,weapon-rider
+efficient-quiver,Efficient Quiver,wondrous-item,true,false,efficient-quiver,Efficient Quiver,container
+efreeti-bottle,Efreeti Bottle,wondrous-item,true,false,efreeti-bottle,Efreeti Bottle,summon
+elemental-gem,Elemental Gem,wondrous-item,true,false,elemental-gem,Elemental Gem,summon
+elephant,Elephant,mount,false,false,excluded,excluded: mount,
+elven-chain-mail,Elven Chain Mail,armor,true,false,elven-chain,Elven Chain,flat-bonus
+elven-chain-shirt,Elven Chain Shirt,armor,true,false,elven-chain,Elven Chain,flat-bonus
+entertainers-pack,Entertainer's Pack,equipment-pack,false,false,excluded,excluded: equipment pack,
+eversmoking-bottle,Eversmoking Bottle,wondrous-item,true,false,eversmoking-bottle,Eversmoking Bottle,activated-effect
+explorers-pack,Explorer's Pack,equipment-pack,false,false,excluded,excluded: equipment pack,
+eyes-of-charming,Eyes of Charming,wondrous-item,true,true,eyes-of-charming,Eyes of Charming,grants-spell
+eyes-of-minute-seeing,Eyes of Minute Seeing,wondrous-item,true,false,eyes-of-minute-seeing,Eyes of Minute Seeing,passive-trait
+eyes-of-the-eagle,Eyes of the Eagle,wondrous-item,true,false,eyes-of-the-eagle,Eyes of the Eagle,passive-trait
+feather-token-anchor,Feather Token (Anchor),wondrous-item,true,false,feather-token-anchor,Feather Token (Anchor),utility-object
+feather-token-bird,Feather Token (Bird),wondrous-item,true,false,feather-token-bird,Feather Token (Bird),summon
+feather-token-fan,Feather Token (Fan),wondrous-item,true,false,feather-token-fan,Feather Token (Fan),utility-object
+feather-token-swan-boat,Feather Token (Swan Boat),wondrous-item,true,false,feather-token-swan-boat,Feather Token (Swan Boat),object-or-vehicle
+feather-token-tree,Feather Token (Tree),wondrous-item,true,false,feather-token-tree,Feather Token (Tree),object-or-vehicle
+feather-token-whip,Feather Token (Whip),wondrous-item,true,false,feather-token-whip,Feather Token (Whip),consumable-effect
+feed-per-day,Feed (per day),adventuring-gear,false,false,excluded,excluded: descriptive gear,
+figurine-of-wondrous-power-bronze-griffon,Figurine of Wondrous Power (Bronze Griffon),wondrous-item,true,false,figurine,Figurine of Wondrous Power (plain summon),summon
+figurine-of-wondrous-power-ebony-fly,Figurine of Wondrous Power (Ebony Fly),wondrous-item,true,false,figurine,Figurine of Wondrous Power (plain summon),summon
+figurine-of-wondrous-power-golden-lions,Figurine of Wondrous Power (Golden Lions),wondrous-item,true,false,figurine,Figurine of Wondrous Power (plain summon),summon
+figurine-of-wondrous-power-ivory-goats,Figurine of Wondrous Power (Ivory Goats),wondrous-item,true,false,figurine-ivory-goats,Figurine of Wondrous Power (Ivory Goats),summon
+figurine-of-wondrous-power-marble-elephant,Figurine of Wondrous Power (Marble Elephant),wondrous-item,true,false,figurine,Figurine of Wondrous Power (plain summon),summon
+figurine-of-wondrous-power-obsidian-stead,Figurine of Wondrous Power (Obsidian Stead),wondrous-item,true,false,figurine-obsidian-steed,Figurine of Wondrous Power (Obsidian Steed),summon
+figurine-of-wondrous-power-onyx-dog,Figurine of Wondrous Power (Onyx Dog),wondrous-item,true,false,figurine,Figurine of Wondrous Power (plain summon),summon
+figurine-of-wondrous-power-serpentine-owl,Figurine of Wondrous Power (Serpentine Owl),wondrous-item,true,false,figurine,Figurine of Wondrous Power (plain summon),summon
+figurine-of-wondrous-power-silver-raven,Figurine of Wondrous Power (Silver Raven),wondrous-item,true,false,figurine-silver-raven,Figurine of Wondrous Power (Silver Raven),summon
+flail,Flail,weapon,false,false,excluded,excluded: base weapon,
+flail-plus-1,Flail (+1),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+flail-plus-2,Flail (+2),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+flail-plus-3,Flail (+3),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+flame-tongue-battleaxe,Flame Tongue Battleaxe,weapon,true,true,flame-tongue,Flame Tongue,weapon-rider
+flame-tongue-club,Flame Tongue Club,weapon,true,true,flame-tongue,Flame Tongue,weapon-rider
+flame-tongue-dagger,Flame Tongue Dagger,weapon,true,true,flame-tongue,Flame Tongue,weapon-rider
+flame-tongue-dart,Flame Tongue Dart,weapon,true,true,flame-tongue,Flame Tongue,weapon-rider
+flame-tongue-flail,Flame Tongue Flail,weapon,true,true,flame-tongue,Flame Tongue,weapon-rider
+flame-tongue-glaive,Flame Tongue Glaive,weapon,true,true,flame-tongue,Flame Tongue,weapon-rider
+flame-tongue-greataxe,Flame Tongue Greataxe,weapon,true,true,flame-tongue,Flame Tongue,weapon-rider
+flame-tongue-greatclub,Flame Tongue Greatclub,weapon,true,true,flame-tongue,Flame Tongue,weapon-rider
+flame-tongue-greatsword,Flame Tongue Greatsword,weapon,true,true,flame-tongue,Flame Tongue,weapon-rider
+flame-tongue-halberd,Flame Tongue Halberd,weapon,true,true,flame-tongue,Flame Tongue,weapon-rider
+flame-tongue-handaxe,Flame Tongue Handaxe,weapon,true,true,flame-tongue,Flame Tongue,weapon-rider
+flame-tongue-javelin,Flame Tongue Javelin,weapon,true,true,flame-tongue,Flame Tongue,weapon-rider
+flame-tongue-lance,Flame Tongue Lance,weapon,true,true,flame-tongue,Flame Tongue,weapon-rider
+flame-tongue-light-hammer,Flame Tongue Light Hammer,weapon,true,true,flame-tongue,Flame Tongue,weapon-rider
+flame-tongue-longsword,Flame Tongue Longsword,weapon,true,true,flame-tongue,Flame Tongue,weapon-rider
+flame-tongue-mace,Flame Tongue Mace,weapon,true,true,flame-tongue,Flame Tongue,weapon-rider
+flame-tongue-maul,Flame Tongue Maul,weapon,true,true,flame-tongue,Flame Tongue,weapon-rider
+flame-tongue-morningstar,Flame Tongue Morningstar,weapon,true,true,flame-tongue,Flame Tongue,weapon-rider
+flame-tongue-pike,Flame Tongue Pike,weapon,true,true,flame-tongue,Flame Tongue,weapon-rider
+flame-tongue-quarterstaff,Flame Tongue Quarterstaff,weapon,true,true,flame-tongue,Flame Tongue,weapon-rider
+flame-tongue-rapier,Flame Tongue Rapier,weapon,true,true,flame-tongue,Flame Tongue,weapon-rider
+flame-tongue-scimitar,Flame Tongue Scimitar,weapon,true,true,flame-tongue,Flame Tongue,weapon-rider
+flame-tongue-shortsword,Flame Tongue Shortsword,weapon,true,true,flame-tongue,Flame Tongue,weapon-rider
+flame-tongue-sickle,Flame Tongue Sickle,weapon,true,true,flame-tongue,Flame Tongue,weapon-rider
+flame-tongue-spear,Flame Tongue Spear,weapon,true,true,flame-tongue,Flame Tongue,weapon-rider
+flame-tongue-trident,Flame Tongue Trident,weapon,true,true,flame-tongue,Flame Tongue,weapon-rider
+flame-tongue-war-pick,Flame Tongue War Pick,weapon,true,true,flame-tongue,Flame Tongue,weapon-rider
+flame-tongue-warhammer,Flame Tongue Warhammer,weapon,true,true,flame-tongue,Flame Tongue,weapon-rider
+flame-tongue-whip,Flame Tongue Whip,weapon,true,true,flame-tongue,Flame Tongue,weapon-rider
+flask,Flask,adventuring-gear,false,false,excluded,excluded: container,
+folding-boat,Folding Boat,wondrous-item,true,false,folding-boat,Folding Boat,object-or-vehicle
+forgery-kit,Forgery Kit,tools,false,false,tools,"Artisan's tools, kits, gaming sets and musical instruments",tool-check
+frost-brand-glaive,Frost Brand (Glaive),weapon,true,true,frost-brand,Frost Brand,weapon-rider
+frost-brand-greatsword,Frost Brand (Greatsword),weapon,true,true,frost-brand,Frost Brand,weapon-rider
+frost-brand-longsword,Frost Brand (Longsword),weapon,true,true,frost-brand,Frost Brand,weapon-rider
+frost-brand-rapier,Frost Brand (Rapier),weapon,true,true,frost-brand,Frost Brand,weapon-rider
+frost-brand-scimitar,Frost Brand (Scimitar),weapon,true,true,frost-brand,Frost Brand,weapon-rider
+frost-brand-shortsword,Frost Brand (Shortsword),weapon,true,true,frost-brand,Frost Brand,weapon-rider
+galley,Galley,waterborne-vehicle,false,false,excluded,excluded: vehicle,
+gaming-set-dice,"Gaming Set, Dice",tools,false,false,tools,"Artisan's tools, kits, gaming sets and musical instruments",tool-check
+gaming-set-dragonchess,"Gaming Set, Dragonchess",tools,false,false,tools,"Artisan's tools, kits, gaming sets and musical instruments",tool-check
+gaming-set-playing-cards,"Gaming Set, Playing Cards",tools,false,false,tools,"Artisan's tools, kits, gaming sets and musical instruments",tool-check
+gaming-set-three-dragon-ante,"Gaming Set, Three-Dragon Ante",tools,false,false,tools,"Artisan's tools, kits, gaming sets and musical instruments",tool-check
+gauntlets-of-ogre-power,Gauntlets of Ogre Power,wondrous-item,true,true,ability-19,Item that sets an ability score to 19,passive-trait
+gem-of-brightness,Gem of Brightness,wondrous-item,true,false,gem-of-brightness,Gem of Brightness,activated-effect
+gem-of-seeing,Gem of Seeing,wondrous-item,true,true,gem-of-seeing,Gem of Seeing,activated-effect
+giant-slayer-battleaxe,Giant Slayer (Battleaxe),weapon,true,false,giant-slayer,Giant Slayer,weapon-rider
+giant-slayer-blowgun,Giant Slayer (Blowgun),weapon,true,false,giant-slayer,Giant Slayer,weapon-rider
+giant-slayer-club,Giant Slayer (Club),weapon,true,false,giant-slayer,Giant Slayer,weapon-rider
+giant-slayer-dagger,Giant Slayer (Dagger),weapon,true,false,giant-slayer,Giant Slayer,weapon-rider
+giant-slayer-dart,Giant Slayer (Dart),weapon,true,false,giant-slayer,Giant Slayer,weapon-rider
+giant-slayer-flail,Giant Slayer (Flail),weapon,true,false,giant-slayer,Giant Slayer,weapon-rider
+giant-slayer-glaive,Giant Slayer (Glaive),weapon,true,false,giant-slayer,Giant Slayer,weapon-rider
+giant-slayer-greataxe,Giant Slayer (Greataxe),weapon,true,false,giant-slayer,Giant Slayer,weapon-rider
+giant-slayer-greatclub,Giant Slayer (Greatclub),weapon,true,false,giant-slayer,Giant Slayer,weapon-rider
+giant-slayer-greatsword,Giant Slayer (Greatsword),weapon,true,false,giant-slayer,Giant Slayer,weapon-rider
+giant-slayer-halberd,Giant Slayer (Halberd),weapon,true,false,giant-slayer,Giant Slayer,weapon-rider
+giant-slayer-hand-crossbow,Giant Slayer (Hand Crossbow),weapon,true,false,giant-slayer,Giant Slayer,weapon-rider
+giant-slayer-handaxe,Giant Slayer (Handaxe),weapon,true,false,giant-slayer,Giant Slayer,weapon-rider
+giant-slayer-heavy-crossbow,Giant Slayer (Heavy Crossbow),weapon,true,false,giant-slayer,Giant Slayer,weapon-rider
+giant-slayer-javelin,Giant Slayer (Javelin),weapon,true,false,giant-slayer,Giant Slayer,weapon-rider
+giant-slayer-lance,Giant Slayer (Lance),weapon,true,false,giant-slayer,Giant Slayer,weapon-rider
+giant-slayer-light-crossbow,Giant Slayer (Light Crossbow),weapon,true,false,giant-slayer,Giant Slayer,weapon-rider
+giant-slayer-light-hammer,Giant Slayer (Light Hammer),weapon,true,false,giant-slayer,Giant Slayer,weapon-rider
+giant-slayer-longbow,Giant Slayer (Longbow),weapon,true,false,giant-slayer,Giant Slayer,weapon-rider
+giant-slayer-longsword,Giant Slayer (Longsword),weapon,true,false,giant-slayer,Giant Slayer,weapon-rider
+giant-slayer-mace,Giant Slayer (Mace),weapon,true,false,giant-slayer,Giant Slayer,weapon-rider
+giant-slayer-maul,Giant Slayer (Maul),weapon,true,false,giant-slayer,Giant Slayer,weapon-rider
+giant-slayer-morningstar,Giant Slayer (Morningstar),weapon,true,false,giant-slayer,Giant Slayer,weapon-rider
+giant-slayer-musket,Giant Slayer (Musket),weapon,true,false,giant-slayer,Giant Slayer,weapon-rider
+giant-slayer-pike,Giant Slayer (Pike),weapon,true,false,giant-slayer,Giant Slayer,weapon-rider
+giant-slayer-pistol,Giant Slayer (Pistol),weapon,true,false,giant-slayer,Giant Slayer,weapon-rider
+giant-slayer-quarterstaff,Giant Slayer (Quarterstaff),weapon,true,false,giant-slayer,Giant Slayer,weapon-rider
+giant-slayer-rapier,Giant Slayer (Rapier),weapon,true,false,giant-slayer,Giant Slayer,weapon-rider
+giant-slayer-scimitar,Giant Slayer (Scimitar),weapon,true,false,giant-slayer,Giant Slayer,weapon-rider
+giant-slayer-shortbow,Giant Slayer (Shortbow),weapon,true,false,giant-slayer,Giant Slayer,weapon-rider
+giant-slayer-shortsword,Giant Slayer (Shortsword),weapon,true,false,giant-slayer,Giant Slayer,weapon-rider
+giant-slayer-sickle,Giant Slayer (Sickle),weapon,true,false,giant-slayer,Giant Slayer,weapon-rider
+giant-slayer-sling,Giant Slayer (Sling),weapon,true,false,giant-slayer,Giant Slayer,weapon-rider
+giant-slayer-spear,Giant Slayer (Spear),weapon,true,false,giant-slayer,Giant Slayer,weapon-rider
+giant-slayer-trident,Giant Slayer (Trident),weapon,true,false,giant-slayer,Giant Slayer,weapon-rider
+giant-slayer-war-pick,Giant Slayer (War Pick),weapon,true,false,giant-slayer,Giant Slayer,weapon-rider
+giant-slayer-warhammer,Giant Slayer (Warhammer),weapon,true,false,giant-slayer,Giant Slayer,weapon-rider
+giant-slayer-whip,Giant Slayer (Whip),weapon,true,false,giant-slayer,Giant Slayer,weapon-rider
+glaive,Glaive,weapon,false,false,excluded,excluded: base weapon,
+glaive-of-life-stealing,Glaive of Life Stealing,weapon,true,true,life-stealing,Sword of Life Stealing,weapon-rider
+glaive-of-sharpness,Glaive of Sharpness,weapon,true,true,sharpness,Sword of Sharpness,weapon-rider
+glaive-of-wounding,Glaive of Wounding,weapon,true,true,wounding,Sword of Wounding,weapon-rider
+glaive-plus-1,Glaive (+1),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+glaive-plus-2,Glaive (+2),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+glaive-plus-3,Glaive (+3),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+glamoured-studded-leather,Glamoured Studded Leather,armor,true,false,glamoured-studded-leather,Glamoured Studded Leather,flat-bonus
+glassblowers-tools,Glassblower's Tools (30 GP),tools,false,false,tools,"Artisan's tools, kits, gaming sets and musical instruments",tool-check
+gloves-of-missile-snaring,Gloves of Missile Snaring,wondrous-item,true,true,gloves-of-missile-snaring,Gloves of Missile Snaring,passive-ward
+gloves-of-swimming-and-climbing,Gloves of Swimming and Climbing,wondrous-item,true,true,gloves-of-swimming-and-climbing,Gloves of Swimming and Climbing,passive-trait
+goggles-of-night,Goggles of Night,wondrous-item,true,false,goggles-of-night,Goggles of Night,passive-trait
+grappling-hook,Grappling Hook,adventuring-gear,false,false,set-dc-gear,"Grappling Hook, Lock",tool-check
+greataxe,Greataxe,weapon,false,false,excluded,excluded: base weapon,
+greataxe-plus-1,Greataxe (+1),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+greataxe-plus-2,Greataxe (+2),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+greataxe-plus-3,Greataxe (+3),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+greatclub,Greatclub,weapon,false,false,excluded,excluded: base weapon,
+greatclub-plus-1,Greatclub (+1),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+greatclub-plus-2,Greatclub (+2),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+greatclub-plus-3,Greatclub (+3),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+greatsword,Greatsword,weapon,false,false,excluded,excluded: base weapon,
+greatsword-of-life-stealing,Greatsword of Life Stealing,weapon,true,true,life-stealing,Sword of Life Stealing,weapon-rider
+greatsword-of-sharpness,Greatsword of Sharpness,weapon,true,true,sharpness,Sword of Sharpness,weapon-rider
+greatsword-of-wounding,Greatsword of Wounding,weapon,true,true,wounding,Sword of Wounding,weapon-rider
+greatsword-plus-1,Greatsword (+1),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+greatsword-plus-2,Greatsword (+2),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+greatsword-plus-3,Greatsword (+3),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+halberd,Halberd,weapon,false,false,excluded,excluded: base weapon,
+halberd-plus-1,Halberd (+1),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+halberd-plus-2,Halberd (+2),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+halberd-plus-3,Halberd (+3),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+half-plate-armor,Half Plate Armor,armor,false,false,excluded,excluded: base armor,
+half-plate-armor-of-etherealness,Half Plate Armor of Etherealness,armor,true,true,armor-of-etherealness,Plate Armor of Etherealness,grants-spell
+half-plate-armor-plus-1,Half Plate Armor (+1),armor,true,false,armor-plus,"Armor, +1, +2 or +3",flat-bonus
+half-plate-armor-plus-2,Half Plate Armor (+2),armor,true,false,armor-plus,"Armor, +1, +2 or +3",flat-bonus
+half-plate-armor-plus-3,Half Plate Armor (+3),armor,true,false,armor-plus,"Armor, +1, +2 or +3",flat-bonus
+hammer-of-thunderbolts-maul,Hammer of Thunderbolts (Maul),weapon,true,true,hammer-of-thunderbolts,Hammer of Thunderbolts,weapon-rider
+hammer-of-thunderbolts-warhammer,Hammer of Thunderbolts (Warhammer),weapon,true,true,hammer-of-thunderbolts,Hammer of Thunderbolts,weapon-rider
+hand-crossbow,Hand Crossbow,weapon,false,false,excluded,excluded: base weapon,
+hand-crossbow-plus-1,Hand Crossbow (+1),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+hand-crossbow-plus-2,Hand Crossbow (+2),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+hand-crossbow-plus-3,Hand Crossbow (+3),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+handaxe,Handaxe,weapon,false,false,excluded,excluded: base weapon,
+handaxe-plus-1,Handaxe (+1),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+handaxe-plus-2,Handaxe (+2),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+handaxe-plus-3,Handaxe (+3),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+handy-haversack,Handy Haversack,wondrous-item,true,false,extradimensional-container,"Bag of Holding, Handy Haversack",container
+hat-of-disguise,Hat of Disguise,wondrous-item,true,true,hat-of-disguise,Hat of Disguise,grants-spell
+headband-of-intellect,Headband of Intellect,wondrous-item,true,true,ability-19,Item that sets an ability score to 19,passive-trait
+healers-kit,Healer's Kit,tools,false,false,healers-kit,Healer's Kit,consumable-effect
+heavy-crossbow,Heavy Crossbow,weapon,false,false,excluded,excluded: base weapon,
+heavy-crossbow-plus-1,Heavy Crossbow (+1),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+heavy-crossbow-plus-2,Heavy Crossbow (+2),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+heavy-crossbow-plus-3,Heavy Crossbow (+3),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+helm-of-brilliance,Helm of Brilliance,wondrous-item,true,true,helm-of-brilliance,Helm of Brilliance,spell-plus
+helm-of-comprehending-languages,Helm of Comprehending Languages,wondrous-item,true,false,helm-of-comprehending-languages,Helm of Comprehending Languages,grants-spell
+helm-of-telepathy,Helm of Telepathy,wondrous-item,true,true,helm-of-telepathy,Helm of Telepathy,spell-plus
+helm-of-teleportation,Helm of Teleportation,wondrous-item,true,true,helm-of-teleportation,Helm of Teleportation,grants-spell
+herbalism-kit,Herbalism Kit,tools,false,false,tools,"Artisan's tools, kits, gaming sets and musical instruments",tool-check
+hide-armor,Hide Armor,armor,false,false,excluded,excluded: base armor,
+hide-armor-plus-1,Hide Armor (+1),armor,true,false,armor-plus,"Armor, +1, +2 or +3",flat-bonus
+hide-armor-plus-2,Hide Armor (+2),armor,true,false,armor-plus,"Armor, +1, +2 or +3",flat-bonus
+hide-armor-plus-3,Hide Armor (+3),armor,true,false,armor-plus,"Armor, +1, +2 or +3",flat-bonus
+holy-avenger,Holy Avenger,weapon,true,true,holy-avenger,Holy Avenger,weapon-rider
+holy-avenger-battleaxe,Holy Avenger (Battleaxe),weapon,true,true,holy-avenger,Holy Avenger,weapon-rider
+holy-avenger-blowgun,Holy Avenger (Blowgun),weapon,true,true,holy-avenger,Holy Avenger,weapon-rider
+holy-avenger-club,Holy Avenger (Club),weapon,true,true,holy-avenger,Holy Avenger,weapon-rider
+holy-avenger-dagger,Holy Avenger (Dagger),weapon,true,true,holy-avenger,Holy Avenger,weapon-rider
+holy-avenger-dart,Holy Avenger (Dart),weapon,true,true,holy-avenger,Holy Avenger,weapon-rider
+holy-avenger-flail,Holy Avenger (Flail),weapon,true,true,holy-avenger,Holy Avenger,weapon-rider
+holy-avenger-glaive,Holy Avenger (Glaive),weapon,true,true,holy-avenger,Holy Avenger,weapon-rider
+holy-avenger-greataxe,Holy Avenger (Greataxe),weapon,true,true,holy-avenger,Holy Avenger,weapon-rider
+holy-avenger-greatclub,Holy Avenger (Greatclub),weapon,true,true,holy-avenger,Holy Avenger,weapon-rider
+holy-avenger-greatsword,Holy Avenger (Greatsword),weapon,true,true,holy-avenger,Holy Avenger,weapon-rider
+holy-avenger-halberd,Holy Avenger (Halberd),weapon,true,true,holy-avenger,Holy Avenger,weapon-rider
+holy-avenger-hand-crossbow,Holy Avenger (Hand Crossbow),weapon,true,true,holy-avenger,Holy Avenger,weapon-rider
+holy-avenger-handaxe,Holy Avenger (Handaxe),weapon,true,true,holy-avenger,Holy Avenger,weapon-rider
+holy-avenger-heavy-crossbow,Holy Avenger (Heavy Crossbow),weapon,true,true,holy-avenger,Holy Avenger,weapon-rider
+holy-avenger-javelin,Holy Avenger (Javelin),weapon,true,true,holy-avenger,Holy Avenger,weapon-rider
+holy-avenger-lance,Holy Avenger (Lance),weapon,true,true,holy-avenger,Holy Avenger,weapon-rider
+holy-avenger-light-crossbow,Holy Avenger (Light Crossbow),weapon,true,true,holy-avenger,Holy Avenger,weapon-rider
+holy-avenger-light-hammer,Holy Avenger (Light Hammer),weapon,true,true,holy-avenger,Holy Avenger,weapon-rider
+holy-avenger-longbow,Holy Avenger (Longbow),weapon,true,true,holy-avenger,Holy Avenger,weapon-rider
+holy-avenger-longsword,Holy Avenger (Longsword),weapon,true,true,holy-avenger,Holy Avenger,weapon-rider
+holy-avenger-mace,Holy Avenger (Mace),weapon,true,true,holy-avenger,Holy Avenger,weapon-rider
+holy-avenger-maul,Holy Avenger (Maul),weapon,true,true,holy-avenger,Holy Avenger,weapon-rider
+holy-avenger-morningstar,Holy Avenger (Morningstar),weapon,true,true,holy-avenger,Holy Avenger,weapon-rider
+holy-avenger-musket,Holy Avenger (Musket),weapon,true,true,holy-avenger,Holy Avenger,weapon-rider
+holy-avenger-pike,Holy Avenger (Pike),weapon,true,true,holy-avenger,Holy Avenger,weapon-rider
+holy-avenger-pistol,Holy Avenger (Pistol),weapon,true,true,holy-avenger,Holy Avenger,weapon-rider
+holy-avenger-quarterstaff,Holy Avenger (Quarterstaff),weapon,true,true,holy-avenger,Holy Avenger,weapon-rider
+holy-avenger-rapier,Holy Avenger (Rapier),weapon,true,true,holy-avenger,Holy Avenger,weapon-rider
+holy-avenger-scimitar,Holy Avenger (Scimitar),weapon,true,true,holy-avenger,Holy Avenger,weapon-rider
+holy-avenger-shortbow,Holy Avenger (Shortbow),weapon,true,true,holy-avenger,Holy Avenger,weapon-rider
+holy-avenger-shortsword,Holy Avenger (Shortsword),weapon,true,true,holy-avenger,Holy Avenger,weapon-rider
+holy-avenger-sickle,Holy Avenger (Sickle),weapon,true,true,holy-avenger,Holy Avenger,weapon-rider
+holy-avenger-sling,Holy Avenger (Sling),weapon,true,true,holy-avenger,Holy Avenger,weapon-rider
+holy-avenger-spear,Holy Avenger (Spear),weapon,true,true,holy-avenger,Holy Avenger,weapon-rider
+holy-avenger-trident,Holy Avenger (Trident),weapon,true,true,holy-avenger,Holy Avenger,weapon-rider
+holy-avenger-war-pick,Holy Avenger (War Pick),weapon,true,true,holy-avenger,Holy Avenger,weapon-rider
+holy-avenger-warhammer,Holy Avenger (Warhammer),weapon,true,true,holy-avenger,Holy Avenger,weapon-rider
+holy-avenger-whip,Holy Avenger (Whip),weapon,true,true,holy-avenger,Holy Avenger,weapon-rider
+holy-symbol-amulet,"Holy Symbol, Amulet)",adventuring-gear,false,false,spellcasting-focus,"Component Pouch, Holy Symbol, Druidic Focus",spellcasting-focus
+holy-symbol-emblem,"Holy Symbol, Emblem)",adventuring-gear,false,false,spellcasting-focus,"Component Pouch, Holy Symbol, Druidic Focus",spellcasting-focus
+holy-symbol-reliquary,"Holy Symbol, Reliquary",adventuring-gear,false,false,spellcasting-focus,"Component Pouch, Holy Symbol, Druidic Focus",spellcasting-focus
+holy-water,Holy Water,weapon,false,false,thrown-vial,"Acid, Holy Water",consumable-effect
+horn-of-blasting,Horn of Blasting,wondrous-item,true,false,horn-of-blasting,Horn of Blasting,activated-effect
+horn-of-valhalla,Horn of Valhalla,wondrous-item,true,false,horn-of-valhalla,Horn of Valhalla,summon
+horse-draft,Horse (Draft),mount,false,false,excluded,excluded: mount,
+horse-riding,Horse (Riding),mount,false,false,excluded,excluded: mount,
+horseshoes-of-a-zephyr,Horseshoes of a Zephyr,wondrous-item,true,false,horseshoes-of-a-zephyr,Horseshoes of a Zephyr,passive-trait
+horseshoes-of-speed,Horseshoes of Speed,wondrous-item,true,false,horseshoes-of-speed,Horseshoes of Speed,passive-trait
+hunting-trap,Hunting Trap,adventuring-gear,false,false,hunting-trap,Hunting Trap,hazard-area
+immovable-rod,Immovable Rod,rod,true,false,immovable-rod,Immovable Rod,utility-object
+ink,Ink,adventuring-gear,false,false,excluded,excluded: descriptive gear,
+ink-pen,Ink Pen,adventuring-gear,false,false,excluded,excluded: descriptive gear,
+instant-fortress,Instant Fortress,wondrous-item,true,true,instant-fortress,Instant Fortress,object-or-vehicle
+ioun-stone,Ioun Stone,wondrous-item,false,false,ioun-stone,Ioun Stone,passive-trait
+iron-bands,Iron Bands,wondrous-item,true,false,iron-bands,Iron Bands,restraint
+iron-flask,Iron Flask,wondrous-item,true,false,iron-flask,Iron Flask,planar-utility
+javelin,Javelin,weapon,false,false,excluded,excluded: base weapon,
+javelin-of-lightning,Javelin of Lightning,weapon,true,false,javelin-of-lightning,Javelin of Lightning,weapon-rider
+javelin-plus-1,Javelin (+1),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+javelin-plus-2,Javelin (+2),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+javelin-plus-3,Javelin (+3),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+jewelers-tools,Jeweler's Tools (25 GP),tools,false,false,tools,"Artisan's tools, kits, gaming sets and musical instruments",tool-check
+jug,Jug,adventuring-gear,false,false,excluded,excluded: container,
+keelboat,Keelboat,waterborne-vehicle,false,false,excluded,excluded: vehicle,
+ladder,Ladder,adventuring-gear,false,false,excluded,excluded: descriptive gear,
+lamp,Lamp,adventuring-gear,false,false,plain-light,"Candle, Lamp, Hooded Lantern",light-source
+lance,Lance,weapon,false,false,excluded,excluded: base weapon,
+lance-plus-1,Lance (+1),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+lance-plus-2,Lance (+2),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+lance-plus-3,Lance (+3),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+lantern-bullseye,"Lantern, Bullseye",adventuring-gear,false,false,lantern-bullseye,Bullseye Lantern,light-source
+lantern-hooded,"Lantern, Hooded",adventuring-gear,false,false,plain-light,"Candle, Lamp, Hooded Lantern",light-source
+lantern-of-revealing,Lantern of Revealing,wondrous-item,true,false,lantern-of-revealing,Lantern of Revealing,light-source
+leather-armor,Leather Armor,armor,false,false,excluded,excluded: base armor,
+leather-armor-plus-1,Leather Armor (+1),armor,true,false,armor-plus,"Armor, +1, +2 or +3",flat-bonus
+leather-armor-plus-2,Leather Armor (+2),armor,true,false,armor-plus,"Armor, +1, +2 or +3",flat-bonus
+leather-armor-plus-3,Leather Armor (+3),armor,true,false,armor-plus,"Armor, +1, +2 or +3",flat-bonus
+leatherworkers-tools,Leatherworker's Tools (5 GP),tools,false,false,tools,"Artisan's tools, kits, gaming sets and musical instruments",tool-check
+light-crossbow,Light Crossbow,weapon,false,false,excluded,excluded: base weapon,
+light-crossbow-plus-1,Light Crossbow (+1),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+light-crossbow-plus-2,Light Crossbow (+2),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+light-crossbow-plus-3,Light Crossbow (+3),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+light-hammer,Light Hammer,weapon,false,false,excluded,excluded: base weapon,
+light-hammer-plus-1,Light Hammer (+1),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+light-hammer-plus-2,Light Hammer (+2),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+light-hammer-plus-3,Light Hammer (+3),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+lock,Lock,adventuring-gear,false,false,set-dc-gear,"Grappling Hook, Lock",tool-check
+longbow,Longbow,weapon,false,false,excluded,excluded: base weapon,
+longbow-plus-1,Longbow (+1),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+longbow-plus-2,Longbow (+2),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+longbow-plus-3,Longbow (+3),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+longship,Longship,waterborne-vehicle,false,false,excluded,excluded: vehicle,
+longsword,Longsword,weapon,false,false,excluded,excluded: base weapon,
+longsword-of-life-stealing,Longsword of Life Stealing,weapon,true,true,life-stealing,Sword of Life Stealing,weapon-rider
+longsword-of-sharpness,Longsword of Sharpness,weapon,true,true,sharpness,Sword of Sharpness,weapon-rider
+longsword-of-wounding,Longsword of Wounding,weapon,true,true,wounding,Sword of Wounding,weapon-rider
+longsword-plus-1,Longsword (+1),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+longsword-plus-2,Longsword (+2),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+longsword-plus-3,Longsword (+3),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+luck-blade-glaive,Luck Blade (Glaive),weapon,true,true,luck-blade,Luck Blade,weapon-rider
+luck-blade-greatsword,Luck Blade (Greatsword),weapon,true,true,luck-blade,Luck Blade,weapon-rider
+luck-blade-longsword,Luck Blade (Longsword),weapon,true,true,luck-blade,Luck Blade,weapon-rider
+luck-blade-rapier,Luck Blade (Rapier),weapon,true,true,luck-blade,Luck Blade,weapon-rider
+luck-blade-scimitar,Luck Blade (Scimitar),weapon,true,true,luck-blade,Luck Blade,weapon-rider
+luck-blade-shortsword,Luck Blade (Shortsword),weapon,true,true,luck-blade,Luck Blade,weapon-rider
+luck-blade-sickle,Luck Blade (Sickle),weapon,true,true,luck-blade,Luck Blade,weapon-rider
+mace,Mace,weapon,false,false,excluded,excluded: base weapon,
+mace-of-disruption,Mace of Disruption,weapon,true,true,mace-of-disruption,Mace of Disruption,weapon-rider
+mace-of-smiting,Mace of Smiting,weapon,true,false,mace-of-smiting,Mace of Smiting,weapon-rider
+mace-of-terror,Mace of Terror,weapon,true,true,mace-of-terror,Mace of Terror,activated-effect
+mace-plus-1,Mace (+1),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+mace-plus-2,Mace (+2),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+mace-plus-3,Mace (+3),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+magnifying-glass,Magnifying Glass,adventuring-gear,false,false,situational-gear,Gear that gives Advantage or a bonus on a fitting check,situational-check
+manacles,Manacles,adventuring-gear,false,false,binding-gear,"Chain, Manacles, Rope",restraint
+mantle-of-spell-resistance,Mantle of Spell Resistance,wondrous-item,true,true,mantle-of-spell-resistance,Mantle of Spell Resistance,passive-ward
+manual-of-bodily-health,Manual of Bodily Health,wondrous-item,true,false,manual-tome,Manual or Tome that raises an ability score,permanent-boost
+manual-of-gainful-exercise,Manual of Gainful Exercise,wondrous-item,true,false,manual-tome,Manual or Tome that raises an ability score,permanent-boost
+manual-of-golems,Manual of Golems,wondrous-item,true,false,manual-of-golems,Manual of Golems,summon
+manual-of-quickness-of-action,Manual of Quickness of Action,wondrous-item,true,false,manual-tome,Manual or Tome that raises an ability score,permanent-boost
+map,Map,adventuring-gear,false,false,situational-gear,Gear that gives Advantage or a bonus on a fitting check,situational-check
+marvelous-pigments,Marvelous Pigments,wondrous-item,true,false,marvelous-pigments,Marvelous Pigments,utility-object
+masons-tools,Mason's Tools (10 GP),tools,false,false,tools,"Artisan's tools, kits, gaming sets and musical instruments",tool-check
+mastiff,Mastiff,mount,false,false,excluded,excluded: mount,
+maul,Maul,weapon,false,false,excluded,excluded: base weapon,
+maul-plus-1,Maul (+1),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+maul-plus-2,Maul (+2),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+maul-plus-3,Maul (+3),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+medallion-of-thoughts,Medallion of Thoughts,wondrous-item,true,true,medallion-of-thoughts,Medallion of Thoughts,grants-spell
+mirror,Mirror,adventuring-gear,false,false,excluded,excluded: descriptive gear,
+mirror-of-life-trapping,Mirror of Life Trapping,wondrous-item,true,false,mirror-of-life-trapping,Mirror of Life Trapping,planar-utility
+mithral-armor-breastplate,Mithral Armor (Breastplate),armor,true,false,mithral-armor,Mithral Armor,passive-trait
+mithral-armor-chain-mail,Mithral Armor (Chain Mail),armor,true,false,mithral-armor,Mithral Armor,passive-trait
+mithral-armor-chain-shirt,Mithral Armor (Chain Shirt),armor,true,false,mithral-armor,Mithral Armor,passive-trait
+mithral-armor-half-plate,Mithral Armor (Half Plate),armor,true,false,mithral-armor,Mithral Armor,passive-trait
+mithral-armor-plate,Mithral Armor (Plate),armor,true,false,mithral-armor,Mithral Armor,passive-trait
+mithral-armor-ring-mail,Mithral Armor (Ring Mail),armor,true,false,mithral-armor,Mithral Armor,passive-trait
+mithral-armor-scale-mail,Mithral Armor (Scale Mail),armor,true,false,mithral-armor,Mithral Armor,passive-trait
+mithral-armor-splint,Mithral Armor (Splint),armor,true,false,mithral-armor,Mithral Armor,passive-trait
+morningstar,Morningstar,weapon,false,false,excluded,excluded: base weapon,
+morningstar-plus-1,Morningstar (+1),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+morningstar-plus-2,Morningstar (+2),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+morningstar-plus-3,Morningstar (+3),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+mule,Mule,mount,false,false,excluded,excluded: mount,
+musical-instrument-bagpipes,"Musical Instrument, Bagpipes",tools,false,false,tools,"Artisan's tools, kits, gaming sets and musical instruments",tool-check
+musical-instrument-drum,"Musical Instrument, Drum",tools,false,false,tools,"Artisan's tools, kits, gaming sets and musical instruments",tool-check
+musical-instrument-dulcimer,"Musical Instrument, Dulcimer",tools,false,false,tools,"Artisan's tools, kits, gaming sets and musical instruments",tool-check
+musical-instrument-flute,"Musical Instrument, Flute",tools,false,false,tools,"Artisan's tools, kits, gaming sets and musical instruments",tool-check
+musical-instrument-horn,"Musical Instrument, Horn",tools,false,false,tools,"Artisan's tools, kits, gaming sets and musical instruments",tool-check
+musical-instrument-lute,"Musical Instrument, Lute",tools,false,false,tools,"Artisan's tools, kits, gaming sets and musical instruments",tool-check
+musical-instrument-lyre,"Musical Instrument, Lyre",tools,false,false,tools,"Artisan's tools, kits, gaming sets and musical instruments",tool-check
+musical-instrument-pan-flute,"Musical Instrument, Pan Flute",tools,false,false,tools,"Artisan's tools, kits, gaming sets and musical instruments",tool-check
+musical-instrument-shawm,"Musical Instrument, Shawm",tools,false,false,tools,"Artisan's tools, kits, gaming sets and musical instruments",tool-check
+musical-instrument-viol,"Musical Instrument, Viol",tools,false,false,tools,"Artisan's tools, kits, gaming sets and musical instruments",tool-check
+musket,Musket,weapon,false,false,excluded,excluded: base weapon,
+musket-plus-1,Musket (+1),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+musket-plus-2,Musket (+2),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+musket-plus-3,Musket (+3),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+mysterious-deck,Mysterious Deck,wondrous-item,true,false,mysterious-deck,Mysterious Deck,random-table
+navigators-tools,Navigator's Tools,tools,false,false,tools,"Artisan's tools, kits, gaming sets and musical instruments",tool-check
+necklace-of-adaptation,Necklace of Adaptation,wondrous-item,true,true,necklace-of-adaptation,Necklace of Adaptation,passive-ward
+necklace-of-fireballs,Necklace of Fireballs,wondrous-item,true,false,necklace-of-fireballs,Necklace of Fireballs,grants-spell
+necklace-of-prayer-beads,Necklace of Prayer Beads,wondrous-item,true,true,necklace-of-prayer-beads,Necklace of Prayer Beads,grants-spell
+needles-50,Needles (50),ammunition,false,false,excluded,excluded: ammunition,
+net,Net,weapon,false,false,net,Net,restraint
+nine-lives-stealer-battleaxe,Nine Lives Stealer (Battleaxe),weapon,true,true,nine-lives-stealer,Nine Lives Stealer,weapon-rider
+nine-lives-stealer-blowgun,Nine Lives Stealer (Blowgun),weapon,true,true,nine-lives-stealer,Nine Lives Stealer,weapon-rider
+nine-lives-stealer-club,Nine Lives Stealer (Club),weapon,true,true,nine-lives-stealer,Nine Lives Stealer,weapon-rider
+nine-lives-stealer-dagger,Nine Lives Stealer (Dagger),weapon,true,true,nine-lives-stealer,Nine Lives Stealer,weapon-rider
+nine-lives-stealer-dart,Nine Lives Stealer (Dart),weapon,true,true,nine-lives-stealer,Nine Lives Stealer,weapon-rider
+nine-lives-stealer-flail,Nine Lives Stealer (Flail),weapon,true,true,nine-lives-stealer,Nine Lives Stealer,weapon-rider
+nine-lives-stealer-glaive,Nine Lives Stealer (Glaive),weapon,true,true,nine-lives-stealer,Nine Lives Stealer,weapon-rider
+nine-lives-stealer-greataxe,Nine Lives Stealer (Greataxe),weapon,true,true,nine-lives-stealer,Nine Lives Stealer,weapon-rider
+nine-lives-stealer-greatclub,Nine Lives Stealer (Greatclub),weapon,true,true,nine-lives-stealer,Nine Lives Stealer,weapon-rider
+nine-lives-stealer-greatsword,Nine Lives Stealer (Greatsword),weapon,true,true,nine-lives-stealer,Nine Lives Stealer,weapon-rider
+nine-lives-stealer-halberd,Nine Lives Stealer (Halberd),weapon,true,true,nine-lives-stealer,Nine Lives Stealer,weapon-rider
+nine-lives-stealer-hand-crossbow,Nine Lives Stealer (Hand Crossbow),weapon,true,true,nine-lives-stealer,Nine Lives Stealer,weapon-rider
+nine-lives-stealer-handaxe,Nine Lives Stealer (Handaxe),weapon,true,true,nine-lives-stealer,Nine Lives Stealer,weapon-rider
+nine-lives-stealer-heavy-crossbow,Nine Lives Stealer (Heavy Crossbow),weapon,true,true,nine-lives-stealer,Nine Lives Stealer,weapon-rider
+nine-lives-stealer-javelin,Nine Lives Stealer (Javelin),weapon,true,true,nine-lives-stealer,Nine Lives Stealer,weapon-rider
+nine-lives-stealer-lance,Nine Lives Stealer (Lance),weapon,true,true,nine-lives-stealer,Nine Lives Stealer,weapon-rider
+nine-lives-stealer-light-crossbow,Nine Lives Stealer (Light Crossbow),weapon,true,true,nine-lives-stealer,Nine Lives Stealer,weapon-rider
+nine-lives-stealer-light-hammer,Nine Lives Stealer (Light Hammer),weapon,true,true,nine-lives-stealer,Nine Lives Stealer,weapon-rider
+nine-lives-stealer-longbow,Nine Lives Stealer (Longbow),weapon,true,true,nine-lives-stealer,Nine Lives Stealer,weapon-rider
+nine-lives-stealer-longsword,Nine Lives Stealer (Longsword),weapon,true,true,nine-lives-stealer,Nine Lives Stealer,weapon-rider
+nine-lives-stealer-mace,Nine Lives Stealer (Mace),weapon,true,true,nine-lives-stealer,Nine Lives Stealer,weapon-rider
+nine-lives-stealer-maul,Nine Lives Stealer (Maul),weapon,true,true,nine-lives-stealer,Nine Lives Stealer,weapon-rider
+nine-lives-stealer-morningstar,Nine Lives Stealer (Morningstar),weapon,true,true,nine-lives-stealer,Nine Lives Stealer,weapon-rider
+nine-lives-stealer-musket,Nine Lives Stealer (Musket),weapon,true,true,nine-lives-stealer,Nine Lives Stealer,weapon-rider
+nine-lives-stealer-pike,Nine Lives Stealer (Pike),weapon,true,true,nine-lives-stealer,Nine Lives Stealer,weapon-rider
+nine-lives-stealer-pistol,Nine Lives Stealer (Pistol),weapon,true,true,nine-lives-stealer,Nine Lives Stealer,weapon-rider
+nine-lives-stealer-quarterstaff,Nine Lives Stealer (Quarterstaff),weapon,true,true,nine-lives-stealer,Nine Lives Stealer,weapon-rider
+nine-lives-stealer-rapier,Nine Lives Stealer (Rapier),weapon,true,true,nine-lives-stealer,Nine Lives Stealer,weapon-rider
+nine-lives-stealer-scimitar,Nine Lives Stealer (Scimitar),weapon,true,true,nine-lives-stealer,Nine Lives Stealer,weapon-rider
+nine-lives-stealer-shortbow,Nine Lives Stealer (Shortbow),weapon,true,true,nine-lives-stealer,Nine Lives Stealer,weapon-rider
+nine-lives-stealer-shortsword,Nine Lives Stealer (Shortsword),weapon,true,true,nine-lives-stealer,Nine Lives Stealer,weapon-rider
+nine-lives-stealer-sickle,Nine Lives Stealer (Sickle),weapon,true,true,nine-lives-stealer,Nine Lives Stealer,weapon-rider
+nine-lives-stealer-sling,Nine Lives Stealer (Sling),weapon,true,true,nine-lives-stealer,Nine Lives Stealer,weapon-rider
+nine-lives-stealer-spear,Nine Lives Stealer (Spear),weapon,true,true,nine-lives-stealer,Nine Lives Stealer,weapon-rider
+nine-lives-stealer-trident,Nine Lives Stealer (Trident),weapon,true,true,nine-lives-stealer,Nine Lives Stealer,weapon-rider
+nine-lives-stealer-war-pick,Nine Lives Stealer (War Pick),weapon,true,true,nine-lives-stealer,Nine Lives Stealer,weapon-rider
+nine-lives-stealer-warhammer,Nine Lives Stealer (Warhammer),weapon,true,true,nine-lives-stealer,Nine Lives Stealer,weapon-rider
+nine-lives-stealer-whip,Nine Lives Stealer (Whip),weapon,true,true,nine-lives-stealer,Nine Lives Stealer,weapon-rider
+oathbow-longbow,Oathbow (Longbow),weapon,true,true,oathbow,Oathbow,weapon-rider
+oathbow-shortbow,Oathbow (Shortbow),weapon,true,true,oathbow,Oathbow,weapon-rider
+oil,Oil,weapon,false,false,oil,Oil,hazard-area
+oil-of-etherealness,Oil of Etherealness,potion,true,false,oil-of-etherealness,Oil of Etherealness,grants-spell
+oil-of-sharpness,Oil of Sharpness,potion,true,false,oil-of-sharpness,Oil of Sharpness,consumable-effect
+oil-of-slipperiness,Oil of Slipperiness,potion,true,false,oil-of-slipperiness,Oil of Slipperiness,grants-spell
+padded-armor,Padded Armor,armor,false,false,excluded,excluded: base armor,
+padded-armor-plus-1,Padded Armor (+1),armor,true,false,armor-plus,"Armor, +1, +2 or +3",flat-bonus
+padded-armor-plus-2,Padded Armor (+2),armor,true,false,armor-plus,"Armor, +1, +2 or +3",flat-bonus
+padded-armor-plus-3,Padded Armor (+3),armor,true,false,armor-plus,"Armor, +1, +2 or +3",flat-bonus
+painters-supplies,Painter's Supplies (10 GP),tools,false,false,tools,"Artisan's tools, kits, gaming sets and musical instruments",tool-check
+paper,Paper,adventuring-gear,false,false,excluded,excluded: descriptive gear,
+parchment,Parchment,adventuring-gear,false,false,excluded,excluded: descriptive gear,
+pearl-of-power,Pearl of Power,wondrous-item,true,true,pearl-of-power,Pearl of Power,spell-resource
+perfume,Perfume,adventuring-gear,false,false,situational-gear,Gear that gives Advantage or a bonus on a fitting check,situational-check
+periapt-of-health,Periapt of Health,wondrous-item,true,true,periapt-of-health,Periapt of Health,passive-ward
+periapt-of-proof-against-poison,Periapt of Proof against Poison,wondrous-item,true,true,periapt-of-proof-against-poison,Periapt of Proof against Poison,passive-ward
+periapt-of-wound-closure,Periapt of Wound Closure,wondrous-item,true,true,periapt-of-wound-closure,Periapt of Wound Closure,passive-ward
+philter-of-love,Philter of Love,potion,true,false,philter-of-love,Philter of Love,consumable-effect
+pike,Pike,weapon,false,false,excluded,excluded: base weapon,
+pike-plus-1,Pike (+1),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+pike-plus-2,Pike (+2),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+pike-plus-3,Pike (+3),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+pipes-of-haunting,Pipes of Haunting,wondrous-item,true,false,pipes-of-haunting,Pipes of Haunting,activated-effect
+pipes-of-the-sewers,Pipes of the Sewers,wondrous-item,true,true,pipes-of-the-sewers,Pipes of the Sewers,summon
+pistol,Pistol,weapon,false,false,excluded,excluded: base weapon,
+pistol-plus-1,Pistol (+1),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+pistol-plus-2,Pistol (+2),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+pistol-plus-3,Pistol (+3),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+plate-armor,Plate Armor,armor,false,false,excluded,excluded: base armor,
+plate-armor-of-etherealness,Plate Armor of Etherealness,armor,true,true,armor-of-etherealness,Plate Armor of Etherealness,grants-spell
+plate-armor-plus-1,Plate Armor (+1),armor,true,false,armor-plus,"Armor, +1, +2 or +3",flat-bonus
+plate-armor-plus-2,Plate Armor (+2),armor,true,false,armor-plus,"Armor, +1, +2 or +3",flat-bonus
+plate-armor-plus-3,Plate Armor (+3),armor,true,false,armor-plus,"Armor, +1, +2 or +3",flat-bonus
+poison-basic,"Poison, Basic",adventuring-gear,false,false,poison-basic,"Poison, Basic",consumable-effect
+poisoners-kit,Poisoner's Kit,tools,false,false,tools,"Artisan's tools, kits, gaming sets and musical instruments",tool-check
+pole,Pole,adventuring-gear,false,false,situational-gear,Gear that gives Advantage or a bonus on a fitting check,situational-check
+pony,Pony,mount,false,false,excluded,excluded: mount,
+portable-hole,Portable Hole,wondrous-item,true,false,portable-hole,Portable Hole,container
+pot-iron,"Pot, Iron",adventuring-gear,false,false,excluded,excluded: container,
+potion-of-animal-friendship,Potion of Animal Friendship,potion,true,false,potion-spell,Potion that gives a spell's effect,grants-spell
+potion-of-clairvoyance,Potion of Clairvoyance,potion,true,false,potion-spell,Potion that gives a spell's effect,grants-spell
+potion-of-climbing,Potion of Climbing,potion,true,false,potion-of-climbing,Potion of Climbing,consumable-effect
+potion-of-diminution,Potion of Diminution,potion,true,false,potion-spell,Potion that gives a spell's effect,grants-spell
+potion-of-flying,Potion of Flying,potion,true,false,potion-of-flying,Potion of Flying,consumable-effect
+potion-of-gaseous-form,Potion of Gaseous Form,potion,true,false,potion-spell,Potion that gives a spell's effect,grants-spell
+potion-of-giant-strength,Potion of Giant Strength,potion,false,false,potion-of-giant-strength,Potion of Giant Strength,consumable-effect
+potion-of-growth,Potion of Growth,potion,true,false,potion-spell,Potion that gives a spell's effect,grants-spell
+potion-of-healing,Potion of Healing,potion,false,false,potion-of-healing,Potion of Healing,consumable-effect
+potion-of-heroism,Potion of Heroism,potion,true,false,potion-of-heroism,Potion of Heroism,consumable-effect
+potion-of-invisibility,Potion of Invisibility,potion,true,false,potion-of-invisibility,Potion of Invisibility,consumable-effect
+potion-of-mind-reading,Potion of Mind Reading,potion,true,false,potion-spell,Potion that gives a spell's effect,grants-spell
+potion-of-poison,Potion of Poison,potion,true,false,potion-of-poison,Potion of Poison,consumable-effect
+potion-of-resistance,Potion of Resistance,potion,true,false,potion-of-resistance,Potion of Resistance,consumable-effect
+potion-of-speed,Potion of Speed,potion,true,false,potion-spell,Potion that gives a spell's effect,grants-spell
+potion-of-water-breathing,Potion of Water Breathing,potion,true,false,potion-of-water-breathing,Potion of Water Breathing,consumable-effect
+potions-of-healing,Potions of Healing,potion,false,false,potion-of-healing,Potion of Healing,consumable-effect
+potters-tools,Potter's Tools (10 GP),tools,false,false,tools,"Artisan's tools, kits, gaming sets and musical instruments",tool-check
+pouch,Pouch,adventuring-gear,false,false,excluded,excluded: container,
+priests-pack,Priest's Pack,equipment-pack,false,false,excluded,excluded: equipment pack,
+quarterstaff,Quarterstaff,weapon,false,false,excluded,excluded: base weapon,
+quarterstaff-plus-1,Quarterstaff (+1),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+quarterstaff-plus-2,Quarterstaff (+2),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+quarterstaff-plus-3,Quarterstaff (+3),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+quiver,Quiver,adventuring-gear,false,false,excluded,excluded: container,
+ram-portable,"Ram, Portable",adventuring-gear,false,false,situational-gear,Gear that gives Advantage or a bonus on a fitting check,situational-check
+rapier,Rapier,weapon,false,false,excluded,excluded: base weapon,
+rapier-of-life-stealing,Rapier of Life Stealing,weapon,true,true,life-stealing,Sword of Life Stealing,weapon-rider
+rapier-of-wounding,Rapier of Wounding,weapon,true,true,wounding,Sword of Wounding,weapon-rider
+rapier-plus-1,Rapier (+1),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+rapier-plus-2,Rapier (+2),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+rapier-plus-3,Rapier (+3),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+rations,Rations,adventuring-gear,false,false,excluded,excluded: descriptive gear,
+ring-mail,Ring Mail,armor,false,false,excluded,excluded: base armor,
+ring-mail-plus-1,Ring Mail (+1),armor,true,false,armor-plus,"Armor, +1, +2 or +3",flat-bonus
+ring-mail-plus-2,Ring Mail (+2),armor,true,false,armor-plus,"Armor, +1, +2 or +3",flat-bonus
+ring-mail-plus-3,Ring Mail (+3),armor,true,false,armor-plus,"Armor, +1, +2 or +3",flat-bonus
+ring-of-animal-influence,Ring of Animal Influence,ring,true,false,ring-of-animal-influence,Ring of Animal Influence,grants-spell
+ring-of-djinni-summoning,Ring of Djinni Summoning,ring,true,true,ring-of-djinni-summoning,Ring of Djinni Summoning,summon
+ring-of-elemental-command,Ring of Elemental Command,ring,true,true,ring-of-elemental-command,Ring of Elemental Command,spell-plus
+ring-of-evasion,Ring of Evasion,ring,true,true,ring-of-evasion,Ring of Evasion,passive-ward
+ring-of-feather-falling,Ring of Feather Falling,ring,true,true,ring-of-feather-falling,Ring of Feather Falling,passive-ward
+ring-of-free-action,Ring of Free Action,ring,true,true,ring-of-free-action,Ring of Free Action,passive-ward
+ring-of-invisibility,Ring of Invisibility,ring,true,true,ring-of-invisibility,Ring of Invisibility,activated-effect
+ring-of-jumping,Ring of Jumping,ring,true,true,ring-of-jumping,Ring of Jumping,grants-spell
+ring-of-mind-shielding,Ring of Mind Shielding,ring,true,true,ring-of-mind-shielding,Ring of Mind Shielding,passive-ward
+ring-of-protection,Ring of Protection,ring,true,true,ring-of-protection,Ring or Cloak of Protection,flat-bonus
+ring-of-regeneration,Ring of Regeneration,ring,true,true,ring-of-regeneration,Ring of Regeneration,passive-trait
+ring-of-resistance,Ring of Resistance,ring,true,false,ring-of-resistance,Ring of Resistance,passive-ward
+ring-of-shooting-stars,Ring of Shooting Stars,ring,true,true,ring-of-shooting-stars,Ring of Shooting Stars,spell-plus
+ring-of-spell-storing,Ring of Spell Storing,ring,true,true,ring-of-spell-storing,Ring of Spell Storing,spell-resource
+ring-of-spell-turning,Ring of Spell Turning,ring,true,true,ring-of-spell-turning,Ring of Spell Turning,passive-ward
+ring-of-swimming,Ring of Swimming,ring,true,false,ring-of-swimming,Ring of Swimming,passive-trait
+ring-of-telekinesis,Ring of Telekinesis,ring,true,true,ring-of-telekinesis,Ring of Telekinesis,grants-spell
+ring-of-the-ram,Ring of the Ram,ring,true,true,ring-of-the-ram,Ring of the Ram,activated-effect
+ring-of-three-wishes,Ring of Three Wishes,ring,true,false,ring-of-three-wishes,Ring of Three Wishes,grants-spell
+ring-of-warmth,Ring of Warmth,ring,true,true,ring-of-warmth,Ring of Warmth,passive-ward
+ring-of-water-walking,Ring of Water Walking,ring,true,false,ring-of-water-walking,Ring of Water Walking,grants-spell
+ring-of-x-ray-vision,Ring of X-ray Vision,ring,true,true,ring-of-x-ray-vision,Ring of X-ray Vision,activated-effect
+robe,Robe,adventuring-gear,false,false,excluded,excluded: descriptive gear,
+robe-of-eyes,Robe of Eyes,wondrous-item,true,true,robe-of-eyes,Robe of Eyes,passive-trait
+robe-of-scintillating-colors,Robe of Scintillating Colors,wondrous-item,true,true,robe-of-scintillating-colors,Robe of Scintillating Colors,activated-effect
+robe-of-stars,Robe of Stars,wondrous-item,true,true,robe-of-stars,Robe of Stars,spell-plus
+robe-of-the-archmagi,Robe of the Archmagi,wondrous-item,true,true,robe-of-the-archmagi,Robe of the Archmagi,passive-ward
+robe-of-useful-items,Robe of Useful Items,wondrous-item,true,false,robe-of-useful-items,Robe of Useful Items,utility-object
+rod-of-absorption,Rod of Absorption,rod,true,true,rod-of-absorption,Rod of Absorption,spell-resource
+rod-of-alertness,Rod of Alertness,rod,true,true,rod-of-alertness,Rod of Alertness,spell-plus
+rod-of-lordly-might,Rod of Lordly Might,rod,true,true,rod-of-lordly-might,Rod of Lordly Might,weapon-rider
+rod-of-rulership,Rod of Rulership,rod,true,true,rod-of-rulership,Rod of Rulership,activated-effect
+rod-of-security,Rod of Security,rod,true,false,rod-of-security,Rod of Security,planar-utility
+rope,Rope,adventuring-gear,false,false,binding-gear,"Chain, Manacles, Rope",restraint
+rope-of-climbing,Rope of Climbing,wondrous-item,true,false,rope-of-climbing,Rope of Climbing,utility-object
+rope-of-entanglement,Rope of Entanglement,wondrous-item,true,false,rope-of-entanglement,Rope of Entanglement,restraint
+rowboat,Rowboat,waterborne-vehicle,false,false,excluded,excluded: vehicle,
+sack,Sack,adventuring-gear,false,false,excluded,excluded: container,
+saddle-exotic,Saddle (Exotic),adventuring-gear,false,false,excluded,excluded: descriptive gear,
+saddle-military,Saddle (Military),adventuring-gear,false,false,situational-gear,Gear that gives Advantage or a bonus on a fitting check,situational-check
+saddle-riding,Saddle (Riding),adventuring-gear,false,false,excluded,excluded: descriptive gear,
+sailing-ship,Sailing Ship,waterborne-vehicle,false,false,excluded,excluded: vehicle,
+scale-mail,Scale Mail,armor,false,false,excluded,excluded: base armor,
+scale-mail-plus-1,Scale Mail (+1),armor,true,false,armor-plus,"Armor, +1, +2 or +3",flat-bonus
+scale-mail-plus-2,Scale Mail (+2),armor,true,false,armor-plus,"Armor, +1, +2 or +3",flat-bonus
+scale-mail-plus-3,Scale Mail (+3),armor,true,false,armor-plus,"Armor, +1, +2 or +3",flat-bonus
+scarab-of-protection,Scarab of Protection,wondrous-item,true,true,scarab-of-protection,Scarab of Protection,passive-ward
+scholars-pack,Scholar's Pack,equipment-pack,false,false,excluded,excluded: equipment pack,
+scimitar,Scimitar,weapon,false,false,excluded,excluded: base weapon,
+scimitar-of-life-stealing,Scimitar of Life Stealing,weapon,true,true,life-stealing,Sword of Life Stealing,weapon-rider
+scimitar-of-sharpness,Scimitar of Sharpness,weapon,true,true,sharpness,Sword of Sharpness,weapon-rider
+scimitar-of-speed,Scimitar of Speed,weapon,true,true,scimitar-of-speed,Scimitar of Speed,weapon-rider
+scimitar-of-wounding,Scimitar of Wounding,weapon,true,true,wounding,Sword of Wounding,weapon-rider
+scimitar-plus-1,Scimitar (+1),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+scimitar-plus-2,Scimitar (+2),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+scimitar-plus-3,Scimitar (+3),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+shield,Shield,armor,false,false,excluded,excluded: base armor,
+shield-of-missile-attraction,Shield of Missile Attraction,armor,true,true,shield-of-missile-attraction,Shield of Missile Attraction,passive-ward
+shield-plus-1,Shield (+1),armor,true,false,shield-plus,"Shield, +1, +2 or +3",flat-bonus
+shield-plus-2,Shield (+2),armor,true,false,shield-plus,"Shield, +1, +2 or +3",flat-bonus
+shield-plus-3,Shield (+3),armor,true,false,shield-plus,"Shield, +1, +2 or +3",flat-bonus
+shortbow,Shortbow,weapon,false,false,excluded,excluded: base weapon,
+shortbow-plus-1,Shortbow (+1),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+shortbow-plus-2,Shortbow (+2),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+shortbow-plus-3,Shortbow (+3),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+shortsword,Shortsword,weapon,false,false,excluded,excluded: base weapon,
+shortsword-of-life-stealing,Shortsword of Life Stealing,weapon,true,true,life-stealing,Sword of Life Stealing,weapon-rider
+shortsword-of-wounding,Shortsword of Wounding,weapon,true,true,wounding,Sword of Wounding,weapon-rider
+shortsword-plus-1,Shortsword (+1),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+shortsword-plus-2,Shortsword (+2),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+shortsword-plus-3,Shortsword (+3),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+shovel,Shovel,adventuring-gear,false,false,excluded,excluded: descriptive gear,
+sickle,Sickle,weapon,false,false,excluded,excluded: base weapon,
+sickle-plus-1,Sickle (+1),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+sickle-plus-2,Sickle (+2),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+sickle-plus-3,Sickle (+3),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+signal-whistle,Signal Whistle,adventuring-gear,false,false,excluded,excluded: descriptive gear,
+sled,Sled,land-vehicle,false,false,excluded,excluded: vehicle,
+sling,Sling,weapon,false,false,excluded,excluded: base weapon,
+sling-plus-1,Sling (+1),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+sling-plus-2,Sling (+2),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+sling-plus-3,Sling (+3),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+slippers-of-spider-climbing,Slippers of Spider Climbing,wondrous-item,true,true,slippers-of-spider-climbing,Slippers of Spider Climbing,passive-trait
+smiths-tools,Smith's Tools (20 GP),tools,false,false,tools,"Artisan's tools, kits, gaming sets and musical instruments",tool-check
+sovereign-glue,Sovereign Glue,wondrous-item,true,false,glue-and-solvent,"Sovereign Glue, Universal Solvent",utility-object
+spear,Spear,weapon,false,false,excluded,excluded: base weapon,
+spear-plus-1,Spear (+1),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+spear-plus-2,Spear (+2),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+spear-plus-3,Spear (+3),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+spell-scroll,Spell Scroll,scroll,false,false,spell-scroll,Spell Scroll,grants-spell
+spellguard-shield,Spellguard Shield,armor,true,true,spellguard-shield,Spellguard Shield,passive-ward
+sphere-of-annihilation,Sphere of Annihilation,wondrous-item,true,false,sphere-of-annihilation,Sphere of Annihilation,object-or-vehicle
+spikes-iron,"Spikes, Iron",adventuring-gear,false,false,excluded,excluded: descriptive gear,
+splint-armor,Splint Armor,armor,false,false,excluded,excluded: base armor,
+splint-armor-plus-1,Splint Armor (+1),armor,true,false,armor-plus,"Armor, +1, +2 or +3",flat-bonus
+splint-armor-plus-2,Splint Armor (+2),armor,true,false,armor-plus,"Armor, +1, +2 or +3",flat-bonus
+splint-armor-plus-3,Splint Armor (+3),armor,true,false,armor-plus,"Armor, +1, +2 or +3",flat-bonus
+spyglass,Spyglass,adventuring-gear,false,false,excluded,excluded: descriptive gear,
+staff-of-charming,Staff of Charming,staff,true,true,staff-of-charming,Staff of Charming,spell-plus
+staff-of-fire,Staff of Fire,staff,true,true,staff-of-fire-frost,"Staff of Fire, Staff of Frost",spell-plus
+staff-of-frost,Staff of Frost,staff,true,true,staff-of-fire-frost,"Staff of Fire, Staff of Frost",spell-plus
+staff-of-healing,Staff of Healing,staff,true,true,staff-of-healing,Staff of Healing,grants-spell
+staff-of-power,Staff of Power,staff,true,true,staff-of-power,Staff of Power,spell-plus
+staff-of-striking,Staff of Striking,staff,true,true,staff-of-striking,Staff of Striking,weapon-rider
+staff-of-swarming-insects,Staff of Swarming Insects,staff,true,true,staff-of-swarming-insects,Staff of Swarming Insects,spell-plus
+staff-of-the-magi,Staff of the Magi,staff,true,true,staff-of-the-magi,Staff of the Magi,spell-plus
+staff-of-the-python,Staff of the Python,staff,true,true,staff-of-the-python,Staff of the Python,summon
+staff-of-the-woodlands,Staff of the Woodlands,staff,true,true,staff-of-the-woodlands,Staff of the Woodlands,spell-plus
+staff-of-thunder-and-lightning,Staff of Thunder and Lightning,staff,true,true,staff-of-thunder-and-lightning,Staff of Thunder and Lightning,weapon-rider
+staff-of-withering,Staff of Withering,staff,true,true,staff-of-withering,Staff of Withering,weapon-rider
+stone-of-controlling-earth-elementals,Stone of Controlling Earth Elementals,wondrous-item,true,false,elemental-summoner,"Bowl, Brazier, Censer or Stone that summons an elemental",summon
+stone-of-good-luck-luckstone,Stone of Good Luck (Luckstone),wondrous-item,true,true,stone-of-good-luck,Stone of Good Luck (Luckstone),flat-bonus
+string,String,adventuring-gear,false,false,excluded,excluded: descriptive gear,
+studded-leather-armor,Studded Leather Armor,armor,false,false,excluded,excluded: base armor,
+studded-leather-armor-plus-1,Studded Leather Armor (+1),armor,true,false,armor-plus,"Armor, +1, +2 or +3",flat-bonus
+studded-leather-armor-plus-2,Studded Leather Armor (+2),armor,true,false,armor-plus,"Armor, +1, +2 or +3",flat-bonus
+studded-leather-armor-plus-3,Studded Leather Armor (+3),armor,true,false,armor-plus,"Armor, +1, +2 or +3",flat-bonus
+sun-blade,Sun Blade,weapon,true,true,sun-blade,Sun Blade,weapon-rider
+talisman-of-pure-good,Talisman of Pure Good,wondrous-item,true,true,talisman,"Talisman of Pure Good, Talisman of Ultimate Evil",activated-effect
+talisman-of-the-sphere,Talisman of the Sphere,wondrous-item,true,true,talisman-of-the-sphere,Talisman of the Sphere,situational-check
+talisman-of-ultimate-evil,Talisman of Ultimate Evil,wondrous-item,true,true,talisman,"Talisman of Pure Good, Talisman of Ultimate Evil",activated-effect
+tent,Tent,adventuring-gear,false,false,excluded,excluded: descriptive gear,
+thieves-tools,Thieves' Tools,tools,false,false,tools,"Artisan's tools, kits, gaming sets and musical instruments",tool-check
+tinderbox,Tinderbox,adventuring-gear,false,false,excluded,excluded: descriptive gear,
+tinkers-tools,Tinker's Tools (50 GP),tools,false,false,tools,"Artisan's tools, kits, gaming sets and musical instruments",tool-check
+tome-of-clear-thought,Tome of Clear Thought,wondrous-item,true,false,manual-tome,Manual or Tome that raises an ability score,permanent-boost
+tome-of-leadership-and-influence,Tome of Leadership and Influence,wondrous-item,true,false,manual-tome,Manual or Tome that raises an ability score,permanent-boost
+tome-of-understanding,Tome of Understanding,wondrous-item,true,false,manual-tome,Manual or Tome that raises an ability score,permanent-boost
+torch,Torch,weapon,false,false,torch,Torch,light-source
+trident,Trident,weapon,false,false,excluded,excluded: base weapon,
+trident-of-fish-command,Trident of Fish Command,weapon,true,true,trident-of-fish-command,Trident of Fish Command,grants-spell
+trident-plus-1,Trident (+1),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+trident-plus-2,Trident (+2),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+trident-plus-3,Trident (+3),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+universal-solvent,Universal Solvent,wondrous-item,true,false,glue-and-solvent,"Sovereign Glue, Universal Solvent",utility-object
+vial,Vial,adventuring-gear,false,false,excluded,excluded: container,
+vicious-battleaxe,Vicious Battleaxe,weapon,true,false,vicious,Vicious Weapon,weapon-rider
+vicious-blowgun,Vicious Blowgun,weapon,true,false,vicious,Vicious Weapon,weapon-rider
+vicious-club,Vicious Club,weapon,true,false,vicious,Vicious Weapon,weapon-rider
+vicious-dagger,Vicious Dagger,weapon,true,false,vicious,Vicious Weapon,weapon-rider
+vicious-dart,Vicious Dart,weapon,true,false,vicious,Vicious Weapon,weapon-rider
+vicious-flail,Vicious Flail,weapon,true,false,vicious,Vicious Weapon,weapon-rider
+vicious-glaive,Vicious Glaive,weapon,true,false,vicious,Vicious Weapon,weapon-rider
+vicious-greataxe,Vicious Greataxe,weapon,true,false,vicious,Vicious Weapon,weapon-rider
+vicious-greatclub,Vicious Greatclub,weapon,true,false,vicious,Vicious Weapon,weapon-rider
+vicious-greatsword,Vicious Greatsword,weapon,true,false,vicious,Vicious Weapon,weapon-rider
+vicious-halberd,Vicious Halberd,weapon,true,false,vicious,Vicious Weapon,weapon-rider
+vicious-hand-crossbow,Vicious Hand Crossbow,weapon,true,false,vicious,Vicious Weapon,weapon-rider
+vicious-handaxe,Vicious Handaxe,weapon,true,false,vicious,Vicious Weapon,weapon-rider
+vicious-heavy-crossbow,Vicious Heavy Crossbow,weapon,true,false,vicious,Vicious Weapon,weapon-rider
+vicious-javelin,Vicious Javelin,weapon,true,false,vicious,Vicious Weapon,weapon-rider
+vicious-lance,Vicious Lance,weapon,true,false,vicious,Vicious Weapon,weapon-rider
+vicious-light-crossbow,Vicious Light Crossbow,weapon,true,false,vicious,Vicious Weapon,weapon-rider
+vicious-light-hammer,Vicious Light Hammer,weapon,true,false,vicious,Vicious Weapon,weapon-rider
+vicious-longbow,Vicious Longbow,weapon,true,false,vicious,Vicious Weapon,weapon-rider
+vicious-longsword,Vicious Longsword,weapon,true,false,vicious,Vicious Weapon,weapon-rider
+vicious-mace,Vicious Mace,weapon,true,false,vicious,Vicious Weapon,weapon-rider
+vicious-maul,Vicious Maul,weapon,true,false,vicious,Vicious Weapon,weapon-rider
+vicious-morningstar,Vicious Morningstar,weapon,true,false,vicious,Vicious Weapon,weapon-rider
+vicious-musket,Vicious Musket,weapon,true,false,vicious,Vicious Weapon,weapon-rider
+vicious-pike,Vicious Pike,weapon,true,false,vicious,Vicious Weapon,weapon-rider
+vicious-pistol,Vicious Pistol,weapon,true,false,vicious,Vicious Weapon,weapon-rider
+vicious-quarterstaff,Vicious Quarterstaff,weapon,true,false,vicious,Vicious Weapon,weapon-rider
+vicious-rapier,Vicious Rapier,weapon,true,false,vicious,Vicious Weapon,weapon-rider
+vicious-scimitar,Vicious Scimitar,weapon,true,false,vicious,Vicious Weapon,weapon-rider
+vicious-shortbow,Vicious Shortbow,weapon,true,false,vicious,Vicious Weapon,weapon-rider
+vicious-shortsword,Vicious Shortsword,weapon,true,false,vicious,Vicious Weapon,weapon-rider
+vicious-sickle,Vicious Sickle,weapon,true,false,vicious,Vicious Weapon,weapon-rider
+vicious-sling,Vicious Sling,weapon,true,false,vicious,Vicious Weapon,weapon-rider
+vicious-spear,Vicious Spear,weapon,true,false,vicious,Vicious Weapon,weapon-rider
+vicious-trident,Vicious Trident,weapon,true,false,vicious,Vicious Weapon,weapon-rider
+vicious-war-pick,Vicious War Pick,weapon,true,false,vicious,Vicious Weapon,weapon-rider
+vicious-warhammer,Vicious Warhammer,weapon,true,false,vicious,Vicious Weapon,weapon-rider
+vicious-whip,Vicious Whip,weapon,true,false,vicious,Vicious Weapon,weapon-rider
+vorpal-glaive,Vorpal Glaive,weapon,true,true,vorpal,Vorpal Sword,weapon-rider
+vorpal-greatsword,Vorpal Greatsword,weapon,true,true,vorpal,Vorpal Sword,weapon-rider
+vorpal-longsword,Vorpal Longsword,weapon,true,true,vorpal,Vorpal Sword,weapon-rider
+vorpal-scimitar,Vorpal Scimitar,weapon,true,true,vorpal,Vorpal Sword,weapon-rider
+wagon,Wagon,land-vehicle,false,false,excluded,excluded: vehicle,
+wand-of-binding,Wand of Binding,wand,true,true,wand-spell-dc,Wand that casts spells at a set DC,grants-spell
+wand-of-enemy-detection,Wand of Enemy Detection,wand,true,true,wand-of-enemy-detection,Wand of Enemy Detection,utility-object
+wand-of-fear,Wand of Fear,wand,true,true,wand-spell-dc,Wand that casts spells at a set DC,grants-spell
+wand-of-fireballs,Wand of Fireballs,wand,true,true,wand-spell-dc,Wand that casts spells at a set DC,grants-spell
+wand-of-lightning-bolts,Wand of Lightning Bolts,wand,true,true,wand-spell-dc,Wand that casts spells at a set DC,grants-spell
+wand-of-magic-detection,Wand of Magic Detection,wand,true,false,wand-of-magic-detection,Wand of Magic Detection,grants-spell
+wand-of-magic-missiles,Wand of Magic Missiles,wand,true,false,wand-of-magic-missiles,Wand of Magic Missiles,grants-spell
+wand-of-paralysis,Wand of Paralysis,wand,true,true,wand-of-paralysis,Wand of Paralysis,activated-effect
+wand-of-polymorph,Wand of Polymorph,wand,true,true,wand-spell-dc,Wand that casts spells at a set DC,grants-spell
+wand-of-secrets,Wand of Secrets,wand,true,false,wand-of-secrets,Wand of Secrets,utility-object
+wand-of-the-war-mage-plus-1,Wand of the War Mage +1,wand,true,true,wand-of-the-war-mage,"Wand of the War Mage, +1, +2 or +3",flat-bonus
+wand-of-the-war-mage-plus-2,Wand of the War Mage +2,wand,true,true,wand-of-the-war-mage,"Wand of the War Mage, +1, +2 or +3",flat-bonus
+wand-of-the-war-mage-plus-3,Wand of the War Mage +3,wand,true,true,wand-of-the-war-mage,"Wand of the War Mage, +1, +2 or +3",flat-bonus
+wand-of-web,Wand of Web,wand,true,true,wand-spell-dc,Wand that casts spells at a set DC,grants-spell
+wand-of-wonder,Wand of Wonder,wand,true,true,wand-of-wonder,Wand of Wonder,random-table
+war-pick,War Pick,weapon,false,false,excluded,excluded: base weapon,
+war-pick-plus-1,War Pick (+1),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+war-pick-plus-2,War Pick (+2),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+war-pick-plus-3,War Pick (+3),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+warhammer,Warhammer,weapon,false,false,excluded,excluded: base weapon,
+warhammer-plus-1,Warhammer (+1),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+warhammer-plus-2,Warhammer (+2),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+warhammer-plus-3,Warhammer (+3),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+warhorse,Warhorse,mount,false,false,excluded,excluded: mount,
+warship,Warship,waterborne-vehicle,false,false,excluded,excluded: vehicle,
+waterskin,Waterskin,adventuring-gear,false,false,excluded,excluded: container,
+weapon-of-warning-battleaxe,Weapon of Warning (Battleaxe),weapon,true,true,weapon-of-warning,Weapon of Warning,passive-trait
+weapon-of-warning-blowgun,Weapon of Warning (Blowgun),weapon,true,true,weapon-of-warning,Weapon of Warning,passive-trait
+weapon-of-warning-club,Weapon of Warning (Club),weapon,true,true,weapon-of-warning,Weapon of Warning,passive-trait
+weapon-of-warning-dagger,Weapon of Warning (Dagger),weapon,true,true,weapon-of-warning,Weapon of Warning,passive-trait
+weapon-of-warning-dart,Weapon of Warning (Dart),weapon,true,true,weapon-of-warning,Weapon of Warning,passive-trait
+weapon-of-warning-flail,Weapon of Warning (Flail),weapon,true,true,weapon-of-warning,Weapon of Warning,passive-trait
+weapon-of-warning-glaive,Weapon of Warning (Glaive),weapon,true,true,weapon-of-warning,Weapon of Warning,passive-trait
+weapon-of-warning-greataxe,Weapon of Warning (Greataxe),weapon,true,true,weapon-of-warning,Weapon of Warning,passive-trait
+weapon-of-warning-greatclub,Weapon of Warning (Greatclub),weapon,true,true,weapon-of-warning,Weapon of Warning,passive-trait
+weapon-of-warning-greatsword,Weapon of Warning (Greatsword),weapon,true,true,weapon-of-warning,Weapon of Warning,passive-trait
+weapon-of-warning-halberd,Weapon of Warning (Halberd),weapon,true,true,weapon-of-warning,Weapon of Warning,passive-trait
+weapon-of-warning-hand-crossbow,Weapon of Warning (Hand Crossbow),weapon,true,true,weapon-of-warning,Weapon of Warning,passive-trait
+weapon-of-warning-handaxe,Weapon of Warning (Handaxe),weapon,true,true,weapon-of-warning,Weapon of Warning,passive-trait
+weapon-of-warning-heavy-crossbow,Weapon of Warning (Heavy Crossbow),weapon,true,true,weapon-of-warning,Weapon of Warning,passive-trait
+weapon-of-warning-javelin,Weapon of Warning (Javelin),weapon,true,true,weapon-of-warning,Weapon of Warning,passive-trait
+weapon-of-warning-lance,Weapon of Warning (Lance),weapon,true,true,weapon-of-warning,Weapon of Warning,passive-trait
+weapon-of-warning-light-crossbow,Weapon of Warning (Light Crossbow),weapon,true,true,weapon-of-warning,Weapon of Warning,passive-trait
+weapon-of-warning-light-hammer,Weapon of Warning (Light Hammer),weapon,true,true,weapon-of-warning,Weapon of Warning,passive-trait
+weapon-of-warning-longbow,Weapon of Warning (Longbow),weapon,true,true,weapon-of-warning,Weapon of Warning,passive-trait
+weapon-of-warning-longsword,Weapon of Warning (Longsword),weapon,true,true,weapon-of-warning,Weapon of Warning,passive-trait
+weapon-of-warning-mace,Weapon of Warning (Mace),weapon,true,true,weapon-of-warning,Weapon of Warning,passive-trait
+weapon-of-warning-maul,Weapon of Warning (Maul),weapon,true,true,weapon-of-warning,Weapon of Warning,passive-trait
+weapon-of-warning-morningstar,Weapon of Warning (Morningstar),weapon,true,true,weapon-of-warning,Weapon of Warning,passive-trait
+weapon-of-warning-musket,Weapon of Warning (Musket),weapon,true,true,weapon-of-warning,Weapon of Warning,passive-trait
+weapon-of-warning-pike,Weapon of Warning (Pike),weapon,true,true,weapon-of-warning,Weapon of Warning,passive-trait
+weapon-of-warning-pistol,Weapon of Warning (Pistol),weapon,true,true,weapon-of-warning,Weapon of Warning,passive-trait
+weapon-of-warning-quarterstaff,Weapon of Warning (Quarterstaff),weapon,true,true,weapon-of-warning,Weapon of Warning,passive-trait
+weapon-of-warning-rapier,Weapon of Warning (Rapier),weapon,true,true,weapon-of-warning,Weapon of Warning,passive-trait
+weapon-of-warning-scimitar,Weapon of Warning (Scimitar),weapon,true,true,weapon-of-warning,Weapon of Warning,passive-trait
+weapon-of-warning-shortbow,Weapon of Warning (Shortbow),weapon,true,true,weapon-of-warning,Weapon of Warning,passive-trait
+weapon-of-warning-shortsword,Weapon of Warning (Shortsword),weapon,true,true,weapon-of-warning,Weapon of Warning,passive-trait
+weapon-of-warning-sickle,Weapon of Warning (Sickle),weapon,true,true,weapon-of-warning,Weapon of Warning,passive-trait
+weapon-of-warning-sling,Weapon of Warning (Sling),weapon,true,true,weapon-of-warning,Weapon of Warning,passive-trait
+weapon-of-warning-spear,Weapon of Warning (Spear),weapon,true,true,weapon-of-warning,Weapon of Warning,passive-trait
+weapon-of-warning-trident,Weapon of Warning (Trident),weapon,true,true,weapon-of-warning,Weapon of Warning,passive-trait
+weapon-of-warning-war-pick,Weapon of Warning (War Pick),weapon,true,true,weapon-of-warning,Weapon of Warning,passive-trait
+weapon-of-warning-warhammer,Weapon of Warning (Warhammer),weapon,true,true,weapon-of-warning,Weapon of Warning,passive-trait
+weapon-of-warning-whip,Weapon of Warning (Whip),weapon,true,true,weapon-of-warning,Weapon of Warning,passive-trait
+weavers-tools,Weaver's Tools (1 GP),tools,false,false,tools,"Artisan's tools, kits, gaming sets and musical instruments",tool-check
+well-of-many-worlds,Well of Many Worlds,wondrous-item,true,false,well-of-many-worlds,Well of Many Worlds,planar-utility
+whip,Whip,weapon,false,false,excluded,excluded: base weapon,
+whip-plus-1,Whip (+1),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+whip-plus-2,Whip (+2),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+whip-plus-3,Whip (+3),weapon,true,false,weapon-plus,"Weapon, +1, +2 or +3",flat-bonus
+wind-fan,Wind Fan,wondrous-item,true,false,wind-fan,Wind Fan,spell-plus
+winged-boots,Winged Boots,wondrous-item,true,true,winged-boots,Winged Boots,activated-effect
+wings-of-flying,Wings of Flying,wondrous-item,true,true,wings-of-flying,Wings of Flying,activated-effect
+woodcarvers-tools,Woodcarver's Tools (1 GP),tools,false,false,tools,"Artisan's tools, kits, gaming sets and musical instruments",tool-check
