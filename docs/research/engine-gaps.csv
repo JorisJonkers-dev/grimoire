@@ -1,0 +1,1238 @@
+census,entry,entries,gaps,wave,exception
+spells,acid-arrow,1,attack_gate damage trigger,1,no
+spells,acid-splash,1,,0,no
+spells,aid,1,modifier,1,no
+spells,alarm,1,create_trap,3,no
+spells,alter-self,1,conceal grant_action modifier speed,3,no
+spells,animal-friendship,1,duration_rule save_gate,2,no
+spells,animal-messenger,1,save_gate,1,yes
+spells,animal-shapes,1,form+ grant_action,3,no
+spells,animate-dead,1,summon+,3,no
+spells,animate-objects,1,summon+,3,no
+spells,antilife-shell,1,ward,3,no
+spells,antimagic-field,1,ward,3,no
+spells,antipathysympathy,1,compel duration_rule trigger,3,no
+spells,arcane-eye,1,create_object grant_action sense,3,no
+spells,arcane-hand,1,apply_condition attack_gate check_gate create_object damage grant_action movement save_gate,3,no
+spells,arcane-lock,1,alter_map,3,no
+spells,arcane-sword,1,attack_gate create_object damage grant_action,3,no
+spells,arcanists-magic-aura,1,modifier ward,3,no
+spells,astral-projection,1,apply_condition banish,3,no
+spells,augury,1,,0,yes
+spells,aura-of-life,1,activation heal resistance trigger,1,no
+spells,awaken,1,apply_condition duration_rule modifier,2,no
+spells,bane,1,roll_rule save_gate,2,no
+spells,banishment,1,banish save_gate,3,no
+spells,barkskin,1,modifier,1,no
+spells,beacon-of-hope,1,heal roll_rule,2,no
+spells,befuddlement,1,action_economy save_gate,2,no
+spells,bestow-curse,1,action_economy roll_rule save_gate trigger,2,no
+spells,black-tentacles,1,check_gate trigger,2,no
+spells,blade-barrier,1,create_object trigger,3,no
+spells,bless,1,,0,no
+spells,blight,1,roll_rule save_gate,2,no
+spells,blindnessdeafness,1,save_gate,1,no
+spells,blink,1,banish roll_table trigger,3,no
+spells,blur,1,roll_rule,2,no
+spells,burning-hands,1,,0,no
+spells,call-lightning,1,grant_action,2,no
+spells,calm-emotions,1,duration_rule end_effect immunity,2,no
+spells,chain-lightning,1,save_gate,1,no
+spells,charm-monster,1,duration_rule roll_rule save_gate,2,no
+spells,charm-person,1,duration_rule roll_rule save_gate,2,no
+spells,chill-touch,1,action_economy attack_gate damage,2,no
+spells,chromatic-orb,1,attack_gate damage trigger,1,no
+spells,circle-of-death,1,,0,no
+spells,clairvoyance,1,grant_action sense,2,no
+spells,clone,1,revive trigger,3,no
+spells,cloudkill,1,area+ trigger,3,no
+spells,color-spray,1,,0,no
+spells,command,1,compel save_gate,3,no
+spells,commune,1,,0,yes
+spells,commune-with-nature,1,,0,yes
+spells,comprehend-languages,1,modifier,1,no
+spells,compulsion,1,compel grant_action save_gate trigger,3,no
+spells,cone-of-cold,1,,0,no
+spells,confusion,1,action_economy compel roll_table trigger,3,no
+spells,conjure-animals,1,activation area+ create_object trigger,3,no
+spells,conjure-celestial,1,activation area+ heal trigger,3,no
+spells,conjure-elemental,1,create_object save_gate trigger,3,no
+spells,conjure-fey,1,apply_condition attack_gate create_object damage grant_action movement,3,no
+spells,conjure-minor-elementals,1,activation modifier,1,no
+spells,conjure-woodland-beings,1,action_economy activation area+ trigger,3,no
+spells,contact-other-plane,1,damage save_gate,1,yes
+spells,contagion,1,save_gate trigger,1,no
+spells,contingency,1,create_trap trigger,3,no
+spells,continual-flame,1,light,3,no
+spells,control-water,1,alter_map check_gate grant_action trigger,3,no
+spells,control-weather,1,alter_map,3,no
+spells,counterspell,1,save_gate,1,no
+spells,create-food-and-water,1,create_item,3,no
+spells,create-or-destroy-water,1,alter_map create_item,3,no
+spells,create-undead,1,summon+,3,no
+spells,creation,1,,0,yes
+spells,cure-wounds,1,heal,1,no
+spells,dancing-lights,1,create_object grant_action light,3,no
+spells,darkness,1,area+ end_effect,3,no
+spells,darkvision,1,sense,2,no
+spells,daylight,1,area+ end_effect light,3,no
+spells,death-ward,1,trigger,1,no
+spells,delayed-blast-fireball,1,trigger,1,no
+spells,demiplane,1,banish create_object,3,no
+spells,detect-evil-and-good,1,detect,3,no
+spells,detect-magic,1,detect grant_action,3,no
+spells,detect-poison-and-disease,1,detect,3,no
+spells,detect-thoughts,1,check_gate detect grant_action save_gate,3,yes
+spells,dimension-door,1,damage movement,2,no
+spells,disguise-self,1,conceal,3,no
+spells,disintegrate,1,alter_map damage save_gate,3,no
+spells,dispel-evil-and-good,1,banish end_effect grant_action roll_rule save_gate,3,no
+spells,dispel-magic,1,check_gate end_effect,2,no
+spells,dissonant-whispers,1,compel save_gate,3,no
+spells,divination,1,,0,yes
+spells,divine-favor,1,modifier,1,no
+spells,divine-smite,1,damage trigger,1,no
+spells,divine-word,1,activation banish damage save_gate,3,no
+spells,dominate-beast,1,compel roll_rule save_gate trigger,3,no
+spells,dominate-monster,1,compel roll_rule save_gate trigger,3,no
+spells,dominate-person,1,compel roll_rule save_gate trigger,3,no
+spells,dragons-breath,1,grant_action,2,no
+spells,dream,1,damage save_gate,1,yes
+spells,druidcraft,1,,0,yes
+spells,earthquake,1,alter_map check_gate trigger,3,no
+spells,eldritch-blast,1,attack_gate damage,1,no
+spells,elementalism,1,,0,yes
+spells,enhance-ability,1,roll_rule,2,no
+spells,enlargereduce,1,modifier roll_rule save_gate,2,no
+spells,ensnaring-strike,1,check_gate damage roll_rule save_gate trigger,2,no
+spells,entangle,1,check_gate,2,no
+spells,enthrall,1,activation roll_rule save_gate,2,no
+spells,etherealness,1,action_economy conceal,3,no
+spells,expeditious-retreat,1,action_economy,2,no
+spells,eyebite,1,compel duration_rule grant_action save_gate,3,no
+spells,fabricate,1,,0,yes
+spells,faerie-fire,1,light,3,no
+spells,faithful-hound,1,create_object grant_action save_gate sense trigger,3,no
+spells,false-life,1,bearer_amount,0,no
+spells,fear,1,compel trigger,3,no
+spells,feather-fall,1,resistance trigger,1,no
+spells,find-familiar,1,grant_action sense summon+,3,no
+spells,find-steed,1,summon+,3,no
+spells,find-the-path,1,,0,yes
+spells,find-traps,1,detect,3,no
+spells,finger-of-death,1,damage save_gate trigger,1,no
+spells,fire-bolt,1,attack_gate damage,1,no
+spells,fire-shield,1,damage light resistance trigger,3,no
+spells,fire-storm,1,area+,3,no
+spells,fireball,1,,0,no
+spells,flame-blade,1,attack_gate damage grant_action light,3,no
+spells,flame-strike,1,damage,1,no
+spells,flaming-sphere,1,create_object grant_action light trigger,3,no
+spells,flesh-to-stone,1,roll_rule save_gate trigger,2,no
+spells,floating-disk,1,create_object,3,no
+spells,fly,1,speed,2,no
+spells,fog-cloud,1,,0,no
+spells,forbiddance,1,damage trigger ward,3,no
+spells,forcecage,1,create_object save_gate ward,3,no
+spells,foresight,1,roll_rule,2,no
+spells,freedom-of-movement,1,immunity speed,2,no
+spells,freezing-sphere,1,alter_map create_item,3,no
+spells,gaseous-form,1,action_economy duration_rule immunity resistance speed,2,no
+spells,gate,1,banish create_object,3,no
+spells,geas,1,damage save_gate,1,yes
+spells,gentle-repose,1,action_economy,2,no
+spells,giant-insect,1,summon+,3,no
+spells,glibness,1,roll_rule ward,3,no
+spells,globe-of-invulnerability,1,ward,3,no
+spells,glyph-of-warding,1,create_trap,3,no
+spells,goodberry,1,create_item heal,3,no
+spells,grease,1,trigger,1,no
+spells,greater-invisibility,1,apply_condition,1,no
+spells,greater-restoration,1,end_effect,1,no
+spells,guardian-of-faith,1,activation create_object damage duration_rule trigger,3,no
+spells,guards-and-wards,1,alter_map create_trap roll_table ward,3,no
+spells,guidance,1,roll_rule,2,no
+spells,guiding-bolt,1,attack_gate damage duration_rule,2,no
+spells,gust-of-wind,1,grant_action trigger,2,no
+spells,hallow,1,immunity resistance ward,3,no
+spells,hallucinatory-terrain,1,,0,yes
+spells,harm,1,modifier save_gate,1,no
+spells,haste,1,action_economy modifier speed trigger,2,no
+spells,heal,1,end_effect heal,1,no
+spells,healing-word,1,heal,1,no
+spells,heat-metal,1,damage grant_action roll_rule save_gate,2,no
+spells,hellish-rebuke,1,save_gate,1,no
+spells,heroes-feast,1,immunity modifier resistance,1,no
+spells,heroism,1,bearer_amount immunity trigger,1,no
+spells,hex,1,grant_action roll_rule,2,no
+spells,hideous-laughter,1,roll_rule save_gate trigger,2,no
+spells,hold-monster,1,save_gate,1,no
+spells,hold-person,1,save_gate,1,no
+spells,holy-aura,1,activation save_gate trigger,1,no
+spells,hunters-mark,1,grant_action roll_rule,2,no
+spells,hypnotic-pattern,1,duration_rule,2,no
+spells,ice-knife,1,attack_gate damage,1,no
+spells,ice-storm,1,damage,1,no
+spells,identify,1,detect,3,no
+spells,illusory-script,1,,0,yes
+spells,imprisonment,1,banish save_gate ward,3,no
+spells,incendiary-cloud,1,area+ trigger,3,no
+spells,inflict-wounds,1,save_gate,1,no
+spells,insect-plague,1,surface+ trigger,3,no
+spells,instant-summons,1,create_item grant_action,3,no
+spells,invisibility,1,apply_condition duration_rule,2,no
+spells,irresistible-dance,1,compel grant_action save_gate,3,no
+spells,jump,1,speed,2,no
+spells,knock,1,alter_map,3,no
+spells,legend-lore,1,,0,yes
+spells,lesser-restoration,1,end_effect,1,no
+spells,levitate,1,grant_action movement save_gate,2,no
+spells,light,1,light,3,no
+spells,lightning-bolt,1,,0,no
+spells,locate-animals-or-plants,1,,0,yes
+spells,locate-creature,1,detect,3,no
+spells,locate-object,1,detect,3,no
+spells,longstrider,1,speed,2,no
+spells,mage-armor,1,duration_rule modifier,2,no
+spells,mage-hand,1,create_object grant_action,3,no
+spells,magic-circle,1,immunity roll_rule save_gate ward,3,no
+spells,magic-jar,1,compel form+ save_gate trigger,3,no
+spells,magic-missile,1,damage,1,no
+spells,magic-mouth,1,,0,yes
+spells,magic-weapon,1,modifier,1,no
+spells,magnificent-mansion,1,banish create_object,3,no
+spells,major-image,1,,0,yes
+spells,mass-cure-wounds,1,activation heal,1,no
+spells,mass-heal,1,activation end_effect heal,1,no
+spells,mass-healing-word,1,heal,1,no
+spells,mass-suggestion,1,duration_rule save_gate,2,yes
+spells,maze,1,banish check_gate,3,no
+spells,meld-into-stone,1,conceal damage trigger,3,no
+spells,mending,1,,0,yes
+spells,message,1,note,0,no
+spells,meteor-swarm,1,area+ damage,3,no
+spells,mind-blank,1,immunity resistance ward,3,no
+spells,mind-spike,1,save_gate sense,2,no
+spells,minor-illusion,1,,0,yes
+spells,mirage-arcane,1,,0,yes
+spells,mirror-image,1,roll_table trigger,3,no
+spells,mislead,1,apply_condition create_object duration_rule grant_action sense,3,no
+spells,misty-step,1,,0,no
+spells,modify-memory,1,duration_rule roll_rule save_gate,2,yes
+spells,moonbeam,1,area+ end_effect grant_action trigger,3,no
+spells,move-earth,1,alter_map,3,no
+spells,nondetection,1,ward,3,no
+spells,pass-without-trace,1,activation roll_rule,2,no
+spells,passwall,1,alter_map,3,no
+spells,phantasmal-force,1,check_gate damage save_gate trigger,2,yes
+spells,phantasmal-killer,1,roll_rule save_gate trigger,2,no
+spells,phantom-steed,1,duration_rule summon+,3,no
+spells,planar-ally,1,,0,yes
+spells,planar-binding,1,compel save_gate,3,no
+spells,plane-shift,1,banish,3,no
+spells,plant-growth,1,,0,no
+spells,poison-spray,1,attack_gate damage,1,no
+spells,polymorph,1,form+ save_gate,3,no
+spells,power-word-heal,1,end_effect heal,1,no
+spells,power-word-kill,1,damage,1,no
+spells,power-word-stun,1,apply_condition,1,no
+spells,prayer-of-healing,1,heal resource_rule,2,no
+spells,prestidigitation,1,,0,yes
+spells,prismatic-spray,1,banish roll_table trigger,3,no
+spells,prismatic-wall,1,activation banish create_object trigger ward,3,no
+spells,private-sanctum,1,ward,3,no
+spells,produce-flame,1,attack_gate damage grant_action light,3,no
+spells,programmed-illusion,1,,0,yes
+spells,project-image,1,sense,2,yes
+spells,protection-from-energy,1,resistance,1,no
+spells,protection-from-evil-and-good,1,immunity roll_rule,2,no
+spells,protection-from-poison,1,end_effect resistance roll_rule,2,no
+spells,purify-food-and-drink,1,,0,yes
+spells,raise-dead,1,end_effect revive,3,no
+spells,ray-of-enfeeblement,1,duration_rule modifier roll_rule save_gate,2,no
+spells,ray-of-frost,1,attack_gate damage,1,no
+spells,ray-of-sickness,1,apply_condition attack_gate damage,1,no
+spells,regenerate,1,heal trigger,1,no
+spells,reincarnate,1,modifier revive roll_table,3,no
+spells,remove-curse,1,end_effect,1,no
+spells,resilient-sphere,1,create_object save_gate ward,3,no
+spells,resistance,1,resistance trigger,1,no
+spells,resurrection,1,action_economy revive,3,no
+spells,reverse-gravity,1,damage movement,2,no
+spells,revivify,1,revive,3,no
+spells,rope-trick,1,banish ward,3,no
+spells,sacred-flame,1,roll_rule save_gate,2,no
+spells,sanctuary,1,duration_rule save_gate trigger,2,no
+spells,scorching-ray,1,attack_gate damage,1,no
+spells,scrying,1,save_gate sense,2,yes
+spells,searing-smite,1,damage save_gate trigger,1,no
+spells,secret-chest,1,create_item grant_action,3,no
+spells,see-invisibility,1,sense,2,no
+spells,seeming,1,conceal save_gate,3,no
+spells,sending,1,note,0,no
+spells,sequester,1,apply_condition duration_rule ward,3,no
+spells,shapechange,1,form+ grant_action,3,no
+spells,shatter,1,roll_rule,2,no
+spells,shield,1,modifier ward,3,no
+spells,shield-of-faith,1,modifier,1,no
+spells,shillelagh,1,duration_rule modifier,2,no
+spells,shining-smite,1,damage light trigger,3,no
+spells,shocking-grasp,1,action_economy attack_gate damage,2,no
+spells,silence,1,action_economy resistance,2,no
+spells,silent-image,1,,0,yes
+spells,simulacrum,1,summon+,3,no
+spells,sleep,1,activation duration_rule roll_rule trigger,2,no
+spells,sleet-storm,1,trigger,1,no
+spells,slow,1,action_economy activation modifier roll_rule speed,2,no
+spells,sorcerous-burst,1,attack_gate damage,1,no
+spells,spare-the-dying,1,revive,3,no
+spells,speak-with-animals,1,,0,yes
+spells,speak-with-dead,1,,0,yes
+spells,speak-with-plants,1,,0,yes
+spells,spider-climb,1,speed,2,no
+spells,spike-growth,1,check_gate,2,no
+spells,spirit-guardians,1,activation speed trigger,2,no
+spells,spiritual-weapon,1,attack_gate create_object damage grant_action,3,no
+spells,starry-wisp,1,attack_gate damage light,3,no
+spells,stinking-cloud,1,action_economy trigger,2,no
+spells,stone-shape,1,,0,yes
+spells,stoneskin,1,resistance,1,no
+spells,storm-of-vengeance,1,action_economy damage trigger,2,no
+spells,suggestion,1,duration_rule save_gate,2,yes
+spells,summon-dragon,1,summon+,3,no
+spells,sunbeam,1,grant_action light,3,no
+spells,sunburst,1,end_effect,1,no
+spells,symbol,1,compel create_trap light trigger,3,no
+spells,telekinesis,1,alter_map grant_action movement save_gate,3,no
+spells,telepathic-bond,1,note,0,no
+spells,teleport,1,banish damage roll_table,3,no
+spells,teleportation-circle,1,banish,3,no
+spells,thaumaturgy,1,,0,yes
+spells,thunderwave,1,,0,no
+spells,time-stop,1,action_economy duration_rule,2,no
+spells,tiny-hut,1,create_object ward,3,no
+spells,tongues,1,modifier,1,no
+spells,transport-via-plants,1,banish,3,no
+spells,tree-stride,1,grant_action movement,2,no
+spells,true-polymorph,1,form+ save_gate summon+,3,no
+spells,true-resurrection,1,end_effect revive,3,no
+spells,true-seeing,1,sense,2,no
+spells,true-strike,1,modifier,1,no
+spells,tsunami,1,area+ check_gate movement trigger,3,no
+spells,unseen-servant,1,create_object grant_action,3,no
+spells,vampiric-touch,1,attack_gate damage grant_action heal,2,no
+spells,vicious-mockery,1,duration_rule save_gate,2,no
+spells,vitriolic-sphere,1,trigger,1,no
+spells,wall-of-fire,1,damage trigger,1,no
+spells,wall-of-force,1,create_object movement ward,3,no
+spells,wall-of-ice,1,create_object movement trigger,3,no
+spells,wall-of-stone,1,create_object movement save_gate,3,no
+spells,wall-of-thorns,1,trigger,1,no
+spells,warding-bond,1,duration_rule modifier resistance roll_rule trigger,2,no
+spells,water-breathing,1,modifier,1,no
+spells,water-walk,1,speed,2,no
+spells,web,1,check_gate surface+ trigger,3,no
+spells,weird,1,activation trigger,1,no
+spells,wind-walk,1,action_economy apply_condition grant_action immunity resistance speed,2,no
+spells,wind-wall,1,create_object,3,no
+spells,wish,1,,0,yes
+spells,word-of-recall,1,banish,3,no
+spells,zone-of-truth,1,action_economy trigger,2,no
+features,class barbarian / core-traits Core Barbarian Traits,1,,0,no
+features,class barbarian / proficiency-bonus Proficiency Bonus,1,,0,no
+features,class barbarian / rage-damage Rage Damage,1,,0,no
+features,class barbarian / rages Rages,1,,0,no
+features,class barbarian / weapon-mastery-count Weapon Mastery,1,,0,no
+features,class barbarian / rage Rage,1,action_economy duration_rule modifier resistance roll_rule,2,no
+features,class barbarian / unarmored-defense Unarmored Defense,1,modifier,1,no
+features,class barbarian / weapon-mastery Weapon Mastery,1,,0,no
+features,class barbarian / danger-sense Danger Sense,1,branch+,2,no
+features,class barbarian / reckless-attack Reckless Attack,1,duration_rule roll_rule,2,no
+features,class barbarian / barbarian-subclass Barbarian Subclass,1,,0,no
+features,class barbarian / primal-knowledge Primal Knowledge,1,branch+ modifier,2,no
+features,class barbarian / ability-score-improvement Ability Score Improvement,1,,0,no
+features,class barbarian / extra-attack Extra Attack,1,,0,no
+features,class barbarian / fast-movement Fast Movement,1,modifier,1,no
+features,class barbarian / feral-instinct Feral Instinct,1,roll_rule,2,no
+features,class barbarian / instinctive-pounce Instinctive Pounce,1,movement,2,no
+features,class barbarian / brutal-strike Brutal Strike,1,damage duration_rule movement trigger,2,no
+features,class barbarian / relentless-rage Relentless Rage,1,branch+ heal save_gate trigger,2,no
+features,class barbarian / improved-brutal-strike Improved Brutal Strike,1,action_economy duration_rule modifier trigger,2,no
+features,class barbarian / persistent-rage Persistent Rage,1,bearer_amount duration_rule trigger,2,no
+features,class barbarian / improved-brutal-strike-enhanced Improved Brutal Strike (Enhanced),1,damage trigger,1,no
+features,class barbarian / indomitable-might Indomitable Might,1,roll_rule,2,no
+features,class barbarian / epic-boon Epic Boon,1,,0,no
+features,class barbarian / primal-champion Primal Champion,1,modifier,1,no
+features,class bard / bard-spell-list Bard Spell List,1,,0,no
+features,class bard / bard-subclass Bard Subclass,1,,0,no
+features,class bard / bardic-die Bardic Die,1,,0,no
+features,class bard / cantrips Cantrips,1,,0,no
+features,class bard / core-traits Core Bard Traits,1,proficiency,2,no
+features,class bard / prepared-spells Prepared Spells,1,,0,no
+features,class bard / proficiency-bonus Proficiency Bonus,1,,0,no
+features,class bard / slots-1st 1st,1,,0,no
+features,class bard / slots-2nd 2nd,1,,0,no
+features,class bard / slots-3rd 3rd,1,,0,no
+features,class bard / slots-4th 4th,1,,0,no
+features,class bard / slots-5th 5th,1,,0,no
+features,class bard / slots-6th 6th,1,,0,no
+features,class bard / slots-7th 7th,1,,0,no
+features,class bard / slots-8th 8th,1,,0,no
+features,class bard / slots-9th 9th,1,,0,no
+features,class bard / bardic-inspiration Bardic Inspiration,1,roll_rule,2,no
+features,class bard / spellcasting Spellcasting,1,,0,no
+features,class bard / expertise Expertise,1,,0,no
+features,class bard / jack-of-all-trades Jack of All Trades,1,modifier,1,no
+features,class bard / ability-score-improvement Ability Score Improvement,1,,0,no
+features,class bard / font-of-inspiration Font of Inspiration,1,spell_rule,2,no
+features,class bard / countercharm Countercharm,1,roll_rule trigger,2,no
+features,class bard / magical-secrets Magical Secrets,1,cast_spell,2,no
+features,class bard / superior-inspiration Superior Inspiration,1,bearer_amount trigger,1,no
+features,class bard / epic-boon Epic Boon,1,,0,no
+features,class bard / words-of-creation Words of Creation,1,cast_spell spell_rule,2,no
+features,subclass champion (fighter) / champion_improved-critical Improved Critical,1,modifier,1,no
+features,subclass champion (fighter) / champion_remarkable-athlete Remarkable Athlete,1,roll_rule,2,no
+features,subclass champion (fighter) / champion_additional-fighting-style Additional Fighting Style,1,,0,no
+features,subclass champion (fighter) / champion_heroic-warrior Heroic Warrior,1,resource_rule trigger,2,no
+features,subclass champion (fighter) / champion_superior-critical Superior Critical,1,modifier,1,no
+features,subclass champion (fighter) / champion_survivor Survivor,1,branch+ heal roll_rule trigger,2,no
+features,subclass circle-of-the-land (druid) / circle-of-the-land_lands-aid Land's Aid,1,heal,1,no
+features,subclass circle-of-the-land (druid) / circle-of-the-land_spell-list Circle of the Land Spells,1,cast_spell feature_link,2,no
+features,subclass circle-of-the-land (druid) / circle-of-the-land_natural-recovery Natural Recovery,1,cast_spell spell_rule,2,no
+features,subclass circle-of-the-land (druid) / circle-of-the-land_natures-ward Nature's Ward,1,feature_link immunity resistance,1,no
+features,subclass circle-of-the-land (druid) / circle-of-the-land_natures-sanctuary Nature's Sanctuary,1,action_economy area+ modifier resistance,3,no
+features,class cleric / cantrips Cantrips,1,,0,no
+features,class cleric / channel-divinity-uses Channel Divinity,1,,0,no
+features,class cleric / cleric-spell-list Cleric Spell List,1,,0,no
+features,class cleric / core-traits Cleric Subclasses,1,,0,no
+features,class cleric / prepared-spells Prepared Spells,1,,0,no
+features,class cleric / proficiency-bonus Proficiency Bonus,1,,0,no
+features,class cleric / slots-1st 1st,1,,0,no
+features,class cleric / slots-2nd 2nd,1,,0,no
+features,class cleric / slots-3rd 3rd,1,,0,no
+features,class cleric / slots-4th 4th,1,,0,no
+features,class cleric / slots-5th 5th,1,,0,no
+features,class cleric / slots-6th 6th,1,,0,no
+features,class cleric / slots-7th 7th,1,,0,no
+features,class cleric / slots-8th 8th,1,,0,no
+features,class cleric / slots-9th 9th,1,,0,no
+features,class cleric / divine-order Divine Order,1,cast_spell feature_link modifier proficiency,2,no
+features,class cleric / spellcasting Spellcasting,1,,0,no
+features,class cleric / channel-divinity Channel Divinity,1,damage duration_rule heal save_gate,2,no
+features,class cleric / cleric-subclasses Cleric Subclasses,1,,0,no
+features,class cleric / ability-score-improvement Ability Score Improvement,1,,0,no
+features,class cleric / sear-undead Sear Undead,1,damage,1,no
+features,class cleric / blessed-strikes Blessed Strikes,1,damage feature_link spell_rule trigger,2,no
+features,class cleric / divine-intervention Divine Intervention,1,cast_spell,2,no
+features,class cleric / improved-blessed-strikes Improved Blessed Strikes,1,bearer_amount damage feature_link spell_rule trigger,2,no
+features,class cleric / epic-boon Epic Boon,1,,0,no
+features,class cleric / greater-divine-intervention Greater Divine Intervention,1,cast_spell,2,no
+features,subclass college-of-lore (bard) / bonus-proficiencies Bonus Proficiencies,1,,0,no
+features,subclass college-of-lore (bard) / cutting-words Cutting Words,1,roll_rule trigger,2,no
+features,subclass college-of-lore (bard) / magical-discoveries Magical Discoveries,1,cast_spell,2,no
+features,subclass college-of-lore (bard) / peerless-skill Peerless Skill,1,roll_rule trigger,2,no
+features,subclass draconic-sorcery (sorcerer) / draconic-sorcery_draconic-resilience Draconic Resilience,1,modifier,1,no
+features,subclass draconic-sorcery (sorcerer) / draconic-sorcery_draconic-spells Draconic Spells,1,cast_spell,2,no
+features,subclass draconic-sorcery (sorcerer) / draconic-sorcery_elemental-affinity Elemental Affinity,1,feature_link resistance spell_rule,2,no
+features,subclass draconic-sorcery (sorcerer) / draconic-sorcery_dragon-wings Dragon Wings,1,speed,2,no
+features,subclass draconic-sorcery (sorcerer) / draconic-sorcery_dragon-companion Dragon Companion,1,cast_spell spell_rule,2,no
+features,class druid / cantrips Cantrips,1,,0,no
+features,class druid / core-traits Core Druid Traits,1,proficiency,2,no
+features,class druid / druid-spell-list Druid Spell List,1,,0,no
+features,class druid / prepared-spells Prepared Spells,1,,0,no
+features,class druid / proficiency-bonus Proficiency Bonus,1,,0,no
+features,class druid / slots-1st 1st,1,,0,no
+features,class druid / slots-2nd 2nd,1,,0,no
+features,class druid / slots-3rd 3rd,1,,0,no
+features,class druid / slots-4th 4th,1,,0,no
+features,class druid / slots-5th 5th,1,,0,no
+features,class druid / slots-6th 6th,1,,0,no
+features,class druid / slots-7th 7th,1,,0,no
+features,class druid / slots-8th 8th,1,,0,no
+features,class druid / slots-9th 9th,1,,0,no
+features,class druid / wild-shape-uses Cantrips Known,1,,0,no
+features,class druid / druidic Druidic,1,cast_spell proficiency,2,yes
+features,class druid / primal-order Primal Order,1,cast_spell feature_link modifier proficiency,2,no
+features,class druid / spellcasting Spellcasting,1,,0,no
+features,class druid / wild-companion Wild Companion,1,cast_spell spell_rule,2,no
+features,class druid / wild-shape Wild Shape,1,action_economy bearer_amount duration_rule,2,yes
+features,class druid / druid-subclass Druid Subclass,1,,0,no
+features,class druid / ability-score-improvement Ability Score Improvement,1,,0,no
+features,class druid / wild-resurgence Wild Resurgence,1,branch+ spell_rule,2,no
+features,class druid / elemental-fury Elemental Fury,1,damage feature_link spell_rule trigger,2,no
+features,class druid / improved-elemental-fury Improved Elemental Fury,1,damage feature_link spell_rule trigger,2,no
+features,class druid / beast-spells Beast Spells,1,action_economy,2,no
+features,class druid / epic-boon Epic Boon,1,,0,no
+features,class druid / archdruid Archdruid,1,branch+ spell_rule trigger,2,no
+features,subclass evoker (wizard) / evoker_evocation-savant Evocation Savant,1,cast_spell,2,no
+features,subclass evoker (wizard) / evoker_potent-cantrip Potent Cantrip,1,spell_rule,2,no
+features,subclass evoker (wizard) / evoker_sculpt-spells Sculpt Spells,1,spell_rule,2,no
+features,subclass evoker (wizard) / evoker_empowered-evocation Empowered Evocation,1,spell_rule,2,no
+features,subclass evoker (wizard) / evoker_overchannel Overchannel,1,damage spell_rule,2,no
+features,subclass fiend-patron (warlock) / fiend-patron_dark-ones-blessing Dark One's Blessing,1,bearer_amount trigger,1,no
+features,subclass fiend-patron (warlock) / fiend-patron_fiend-spells Fiend Spells,1,cast_spell,2,no
+features,subclass fiend-patron (warlock) / fiend-patron_dark-ones-own-luck Dark One's Own Luck,1,roll_rule trigger,2,no
+features,subclass fiend-patron (warlock) / fiend-patron_fiendish-resilience Fiendish Resilience,1,feature_link resistance,1,no
+features,subclass fiend-patron (warlock) / fiend-patron_hurl-through-hell Hurl Through Hell,1,banish branch+ damage save_gate spell_rule trigger,3,no
+features,class fighter / core-traits Core Fighter Traits,1,,0,no
+features,class fighter / proficiency-bonus Proficiency Bonus,1,,0,no
+features,class fighter / second-wind-uses Second Wind,1,,0,no
+features,class fighter / weapon-mastery-count Weapon Mastery,1,,0,no
+features,class fighter / fighting-style Fighting Style,1,,0,no
+features,class fighter / second-wind Second Wind,1,heal,1,no
+features,class fighter / weapon-mastery Weapon Mastery,1,,0,no
+features,class fighter / action-surge Action Surge,1,action_economy,2,no
+features,class fighter / tactical-mind Tactical Mind,1,roll_rule trigger,2,no
+features,class fighter / fighter-subclass Fighter Subclass,1,,0,no
+features,class fighter / ability-score-improvement Ability Score Improvement,1,,0,no
+features,class fighter / extra-attack Extra Attack,1,,0,no
+features,class fighter / tactical-shift Tactical Shift,1,movement,2,no
+features,class fighter / indomitable Indomitable,1,roll_rule trigger,2,no
+features,class fighter / tactical-master Tactical Master,1,modifier,1,no
+features,class fighter / two-extra-attacks Two Extra Attacks,1,,0,no
+features,class fighter / studied-attacks Studdied Attacks,1,trigger,1,no
+features,class fighter / epic-boon Epic Boon,1,,0,no
+features,class fighter / three-extra-attacks Three Extra Attacks,1,,0,no
+features,subclass hunter (ranger) / hunter_hunters-lore Hunter's Lore,1,branch+ detect,3,no
+features,subclass hunter (ranger) / hunter_hunters-prey Hunter's Prey,1,action_economy branch+ damage feature_link trigger,2,no
+features,subclass hunter (ranger) / hunter_defensive-tactics Defensive Tactics,1,feature_link roll_rule trigger,2,no
+features,subclass hunter (ranger) / hunter_superior-hunters-prey Superior Hunter's Prey,1,branch+ damage trigger,2,no
+features,subclass hunter (ranger) / hunter_superior-hunters-defense Superior Hunter's Defense,1,duration_rule resistance trigger,2,no
+features,subclass life-domain (cleric) / life-domain_disciple-of-life Disciple of Life,1,spell_rule,2,no
+features,subclass life-domain (cleric) / life-domain_life-domain-spells Life Domain Spells,1,cast_spell,2,no
+features,subclass life-domain (cleric) / life-domain_preserve-life Preserve Life,1,branch+ heal,2,no
+features,subclass life-domain (cleric) / life-domain_blessed-healer Blessed Healer,1,heal trigger,1,no
+features,subclass life-domain (cleric) / life-domain_supreme-healing Supreme Healing,1,roll_rule,2,no
+features,class monk / core-traits Core Monk Traits,1,proficiency,2,no
+features,class monk / deflect-attacks Deflect Attacks,1,damage resistance save_gate trigger,1,no
+features,class monk / focus-points Focus Points,1,,0,no
+features,class monk / martial-arts-dice Martial Arts,1,,0,no
+features,class monk / proficiency-bonus Proficiency Bonus,1,,0,no
+features,class monk / martial-arts Martial Arts,1,action_economy branch+ modifier,2,no
+features,class monk / unarmored-defense Unarmored Defense,1,modifier,1,no
+features,class monk / monks-focus Monk's Focus,1,action_economy modifier save_gate,2,no
+features,class monk / unarmored-movement Unarmoed Movement,1,modifier,1,no
+features,class monk / uncanny-metabolism Uncanny Metabolism,1,bearer_amount heal trigger,1,no
+features,class monk / monk-subclass Monk Subclass,1,,0,no
+features,class monk / stunning-strike Stunning Strike,1,apply_condition duration_rule modifier roll_rule save_gate trigger,2,no
+features,class monk / ability-score-improvement Ability Score Improvement,1,,0,no
+features,class monk / slow-fall Slow Fall,1,resistance trigger,1,no
+features,class monk / extra-attack Extra Attack,1,,0,no
+features,class monk / empowered-strikes Empowered Strikes,1,modifier,1,no
+features,class monk / evasion Evasion,1,branch+ resistance,2,no
+features,class monk / acrobatic-movement Acrobatic Movement,1,branch+ speed,2,no
+features,class monk / heightened-focus Heightened Focus,1,action_economy bearer_amount movement,2,no
+features,class monk / self-restoration Self-Restoration,1,end_effect trigger,1,no
+features,class monk / deflect-energy Deflect Energy,1,resistance trigger,1,no
+features,class monk / disciplined-survivor Disciplined Survivor,1,proficiency roll_rule trigger,2,no
+features,class monk / perfect-focus Perfect Focus,1,bearer_amount branch+ trigger,2,no
+features,class monk / superior-defense Superior Defense,1,duration_rule resistance,2,no
+features,class monk / epic-boon Epic Boon,1,,0,no
+features,class monk / body-and-mind Body and Mind,1,modifier,1,no
+features,subclass oath-of-devotion (paladin) / oath-of-devotion_sacred-weapon Sacred Weapon,1,duration_rule modifier,2,no
+features,subclass oath-of-devotion (paladin) / oath-of-devotion_spells Oath of Devotion Spells,1,cast_spell,2,no
+features,subclass oath-of-devotion (paladin) / oath-of-devotion_aura-of-devotion Aura of Devotion,1,area+ immunity,3,no
+features,subclass oath-of-devotion (paladin) / oath-of-devotion_smite-of-protection Smite of Protection,1,area+ duration_rule modifier trigger,3,no
+features,subclass oath-of-devotion (paladin) / oath-of-devotion_holy-nimbus Holy Nimbus,1,area+ damage roll_rule spell_rule trigger,3,no
+features,class paladin / channel-divinity-uses Channel Divinity,1,,0,no
+features,class paladin / core-traits Core Paladin Traits,1,,0,no
+features,class paladin / prepared-spells Prepared Spells,1,,0,no
+features,class paladin / proficiency-bonus Proficiency Bonus,1,,0,no
+features,class paladin / slots-1st 1st,1,,0,no
+features,class paladin / slots-2nd 2nd,1,,0,no
+features,class paladin / slots-3rd 3rd,1,,0,no
+features,class paladin / slots-4th 4th,1,,0,no
+features,class paladin / slots-5th 5th,1,,0,no
+features,class paladin / spell-list Paladin Spell List,1,,0,no
+features,class paladin / lay-on-hands Lay On Hands,1,bearer_amount end_effect heal,1,no
+features,class paladin / spellcasting Spellcasting,1,,0,no
+features,class paladin / weapon-mastery Weapon Mastery,1,,0,no
+features,class paladin / fighting-style Fighting Style,1,cast_spell,2,no
+features,class paladin / paladins-smite Paladin's Smite,1,cast_spell,2,no
+features,class paladin / channel-divinity Channel Divinity,1,detect duration_rule,3,no
+features,class paladin / paladin-subclass Paladin Subclass,1,,0,no
+features,class paladin / ability-score-improvement Ability Score Improvement,1,,0,no
+features,class paladin / extra-attack Extra Attack,1,,0,no
+features,class paladin / faithful-steed Faithful Steed,1,cast_spell,2,no
+features,class paladin / aura-of-protection Aura of Protection,1,area+ modifier,3,no
+features,class paladin / abjure-foes Abjure Foes,1,action_economy apply_condition duration_rule save_gate,2,no
+features,class paladin / aura-of-courage Aura of Courage,1,area+ immunity,3,no
+features,class paladin / radiant-strikes Radiant Strikes,1,damage trigger,1,no
+features,class paladin / restoring-touch Restoring Touch,1,end_effect,1,no
+features,class paladin / aura-expansion Aura Expansion,1,area+,3,no
+features,class paladin / epic-boon Epic Boon,1,,0,no
+features,subclass path-of-the-berserker (barbarian) / frenzy Frenzy,1,branch+ damage trigger,2,no
+features,subclass path-of-the-berserker (barbarian) / mindless-rage Mindless Rage,1,branch+ end_effect immunity,2,no
+features,subclass path-of-the-berserker (barbarian) / retaliation Retaliation,1,action_economy trigger,2,no
+features,subclass path-of-the-berserker (barbarian) / intimidating-presence Intimidating Presence,1,save_gate,1,no
+features,class ranger / core-traits Core Ranger Traits,1,,0,no
+features,class ranger / favored-enemy-uses Favored Enemy,1,,0,no
+features,class ranger / prepared-spells Prepared Spells,1,,0,no
+features,class ranger / proficiency-bonus Proficiency Bonus,1,,0,no
+features,class ranger / slots-1st 1st,1,,0,no
+features,class ranger / slots-2nd 2nd,1,,0,no
+features,class ranger / slots-3rd 3rd,1,,0,no
+features,class ranger / slots-4th 4th,1,,0,no
+features,class ranger / slots-5th 5th,1,,0,no
+features,class ranger / spell-list Ranger Spell List,1,,0,no
+features,class ranger / favored-enemy Favored Enemy,1,cast_spell,2,no
+features,class ranger / spellcasting Spellcasting,1,,0,no
+features,class ranger / weapon-mastery Weapon Mastery,1,,0,no
+features,class ranger / deft-explorer Deft Explorer,1,proficiency,2,no
+features,class ranger / fighting-style Fighting Style,1,cast_spell,2,no
+features,class ranger / ranger-subclass Ranger Subclass,1,,0,no
+features,class ranger / ability-score-improvement Ability Score Improvement,1,,0,no
+features,class ranger / extra-attack Extra Attack,1,,0,no
+features,class ranger / roving Roving,1,modifier speed,2,no
+features,class ranger / expertise Expertise,1,,0,no
+features,class ranger / tireless Tireless,1,bearer_amount end_effect trigger,1,no
+features,class ranger / relentless-hunter Relentless Hunter,1,spell_rule,2,no
+features,class ranger / natures-veil Nature's Veil,1,apply_condition,1,no
+features,class ranger / precise-hunter Precise Hunter,1,roll_rule,2,no
+features,class ranger / feral-senses Feral Senses,1,sense,2,no
+features,class ranger / epic-boon Epic Boon,1,,0,no
+features,class ranger / foe-slayer Foe Slayer,1,spell_rule,2,no
+features,class rogue / core-traits Core Rogue Traits,1,proficiency,2,no
+features,class rogue / proficiency-bonus Proficiency Bonus,1,,0,no
+features,class rogue / sneak-attack-column-data Sneak Attack,1,,0,no
+features,class rogue / expertise Expertise,1,,0,no
+features,class rogue / sneak-attack Sneak Attack,1,branch+ damage trigger,2,no
+features,class rogue / thieves-cant Thieves' Cant,1,proficiency,2,no
+features,class rogue / weapon-mastery Weapon Mastery,1,,0,no
+features,class rogue / cunning-action Cunning Action,1,action_economy,2,no
+features,class rogue / rogue-subclass Rogue Subclass,1,,0,no
+features,class rogue / steady-aim Steady Aim,1,branch+ duration_rule roll_rule,2,no
+features,class rogue / ability-score-improvement Ability Score Improvement,1,,0,no
+features,class rogue / cunning-strike Cunning Strike,1,apply_condition branch+ movement save_gate trigger,2,no
+features,class rogue / uncanny-dodge Uncanny Dodge,1,resistance trigger,1,no
+features,class rogue / evasion Evasion,1,branch+ resistance,2,no
+features,class rogue / reliable-talent Reliable Talent,1,roll_rule,2,no
+features,class rogue / improved-cunning-strike Improved Cunning Strike,1,trigger,1,no
+features,class rogue / devious-strikes Devious Strikes,1,action_economy apply_condition duration_rule save_gate trigger,2,no
+features,class rogue / slippery-mind Slippery Mind,1,proficiency,2,no
+features,class rogue / elusive Elusive,1,branch+ roll_rule,2,no
+features,class rogue / epic-boon Epic Boon,1,,0,no
+features,class rogue / stroke-of-luck Stroke of Luck,1,roll_rule trigger,2,no
+features,class sorcerer / cantrips Cantrips,1,,0,no
+features,class sorcerer / core-traits Core Sorcerer Traits,1,,0,no
+features,class sorcerer / metamagic-options Metamagic Options,1,roll_rule spell_rule,2,no
+features,class sorcerer / prepared-spells Prepared Spells,1,,0,no
+features,class sorcerer / proficiency-bonus Proficiency Bonus,1,,0,no
+features,class sorcerer / slots-1st 1st,1,,0,no
+features,class sorcerer / slots-2nd 2nd,1,,0,no
+features,class sorcerer / slots-3rd 3rd,1,,0,no
+features,class sorcerer / slots-4th 4th,1,,0,no
+features,class sorcerer / slots-5th 5th,1,,0,no
+features,class sorcerer / slots-6th 6th,1,,0,no
+features,class sorcerer / slots-7th 7th,1,,0,no
+features,class sorcerer / slots-8th 8th,1,,0,no
+features,class sorcerer / slots-9th 9th,1,,0,no
+features,class sorcerer / sorcerer-spell-list Sorcerer Spell List,1,,0,no
+features,class sorcerer / sorcery-points Sorcery Points,1,,0,no
+features,class sorcerer / innate-sorcery Innate Sorcery,1,modifier roll_rule,2,no
+features,class sorcerer / spellcasting Spellcasting,1,,0,no
+features,class sorcerer / font-of-magic Font of Magic,1,bearer_amount spell_rule,2,no
+features,class sorcerer / metamagic Metamagic,1,feature_link spell_rule,2,no
+features,class sorcerer / sorcerer-subclass Sorcerer Subclass,1,,0,no
+features,class sorcerer / ability-score-improvement Ability Score Improvement,1,,0,no
+features,class sorcerer / sorcerous-restoration Sorcerous Restoration,1,bearer_amount trigger,1,no
+features,class sorcerer / sorcery-incarnate Sorcery Incarnate,1,branch+ spell_rule,2,no
+features,class sorcerer / epic-boon Epic Boon,1,,0,no
+features,class sorcerer / arcane-apotheosis Arcane Apotheosis,1,branch+ spell_rule,2,no
+features,subclass thief (rogue) / thief_fast-hands Fast Hands,1,action_economy,2,no
+features,subclass thief (rogue) / thief_second-story-work Second-Story Work,1,modifier speed,2,no
+features,subclass thief (rogue) / thief_supreme-sneak Supreme Sneak,1,branch+ duration_rule trigger,2,no
+features,subclass thief (rogue) / thief_use-magic-device Use Magic Device,1,modifier roll_rule spell_rule trigger,2,no
+features,subclass thief (rogue) / thief_thiefs-reflexes Thief's Reflexes,1,action_economy,2,no
+features,class warlock / cantrips Cantrips,1,,0,no
+features,class warlock / core-traits Core Warlock Traits,1,,0,no
+features,class warlock / eldritch-invocation-count Eldritch Invocations,1,,0,no
+features,class warlock / eldritch-invocation-options Eldritch Invocation Options,1,action_economy apply_condition branch+ cast_spell create_item damage detect feature_link heal modifier movement resistance roll_rule sense speed spell_rule trigger,3,no
+features,class warlock / prepared-spells Prepared Spells,1,,0,no
+features,class warlock / proficiency-bonus Proficiency Bonus,1,,0,no
+features,class warlock / slot-level Slot Level,1,,0,no
+features,class warlock / spell-slots Spell Slots,1,,0,no
+features,class warlock / warlock-spell-list Warlock Spell List,1,,0,no
+features,class warlock / eldritch-invocations Eldritch Invocations,1,feature_link,0,no
+features,class warlock / pact-magic Pact Magic,1,,0,no
+features,class warlock / magical-cunning Magic Cunning,1,spell_rule,2,no
+features,class warlock / warlock-subclass Warlock Subclass,1,,0,no
+features,class warlock / ability-score-improvement Ability Score Improvement,1,,0,no
+features,class warlock / contact-patron Contact Patron,1,cast_spell spell_rule,2,no
+features,class warlock / mystic-arcanum Mystic Arcanum,1,cast_spell,2,no
+features,class warlock / epic-boon Epic Boon,1,,0,no
+features,class warlock / eldritch-master Eldritch Master,1,spell_rule,2,no
+features,subclass warrior-of-the-open-hand (monk) / warrior-of-the-open-hand_open-hand-technique Open Hand Technique,1,action_economy apply_condition movement save_gate trigger,2,no
+features,subclass warrior-of-the-open-hand (monk) / warrior-of-the-open-hand_wholeness-of-body Wholeness of Body,1,heal,1,no
+features,subclass warrior-of-the-open-hand (monk) / warrior-of-the-open-hand_fleet-step Fleet Step,1,action_economy trigger,2,no
+features,subclass warrior-of-the-open-hand (monk) / warrior-of-the-open-hand_quivering-palm Quivering Palm,1,action_economy damage duration_rule save_gate trigger,2,no
+features,class wizard / cantrips Cantrips,1,,0,no
+features,class wizard / core-traits Core Wizard Traits,1,,0,no
+features,class wizard / prepared-spells Prepared Spells,1,,0,no
+features,class wizard / proficiency-bonus Proficiency Bonus,1,,0,no
+features,class wizard / slots-1st 1st,1,,0,no
+features,class wizard / slots-2nd 2nd,1,,0,no
+features,class wizard / slots-3rd 3rd,1,,0,no
+features,class wizard / slots-4th 4th,1,,0,no
+features,class wizard / slots-5th 5th,1,,0,no
+features,class wizard / slots-6th 6th,1,,0,no
+features,class wizard / slots-7th 7th,1,,0,no
+features,class wizard / slots-8th 8th,1,,0,no
+features,class wizard / slots-9th 9th,1,,0,no
+features,class wizard / wizard-spell-list Wizard Spell List,1,,0,no
+features,class wizard / arcane-recovery Arcane Recovery,1,spell_rule trigger,2,no
+features,class wizard / ritual-adept Ritual Adept,1,cast_spell,2,no
+features,class wizard / spellcasting Spellcasting,1,,0,no
+features,class wizard / scholar Scholar,1,,0,no
+features,class wizard / wizard-subclass Wizard Subclass,1,,0,no
+features,class wizard / ability-score-improvement Ability Score Improvement,1,,0,no
+features,class wizard / memorize-spell Memorize Spell,1,resource_rule,2,no
+features,class wizard / spell-mastery Spell Mastery,1,cast_spell,2,no
+features,class wizard / epic-boon Epic Boon,1,,0,no
+features,class wizard / signature-spells Signature Spells,1,cast_spell,2,no
+features,feat (General) / ability-score-improvement Ability Score Improvement,1,,0,no
+features,feat (Origin) / alert Alert,1,action_economy modifier,2,no
+features,feat (Fighting Style) / archery Archery,1,modifier,1,no
+features,feat (Epic Boon) / boon-of-combat-prowess Boon of Combat Prowess,1,modifier roll_rule trigger,2,no
+features,feat (Epic Boon) / boon-of-dimensional-travel Boon of Dimensional Travel,1,modifier trigger,1,no
+features,feat (Epic Boon) / boon-of-fate Boon of Fate,1,modifier roll_rule trigger,2,no
+features,feat (Epic Boon) / boon-of-irresistible-offense Boon of Irresistible Offense,1,damage modifier resistance trigger,1,no
+features,feat (Epic Boon) / boon-of-spell-recall Boon of Spell Recall,1,modifier spell_rule trigger,2,no
+features,feat (Epic Boon) / boon-of-the-night-spirit Boon of the Night Spirit,1,apply_condition branch+ duration_rule modifier resistance,2,no
+features,feat (Epic Boon) / boon-of-truesight Boon of Truesight,1,modifier sense,2,no
+features,feat (Fighting Style) / defense Defense,1,modifier,1,no
+features,feat (General) / grappler Grappler,1,action_economy modifier roll_rule trigger,2,no
+features,feat (Fighting Style) / great-weapon-fighting Great Weapon Fighting,1,roll_rule,2,no
+features,feat (Origin) / magic-initiate Magic Initiate,1,cast_spell,2,no
+features,feat (Origin) / savage-attacker Savage Attacker,1,roll_rule trigger,2,no
+features,feat (Origin) / skilled Skilled,1,,0,no
+features,feat (Fighting Style) / two-weapon-fighting Two-Weapon Fighting,1,modifier,1,no
+features,species dragonborn / Size,1,,0,no
+features,species dragonborn / Speed,1,,0,no
+features,species dragonborn / Draconic Ancestry,1,feature_link,0,no
+features,species dragonborn / Breath Weapon,1,action_economy feature_link save_gate,2,no
+features,species dragonborn / Damage Resistance,1,feature_link resistance,1,no
+features,species dragonborn / Darkvision,1,sense,2,no
+features,species dragonborn / Draconic Flight,1,duration_rule speed,2,no
+features,species dwarf / Size,1,,0,no
+features,species dwarf / Speed,1,,0,no
+features,species dwarf / Darkvision,1,sense,2,no
+features,species dwarf / Dwarven Resilience,1,resistance roll_rule,2,no
+features,species dwarf / Dwarven Toughness,1,modifier,1,no
+features,species dwarf / Stonecunning,1,branch+ sense,2,no
+features,species elf / Size,1,,0,no
+features,species elf / Speed,1,,0,no
+features,species elf / Darkvision,1,sense,2,no
+features,species elf / Elven Lineage,1,cast_spell feature_link modifier sense,2,no
+features,species elf / Fey Ancestry,1,roll_rule,2,no
+features,species elf / Keen Senses,1,,0,no
+features,species elf / Trance,1,immunity resource_rule,2,no
+features,species gnome / Size,1,,0,no
+features,species gnome / Speed,1,,0,no
+features,species gnome / Darkvision,1,sense,2,no
+features,species gnome / Gnomish Cunning,1,,0,no
+features,species gnome / Gnomish Lineage,1,cast_spell create_item feature_link,3,yes
+features,species goliath / Size,1,,0,no
+features,species goliath / Speed,1,,0,no
+features,species goliath / Giant Ancestry,1,apply_condition branch+ damage duration_rule feature_link resistance trigger,2,no
+features,species goliath / Large Form,1,modifier roll_rule,2,no
+features,species goliath / Powerful Build,1,modifier roll_rule,2,no
+features,species halfling / Size,1,,0,no
+features,species halfling / Speed,1,,0,no
+features,species halfling / Brave,1,roll_rule,2,no
+features,species halfling / Halfling Nimbleness,1,speed,2,no
+features,species halfling / Luck,1,roll_rule trigger,2,no
+features,species halfling / Naturally Stealthy,1,action_economy,2,no
+features,species human / Size,1,,0,no
+features,species human / Speed,1,,0,no
+features,species human / Resourceful,1,resource_rule trigger,2,no
+features,species human / Skillful,1,,0,no
+features,species human / Versatile,1,,0,no
+features,species orc / Size,1,,0,no
+features,species orc / Speed,1,,0,no
+features,species orc / Adrenaline Rush,1,action_economy bearer_amount,2,no
+features,species orc / Darkvision,1,sense,2,no
+features,species orc / Relentless Endurance,1,heal trigger,1,no
+features,species tiefling / Size,1,,0,no
+features,species tiefling / Speed,1,,0,no
+features,species tiefling / Darkvision,1,sense,2,no
+features,species tiefling / Fiendish Legacy,1,cast_spell feature_link resistance,2,no
+features,species tiefling / Otherworldly Presence,1,cast_spell,2,no
+monsters,"Attack with a charge rider (moved 10+ or 20+ feet straight toward the target) (Gore, Hooves) [action]",4,apply_condition attack_gate branch+,2,no
+monsters,Attack with a charge rider (moved 10+ or 20+ feet straight toward the target) (Ram) [action],2,attack_gate branch+ damage,2,no
+monsters,"Attack with a charge rider (moved 10+ or 20+ feet straight toward the target) (Gore, Ram, Hooves, Tusk) [action]",11,apply_condition attack_gate branch+ damage,2,no
+monsters,Attack with a charge rider (moved 10+ or 20+ feet straight toward the target) (Claws) [action],1,apply_condition attack_gate branch+ sequence,2,no
+monsters,"Attack that grapples (escape DC), with or without Restrained (Tentacle) [action]",1,apply_condition attack_gate,1,no
+monsters,"Attack that grapples (escape DC), with or without Restrained (Tentacle) [action]",1,apply_condition attack_gate create_object,3,no
+monsters,"Attack that grapples (escape DC), with or without Restrained (Bite) [action]",1,apply_condition attack_gate modifier,1,no
+monsters,"Attack that grapples (escape DC), with or without Restrained (Bite, Claw, Tentacle, Pincer, Tentacles, Claws, and 5 more) [action]",22,apply_condition attack_gate branch+,2,no
+monsters,"Attack that grapples (escape DC), with or without Restrained (Bite, Pseudopod) [action]",2,apply_condition attack_gate branch+ roll_rule,2,no
+monsters,"Attack that knocks a size-limited target Prone (Tail, Bite, Claw, Ram, Storm Bolt, Rock Launch, and 5 more) [action]",18,apply_condition attack_gate branch+,2,no
+monsters,Attack that knocks a size-limited target Prone (Swarm of Grasping Hands) [action],1,apply_condition attack_gate branch+ damage,2,no
+monsters,Attack that knocks a size-limited target Prone (Bite) [action],1,apply_condition attack_gate branch+ trigger,2,no
+monsters,"Attack that leaves a target dropped to 0 Hit Points Stable and Paralyzed (Bite, Umbral Dagger) [action]",2,apply_condition attack_gate trigger,1,no
+monsters,"Attack that puts a condition on the target until a turn boundary (Bite, Shortsword, Thundercloud, Gouge, Trash Lob, Paralyzing Touch, and 5 more) [action]",14,apply_condition attack_gate,1,no
+monsters,"Attack that puts a condition on the target until a turn boundary (Beard, Infernal Sting) [action]",2,apply_condition attack_gate modifier,1,no
+monsters,"Attack that sets the target burning (Hurl Flame, Burn, Touch) [action]",4,apply_condition attack_gate,1,no
+monsters,Attack that attaches to or smothers the target (Crush) [action],1,apply_condition attack_gate branch+ contain roll_rule,3,no
+monsters,Attack that attaches to or smothers the target (Attach) [action],1,apply_condition attack_gate branch+ contain modifier,3,no
+monsters,Attack that attaches to or smothers the target (Smother) [action],1,apply_condition attack_gate branch+ contain damage modifier trigger,3,no
+monsters,Attack that attaches to or smothers the target (Proboscis) [action],1,attack_gate contain damage trigger,3,no
+monsters,"Attack that leaves a lasting poison or curse (Restless Touch, Cursed Touch) [action]",2,apply_condition attack_gate modifier,1,no
+monsters,Attack that leaves a lasting poison or curse (Rotting Fist) [action],1,apply_condition attack_gate modifier trigger,1,no
+monsters,Attack that leaves a lasting poison or curse (Rotting Fist) [action],1,apply_condition attack_gate modifier trigger,1,no
+monsters,Attack that leaves a lasting poison or curse (Bite) [action],1,apply_condition attack_gate modifier save_gate trigger,1,no
+monsters,"Attack that lowers Hit Point maximum or an ability score (Life Drain, Slam) [action]",3,attack_gate modifier,1,no
+monsters,Attack that lowers Hit Point maximum or an ability score (Draining Swipe) [action],1,attack_gate modifier summon+ trigger,3,no
+monsters,"Attack that slows, or weakens the target's next roll or turn (Morningstar, Rapier, Bite) [action]",3,attack_gate roll_rule,2,no
+monsters,"Attack that slows, or weakens the target's next roll or turn (Lightning Blade) [action]",1,attack_gate modifier,1,no
+monsters,"Attack that slows, or weakens the target's next roll or turn (Ice Spear) [action]",1,attack_gate modifier,1,no
+monsters,"Attack that slows, or weakens the target's next roll or turn (Great Bow, Ocean Spear) [action]",2,attack_gate,1,no
+monsters,Attack that pushes or pulls the target (Flame Whip) [action],1,apply_condition attack_gate branch+,2,no
+monsters,"Attack that pushes or pulls the target (Harpoon, Hooves, Charged Tendril, Warhammer) [action]",4,attack_gate branch+,2,no
+monsters,Attack that pushes or pulls the target (Hammer Throw) [action],1,attack_gate roll_rule,2,no
+monsters,Attack that leaves a lasting poison or curse (Bite) [action],1,apply_condition attack_gate modifier save_gate trigger,1,no
+monsters,Attack that leaves a lasting poison or curse (Infernal Glaive) [action],1,apply_condition attack_gate damage save_gate trigger,1,no
+monsters,Attack that leaves a lasting poison or curse (Bite) [action],1,apply_condition attack_gate damage modifier save_gate trigger,1,no
+monsters,"Attack that passes on lycanthropy (Bite, Gore) [action]",5,apply_condition attack_gate compel modifier save_gate trigger,3,no
+monsters,Attack whose hit forces a saving throw (Petrifying Bite) [action],1,apply_condition attack_gate save_gate,1,no
+monsters,Attack whose hit forces a saving throw (Bite) [action],1,apply_condition attack_gate save_gate,1,no
+monsters,Attack whose hit forces a saving throw (Claw) [action],2,apply_condition attack_gate branch+ save_gate,2,no
+monsters,"Attack whose damage or Advantage depends on a state (Bites, Scimitar, Shortbow, Beak, Bite, Beaks) [action]",11,attack_gate branch+ damage,2,no
+monsters,"Attack whose damage or Advantage depends on a state (Bite, Bites) [action]",2,attack_gate branch+ damage roll_rule,2,no
+monsters,Attack whose damage or Advantage depends on a state (Claw) [action],1,attack_gate damage,1,no
+monsters,"Attack whose damage or Advantage depends on a state (Bite, Morningstar, Light Hammer, Slam) [action]",6,roll_rule,2,no
+monsters,"Aura that damages creatures around it each turn (Fire Aura, Heat Aura) [trait]",5,damage trigger,1,no
+monsters,Aura that damages creatures around it each turn (Barbed Hide) [trait],1,damage trigger,1,no
+monsters,Aura that forces a save on creatures that start their turn in it (Mucus Cloud) [trait],1,apply_condition damage modifier save_gate trigger,1,no
+monsters,Aura that forces a save on creatures that start their turn in it (Gibbering) [trait],1,compel save_gate trigger,3,no
+monsters,"Aura that forces a save on creatures that start their turn in it (Stench, Fear Aura, Vile Appearance) [trait]",4,modifier save_gate trigger,1,no
+monsters,"Casts one or a few named spells (Invisibility, Read Thoughts, Sleep, Etherealness, Ice Wall, Fog Cloud, and 3 more) [action]",11,cast_spell,2,no
+monsters,Casts one or a few named spells (Nightmare Haunting) [action],1,cast_spell modifier,2,no
+monsters,"Casts one or a few named spells (Divine Aid, Misty Step, Phantasms, Spiritual Weapon, Magic of the Spider Queen, Invisibility, and 3 more) [bonus]",16,cast_spell,2,no
+monsters,Casts one or a few named spells (Protective Magic) [reaction],3,cast_spell,2,no
+monsters,"Casts one or a few named spells (Frightful Presence, Guiding Light, Sonic Boom, Blazing Light, Mind Jolt, Mind Invasion, and 6 more) [legendary]",25,cast_spell,2,no
+monsters,Casts one or a few named spells (Cloaked Flight) [legendary],2,cast_spell movement,2,no
+monsters,"Advantage or Disadvantage that holds only in a state (Sunlight Sensitivity, Bloodied Fury, Light Sensitivity, Blood Frenzy, Blurred Form) [trait]",10,roll_rule,2,no
+monsters,"Advantage or Disadvantage that holds only in a state (Bloodied Frenzy, Sunlight Weakness) [trait]",2,roll_rule,2,no
+monsters,Advantage or Disadvantage that holds only in a state (Aversion to Fire) [trait],1,roll_rule trigger,2,no
+monsters,Aura that gives Advantage to the creature and its allies (Aura of Authority) [trait],1,roll_rule,2,no
+monsters,Magic Resistance (Greater Magic Resistance) [trait],1,modifier roll_rule,2,no
+monsters,Magic Resistance (Magic Resistance) [trait],34,roll_rule,2,no
+monsters,Pack Tactics (Pack Tactics) [trait],18,roll_rule,2,no
+monsters,"Swallow, engulf or whelm: the target is held inside the creature (Engulf) [action]",1,apply_condition contain damage movement save_gate trigger,3,no
+monsters,"Swallow, engulf or whelm: the target is held inside the creature (Swallow) [action]",2,apply_condition contain damage trigger,3,no
+monsters,"Swallow, engulf or whelm: the target is held inside the creature (Whelm) [action]",1,apply_condition branch+ contain damage save_gate trigger,3,no
+monsters,"Swallow, engulf or whelm: the target is held inside the creature (Swallow) [action]",1,apply_condition contain damage save_gate trigger,3,no
+monsters,"Swallow, engulf or whelm: the target is held inside the creature (Engulf) [action]",1,apply_condition contain damage save_gate trigger,3,no
+monsters,"Swallow, engulf or whelm: the target is held inside the creature (Swallow) [bonus]",4,apply_condition contain damage save_gate trigger,3,no
+monsters,"Swallow, engulf or whelm: the target is held inside the creature (Ooze Cube) [trait]",1,contain trigger,3,no
+monsters,Grants wishes (Wishes) [trait],2,,0,yes
+monsters,Learns something only the DM can tell (Heart Sight) [action],1,save_gate,1,yes
+monsters,Learns something only the DM can tell (Probing Telepathy) [trait],1,,0,yes
+monsters,Learns something only the DM can tell (Divine Awareness) [trait],2,,0,yes
+monsters,Mimics sounds and voices (Mimicry) [trait],2,,0,yes
+monsters,"Senses a kind of thing in the world (magic, metal, gems) (Sense Magic) [trait]",1,,0,yes
+monsters,"Senses a kind of thing in the world (magic, metal, gems) (Iron Scent) [trait]",1,,0,yes
+monsters,"Senses a kind of thing in the world (magic, metal, gems) (Treasure Sense) [trait]",1,,0,yes
+monsters,Shrieks when something comes near (Shriek) [reaction],1,trigger,1,yes
+monsters,Vampire weaknesses (Vampire Weakness) [trait],2,damage roll_rule trigger,2,yes
+monsters,"Corrodes or destroys armor, weapons and metal (Dissolving Pseudopod, Pseudopod) [action]",2,attack_gate item_wear,3,no
+monsters,"Corrodes or destroys armor, weapons and metal (Destroy Metal) [action]",1,item_wear,3,no
+monsters,"Corrodes or destroys armor, weapons and metal (Antennae) [action]",1,item_wear save_gate,3,no
+monsters,"Corrodes or destroys armor, weapons and metal (Reflexive Antennae) [reaction]",1,sequence trigger,2,no
+monsters,"Corrodes or destroys armor, weapons and metal (Corrosive Form) [trait]",1,damage item_wear trigger,3,no
+monsters,"Corrodes or destroys armor, weapons and metal (Corrosive Form) [trait]",1,item_wear trigger,3,no
+monsters,Legendary Resistance (Legendary Resistance) [trait],32,,0,no
+monsters,Sheds light (Ignited Illumination) [bonus],1,light,3,no
+monsters,Sheds light (Illumination) [trait],5,light,3,no
+monsters,Drags a grappled creature at no extra movement (Abduct) [trait],2,speed,2,no
+monsters,"Fixed jump distances (Standing Leap, Running Leap, Jumper) [trait]",6,speed,2,no
+monsters,"Ignores a kind of terrain, or climbs, burrows or passes through it (Spider Climb, Ice Walk, Tunneler, Earth Glide) [trait]",22,speed,2,no
+monsters,"Ignores a kind of terrain, or climbs, burrows or passes through it (Web Walker) [trait]",5,sense speed,2,no
+monsters,"Ignores a kind of terrain, or climbs, burrows or passes through it (Incorporeal Movement) [trait]",4,damage speed trigger,2,no
+monsters,"Leaves reach without provoking Opportunity Attacks (Flyby, Agile) [trait]",9,speed,2,no
+monsters,"Squeezes through gaps, or shares other creatures' spaces (Swarm) [trait]",7,modifier speed,2,no
+monsters,"Squeezes through gaps, or shares other creatures' spaces (Amorphous, Air Form, Compression, Water Form) [trait]",8,speed,2,no
+monsters,"Squeezes through gaps, or shares other creatures' spaces (Fire Form) [trait]",1,damage speed trigger,2,no
+monsters,Multiattack: a fixed mix of different attacks (Multiattack) [action],28,sequence,2,no
+monsters,"Multiattack: a number of attacks of one kind, or of its attacks in any combination (Multiattack) [action]",91,,0,no
+monsters,Multiattack: an attack may be swapped for a spell (Multiattack) [action],20,cast_spell sequence,2,no
+monsters,"Multiattack: attacks mixed with, or swapped for, another action (Multiattack) [action]",39,sequence,2,no
+monsters,"Breathing: air, water, holding breath (Amphibious, Water Breathing, Hold Breath, Limited Amphibiousness) [trait]",47,,0,no
+monsters,"Other traits with nothing to compute at the table (Succubus Form, Beast of Burden, Incubus Form, Ephemeral) [trait]",4,,0,no
+monsters,"Returns to life elsewhere, or days later (Diabolical Restoration, Demonic Restoration, Exalted Restoration, Elemental Restoration, Fiendish Restoration, Eldritch Restoration, and 5 more) [trait]",25,,0,no
+monsters,"Speech, telepathy and bonds (Speak with Beasts and Plants, Telepathic Bond, Shark Telepathy, Vampiric Connection) [trait]",4,,0,no
+monsters,Grapples whatever touches it (Adhesive) [trait],1,apply_condition roll_rule trigger,2,no
+monsters,Weakened by a damage type or a surrounding (Freeze) [trait],1,trigger,1,no
+monsters,Weakened by a damage type or a surrounding (Water Susceptibility) [trait],1,damage trigger,1,no
+monsters,"Explodes when it dies (Death Burst, Death Throes) [trait]",6,save_gate trigger,1,no
+monsters,Damage type chosen when the creature is placed (Draconic Origin) [trait],1,,0,no
+monsters,Double damage to objects and structures (Siege Monster) [trait],4,modifier,1,no
+monsters,Evasion (Evasion) [trait],1,modifier,1,no
+monsters,"Extra Reactions (Reactive Heads, Reactive) [trait]",2,modifier,1,no
+monsters,Gives its rider Resistance to Fire (Confer Fire Resistance) [trait],1,modifier,1,no
+monsters,Goes unnoticed until it moves (Transparent) [trait],1,conceal,3,no
+monsters,Mind and detection wards (Inscrutable) [trait],2,modifier roll_rule,2,no
+monsters,"Mind and detection wards (Immutable Form, Shielded Mind) [trait]",5,modifier,1,no
+monsters,Skill chosen when the creature is placed (Training) [trait],1,modifier,1,no
+monsters,Turns Invisible (Invisibility) [trait],1,apply_condition,1,no
+monsters,"Plain attack, carried as text only (Bite, Talons, Rake, Scratch, Claw, Storm Blade, and 2 more) [action]",19,,0,no
+monsters,"Plain attack, structured data agrees with the text (Rend, Bite, Claw, Slam, Hooves, Beak, and 57 more) [action]",182,,0,no
+monsters,"Plain attack, structured data disagrees with the text (Bite, Rend, Claw, Sting, Pact Blade, Slam, and 33 more) [action]",75,,0,no
+monsters,Pulls creatures it already holds toward itself (Reel) [action],1,,0,no
+monsters,Pulls creatures it already holds toward itself (Reel) [bonus],1,,0,no
+monsters,"Reaction: raises its AC against the attack that hit (Parry, Protection) [reaction]",8,modifier trigger,1,no
+monsters,Reaction: raises its AC against the attack that hit (Riposte) [reaction],1,modifier sequence trigger,2,no
+monsters,Reaction: raises its AC against the attack that hit (Whirlwind of Sand) [reaction],1,apply_condition modifier trigger,1,no
+monsters,Reaction: reduces the damage of a ranged hit and may throw it back (Deflect Missile) [reaction],1,damage modifier save_gate trigger,1,no
+monsters,Reaction: adds a bonus to a roll being made (Burst of Ingenuity) [reaction],1,modifier trigger,1,no
+monsters,Reaction: forces a save on a creature that starts its turn nearby (Unnerving Gaze) [reaction],1,apply_condition modifier save_gate trigger,1,no
+monsters,"Reaction: splits into two smaller creatures (Parry, Split) [reaction]",2,summon+ trigger,3,no
+monsters,"Reaction: swaps places with an ally, who takes the attack (Redirect Attack) [reaction]",1,modifier movement trigger,2,no
+monsters,Reaction: teleports next to a creature that ends its move nearby (Pursuit) [reaction],1,sequence trigger,2,no
+monsters,Area save for damage only (breath weapons and bursts) (Dragon's Breath) [action],1,save_gate,1,no
+monsters,"Area save for damage only (breath weapons and bursts) (Fire Breath, Cold Breath, Lightning Breath, Acid Breath, Poison Breath, Acid Spray, and 4 more) [action]",47,save_gate,1,no
+monsters,"Area save for damage only (breath weapons and bursts) (Acid Breath, Lightning Breath) [action]",4,area+ save_gate,3,no
+monsters,Area save for damage only (breath weapons and bursts) (Disrupt Life) [legendary],1,save_gate,1,no
+monsters,Area save for damage only (breath weapons and bursts) (Radiant Teleport) [legendary],1,save_gate,1,no
+monsters,"Area save against a condition, push or weakening, no damage (Weakening Breath) [action]",4,modifier roll_rule save_gate,2,no
+monsters,"Area save against a condition, push or weakening, no damage (Slowing Breath) [action]",4,modifier save_gate speed,2,no
+monsters,"Area save against a condition, push or weakening, no damage (Unsettling Visage, Blinding Breath) [action]",2,save_gate,1,no
+monsters,"Area save against a condition, push or weakening, no damage (Repulsion Breath) [action]",4,save_gate,1,no
+monsters,"Area save against a condition, push or weakening, no damage (Fetid Cloud) [action]",1,modifier save_gate,1,no
+monsters,"Area save against a condition, push or weakening, no damage (Spores) [action]",1,damage save_gate trigger,1,no
+monsters,"Area save against a condition, push or weakening, no damage (Moan) [bonus]",1,modifier save_gate,1,no
+monsters,"Area save against a condition, push or weakening, no damage (Toxic Ink) [legendary]",1,movement save_gate,2,no
+monsters,"Area save for damage plus a condition, push or weakening (Boulder Toss) [action]",1,branch+ save_gate,2,no
+monsters,"Area save for damage plus a condition, push or weakening (Blinding Spittle, Baleful Command, Mind-Rending Roar, Thunderous Bellow, Stunning Screech) [action]",5,save_gate,1,no
+monsters,"Area save for damage plus a condition, push or weakening (Fling) [action]",1,save_gate,1,no
+monsters,"Area save for damage plus a condition, push or weakening (Horrific Visage) [action]",1,modifier save_gate,1,no
+monsters,"Area save for damage plus a condition, push or weakening (Steam Breath) [action]",1,save_gate,1,no
+monsters,"Area save for damage plus a condition, push or weakening (Deadly Leap) [action]",1,movement save_gate,2,no
+monsters,"Area save for damage plus a condition, push or weakening (Horror Nimbus) [bonus]",1,modifier save_gate trigger,1,no
+monsters,"Area save for damage plus a condition, push or weakening (Cold Gale) [legendary]",2,save_gate,1,no
+monsters,"Area save for damage plus a condition, push or weakening (Freezing Burst) [legendary]",2,save_gate,1,no
+monsters,"Area save for damage plus a condition, push or weakening (Noxious Miasma) [legendary]",2,modifier save_gate,1,no
+monsters,"Area save for damage plus a condition, push or weakening (Thunderclap) [legendary]",2,save_gate,1,no
+monsters,Area save that changes with each use (Roar) [action],1,branch+ save_gate,2,no
+monsters,Area save that charms and compels the target toward the creature (Luring Song) [action],1,apply_condition compel modifier save_gate trigger,3,no
+monsters,"Area save in stages: a second failure worsens the condition (Paralyzing Breath, Petrifying Breath) [action]",5,save_gate,1,no
+monsters,Area save in stages: a second failure worsens the condition (Sleep Breath) [action],4,save_gate trigger,1,no
+monsters,Area save in stages: a second failure worsens the condition (Petrifying Gaze) [bonus],2,save_gate,1,no
+monsters,"Target save for damage only (Consume Memories, Pummel, Lightning Strike, Mockery) [action]",4,damage save_gate,1,no
+monsters,Target save for damage only (Trample) [bonus],3,damage save_gate,1,no
+monsters,"Target save against a bond that is itself an object with hit points (Web Strand, Web) [action]",2,apply_condition create_object save_gate,3,no
+monsters,Target save against a bond that is itself an object with hit points (Entangling Rope) [action],1,apply_condition create_object damage save_gate,3,no
+monsters,"Target save against a condition, no damage (Paralyzing Tentacles, Roar, Enthralling Panache, Scare) [action]",4,apply_condition save_gate,1,no
+monsters,"Target save against a condition, no damage (Cacophony) [action]",1,apply_condition roll_rule save_gate,2,no
+monsters,"Target save against a condition, no damage (Dreadful Glare) [action]",1,apply_condition modifier save_gate,1,no
+monsters,"Target save against a condition, no damage (Quick Grapple, Captain's Charm) [bonus]",2,apply_condition save_gate,1,no
+monsters,"Target save against a condition, no damage (Weight of Years, Blinding Gaze) [legendary]",3,apply_condition save_gate,1,no
+monsters,"Target save for damage plus a condition, push or weakening (Sting) [action]",1,apply_condition damage save_gate,1,no
+monsters,"Target save for damage plus a condition, push or weakening (Shield Bash) [action]",1,apply_condition branch+ damage save_gate,2,no
+monsters,"Target save for damage plus a condition, push or weakening (Conjure Infernal Chain) [action]",1,apply_condition branch+ damage save_gate,2,no
+monsters,"Target save for damage plus a condition, push or weakening (Constrict, Poisonous Spittle, Corrupting Touch, Dreadful Glare, Tentacle Slam) [action]",10,apply_condition damage save_gate,1,no
+monsters,"Target save for damage plus a condition, push or weakening (Whirlwind) [action]",1,apply_condition damage save_gate,1,no
+monsters,"Target save for damage plus a condition, push or weakening (Infernal Tail) [action]",1,apply_condition damage save_gate trigger,1,no
+monsters,"Target save for damage plus a condition, push or weakening (Vortex) [action]",1,apply_condition damage modifier save_gate trigger,1,no
+monsters,"Target save for damage plus a condition, push or weakening (Trampling Charge) [bonus]",1,apply_condition damage movement save_gate trigger,2,no
+monsters,"Target save for damage plus a condition, push or weakening (Giggling Magic) [legendary]",2,damage roll_rule save_gate,2,no
+monsters,"Target save for damage plus a condition, push or weakening (Cloud of Insects) [legendary]",2,damage roll_rule save_gate,2,no
+monsters,"Target save for damage plus a condition, push or weakening (Scorching Sands) [legendary]",2,damage save_gate speed,2,no
+monsters,Target save for damage that lowers Hit Point maximum (Bite) [action],1,damage heal modifier save_gate,1,no
+monsters,Target save for damage that lowers Hit Point maximum (Bite) [action],1,damage heal modifier save_gate summon+,3,no
+monsters,Target save for damage that lowers Hit Point maximum (Draining Kiss) [action],1,damage modifier save_gate,1,no
+monsters,Target save for damage that lowers Hit Point maximum (Life Drain) [action],1,damage modifier save_gate summon+,3,no
+monsters,Target save that banishes until the creature's next turn (Banish) [legendary],2,apply_condition damage movement save_gate,2,no
+monsters,"Target save that kills or drops a weakened target outright (Death Glare, Slaying Bow) [action]",2,damage save_gate,1,no
+monsters,Target save that kills or drops a weakened target outright (Consume Life) [bonus],1,damage heal save_gate,1,no
+monsters,Target save that kills or drops a weakened target outright (Nightmare) [bonus],1,apply_condition damage save_gate trigger,1,no
+monsters,Target save that takes control of the target (Possession) [action],1,apply_condition compel conceal modifier save_gate,3,no
+monsters,Target save that takes control of the target (Dominate Mind) [action],1,apply_condition compel save_gate trigger,3,no
+monsters,Bolsters itself or an ally (War Cry) [bonus],1,,0,no
+monsters,Bolsters itself or an ally (Shimmering Shield) [legendary],1,modifier,1,no
+monsters,Turns Invisible (Vanish) [bonus],1,apply_condition,1,no
+monsters,"Regains hit points from a damage type (Lightning Absorption, Acid Absorption, Fire Absorption) [trait]",4,heal trigger,1,no
+monsters,Regeneration (Regeneration) [trait],2,heal trigger,1,no
+monsters,Regeneration (Regeneration) [trait],2,heal trigger,1,no
+monsters,"Moves or leaps on its own, with or without provoking Opportunity Attacks (Bubble Dash) [action]",1,movement,2,no
+monsters,"Moves or leaps on its own, with or without provoking Opportunity Attacks (Leap, Charge, Bubble Dash, Swoop, Aquatic Charge) [bonus]",10,movement,2,no
+monsters,"Moves or leaps on its own, with or without provoking Opportunity Attacks (Prowl) [bonus]",1,movement sequence,2,no
+monsters,Sees into the Ethereal Plane (Ethereal Sight) [trait],2,sense,2,no
+monsters,Shape-Shift (Shape-Shift) [action],3,form+,3,no
+monsters,Shape-Shift (Shape-Shift) [bonus],1,conceal form+,3,no
+monsters,Shape-Shift (Shape-Shift) [bonus],8,form+,3,no
+monsters,Shape-Shift (Shape-Shift) [bonus],1,form+ modifier speed,3,no
+monsters,"Carries an object with its own AC and hit points (Magic Rope, Soul Bag) [trait]",2,create_object,3,no
+monsters,Goes berserk while Bloodied and attacks the nearest creature (Berserk) [trait],2,branch+ compel trigger,3,no
+monsters,Heads die and regrow (Multiple Heads) [trait],1,bearer_amount heal trigger,1,no
+monsters,Loses limbs that fight on (Loathsome Limbs) [trait],1,apply_condition branch+ summon+ trigger,3,no
+monsters,Saves to stay at 1 Hit Point (Undead Fortitude) [trait],2,save_gate trigger,1,no
+monsters,Shares the damage its amulet's wearer takes (Bound) [trait],1,modifier,1,no
+monsters,Shrugs off or reflects spells aimed at it (Reflective Carapace) [trait],1,modifier trigger,1,no
+monsters,Stores one spell and casts it later (Spell Storing) [trait],1,cast_spell,2,no
+monsters,Turns to mist at 0 Hit Points (Misty Escape) [trait],1,apply_condition form+ heal trigger,3,no
+monsters,Spellcasting: a list of spells cast at will or a set number of times a day (Spellcasting) [action],48,cast_spell,2,no
+monsters,"Takes Dash, Disengage or Hide (Nimble Escape, Cunning Action, Deathless Agility, Hasten, Shadow Stealth) [bonus]",12,,0,no
+monsters,"Creates or raises creatures under its control (Animate Trees, Create Specter) [action]",2,summon+,3,no
+monsters,Steps to or from the Ethereal Plane (Ethereal Stride) [action],1,conceal,3,no
+monsters,Steps to or from the Ethereal Plane (Ethereal Jaunt) [bonus],1,conceal,3,no
+monsters,"Teleports another creature, or between fixed points (Teleport, Tree Stride) [bonus]",2,movement,2,no
+monsters,Teleports itself (Teleport) [action],1,,0,no
+monsters,Teleports itself (Teleport) [bonus],2,,0,no
+monsters,Teleports itself (Deathly Teleport) [legendary],1,damage,1,no
+monsters,"Makes one attack or uses another of its actions (Tail Swipe, Lash, Storm Bolt, Glare, Necrotic Strike) [legendary]",6,sequence,2,no
+monsters,Makes one attack or uses another of its actions (Psychic Drain) [legendary],1,heal sequence,2,no
+monsters,"Moves, then knocks creatures around it Prone and breaks Concentration (World-Shaking Movement) [legendary]",1,apply_condition branch+ modifier movement,2,no
+monsters,"Moves, then makes one attack (Rampage) [bonus]",2,branch+ movement sequence,2,no
+monsters,"Moves, then makes one attack (Pounce, Onslaught, Charging Horn, Deathless Strike) [legendary]",21,movement sequence,2,no
+monsters,"Moves, then makes one attack (Arcane Prowl) [legendary]",2,sequence,2,no
+monsters,Area the creature conjures or carries that lasts (Darkness Aura) [action],1,,0,no
+monsters,Area the creature conjures or carries that lasts (Create Whirlwind) [action],1,apply_condition contain damage save_gate trigger,3,no
+monsters,Area the creature conjures or carries that lasts (Ink Cloud) [reaction],1,movement trigger,2,no
+monsters,Area the creature conjures or carries that lasts (Ink Cloud) [reaction],1,movement trigger,2,no
+monsters,Ground around it is Difficult Terrain (Aberrant Ground) [trait],1,surface+,3,no
+items,"Weapon, +1, +2 or +3",1,modifier,1,no
+items,"Ammunition, +1, +2 or +3",1,modifier,1,no
+items,Defender,1,modifier,1,no
+items,Giant Slayer,1,apply_condition damage modifier save_gate trigger,1,no
+items,Holy Avenger,1,damage modifier roll_rule trigger,2,no
+items,Nine Lives Stealer,1,damage item_link modifier save_gate trigger,1,no
+items,Vicious Weapon,1,damage trigger,1,no
+items,Weapon of Warning,1,note roll_rule,2,no
+items,Flame Tongue,1,damage trigger,1,no
+items,Ammunition of Slaying,1,damage save_gate trigger,1,no
+items,Luck Blade,1,item_link modifier roll_rule,2,no
+items,Frost Brand,1,damage item_link note resistance trigger,1,no
+items,Sword of Life Stealing,1,damage trigger,1,no
+items,Sword of Wounding,1,damage one_off save_gate trigger,4,no
+items,Dancing Sword,1,one_off,4,no
+items,Sword of Sharpness,1,apply_condition damage modifier trigger,1,no
+items,Vorpal Sword,1,damage modifier resistance trigger,1,no
+items,Berserker Axe,1,compel item_link modifier roll_rule save_gate trigger,3,no
+items,Hammer of Thunderbolts,1,damage modifier save_gate trigger,1,no
+items,Oathbow,1,item_link roll_rule,2,no
+items,Dagger of Venom,1,apply_condition damage modifier save_gate trigger,1,no
+items,Dragon Slayer,1,damage modifier trigger,1,no
+items,Dwarven Thrower,1,damage modifier trigger,1,no
+items,Javelin of Lightning,1,modifier save_gate,1,no
+items,Mace of Disruption,1,apply_condition damage save_gate trigger,1,no
+items,Mace of Smiting,1,damage modifier trigger,1,no
+items,Mace of Terror,1,compel save_gate,3,no
+items,Scimitar of Speed,1,modifier,1,no
+items,Sun Blade,1,damage modifier one_off trigger,4,no
+items,Trident of Fish Command,1,cast_spell,2,no
+items,"Armor, +1, +2 or +3",1,modifier,1,no
+items,"Shield, +1, +2 or +3",1,modifier,1,no
+items,Armor of Resistance,1,item_link resistance,1,no
+items,Armor of Vulnerability,1,item_link resistance,1,no
+items,Demon Armor,1,item_link modifier proficiency roll_rule,2,no
+items,Adamantine Armor,1,roll_rule,2,no
+items,Mithral Armor,1,modifier,1,no
+items,Dwarven Plate,1,modifier one_off,4,no
+items,Plate Armor of Etherealness,1,cast_spell,2,no
+items,Animated Shield,1,modifier,1,no
+items,Armor of Invulnerability,1,resistance,1,no
+items,Arrow-Catching Shield,1,modifier one_off,4,no
+items,Dragon Scale Mail,1,item_link modifier note resistance roll_rule,2,no
+items,Elven Chain,1,modifier proficiency,2,no
+items,Glamoured Studded Leather,1,modifier note,1,no
+items,Shield of Missile Attraction,1,item_link one_off resistance,4,no
+items,Spellguard Shield,1,roll_rule,2,no
+items,Ring of Animal Influence,1,cast_spell,2,no
+items,Ring of Djinni Summoning,1,item_link,0,no
+items,Ring of Elemental Command,1,cast_spell compel immunity item_link one_off proficiency resistance roll_rule save_gate speed,4,no
+items,Ring of Evasion,1,roll_rule,2,no
+items,Ring of Feather Falling,1,immunity,1,no
+items,Ring of Free Action,1,immunity,1,no
+items,Ring of Invisibility,1,apply_condition,1,no
+items,Ring of Jumping,1,cast_spell,2,no
+items,Ring of Mind Shielding,1,immunity note,1,no
+items,Ring or Cloak of Protection,1,modifier,1,no
+items,Ring of Regeneration,1,heal note trigger,1,no
+items,Ring of Resistance,1,item_link resistance,1,no
+items,Ring of Shooting Stars,1,bearer_amount one_off save_gate,4,no
+items,Ring of Spell Storing,1,spell_rule,2,no
+items,Ring of Spell Turning,1,roll_rule spell_rule,2,no
+items,Ring of Swimming,1,speed,2,no
+items,Ring of Telekinesis,1,,0,no
+items,Ring of the Ram,1,attack_gate bearer_amount check_gate damage,2,no
+items,Ring of Three Wishes,1,,0,no
+items,Ring of Warmth,1,immunity resistance,1,no
+items,Ring of Water Walking,1,cast_spell,2,no
+items,Ring of X-ray Vision,1,apply_condition item_link save_gate sense,2,no
+items,Oil of Etherealness,1,cast_spell,2,no
+items,Oil of Sharpness,1,modifier one_off,4,no
+items,Oil of Slipperiness,1,cast_spell,2,no
+items,Philter of Love,1,apply_condition trigger,1,no
+items,Potion that gives a spell's effect,1,cast_spell,2,no
+items,Potion of Climbing,1,roll_rule speed,2,no
+items,Potion of Flying,1,speed,2,no
+items,Potion of Heroism,1,cast_spell,2,no
+items,Potion of Invisibility,1,apply_condition trigger,1,no
+items,Potion of Poison,1,apply_condition damage save_gate,1,no
+items,Potion of Resistance,1,item_link resistance,1,no
+items,Potion of Water Breathing,1,immunity,1,no
+items,Potion of Healing,1,heal item_link,1,no
+items,Potion of Giant Strength,1,item_link modifier,1,no
+items,Antitoxin,1,roll_rule,2,no
+items,Wand that casts spells at a set DC,1,cast_spell item_link,2,no
+items,Wand of Magic Missiles,1,cast_spell item_link,2,no
+items,Wand of Magic Detection,1,,0,no
+items,Wand of Enemy Detection,1,item_link one_off,4,no
+items,Wand of Paralysis,1,item_link save_gate,1,no
+items,Wand of Secrets,1,one_off,4,no
+items,"Wand of the War Mage, +1, +2 or +3",1,modifier,1,no
+items,Wand of Wonder,1,apply_condition cast_spell damage item_link note roll_table save_gate,3,no
+items,Staff of Charming,1,item_link roll_rule spell_rule,2,no
+items,"Staff of Fire, Staff of Frost",1,item_link resistance,1,no
+items,Staff of Healing,1,cast_spell item_link,2,no
+items,Staff of Power,1,banish bearer_amount cast_spell damage item_link modifier roll_table save_gate,3,no
+items,Staff of Striking,1,bearer_amount damage item_link modifier trigger,1,no
+items,Staff of Swarming Insects,1,item_link one_off,4,no
+items,Staff of the Magi,1,banish bearer_amount cast_spell damage item_link modifier roll_rule roll_table save_gate spell_rule,3,no
+items,Staff of the Python,1,item_link,0,no
+items,Staff of the Woodlands,1,create_object item_link modifier,3,no
+items,Staff of Thunder and Lightning,1,apply_condition damage item_link modifier save_gate trigger,1,no
+items,Staff of Withering,1,damage roll_rule save_gate trigger,2,no
+items,Immovable Rod,1,check_gate create_object,3,no
+items,Rod of Absorption,1,item_link spell_rule,2,no
+items,Rod of Alertness,1,modifier roll_rule,2,no
+items,Rod of Lordly Might,1,apply_condition create_object damage heal item_link modifier note save_gate trigger,3,no
+items,Rod of Rulership,1,save_gate trigger,1,no
+items,Rod of Security,1,banish heal item_link note,3,no
+items,Item that sets an ability score to 19,1,modifier,1,no
+items,Belt of Giant Strength,1,modifier,1,no
+items,Amulet of Proof against Detection and Location,1,immunity,1,no
+items,Amulet of the Planes,1,banish check_gate roll_table,3,no
+items,Apparatus of the Crab,1,apply_condition attack_gate check_gate create_object damage,3,no
+items,Bag of Beans,1,item_link roll_table save_gate,3,yes
+items,Bag of Devouring,1,banish check_gate damage note roll_table,3,no
+items,"Bag of Holding, Handy Haversack",1,one_off,4,no
+items,Efficient Quiver,1,one_off,4,no
+items,Portable Hole,1,check_gate create_object one_off,4,no
+items,Bag of Tricks,1,item_link roll_table,3,no
+items,Bead of Force,1,create_object save_gate,3,no
+items,Belt of Dwarvenkind,1,modifier note proficiency resistance roll_rule sense,2,no
+items,Boots of Elvenkind,1,roll_rule,2,no
+items,Boots of Levitation,1,cast_spell,2,no
+items,Boots of Speed,1,item_link roll_rule speed,2,no
+items,Boots of Striding and Springing,1,modifier speed,2,no
+items,Boots of the Winterlands,1,immunity resistance,1,no
+items,"Bowl, Brazier, Censer or Stone that summons an elemental",1,,0,no
+items,Bracers of Archery,1,modifier proficiency,2,no
+items,Bracers of Defense,1,modifier,1,no
+items,Brooch of Shielding,1,one_off resistance,4,no
+items,Broom of Flying,1,note speed,2,no
+items,Candle of Invocation,1,item_link one_off roll_rule,4,no
+items,Cape of the Mountebank,1,note,0,no
+items,Carpet of Flying,1,create_object item_link speed,3,no
+items,Chime of Opening,1,,0,no
+items,Circlet of Blasting,1,cast_spell,2,no
+items,Cloak of Arachnida,1,cast_spell immunity resistance speed,2,no
+items,Cloak of Displacement,1,trigger,1,no
+items,Cloak of Elvenkind,1,roll_rule,2,no
+items,Cloak of the Bat,1,cast_spell one_off roll_rule speed,4,no
+items,Cloak of the Manta Ray,1,immunity speed,2,no
+items,Crystal Ball,1,cast_spell item_link,2,no
+items,Crystal Ball of True Seeing,1,cast_spell sense,2,no
+items,Cube of Force,1,cast_spell,2,no
+items,Cubic Gate,1,item_link,0,no
+items,Decanter of Endless Water,1,note save_gate,1,no
+items,Deck of Illusions,1,check_gate create_object item_link roll_table,3,no
+items,Dimensional Shackles,1,check_gate one_off,4,no
+items,Dragon Orb,1,apply_condition cast_spell compel item_link note save_gate,3,yes
+items,Dust of Disappearance,1,apply_condition trigger,1,no
+items,Dust of Dryness,1,item_link note save_gate,1,no
+items,Dust of Sneezing and Choking,1,one_off save_gate,4,no
+items,Efreeti Bottle,1,item_link roll_table,3,no
+items,Elemental Gem,1,item_link,0,no
+items,Eversmoking Bottle,1,one_off,4,no
+items,Eyes of Charming,1,cast_spell,2,no
+items,Eyes of Minute Seeing,1,roll_rule sense,2,no
+items,Eyes of the Eagle,1,roll_rule,2,no
+items,Feather Token (Anchor),1,note,0,no
+items,Feather Token (Bird),1,note,0,no
+items,Feather Token (Fan),1,note,0,no
+items,Feather Token (Swan Boat),1,create_object,3,no
+items,Feather Token (Tree),1,create_object,3,no
+items,Feather Token (Whip),1,attack_gate create_object damage,3,no
+items,Figurine of Wondrous Power (plain summon),1,item_link,0,no
+items,Figurine of Wondrous Power (Obsidian Steed),1,banish item_link roll_table,3,no
+items,Figurine of Wondrous Power (Silver Raven),1,cast_spell item_link,2,no
+items,Figurine of Wondrous Power (Ivory Goats),1,create_object item_link save_gate,3,no
+items,Folding Boat,1,create_object,3,no
+items,Gem of Brightness,1,save_gate,1,no
+items,Gem of Seeing,1,sense,2,no
+items,Gloves of Missile Snaring,1,resistance,1,no
+items,Gloves of Swimming and Climbing,1,modifier speed,2,no
+items,Goggles of Night,1,sense,2,no
+items,Hat of Disguise,1,,0,no
+items,Helm of Brilliance,1,cast_spell damage item_link resistance roll_table save_gate trigger,3,no
+items,Helm of Comprehending Languages,1,,0,no
+items,Helm of Telepathy,1,cast_spell item_link note,2,no
+items,Helm of Teleportation,1,,0,no
+items,Horn of Blasting,1,damage roll_table save_gate,3,no
+items,Horn of Valhalla,1,item_link one_off,4,no
+items,Horseshoes of a Zephyr,1,immunity note,1,no
+items,Horseshoes of Speed,1,speed,2,no
+items,Instant Fortress,1,create_object,3,no
+items,Iron Bands,1,apply_condition attack_gate check_gate,2,no
+items,Iron Flask,1,banish compel save_gate,3,no
+items,Lantern of Revealing,1,,0,no
+items,Mantle of Spell Resistance,1,roll_rule,2,no
+items,Manual or Tome that raises an ability score,1,modifier,1,no
+items,Manual of Golems,1,damage item_link,1,no
+items,Marvelous Pigments,1,create_object item_link,3,yes
+items,Medallion of Thoughts,1,cast_spell,2,no
+items,Mirror of Life Trapping,1,banish create_object save_gate trigger,3,no
+items,Mysterious Deck,1,item_link modifier proficiency roll_rule roll_table,3,yes
+items,Necklace of Adaptation,1,immunity roll_rule,2,no
+items,Necklace of Fireballs,1,bearer_amount cast_spell item_link,2,no
+items,Necklace of Prayer Beads,1,cast_spell item_link,2,no
+items,Pearl of Power,1,one_off,4,no
+items,Periapt of Health,1,heal roll_rule,2,no
+items,Periapt of Proof against Poison,1,immunity resistance,1,no
+items,Periapt of Wound Closure,1,one_off roll_rule,4,no
+items,Pipes of Haunting,1,save_gate,1,no
+items,Pipes of the Sewers,1,bearer_amount compel save_gate,3,no
+items,Robe of Eyes,1,apply_condition roll_rule save_gate sense trigger,2,no
+items,Robe of Scintillating Colors,1,save_gate,1,no
+items,Robe of Stars,1,banish cast_spell item_link modifier,3,no
+items,Robe of the Archmagi,1,modifier roll_rule,2,no
+items,Robe of Useful Items,1,create_object item_link roll_table,3,no
+items,Rope of Climbing,1,create_object note roll_rule,3,no
+items,Rope of Entanglement,1,check_gate create_object save_gate,3,no
+items,Scarab of Protection,1,item_link modifier roll_rule,2,no
+items,Slippers of Spider Climbing,1,speed,2,no
+items,"Sovereign Glue, Universal Solvent",1,item_link note,0,no
+items,Sphere of Annihilation,1,banish check_gate create_object damage roll_table save_gate,3,no
+items,Stone of Good Luck (Luckstone),1,modifier,1,no
+items,"Talisman of Pure Good, Talisman of Ultimate Evil",1,damage item_link modifier save_gate trigger,1,no
+items,Talisman of the Sphere,1,note roll_rule,2,no
+items,Well of Many Worlds,1,banish create_object item_link,3,no
+items,Wind Fan,1,cast_spell roll_table,3,no
+items,Winged Boots,1,speed,2,no
+items,Wings of Flying,1,item_link speed,2,no
+items,Ioun Stone,1,heal immunity item_link modifier roll_rule spell_rule trigger,2,no
+items,Spell Scroll,1,cast_spell item_link,2,no
+items,"Acid, Holy Water",1,damage save_gate,1,no
+items,Alchemist's Fire,1,damage save_gate trigger,1,no
+items,Oil,1,damage save_gate trigger,1,no
+items,Net,1,apply_condition check_gate save_gate,2,no
+items,Torch,1,damage,1,no
+items,"Candle, Lamp, Hooded Lantern",1,,0,no
+items,Bullseye Lantern,1,one_off,4,no
+items,Ball Bearings,1,save_gate,1,no
+items,Caltrops,1,save_gate,1,no
+items,Hunting Trap,1,check_gate damage save_gate trigger,2,no
+items,"Chain, Manacles, Rope",1,apply_condition check_gate,2,no
+items,"Bedroll, Blanket",1,roll_rule,2,no
+items,Gear that gives Advantage or a bonus on a fitting check,1,modifier roll_rule,2,no
+items,"Poison, Basic",1,damage trigger,1,no
+items,Healer's Kit,1,revive,3,no
+items,Climber's Kit,1,note,0,no
+items,"Grappling Hook, Lock",1,check_gate,2,no
+items,"Artisan's tools, kits, gaming sets and musical instruments",1,check_gate,2,no
+items,"Component Pouch, Holy Symbol, Druidic Focus",1,item_link,0,no
