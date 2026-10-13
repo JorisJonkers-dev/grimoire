@@ -1,0 +1,21 @@
+entry: feats/alert
+name: Alert
+automation: full
+pattern: roll-rule
+effects:
+  - label: Initiative Proficiency
+    activation: {passive: true}
+    parts:
+      - kind: modifier
+        changes: initiative rolls
+        value: proficiency bonus
+  - label: Initiative Swap
+    activation:
+      cost: none
+      on: after rolling initiative
+      unless: [incapacitated]
+      targeting: {pick: creatures, count: 1, side: allies, willing: true}
+      duration: instant
+    parts:
+      - kind: action_economy
+        swaps: initiative with the target

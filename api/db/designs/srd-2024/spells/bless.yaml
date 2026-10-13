@@ -1,0 +1,19 @@
+entry: spells/bless
+name: Bless
+automation: full
+pattern: lasting-buff-on-chosen-creatures
+effects:
+  - activation:
+      cost: action
+      components: [verbal, somatic, material]
+      targeting: {pick: creatures, count: 3, range_ft: 30}
+      duration: {minutes: 1}
+      concentration: true
+    parts:
+      - kind: bonus_die
+        dice: 1d4
+        on: [attack rolls, saving throws]
+    scaling:
+      - per: slot_level
+        above: 1
+        grows: {targeting: count, by: 1}

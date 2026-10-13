@@ -1,0 +1,17 @@
+entry: items/potion-of-healing
+name: Potion of Healing
+automation: full
+pattern: consumable-effect
+applies_to:
+  - match: potion-of-healing
+effects:
+  - label: Drink
+    activation:
+      cost: bonus_action
+      consumes: this item
+      targeting: {pick: creatures, count: 1, range_ft: 5, may_be_self: true}
+      duration: instant
+    parts:
+      - kind: heal
+        dice: 2d4
+        plus: 2

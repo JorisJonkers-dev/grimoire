@@ -1,0 +1,10 @@
+entry: species/dwarf/darkvision
+name: Darkvision
+automation: full
+pattern: passive-sense
+effects:
+  - activation: {passive: true}
+    parts:
+      - kind: sense
+        sense: darkvision
+        range_ft: 120

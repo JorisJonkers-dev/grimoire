@@ -1,0 +1,1300 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>PROTOTYPE: Design files</title><style>
+:root{--bg:#15130f;--panel:#1e1b15;--line:#3a3326;--ink:#e9e2d0;--dim:#a39a84;--gold:#c9a24a;--bad:#d9705a;--ok:#7fb37a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,"Segoe UI",sans-serif}
+main{max-width:1320px;margin:0 auto;padding:32px 40px 80px}h1{font-size:26px;margin:0 0 6px}h2{font-size:16px;margin:0;font-family:ui-monospace,Menlo,monospace;color:var(--gold)}
+h3{font-size:13px;margin:12px 0 2px;color:var(--dim);font-weight:normal;text-transform:uppercase;letter-spacing:.05em}
+.tag{color:var(--bad);font-size:12px;letter-spacing:.08em}.dim{color:var(--dim)}p{margin:0 0 8px}
+section{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px 20px;margin-top:18px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:24px}pre{margin:0;white-space:pre-wrap;font:13px/1.5 ui-monospace,Menlo,monospace}
+.head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}.ok{color:var(--ok)}.bad{color:var(--bad)}
+button{background:transparent;color:var(--ink);border:1px solid var(--line);border-radius:5px;padding:6px 12px;font:inherit;cursor:pointer}button.on{border-color:var(--gold);color:var(--gold)}
+nav{position:sticky;top:0;background:var(--bg);padding:10px 0;border-bottom:1px solid var(--line);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+nav a{color:var(--dim);font-size:13px;text-decoration:none;margin-right:6px}nav a:hover{color:var(--gold)}
+body.json .yaml,body:not(.json) .json{display:none}
+</style></head><body><main>
+<div class="tag">PROTOTYPE · THROWAWAY · grimoire issue 241</div>
+<h1>Design files, read back against the SRD text</h1>
+<p class="dim" style="max-width:920px">The question: what does one Design file look like for a spell, a Feature, a monster and an item, and where does it live? Each file below is shown as written, next to the seed text it automates, with what a reader checked: that the file's path names a real entry, that every action and trait of a stat block is accounted for, that an item file reaches real seed items, that a Note states its reason, and that a full entry holds no Manual Effect. Fields inside a Part are illustrative.</p>
+<nav><span class="dim">Show files as</span><button id="y" class="on" onclick="document.body.classList.remove('json');y.classList.add('on');j.classList.remove('on')">YAML</button><button id="j" onclick="document.body.classList.add('json');j.classList.add('on');y.classList.remove('on')">JSON</button>
+<span style="flex:1"></span><a href="#feats%2falert.yaml">feats/alert.yaml</a><a href="#features%2fbarbarian%2frage.yaml">features/barbarian/rage.yaml</a><a href="#features%2frogue%2fsneak-attack.yaml">features/rogue/sneak-attack.yaml</a><a href="#items%2fflame-tongue.yaml">items/flame-tongue.yaml</a><a href="#items%2fpotion-of-healing.yaml">items/potion-of-healing.yaml</a><a href="#items%2fring-of-protection.yaml">items/ring-of-protection.yaml</a><a href="#items%2fweapon-plus.yaml">items/weapon-plus.yaml</a><a href="#monsters%2fadult-red-dragon.yaml">monsters/adult-red-dragon.yaml</a><a href="#monsters%2fwolf.yaml">monsters/wolf.yaml</a><a href="#species%2fdwarf%2fdarkvision.yaml">species/dwarf/darkvision.yaml</a><a href="#spells%2fbless.yaml">spells/bless.yaml</a><a href="#spells%2fcommune.yaml">spells/commune.yaml</a><a href="#spells%2fcure-wounds.yaml">spells/cure-wounds.yaml</a><a href="#spells%2ffireball.yaml">spells/fireball.yaml</a><a href="#spells%2fhold-person.yaml">spells/hold-person.yaml</a><a href="#spells%2fprestidigitation.yaml">spells/prestidigitation.yaml</a><a href="#traits%2flegendary-resistance.yaml">traits/legendary-resistance.yaml</a><a href="#traits%2fpack-tactics.yaml">traits/pack-tactics.yaml</a></nav>
+<section id="feats/alert.yaml"><div class="head"><h2>feats/alert.yaml</h2>
+<span class="ok">checks pass</span></div>
+
+<div class="cols"><div><h3>Design file</h3><pre class="yaml">entry: feats/alert
+name: Alert
+automation: full
+pattern: roll-rule
+effects:
+  - label: Initiative Proficiency
+    activation: {passive: true}
+    parts:
+      - kind: modifier
+        changes: initiative rolls
+        value: proficiency bonus
+  - label: Initiative Swap
+    activation:
+      cost: none
+      on: after rolling initiative
+      unless: [incapacitated]
+      targeting: {pick: creatures, count: 1, side: allies, willing: true}
+      duration: instant
+    parts:
+      - kind: action_economy
+        swaps: initiative with the target
+</pre><pre class="json">{
+  &#34;entry&#34;: &#34;feats/alert&#34;,
+  &#34;name&#34;: &#34;Alert&#34;,
+  &#34;automation&#34;: &#34;full&#34;,
+  &#34;pattern&#34;: &#34;roll-rule&#34;,
+  &#34;effects&#34;: [
+    {
+      &#34;label&#34;: &#34;Initiative Proficiency&#34;,
+      &#34;activation&#34;: {
+        &#34;passive&#34;: true
+      },
+      &#34;parts&#34;: [
+        {
+          &#34;changes&#34;: &#34;initiative rolls&#34;,
+          &#34;kind&#34;: &#34;modifier&#34;,
+          &#34;value&#34;: &#34;proficiency bonus&#34;
+        }
+      ]
+    },
+    {
+      &#34;label&#34;: &#34;Initiative Swap&#34;,
+      &#34;activation&#34;: {
+        &#34;cost&#34;: &#34;none&#34;,
+        &#34;duration&#34;: &#34;instant&#34;,
+        &#34;on&#34;: &#34;after rolling initiative&#34;,
+        &#34;targeting&#34;: {
+          &#34;count&#34;: 1,
+          &#34;pick&#34;: &#34;creatures&#34;,
+          &#34;side&#34;: &#34;allies&#34;,
+          &#34;willing&#34;: true
+        },
+        &#34;unless&#34;: [
+          &#34;incapacitated&#34;
+        ]
+      },
+      &#34;parts&#34;: [
+        {
+          &#34;kind&#34;: &#34;action_economy&#34;,
+          &#34;swaps&#34;: &#34;initiative with the target&#34;
+        }
+      ]
+    }
+  ]
+}</pre></div>
+<div><h3>Seed text</h3><p><strong>Alert.</strong> When you roll Initiative, you can add your Proficiency Bonus to the roll.
+
+Immediately after you roll Initiative, you can swap your Initiative with the Initiative of one willing ally in the same combat. You can&#39;t make this swap if you or the ally has the Incapacitated condition.</p></div></div></section><section id="features/barbarian/rage.yaml"><div class="head"><h2>features/barbarian/rage.yaml</h2>
+<span class="ok">checks pass</span></div>
+
+<div class="cols"><div><h3>Design file</h3><pre class="yaml">entry: features/barbarian/rage
+name: Rage
+automation: full
+pattern: activated-state
+effects:
+  - activation:
+      cost: bonus_action
+      spends: {resource: rage, amount: 1}
+      unless: [wearing heavy armor]
+      targeting: {pick: self}
+      duration: {until: end of your next turn, extended_by: [attacking an enemy, forcing a saving throw, a bonus action], at_most_minutes: 10}
+      ends_when: [dons heavy armor, incapacitated]
+    parts:
+      - kind: resistance
+        damage_types: [bludgeoning, piercing, slashing]
+      - kind: modifier
+        changes: damage rolls
+        scope: attacks using strength
+        value: {scale: rage-damage}
+      - kind: roll_rule
+        edge: advantage
+        on: [strength checks, strength saving throws]
+      - kind: action_economy
+        forbids: [casting spells, concentration]
+</pre><pre class="json">{
+  &#34;entry&#34;: &#34;features/barbarian/rage&#34;,
+  &#34;name&#34;: &#34;Rage&#34;,
+  &#34;automation&#34;: &#34;full&#34;,
+  &#34;pattern&#34;: &#34;activated-state&#34;,
+  &#34;effects&#34;: [
+    {
+      &#34;activation&#34;: {
+        &#34;cost&#34;: &#34;bonus_action&#34;,
+        &#34;duration&#34;: {
+          &#34;at_most_minutes&#34;: 10,
+          &#34;extended_by&#34;: [
+            &#34;attacking an enemy&#34;,
+            &#34;forcing a saving throw&#34;,
+            &#34;a bonus action&#34;
+          ],
+          &#34;until&#34;: &#34;end of your next turn&#34;
+        },
+        &#34;ends_when&#34;: [
+          &#34;dons heavy armor&#34;,
+          &#34;incapacitated&#34;
+        ],
+        &#34;spends&#34;: {
+          &#34;amount&#34;: 1,
+          &#34;resource&#34;: &#34;rage&#34;
+        },
+        &#34;targeting&#34;: {
+          &#34;pick&#34;: &#34;self&#34;
+        },
+        &#34;unless&#34;: [
+          &#34;wearing heavy armor&#34;
+        ]
+      },
+      &#34;parts&#34;: [
+        {
+          &#34;damage_types&#34;: [
+            &#34;bludgeoning&#34;,
+            &#34;piercing&#34;,
+            &#34;slashing&#34;
+          ],
+          &#34;kind&#34;: &#34;resistance&#34;
+        },
+        {
+          &#34;changes&#34;: &#34;damage rolls&#34;,
+          &#34;kind&#34;: &#34;modifier&#34;,
+          &#34;scope&#34;: &#34;attacks using strength&#34;,
+          &#34;value&#34;: {
+            &#34;scale&#34;: &#34;rage-damage&#34;
+          }
+        },
+        {
+          &#34;edge&#34;: &#34;advantage&#34;,
+          &#34;kind&#34;: &#34;roll_rule&#34;,
+          &#34;on&#34;: [
+            &#34;strength checks&#34;,
+            &#34;strength saving throws&#34;
+          ]
+        },
+        {
+          &#34;forbids&#34;: [
+            &#34;casting spells&#34;,
+            &#34;concentration&#34;
+          ],
+          &#34;kind&#34;: &#34;action_economy&#34;
+        }
+      ]
+    }
+  ]
+}</pre></div>
+<div><h3>Seed text</h3><p><strong>Rage.</strong> You can imbue yourself with a primal power called Rage, a force that grants you extraordinary might and resilience. You can enter it as a Bonus Action if you aren&#39;t wearing Heavy armor.
+
+You can enter your Rage the number of times shown for your Barbarian level in the Rages column of the Barbarian Features table. You regain one expended use when you finish a Short Rest, and you regain all expended uses when you finish a Long Rest.
+
+While active, your Rage follows the rules below. *Damage Resistance.* You have Resistance to Bludgeoning, Piercing, and Slashing damage.
+
+**Rage Damage.** When you make an attack using Strength—with either a weapon or an Unarmed Strike—and deal damage to the target, you gain a bonus to the damage that increases as you gain levels as a Barbarian, as shown in the Rage Damage column of the Barbarian Features table.
+
+**Strength Advantage.** You have Advantage on Strength checks and Strength saving throws.
+
+**No Concentration or Spells.** You can&#39;t maintain Concentration, and you can&#39;t cast spells.
+
+**Duration.** The Rage lasts until the end of your next turn, and it ends early if you don Heavy armor or have the Incapacitated condition. If your Rage is still active on your next turn, you can extend the Rage for another round by doing one of the following:
+- Make an attack roll against an enemy.
+- Force an enemy to make a saving throw.
+- Take a Bonus Action to extend your Rage.
+
+Each time the Rage is extended, it lasts until the end of your next turn. You can maintain a Rage for up to 10 minutes.</p></div></div></section><section id="features/rogue/sneak-attack.yaml"><div class="head"><h2>features/rogue/sneak-attack.yaml</h2>
+<span class="ok">checks pass</span></div>
+
+<div class="cols"><div><h3>Design file</h3><pre class="yaml">entry: features/rogue/sneak-attack
+name: Sneak Attack
+automation: full
+pattern: on-hit-rider
+effects:
+  - activation: {passive: true}
+    parts:
+      - kind: trigger
+        on: hit
+        limit: once per turn
+        when:
+          - the attack uses a finesse or ranged weapon
+          - any_of:
+              - the attack roll has advantage
+              - all_of: [an ally is within 5 feet of the target, that ally is not incapacitated, the attack roll has no disadvantage]
+        then:
+          - kind: damage
+            dice: {scale: sneak-attack}
+            damage_type: same as the weapon
+</pre><pre class="json">{
+  &#34;entry&#34;: &#34;features/rogue/sneak-attack&#34;,
+  &#34;name&#34;: &#34;Sneak Attack&#34;,
+  &#34;automation&#34;: &#34;full&#34;,
+  &#34;pattern&#34;: &#34;on-hit-rider&#34;,
+  &#34;effects&#34;: [
+    {
+      &#34;activation&#34;: {
+        &#34;passive&#34;: true
+      },
+      &#34;parts&#34;: [
+        {
+          &#34;kind&#34;: &#34;trigger&#34;,
+          &#34;limit&#34;: &#34;once per turn&#34;,
+          &#34;on&#34;: &#34;hit&#34;,
+          &#34;then&#34;: [
+            {
+              &#34;damage_type&#34;: &#34;same as the weapon&#34;,
+              &#34;dice&#34;: {
+                &#34;scale&#34;: &#34;sneak-attack&#34;
+              },
+              &#34;kind&#34;: &#34;damage&#34;
+            }
+          ],
+          &#34;when&#34;: [
+            &#34;the attack uses a finesse or ranged weapon&#34;,
+            {
+              &#34;any_of&#34;: [
+                &#34;the attack roll has advantage&#34;,
+                {
+                  &#34;all_of&#34;: [
+                    &#34;an ally is within 5 feet of the target&#34;,
+                    &#34;that ally is not incapacitated&#34;,
+                    &#34;the attack roll has no disadvantage&#34;
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}</pre></div>
+<div><h3>Seed text</h3><p><strong>Sneak Attack.</strong> You know how to strike subtly and exploit a foe&#39;s distraction. Once per turn, you can deal an extra 1d6 damage to one creature you hit with an attack roll if you have Advantage on the roll and the attack uses a Finesse or a Ranged weapon. The extra damage&#39;s type is the same as the weapon&#39;s type.
+
+You don&#39;t need Advantage on the attack roll if at least one of your allies is within 5 feet of the target, the ally doesn&#39;t have the Incapacitated condition, and you don&#39;t have Disadvantage on the attack roll.
+
+The extra damage increases as you gain Rogue levels, as shown in the Sneak Attack column of the Rogue Features table.</p></div></div></section><section id="items/flame-tongue.yaml"><div class="head"><h2>items/flame-tongue.yaml</h2>
+<span class="ok">checks pass</span></div>
+<p class="dim">applies to 29 seed items</p><p class="dim">first: flame-tongue-battleaxe, last: flame-tongue-whip</p>
+<div class="cols"><div><h3>Design file</h3><pre class="yaml">entry: items/flame-tongue
+name: Flame Tongue
+automation: full
+pattern: weapon-rider
+attunement: true
+applies_to:
+  - match: &#34;flame-tongue-*&#34;
+    category: weapon
+effects:
+  - label: Ablaze
+    activation:
+      cost: bonus_action
+      while: held
+      targeting: {pick: self}
+      duration: {until: the command is spoken again}
+      ends_when: [dropped, stowed, sheathed]
+    parts:
+      - kind: light
+        bright_ft: 40
+        dim_ft: 40
+      - kind: trigger
+        on: hit with this item
+        then:
+          - kind: damage
+            dice: 2d6
+            damage_type: fire
+</pre><pre class="json">{
+  &#34;entry&#34;: &#34;items/flame-tongue&#34;,
+  &#34;name&#34;: &#34;Flame Tongue&#34;,
+  &#34;automation&#34;: &#34;full&#34;,
+  &#34;pattern&#34;: &#34;weapon-rider&#34;,
+  &#34;attunement&#34;: true,
+  &#34;appliesTo&#34;: [
+    {
+      &#34;match&#34;: &#34;flame-tongue-*&#34;,
+      &#34;category&#34;: &#34;weapon&#34;
+    }
+  ],
+  &#34;effects&#34;: [
+    {
+      &#34;label&#34;: &#34;Ablaze&#34;,
+      &#34;activation&#34;: {
+        &#34;cost&#34;: &#34;bonus_action&#34;,
+        &#34;duration&#34;: {
+          &#34;until&#34;: &#34;the command is spoken again&#34;
+        },
+        &#34;ends_when&#34;: [
+          &#34;dropped&#34;,
+          &#34;stowed&#34;,
+          &#34;sheathed&#34;
+        ],
+        &#34;targeting&#34;: {
+          &#34;pick&#34;: &#34;self&#34;
+        },
+        &#34;while&#34;: &#34;held&#34;
+      },
+      &#34;parts&#34;: [
+        {
+          &#34;bright_ft&#34;: 40,
+          &#34;dim_ft&#34;: 40,
+          &#34;kind&#34;: &#34;light&#34;
+        },
+        {
+          &#34;kind&#34;: &#34;trigger&#34;,
+          &#34;on&#34;: &#34;hit with this item&#34;,
+          &#34;then&#34;: [
+            {
+              &#34;damage_type&#34;: &#34;fire&#34;,
+              &#34;dice&#34;: &#34;2d6&#34;,
+              &#34;kind&#34;: &#34;damage&#34;
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}</pre></div>
+<div><h3>Seed text</h3><p><strong>Flame Tongue Battleaxe.</strong> While holding this magic weapon, you can take a Bonus Action and use a command word to cause flames to engulf the damage-dealing part of the weapon. These flames shed Bright Light in a 40 foot radius and Dim Light for an additional 40 feet. While the weapon is ablaze, it deals an extra 2d6 Fire damage on a hit. The flames last until you take a Bonus Action to issue the command again or until you drop, stow, or sheathe the weapon.</p></div></div></section><section id="items/potion-of-healing.yaml"><div class="head"><h2>items/potion-of-healing.yaml</h2>
+<span class="ok">checks pass</span></div>
+<p class="dim">applies to 1 seed items</p><p class="dim">first: potion-of-healing, last: potion-of-healing</p>
+<div class="cols"><div><h3>Design file</h3><pre class="yaml">entry: items/potion-of-healing
+name: Potion of Healing
+automation: full
+pattern: consumable-effect
+applies_to:
+  - match: potion-of-healing
+effects:
+  - label: Drink
+    activation:
+      cost: bonus_action
+      consumes: this item
+      targeting: {pick: creatures, count: 1, range_ft: 5, may_be_self: true}
+      duration: instant
+    parts:
+      - kind: heal
+        dice: 2d4
+        plus: 2
+</pre><pre class="json">{
+  &#34;entry&#34;: &#34;items/potion-of-healing&#34;,
+  &#34;name&#34;: &#34;Potion of Healing&#34;,
+  &#34;automation&#34;: &#34;full&#34;,
+  &#34;pattern&#34;: &#34;consumable-effect&#34;,
+  &#34;appliesTo&#34;: [
+    {
+      &#34;match&#34;: &#34;potion-of-healing&#34;
+    }
+  ],
+  &#34;effects&#34;: [
+    {
+      &#34;label&#34;: &#34;Drink&#34;,
+      &#34;activation&#34;: {
+        &#34;consumes&#34;: &#34;this item&#34;,
+        &#34;cost&#34;: &#34;bonus_action&#34;,
+        &#34;duration&#34;: &#34;instant&#34;,
+        &#34;targeting&#34;: {
+          &#34;count&#34;: 1,
+          &#34;may_be_self&#34;: true,
+          &#34;pick&#34;: &#34;creatures&#34;,
+          &#34;range_ft&#34;: 5
+        }
+      },
+      &#34;parts&#34;: [
+        {
+          &#34;dice&#34;: &#34;2d4&#34;,
+          &#34;kind&#34;: &#34;heal&#34;,
+          &#34;plus&#34;: 2
+        }
+      ]
+    }
+  ]
+}</pre></div>
+<div><h3>Seed text</h3><p><strong>Potion of Healing.</strong> This potion is a magic item. As a Bonus Action, you can drink it or administer it to another creature within 5 feet of yourself. The creature that drinks the magical red fluid in this vial regains 2d4 &#43; 2 Hit Points.</p></div></div></section><section id="items/ring-of-protection.yaml"><div class="head"><h2>items/ring-of-protection.yaml</h2>
+<span class="ok">checks pass</span></div>
+<p class="dim">applies to 1 seed items</p><p class="dim">first: ring-of-protection, last: ring-of-protection</p>
+<div class="cols"><div><h3>Design file</h3><pre class="yaml">entry: items/ring-of-protection
+name: Ring of Protection
+automation: full
+pattern: flat-bonus
+attunement: true
+applies_to:
+  - match: ring-of-protection
+effects:
+  - label: Protection
+    activation: {passive: true, while: worn}
+    parts:
+      - kind: modifier
+        changes: [armor class, saving throws]
+        value: 1
+</pre><pre class="json">{
+  &#34;entry&#34;: &#34;items/ring-of-protection&#34;,
+  &#34;name&#34;: &#34;Ring of Protection&#34;,
+  &#34;automation&#34;: &#34;full&#34;,
+  &#34;pattern&#34;: &#34;flat-bonus&#34;,
+  &#34;attunement&#34;: true,
+  &#34;appliesTo&#34;: [
+    {
+      &#34;match&#34;: &#34;ring-of-protection&#34;
+    }
+  ],
+  &#34;effects&#34;: [
+    {
+      &#34;label&#34;: &#34;Protection&#34;,
+      &#34;activation&#34;: {
+        &#34;passive&#34;: true,
+        &#34;while&#34;: &#34;worn&#34;
+      },
+      &#34;parts&#34;: [
+        {
+          &#34;changes&#34;: [
+            &#34;armor class&#34;,
+            &#34;saving throws&#34;
+          ],
+          &#34;kind&#34;: &#34;modifier&#34;,
+          &#34;value&#34;: 1
+        }
+      ]
+    }
+  ]
+}</pre></div>
+<div><h3>Seed text</h3><p><strong>Ring of Protection.</strong> You gain a &#43;1 bonus to Armor Class and saving throws while wearing this ring.</p></div></div></section><section id="items/weapon-plus.yaml"><div class="head"><h2>items/weapon-plus.yaml</h2>
+<span class="ok">checks pass</span></div>
+<p class="dim">applies to 114 seed items</p><p class="dim">first: battleaxe-plus-1, last: whip-plus-3</p>
+<div class="cols"><div><h3>Design file</h3><pre class="yaml">entry: items/weapon-plus
+name: Weapon, &#43;1, &#43;2 or &#43;3
+automation: full
+pattern: flat-bonus
+applies_to:
+  - match: &#34;*-plus-{bonus}&#34;
+    category: weapon
+    bonus: [1, 2, 3]
+effects:
+  - label: Bonus
+    activation: {passive: true, while: held}
+    parts:
+      - kind: modifier
+        changes: [attack rolls, damage rolls]
+        scope: attacks with this item
+        value: {param: bonus}
+</pre><pre class="json">{
+  &#34;entry&#34;: &#34;items/weapon-plus&#34;,
+  &#34;name&#34;: &#34;Weapon, &#43;1, &#43;2 or &#43;3&#34;,
+  &#34;automation&#34;: &#34;full&#34;,
+  &#34;pattern&#34;: &#34;flat-bonus&#34;,
+  &#34;appliesTo&#34;: [
+    {
+      &#34;match&#34;: &#34;*-plus-{bonus}&#34;,
+      &#34;category&#34;: &#34;weapon&#34;,
+      &#34;bonus&#34;: [
+        1,
+        2,
+        3
+      ]
+    }
+  ],
+  &#34;effects&#34;: [
+    {
+      &#34;label&#34;: &#34;Bonus&#34;,
+      &#34;activation&#34;: {
+        &#34;passive&#34;: true,
+        &#34;while&#34;: &#34;held&#34;
+      },
+      &#34;parts&#34;: [
+        {
+          &#34;changes&#34;: [
+            &#34;attack rolls&#34;,
+            &#34;damage rolls&#34;
+          ],
+          &#34;kind&#34;: &#34;modifier&#34;,
+          &#34;scope&#34;: &#34;attacks with this item&#34;,
+          &#34;value&#34;: {
+            &#34;param&#34;: &#34;bonus&#34;
+          }
+        }
+      ]
+    }
+  ]
+}</pre></div>
+<div><h3>Seed text</h3><p><strong>Battleaxe (&#43;1).</strong> You have a bonus to attack rolls and damage rolls made with this magic weapon. The bonus is determined by the weapon&#39;s rarity.</p></div></div></section><section id="monsters/adult-red-dragon.yaml"><div class="head"><h2>monsters/adult-red-dragon.yaml</h2>
+<span class="ok">checks pass</span></div>
+
+<div class="cols"><div><h3>Design file</h3><pre class="yaml">entry: monsters/adult-red-dragon
+name: Adult Red Dragon
+automation: full
+legendary: {uses: 3, in_lair: 4}
+effects:
+  - of: Legendary Resistance (3/Day, or 4/Day in Lair)
+    use: traits/legendary-resistance
+    with: {uses: 3, in_lair: 4}
+  - of: Multiattack
+    activation: {cost: action}
+    parts:
+      - kind: sequence
+        steps: [{take: Rend, times: 3}]
+        may_swap: {one: Rend, for: {cast: scorching-ray}}
+  - of: Rend
+    attack: stat block
+  - of: Fire Breath
+    activation:
+      cost: action
+      recharge: 5
+    parts:
+      - kind: area
+        shape: cone
+        size_ft: 60
+      - kind: save_damage
+        ability: dexterity
+        dc: 21
+        dice: 17d6
+        damage_type: fire
+        half: true
+  - of: Spellcasting
+    activation: {cost: action}
+    parts:
+      - kind: cast_spell
+        ability: charisma
+        save_dc: 20
+        attack_bonus: 12
+        without: [material]
+        at_will: [command, detect-magic, scorching-ray]
+        per_day: {fireball: 1}
+  - of: Commanding Presence
+    activation: {cost: legendary_action, price: 1, limit: once until the start of its next turn}
+    parts:
+      - kind: cast_spell
+        from: Spellcasting
+        spell: command
+        slot_level: 2
+  - of: Fiery Rays
+    activation: {cost: legendary_action, price: 1, limit: once until the start of its next turn}
+    parts:
+      - kind: cast_spell
+        from: Spellcasting
+        spell: scorching-ray
+  - of: Pounce
+    activation: {cost: legendary_action, price: 1}
+    parts:
+      - kind: movement
+        up_to: half speed
+      - kind: sequence
+        steps: [{take: Rend, times: 1}]
+</pre><pre class="json">{
+  &#34;entry&#34;: &#34;monsters/adult-red-dragon&#34;,
+  &#34;name&#34;: &#34;Adult Red Dragon&#34;,
+  &#34;automation&#34;: &#34;full&#34;,
+  &#34;legendary&#34;: {
+    &#34;in_lair&#34;: 4,
+    &#34;uses&#34;: 3
+  },
+  &#34;effects&#34;: [
+    {
+      &#34;of&#34;: &#34;Legendary Resistance (3/Day, or 4/Day in Lair)&#34;,
+      &#34;use&#34;: &#34;traits/legendary-resistance&#34;,
+      &#34;with&#34;: {
+        &#34;in_lair&#34;: 4,
+        &#34;uses&#34;: 3
+      }
+    },
+    {
+      &#34;of&#34;: &#34;Multiattack&#34;,
+      &#34;activation&#34;: {
+        &#34;cost&#34;: &#34;action&#34;
+      },
+      &#34;parts&#34;: [
+        {
+          &#34;kind&#34;: &#34;sequence&#34;,
+          &#34;may_swap&#34;: {
+            &#34;for&#34;: {
+              &#34;cast&#34;: &#34;scorching-ray&#34;
+            },
+            &#34;one&#34;: &#34;Rend&#34;
+          },
+          &#34;steps&#34;: [
+            {
+              &#34;take&#34;: &#34;Rend&#34;,
+              &#34;times&#34;: 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      &#34;of&#34;: &#34;Rend&#34;,
+      &#34;attack&#34;: &#34;stat block&#34;
+    },
+    {
+      &#34;of&#34;: &#34;Fire Breath&#34;,
+      &#34;activation&#34;: {
+        &#34;cost&#34;: &#34;action&#34;,
+        &#34;recharge&#34;: 5
+      },
+      &#34;parts&#34;: [
+        {
+          &#34;kind&#34;: &#34;area&#34;,
+          &#34;shape&#34;: &#34;cone&#34;,
+          &#34;size_ft&#34;: 60
+        },
+        {
+          &#34;ability&#34;: &#34;dexterity&#34;,
+          &#34;damage_type&#34;: &#34;fire&#34;,
+          &#34;dc&#34;: 21,
+          &#34;dice&#34;: &#34;17d6&#34;,
+          &#34;half&#34;: true,
+          &#34;kind&#34;: &#34;save_damage&#34;
+        }
+      ]
+    },
+    {
+      &#34;of&#34;: &#34;Spellcasting&#34;,
+      &#34;activation&#34;: {
+        &#34;cost&#34;: &#34;action&#34;
+      },
+      &#34;parts&#34;: [
+        {
+          &#34;ability&#34;: &#34;charisma&#34;,
+          &#34;at_will&#34;: [
+            &#34;command&#34;,
+            &#34;detect-magic&#34;,
+            &#34;scorching-ray&#34;
+          ],
+          &#34;attack_bonus&#34;: 12,
+          &#34;kind&#34;: &#34;cast_spell&#34;,
+          &#34;per_day&#34;: {
+            &#34;fireball&#34;: 1
+          },
+          &#34;save_dc&#34;: 20,
+          &#34;without&#34;: [
+            &#34;material&#34;
+          ]
+        }
+      ]
+    },
+    {
+      &#34;of&#34;: &#34;Commanding Presence&#34;,
+      &#34;activation&#34;: {
+        &#34;cost&#34;: &#34;legendary_action&#34;,
+        &#34;limit&#34;: &#34;once until the start of its next turn&#34;,
+        &#34;price&#34;: 1
+      },
+      &#34;parts&#34;: [
+        {
+          &#34;from&#34;: &#34;Spellcasting&#34;,
+          &#34;kind&#34;: &#34;cast_spell&#34;,
+          &#34;slot_level&#34;: 2,
+          &#34;spell&#34;: &#34;command&#34;
+        }
+      ]
+    },
+    {
+      &#34;of&#34;: &#34;Fiery Rays&#34;,
+      &#34;activation&#34;: {
+        &#34;cost&#34;: &#34;legendary_action&#34;,
+        &#34;limit&#34;: &#34;once until the start of its next turn&#34;,
+        &#34;price&#34;: 1
+      },
+      &#34;parts&#34;: [
+        {
+          &#34;from&#34;: &#34;Spellcasting&#34;,
+          &#34;kind&#34;: &#34;cast_spell&#34;,
+          &#34;spell&#34;: &#34;scorching-ray&#34;
+        }
+      ]
+    },
+    {
+      &#34;of&#34;: &#34;Pounce&#34;,
+      &#34;activation&#34;: {
+        &#34;cost&#34;: &#34;legendary_action&#34;,
+        &#34;price&#34;: 1
+      },
+      &#34;parts&#34;: [
+        {
+          &#34;kind&#34;: &#34;movement&#34;,
+          &#34;up_to&#34;: &#34;half speed&#34;
+        },
+        {
+          &#34;kind&#34;: &#34;sequence&#34;,
+          &#34;steps&#34;: [
+            {
+              &#34;take&#34;: &#34;Rend&#34;,
+              &#34;times&#34;: 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}</pre></div>
+<div><h3>Seed text</h3><p><strong>Commanding Presence (legendary action).</strong> The dragon uses Spellcasting to cast Command (level 2 version). The dragon can&#39;t take this action again until the start of its next turn.</p><p><strong>Fiery Rays (legendary action).</strong> The dragon uses Spellcasting to cast Scorching Ray. The dragon can&#39;t take this action again until the start of its next turn.</p><p><strong>Fire Breath (action).</strong> Dexterity Saving Throw: DC 21, each creature in a 60-foot Cone. Failure: 59 (17d6) Fire damage. Success: Half damage.</p><p><strong>Multiattack (action).</strong> The dragon makes three Rend attacks. It can replace one attack with a use of Spellcasting to cast Scorching Ray.</p><p><strong>Pounce (legendary action).</strong> The dragon moves up to half its Speed, and it makes one Rend attack.</p><p><strong>Rend (action).</strong> Melee Attack Roll: &#43;14, reach 10 ft. 13 (1d10 &#43; 8) Slashing damage plus 5 (2d4) Fire damage.</p><p><strong>Spellcasting (action).</strong> The dragon casts one of the following spells, requiring no Material components and using Charisma as the spellcasting ability (spell save DC 20, &#43;12 to hit with spell attacks):
+
+- **At Will:** Command, Detect Magic, Scorching Ray
+- **1/Day Each:** Fireball</p><p><strong>Legendary Resistance (3/Day, or 4/Day in Lair) (trait).</strong> If the dragon fails a saving throw, it can choose to succeed instead.</p></div></div></section><section id="monsters/wolf.yaml"><div class="head"><h2>monsters/wolf.yaml</h2>
+<span class="ok">checks pass</span></div>
+
+<div class="cols"><div><h3>Design file</h3><pre class="yaml">entry: monsters/wolf
+name: Wolf
+automation: full
+effects:
+  - of: Bite
+    attack: stat block
+    on_hit:
+      - kind: branch
+        when: [the target is medium or smaller]
+        then:
+          - kind: apply_condition
+            condition: prone
+  - of: Pack Tactics
+    use: traits/pack-tactics
+</pre><pre class="json">{
+  &#34;entry&#34;: &#34;monsters/wolf&#34;,
+  &#34;name&#34;: &#34;Wolf&#34;,
+  &#34;automation&#34;: &#34;full&#34;,
+  &#34;effects&#34;: [
+    {
+      &#34;of&#34;: &#34;Bite&#34;,
+      &#34;attack&#34;: &#34;stat block&#34;,
+      &#34;onHit&#34;: [
+        {
+          &#34;kind&#34;: &#34;branch&#34;,
+          &#34;then&#34;: [
+            {
+              &#34;condition&#34;: &#34;prone&#34;,
+              &#34;kind&#34;: &#34;apply_condition&#34;
+            }
+          ],
+          &#34;when&#34;: [
+            &#34;the target is medium or smaller&#34;
+          ]
+        }
+      ]
+    },
+    {
+      &#34;of&#34;: &#34;Pack Tactics&#34;,
+      &#34;use&#34;: &#34;traits/pack-tactics&#34;
+    }
+  ]
+}</pre></div>
+<div><h3>Seed text</h3><p><strong>Bite (action).</strong> Melee Attack Roll: &#43;4, reach 5 ft. 5 (1d6 &#43; 2) Piercing damage. If the target is a Medium or smaller creature, it has the Prone condition.</p><p><strong>Pack Tactics (trait).</strong> The wolf has Advantage on attack rolls against a creature if at least one of the wolf&#39;s allies is within 5 feet of the creature and the ally doesn&#39;t have the Incapacitated condition.</p></div></div></section><section id="species/dwarf/darkvision.yaml"><div class="head"><h2>species/dwarf/darkvision.yaml</h2>
+<span class="ok">checks pass</span></div>
+
+<div class="cols"><div><h3>Design file</h3><pre class="yaml">entry: species/dwarf/darkvision
+name: Darkvision
+automation: full
+pattern: passive-sense
+effects:
+  - activation: {passive: true}
+    parts:
+      - kind: sense
+        sense: darkvision
+        range_ft: 120
+</pre><pre class="json">{
+  &#34;entry&#34;: &#34;species/dwarf/darkvision&#34;,
+  &#34;name&#34;: &#34;Darkvision&#34;,
+  &#34;automation&#34;: &#34;full&#34;,
+  &#34;pattern&#34;: &#34;passive-sense&#34;,
+  &#34;effects&#34;: [
+    {
+      &#34;activation&#34;: {
+        &#34;passive&#34;: true
+      },
+      &#34;parts&#34;: [
+        {
+          &#34;kind&#34;: &#34;sense&#34;,
+          &#34;range_ft&#34;: 120,
+          &#34;sense&#34;: &#34;darkvision&#34;
+        }
+      ]
+    }
+  ]
+}</pre></div>
+<div><h3>Seed text</h3><p><strong>Darkvision.</strong> You have Darkvision with a range of 120 feet.</p></div></div></section><section id="spells/bless.yaml"><div class="head"><h2>spells/bless.yaml</h2>
+<span class="ok">checks pass</span></div>
+
+<div class="cols"><div><h3>Design file</h3><pre class="yaml">entry: spells/bless
+name: Bless
+automation: full
+pattern: lasting-buff-on-chosen-creatures
+effects:
+  - activation:
+      cost: action
+      components: [verbal, somatic, material]
+      targeting: {pick: creatures, count: 3, range_ft: 30}
+      duration: {minutes: 1}
+      concentration: true
+    parts:
+      - kind: bonus_die
+        dice: 1d4
+        on: [attack rolls, saving throws]
+    scaling:
+      - per: slot_level
+        above: 1
+        grows: {targeting: count, by: 1}
+</pre><pre class="json">{
+  &#34;entry&#34;: &#34;spells/bless&#34;,
+  &#34;name&#34;: &#34;Bless&#34;,
+  &#34;automation&#34;: &#34;full&#34;,
+  &#34;pattern&#34;: &#34;lasting-buff-on-chosen-creatures&#34;,
+  &#34;effects&#34;: [
+    {
+      &#34;activation&#34;: {
+        &#34;components&#34;: [
+          &#34;verbal&#34;,
+          &#34;somatic&#34;,
+          &#34;material&#34;
+        ],
+        &#34;concentration&#34;: true,
+        &#34;cost&#34;: &#34;action&#34;,
+        &#34;duration&#34;: {
+          &#34;minutes&#34;: 1
+        },
+        &#34;targeting&#34;: {
+          &#34;count&#34;: 3,
+          &#34;pick&#34;: &#34;creatures&#34;,
+          &#34;range_ft&#34;: 30
+        }
+      },
+      &#34;parts&#34;: [
+        {
+          &#34;dice&#34;: &#34;1d4&#34;,
+          &#34;kind&#34;: &#34;bonus_die&#34;,
+          &#34;on&#34;: [
+            &#34;attack rolls&#34;,
+            &#34;saving throws&#34;
+          ]
+        }
+      ],
+      &#34;scaling&#34;: [
+        {
+          &#34;above&#34;: 1,
+          &#34;grows&#34;: {
+            &#34;by&#34;: 1,
+            &#34;targeting&#34;: &#34;count&#34;
+          },
+          &#34;per&#34;: &#34;slot_level&#34;
+        }
+      ]
+    }
+  ]
+}</pre></div>
+<div><h3>Seed text</h3><p><strong>Bless.</strong> You bless up to three creatures within range. Whenever a target makes an attack roll or a saving throw before the spell ends, the target adds 1d4 to the attack roll or save.</p><p><strong>Using a higher-level spell slot.</strong> You can target one additional creature for each spell slot level above 1.</p></div></div></section><section id="spells/commune.yaml"><div class="head"><h2>spells/commune.yaml</h2>
+<span class="ok">checks pass</span></div>
+
+<div class="cols"><div><h3>Design file</h3><pre class="yaml">entry: spells/commune
+name: Commune
+automation: exception
+exception: The answers are the DM&#39;s to give; nothing in the rules computes them.
+pattern: knowledge-the-dm-supplies
+effects:
+  - activation:
+      cost: {minutes: 1}
+      ritual: true
+      components: [verbal, somatic, material]
+      targeting: {pick: self}
+      duration: {minutes: 1}
+    parts:
+      - kind: manual
+        prompt: Answer up to three yes-or-no questions truthfully, or &#34;unclear&#34; where the deity cannot know.
+</pre><pre class="json">{
+  &#34;entry&#34;: &#34;spells/commune&#34;,
+  &#34;name&#34;: &#34;Commune&#34;,
+  &#34;automation&#34;: &#34;exception&#34;,
+  &#34;exception&#34;: &#34;The answers are the DM&#39;s to give; nothing in the rules computes them.&#34;,
+  &#34;pattern&#34;: &#34;knowledge-the-dm-supplies&#34;,
+  &#34;effects&#34;: [
+    {
+      &#34;activation&#34;: {
+        &#34;components&#34;: [
+          &#34;verbal&#34;,
+          &#34;somatic&#34;,
+          &#34;material&#34;
+        ],
+        &#34;cost&#34;: {
+          &#34;minutes&#34;: 1
+        },
+        &#34;duration&#34;: {
+          &#34;minutes&#34;: 1
+        },
+        &#34;ritual&#34;: true,
+        &#34;targeting&#34;: {
+          &#34;pick&#34;: &#34;self&#34;
+        }
+      },
+      &#34;parts&#34;: [
+        {
+          &#34;kind&#34;: &#34;manual&#34;,
+          &#34;prompt&#34;: &#34;Answer up to three yes-or-no questions truthfully, or \&#34;unclear\&#34; where the deity cannot know.&#34;
+        }
+      ]
+    }
+  ]
+}</pre></div>
+<div><h3>Seed text</h3><p><strong>Commune.</strong> You contact a deity or a divine proxy and ask up to three questions that can be answered with yes or no. You must ask your questions before the spell ends. You receive a correct answer for each question. Divine beings aren&#39;t necessarily omniscient, so you might receive &#34;unclear&#34; as an answer if a question pertains to information that lies beyond the deity&#39;s knowledge. In a case where a one-word answer could be misleading or contrary to the deity&#39;s interests, the GM might offer a short phrase as an answer instead. If you cast the spell more than once before finishing a Long Rest, there is a cumulative 25 percent chance for each casting after the first that you get no answer.</p></div></div></section><section id="spells/cure-wounds.yaml"><div class="head"><h2>spells/cure-wounds.yaml</h2>
+<span class="ok">checks pass</span></div>
+
+<div class="cols"><div><h3>Design file</h3><pre class="yaml">entry: spells/cure-wounds
+name: Cure Wounds
+automation: full
+pattern: healing
+effects:
+  - activation:
+      cost: action
+      components: [verbal, somatic]
+      targeting: {pick: creatures, count: 1, range: touch}
+      duration: instant
+    parts:
+      - kind: heal
+        dice: 2d8
+        plus: spellcasting ability modifier
+    scaling:
+      - per: slot_level
+        above: 1
+        grows: {part: heal, field: dice, by: 2d8}
+</pre><pre class="json">{
+  &#34;entry&#34;: &#34;spells/cure-wounds&#34;,
+  &#34;name&#34;: &#34;Cure Wounds&#34;,
+  &#34;automation&#34;: &#34;full&#34;,
+  &#34;pattern&#34;: &#34;healing&#34;,
+  &#34;effects&#34;: [
+    {
+      &#34;activation&#34;: {
+        &#34;components&#34;: [
+          &#34;verbal&#34;,
+          &#34;somatic&#34;
+        ],
+        &#34;cost&#34;: &#34;action&#34;,
+        &#34;duration&#34;: &#34;instant&#34;,
+        &#34;targeting&#34;: {
+          &#34;count&#34;: 1,
+          &#34;pick&#34;: &#34;creatures&#34;,
+          &#34;range&#34;: &#34;touch&#34;
+        }
+      },
+      &#34;parts&#34;: [
+        {
+          &#34;dice&#34;: &#34;2d8&#34;,
+          &#34;kind&#34;: &#34;heal&#34;,
+          &#34;plus&#34;: &#34;spellcasting ability modifier&#34;
+        }
+      ],
+      &#34;scaling&#34;: [
+        {
+          &#34;above&#34;: 1,
+          &#34;grows&#34;: {
+            &#34;by&#34;: &#34;2d8&#34;,
+            &#34;field&#34;: &#34;dice&#34;,
+            &#34;part&#34;: &#34;heal&#34;
+          },
+          &#34;per&#34;: &#34;slot_level&#34;
+        }
+      ]
+    }
+  ]
+}</pre></div>
+<div><h3>Seed text</h3><p><strong>Cure Wounds.</strong> A creature you touch regains a number of Hit Points equal to 2d8 plus your spellcasting ability modifier.</p><p><strong>Using a higher-level spell slot.</strong> The healing increases by 2d8 for each spell slot level above 1.</p></div></div></section><section id="spells/fireball.yaml"><div class="head"><h2>spells/fireball.yaml</h2>
+<span class="ok">checks pass</span></div>
+
+<div class="cols"><div><h3>Design file</h3><pre class="yaml">entry: spells/fireball
+name: Fireball
+automation: full
+pattern: save-area-damage
+effects:
+  - activation:
+      cost: action
+      components: [verbal, somatic, material]
+      targeting: {pick: point, range_ft: 150}
+      duration: instant
+    parts:
+      - kind: area
+        shape: sphere
+        size_ft: 20
+      - kind: save_damage
+        ability: dexterity
+        dice: 8d6
+        damage_type: fire
+        half: true
+    scaling:
+      - per: slot_level
+        above: 3
+        grows: {part: save_damage, field: dice, by: 1d6}
+</pre><pre class="json">{
+  &#34;entry&#34;: &#34;spells/fireball&#34;,
+  &#34;name&#34;: &#34;Fireball&#34;,
+  &#34;automation&#34;: &#34;full&#34;,
+  &#34;pattern&#34;: &#34;save-area-damage&#34;,
+  &#34;effects&#34;: [
+    {
+      &#34;activation&#34;: {
+        &#34;components&#34;: [
+          &#34;verbal&#34;,
+          &#34;somatic&#34;,
+          &#34;material&#34;
+        ],
+        &#34;cost&#34;: &#34;action&#34;,
+        &#34;duration&#34;: &#34;instant&#34;,
+        &#34;targeting&#34;: {
+          &#34;pick&#34;: &#34;point&#34;,
+          &#34;range_ft&#34;: 150
+        }
+      },
+      &#34;parts&#34;: [
+        {
+          &#34;kind&#34;: &#34;area&#34;,
+          &#34;shape&#34;: &#34;sphere&#34;,
+          &#34;size_ft&#34;: 20
+        },
+        {
+          &#34;ability&#34;: &#34;dexterity&#34;,
+          &#34;damage_type&#34;: &#34;fire&#34;,
+          &#34;dice&#34;: &#34;8d6&#34;,
+          &#34;half&#34;: true,
+          &#34;kind&#34;: &#34;save_damage&#34;
+        }
+      ],
+      &#34;scaling&#34;: [
+        {
+          &#34;above&#34;: 3,
+          &#34;grows&#34;: {
+            &#34;by&#34;: &#34;1d6&#34;,
+            &#34;field&#34;: &#34;dice&#34;,
+            &#34;part&#34;: &#34;save_damage&#34;
+          },
+          &#34;per&#34;: &#34;slot_level&#34;
+        }
+      ]
+    }
+  ]
+}</pre></div>
+<div><h3>Seed text</h3><p><strong>Fireball.</strong> A bright streak flashes from you to a point you choose within range and then blossoms with a low roar into a fiery explosion. Each creature in a 20-foot-radius Sphere centered on that point makes a Dexterity saving throw, taking 8d6 Fire damage on a failed save or half as much damage on a successful one. Flammable objects in the area that aren&#39;t being worn or carried start burning.</p><p><strong>Using a higher-level spell slot.</strong> The damage increases by 1d6 for each spell slot level above 3.</p></div></div></section><section id="spells/hold-person.yaml"><div class="head"><h2>spells/hold-person.yaml</h2>
+<span class="ok">checks pass</span></div>
+
+<div class="cols"><div><h3>Design file</h3><pre class="yaml">entry: spells/hold-person
+name: Hold Person
+automation: full
+pattern: chosen-creatures-save-or-condition
+effects:
+  - activation:
+      cost: action
+      components: [verbal, somatic, material]
+      targeting: {pick: creatures, count: 1, range_ft: 60, creature_types: [humanoid], needs_sight: true}
+      duration: {minutes: 1}
+      concentration: true
+    parts:
+      - kind: save_gate
+        ability: wisdom
+        failure:
+          - kind: apply_condition
+            condition: paralyzed
+        repeat: {at: end of the target&#39;s turn, ends_on: success}
+    scaling:
+      - per: slot_level
+        above: 2
+        grows: {targeting: count, by: 1}
+</pre><pre class="json">{
+  &#34;entry&#34;: &#34;spells/hold-person&#34;,
+  &#34;name&#34;: &#34;Hold Person&#34;,
+  &#34;automation&#34;: &#34;full&#34;,
+  &#34;pattern&#34;: &#34;chosen-creatures-save-or-condition&#34;,
+  &#34;effects&#34;: [
+    {
+      &#34;activation&#34;: {
+        &#34;components&#34;: [
+          &#34;verbal&#34;,
+          &#34;somatic&#34;,
+          &#34;material&#34;
+        ],
+        &#34;concentration&#34;: true,
+        &#34;cost&#34;: &#34;action&#34;,
+        &#34;duration&#34;: {
+          &#34;minutes&#34;: 1
+        },
+        &#34;targeting&#34;: {
+          &#34;count&#34;: 1,
+          &#34;creature_types&#34;: [
+            &#34;humanoid&#34;
+          ],
+          &#34;needs_sight&#34;: true,
+          &#34;pick&#34;: &#34;creatures&#34;,
+          &#34;range_ft&#34;: 60
+        }
+      },
+      &#34;parts&#34;: [
+        {
+          &#34;ability&#34;: &#34;wisdom&#34;,
+          &#34;failure&#34;: [
+            {
+              &#34;condition&#34;: &#34;paralyzed&#34;,
+              &#34;kind&#34;: &#34;apply_condition&#34;
+            }
+          ],
+          &#34;kind&#34;: &#34;save_gate&#34;,
+          &#34;repeat&#34;: {
+            &#34;at&#34;: &#34;end of the target&#39;s turn&#34;,
+            &#34;ends_on&#34;: &#34;success&#34;
+          }
+        }
+      ],
+      &#34;scaling&#34;: [
+        {
+          &#34;above&#34;: 2,
+          &#34;grows&#34;: {
+            &#34;by&#34;: 1,
+            &#34;targeting&#34;: &#34;count&#34;
+          },
+          &#34;per&#34;: &#34;slot_level&#34;
+        }
+      ]
+    }
+  ]
+}</pre></div>
+<div><h3>Seed text</h3><p><strong>Hold Person.</strong> Choose a Humanoid that you can see within range. The target must succeed on a Wisdom saving throw or have the Paralyzed condition for the duration. At the end of each of its turns, the target repeats the save, ending the spell on itself on a success.</p><p><strong>Using a higher-level spell slot.</strong> You can target one additional Humanoid for each spell slot level above 2.</p></div></div></section><section id="spells/prestidigitation.yaml"><div class="head"><h2>spells/prestidigitation.yaml</h2>
+<span class="ok">checks pass</span></div>
+
+<div class="cols"><div><h3>Design file</h3><pre class="yaml">entry: spells/prestidigitation
+name: Prestidigitation
+automation: full
+pattern: note-only
+effects:
+  - activation:
+      cost: action
+      components: [verbal, somatic]
+      targeting: {pick: point, range_ft: 10}
+      duration: {hours: 1}
+    parts:
+      - kind: note
+        reason: narration
+        text: &gt;-
+          You create one minor magical effect within range: a harmless sensory effect, lighting or
+          snuffing a small flame, cleaning or soiling a small object, chilling, warming or flavouring
+          nonliving material, a small mark or symbol, or a trinket or illusory image that fits in your
+          hand. Up to three of the lasting effects can be active at a time.
+</pre><pre class="json">{
+  &#34;entry&#34;: &#34;spells/prestidigitation&#34;,
+  &#34;name&#34;: &#34;Prestidigitation&#34;,
+  &#34;automation&#34;: &#34;full&#34;,
+  &#34;pattern&#34;: &#34;note-only&#34;,
+  &#34;effects&#34;: [
+    {
+      &#34;activation&#34;: {
+        &#34;components&#34;: [
+          &#34;verbal&#34;,
+          &#34;somatic&#34;
+        ],
+        &#34;cost&#34;: &#34;action&#34;,
+        &#34;duration&#34;: {
+          &#34;hours&#34;: 1
+        },
+        &#34;targeting&#34;: {
+          &#34;pick&#34;: &#34;point&#34;,
+          &#34;range_ft&#34;: 10
+        }
+      },
+      &#34;parts&#34;: [
+        {
+          &#34;kind&#34;: &#34;note&#34;,
+          &#34;reason&#34;: &#34;narration&#34;,
+          &#34;text&#34;: &#34;You create one minor magical effect within range: a harmless sensory effect, lighting or snuffing a small flame, cleaning or soiling a small object, chilling, warming or flavouring nonliving material, a small mark or symbol, or a trinket or illusory image that fits in your hand. Up to three of the lasting effects can be active at a time.&#34;
+        }
+      ]
+    }
+  ]
+}</pre></div>
+<div><h3>Seed text</h3><p><strong>Prestidigitation.</strong> You create a magical effect within range. Choose the effect from the options below. If you cast this spell multiple times, you can have up to three of its non-instantaneous effects active at a time.
+
+**_Sensory Effect._** You create an instantaneous, harmless sensory effect, such as a shower of sparks, a puff of wind, faint musical notes, or an odd odor.
+
+**_Fire Play._** You instantaneously light or snuff out a candle, a torch, or a small campfire.
+
+**_Clean or Soil._** You instantaneously clean or soil an object no larger than 1 cubic foot.
+
+**_Minor Sensation._** You chill, warm, or flavor up to 1 cubic foot of nonliving material for 1 hour.
+
+**_Magic Mark._** You make a color, a small mark, or a symbol appear on an object or a surface for 1 hour.
+
+**_Minor Creation._** You create a nonmagical trinket or an illusory image that can fit in your hand. It lasts until the end of your next turn. A trinket can deal no damage and has no monetary worth.</p></div></div></section><section id="traits/legendary-resistance.yaml"><div class="head"><h2>traits/legendary-resistance.yaml</h2>
+<span class="ok">checks pass</span></div>
+<p class="dim">32 stat blocks carry this trait</p>
+<div class="cols"><div><h3>Design file</h3><pre class="yaml">entry: traits/legendary-resistance
+name: Legendary Resistance
+automation: full
+pattern: legendary-resistance
+params: [uses, in_lair]
+effects:
+  - activation: {passive: true}
+    parts:
+      - kind: trigger
+        on: failed saving throw
+        optional: true
+        limit: {per_day: uses, per_day_in_lair: in_lair}
+        then:
+          - kind: roll_rule
+            outcome: the save succeeds instead
+</pre><pre class="json">{
+  &#34;entry&#34;: &#34;traits/legendary-resistance&#34;,
+  &#34;name&#34;: &#34;Legendary Resistance&#34;,
+  &#34;automation&#34;: &#34;full&#34;,
+  &#34;pattern&#34;: &#34;legendary-resistance&#34;,
+  &#34;params&#34;: [
+    &#34;uses&#34;,
+    &#34;in_lair&#34;
+  ],
+  &#34;effects&#34;: [
+    {
+      &#34;activation&#34;: {
+        &#34;passive&#34;: true
+      },
+      &#34;parts&#34;: [
+        {
+          &#34;kind&#34;: &#34;trigger&#34;,
+          &#34;limit&#34;: {
+            &#34;per_day&#34;: &#34;uses&#34;,
+            &#34;per_day_in_lair&#34;: &#34;in_lair&#34;
+          },
+          &#34;on&#34;: &#34;failed saving throw&#34;,
+          &#34;optional&#34;: true,
+          &#34;then&#34;: [
+            {
+              &#34;kind&#34;: &#34;roll_rule&#34;,
+              &#34;outcome&#34;: &#34;the save succeeds instead&#34;
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}</pre></div>
+<div><h3>Seed text</h3><p><strong>Legendary Resistance (as one stat block words it).</strong> If the vampire fails a saving throw, it can choose to succeed instead.</p></div></div></section><section id="traits/pack-tactics.yaml"><div class="head"><h2>traits/pack-tactics.yaml</h2>
+<span class="ok">checks pass</span></div>
+<p class="dim">18 stat blocks carry this trait</p>
+<div class="cols"><div><h3>Design file</h3><pre class="yaml">entry: traits/pack-tactics
+name: Pack Tactics
+automation: full
+pattern: conditional-edge
+effects:
+  - activation: {passive: true}
+    parts:
+      - kind: roll_rule
+        edge: advantage
+        on: [attack rolls]
+        when: [an ally is within 5 feet of the target, that ally is not incapacitated]
+</pre><pre class="json">{
+  &#34;entry&#34;: &#34;traits/pack-tactics&#34;,
+  &#34;name&#34;: &#34;Pack Tactics&#34;,
+  &#34;automation&#34;: &#34;full&#34;,
+  &#34;pattern&#34;: &#34;conditional-edge&#34;,
+  &#34;effects&#34;: [
+    {
+      &#34;activation&#34;: {
+        &#34;passive&#34;: true
+      },
+      &#34;parts&#34;: [
+        {
+          &#34;edge&#34;: &#34;advantage&#34;,
+          &#34;kind&#34;: &#34;roll_rule&#34;,
+          &#34;on&#34;: [
+            &#34;attack rolls&#34;
+          ],
+          &#34;when&#34;: [
+            &#34;an ally is within 5 feet of the target&#34;,
+            &#34;that ally is not incapacitated&#34;
+          ]
+        }
+      ]
+    }
+  ]
+}</pre></div>
+<div><h3>Seed text</h3><p><strong>Pack Tactics (as one stat block words it).</strong> The wolf has Advantage on attack rolls against a creature if at least one of the wolf&#39;s allies is within 5 feet of the creature and the ally doesn&#39;t have the Incapacitated condition.</p></div></div></section>
+</main></body></html>

@@ -1,0 +1,14 @@
+entry: items/ring-of-protection
+name: Ring of Protection
+automation: full
+pattern: flat-bonus
+attunement: true
+applies_to:
+  - match: ring-of-protection
+effects:
+  - label: Protection
+    activation: {passive: true, while: worn}
+    parts:
+      - kind: modifier
+        changes: [armor class, saving throws]
+        value: 1

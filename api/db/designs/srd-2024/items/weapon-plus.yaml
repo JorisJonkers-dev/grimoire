@@ -1,0 +1,16 @@
+entry: items/weapon-plus
+name: Weapon, +1, +2 or +3
+automation: full
+pattern: flat-bonus
+applies_to:
+  - match: "*-plus-{bonus}"
+    category: weapon
+    bonus: [1, 2, 3]
+effects:
+  - label: Bonus
+    activation: {passive: true, while: held}
+    parts:
+      - kind: modifier
+        changes: [attack rolls, damage rolls]
+        scope: attacks with this item
+        value: {param: bonus}

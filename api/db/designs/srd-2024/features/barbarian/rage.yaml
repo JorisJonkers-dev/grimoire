@@ -1,0 +1,24 @@
+entry: features/barbarian/rage
+name: Rage
+automation: full
+pattern: activated-state
+effects:
+  - activation:
+      cost: bonus_action
+      spends: {resource: rage, amount: 1}
+      unless: [wearing heavy armor]
+      targeting: {pick: self}
+      duration: {until: end of your next turn, extended_by: [attacking an enemy, forcing a saving throw, a bonus action], at_most_minutes: 10}
+      ends_when: [dons heavy armor, incapacitated]
+    parts:
+      - kind: resistance
+        damage_types: [bludgeoning, piercing, slashing]
+      - kind: modifier
+        changes: damage rolls
+        scope: attacks using strength
+        value: {scale: rage-damage}
+      - kind: roll_rule
+        edge: advantage
+        on: [strength checks, strength saving throws]
+      - kind: action_economy
+        forbids: [casting spells, concentration]

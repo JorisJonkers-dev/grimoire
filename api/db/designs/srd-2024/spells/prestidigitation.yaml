@@ -1,0 +1,18 @@
+entry: spells/prestidigitation
+name: Prestidigitation
+automation: full
+pattern: note-only
+effects:
+  - activation:
+      cost: action
+      components: [verbal, somatic]
+      targeting: {pick: point, range_ft: 10}
+      duration: {hours: 1}
+    parts:
+      - kind: note
+        reason: narration
+        text: >-
+          You create one minor magical effect within range: a harmless sensory effect, lighting or
+          snuffing a small flame, cleaning or soiling a small object, chilling, warming or flavouring
+          nonliving material, a small mark or symbol, or a trinket or illusory image that fits in your
+          hand. Up to three of the lasting effects can be active at a time.

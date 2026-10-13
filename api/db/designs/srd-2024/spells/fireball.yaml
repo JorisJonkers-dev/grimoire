@@ -1,0 +1,23 @@
+entry: spells/fireball
+name: Fireball
+automation: full
+pattern: save-area-damage
+effects:
+  - activation:
+      cost: action
+      components: [verbal, somatic, material]
+      targeting: {pick: point, range_ft: 150}
+      duration: instant
+    parts:
+      - kind: area
+        shape: sphere
+        size_ft: 20
+      - kind: save_damage
+        ability: dexterity
+        dice: 8d6
+        damage_type: fire
+        half: true
+    scaling:
+      - per: slot_level
+        above: 3
+        grows: {part: save_damage, field: dice, by: 1d6}

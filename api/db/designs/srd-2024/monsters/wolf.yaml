@@ -1,0 +1,14 @@
+entry: monsters/wolf
+name: Wolf
+automation: full
+effects:
+  - of: Bite
+    attack: stat block
+    on_hit:
+      - kind: branch
+        when: [the target is medium or smaller]
+        then:
+          - kind: apply_condition
+            condition: prone
+  - of: Pack Tactics
+    use: traits/pack-tactics

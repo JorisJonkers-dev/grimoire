@@ -1,0 +1,18 @@
+entry: spells/cure-wounds
+name: Cure Wounds
+automation: full
+pattern: healing
+effects:
+  - activation:
+      cost: action
+      components: [verbal, somatic]
+      targeting: {pick: creatures, count: 1, range: touch}
+      duration: instant
+    parts:
+      - kind: heal
+        dice: 2d8
+        plus: spellcasting ability modifier
+    scaling:
+      - per: slot_level
+        above: 1
+        grows: {part: heal, field: dice, by: 2d8}

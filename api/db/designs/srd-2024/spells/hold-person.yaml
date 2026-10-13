@@ -1,0 +1,22 @@
+entry: spells/hold-person
+name: Hold Person
+automation: full
+pattern: chosen-creatures-save-or-condition
+effects:
+  - activation:
+      cost: action
+      components: [verbal, somatic, material]
+      targeting: {pick: creatures, count: 1, range_ft: 60, creature_types: [humanoid], needs_sight: true}
+      duration: {minutes: 1}
+      concentration: true
+    parts:
+      - kind: save_gate
+        ability: wisdom
+        failure:
+          - kind: apply_condition
+            condition: paralyzed
+        repeat: {at: end of the target's turn, ends_on: success}
+    scaling:
+      - per: slot_level
+        above: 2
+        grows: {targeting: count, by: 1}

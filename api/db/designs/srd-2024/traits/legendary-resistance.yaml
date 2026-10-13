@@ -1,0 +1,15 @@
+entry: traits/legendary-resistance
+name: Legendary Resistance
+automation: full
+pattern: legendary-resistance
+params: [uses, in_lair]
+effects:
+  - activation: {passive: true}
+    parts:
+      - kind: trigger
+        on: failed saving throw
+        optional: true
+        limit: {per_day: uses, per_day_in_lair: in_lair}
+        then:
+          - kind: roll_rule
+            outcome: the save succeeds instead

@@ -1,0 +1,60 @@
+entry: monsters/adult-red-dragon
+name: Adult Red Dragon
+automation: full
+legendary: {uses: 3, in_lair: 4}
+effects:
+  - of: Legendary Resistance (3/Day, or 4/Day in Lair)
+    use: traits/legendary-resistance
+    with: {uses: 3, in_lair: 4}
+  - of: Multiattack
+    activation: {cost: action}
+    parts:
+      - kind: sequence
+        steps: [{take: Rend, times: 3}]
+        may_swap: {one: Rend, for: {cast: scorching-ray}}
+  - of: Rend
+    attack: stat block
+  - of: Fire Breath
+    activation:
+      cost: action
+      recharge: 5
+    parts:
+      - kind: area
+        shape: cone
+        size_ft: 60
+      - kind: save_damage
+        ability: dexterity
+        dc: 21
+        dice: 17d6
+        damage_type: fire
+        half: true
+  - of: Spellcasting
+    activation: {cost: action}
+    parts:
+      - kind: cast_spell
+        ability: charisma
+        save_dc: 20
+        attack_bonus: 12
+        without: [material]
+        at_will: [command, detect-magic, scorching-ray]
+        per_day: {fireball: 1}
+  - of: Commanding Presence
+    activation: {cost: legendary_action, price: 1, limit: once until the start of its next turn}
+    parts:
+      - kind: cast_spell
+        from: Spellcasting
+        spell: command
+        slot_level: 2
+  - of: Fiery Rays
+    activation: {cost: legendary_action, price: 1, limit: once until the start of its next turn}
+    parts:
+      - kind: cast_spell
+        from: Spellcasting
+        spell: scorching-ray
+  - of: Pounce
+    activation: {cost: legendary_action, price: 1}
+    parts:
+      - kind: movement
+        up_to: half speed
+      - kind: sequence
+        steps: [{take: Rend, times: 1}]

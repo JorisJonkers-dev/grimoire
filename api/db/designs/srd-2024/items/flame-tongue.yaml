@@ -1,0 +1,26 @@
+entry: items/flame-tongue
+name: Flame Tongue
+automation: full
+pattern: weapon-rider
+attunement: true
+applies_to:
+  - match: "flame-tongue-*"
+    category: weapon
+effects:
+  - label: Ablaze
+    activation:
+      cost: bonus_action
+      while: held
+      targeting: {pick: self}
+      duration: {until: the command is spoken again}
+      ends_when: [dropped, stowed, sheathed]
+    parts:
+      - kind: light
+        bright_ft: 40
+        dim_ft: 40
+      - kind: trigger
+        on: hit with this item
+        then:
+          - kind: damage
+            dice: 2d6
+            damage_type: fire

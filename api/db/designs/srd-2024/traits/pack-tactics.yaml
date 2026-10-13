@@ -1,0 +1,11 @@
+entry: traits/pack-tactics
+name: Pack Tactics
+automation: full
+pattern: conditional-edge
+effects:
+  - activation: {passive: true}
+    parts:
+      - kind: roll_rule
+        edge: advantage
+        on: [attack rolls]
+        when: [an ally is within 5 feet of the target, that ally is not incapacitated]

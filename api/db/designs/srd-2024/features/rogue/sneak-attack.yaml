@@ -1,0 +1,19 @@
+entry: features/rogue/sneak-attack
+name: Sneak Attack
+automation: full
+pattern: on-hit-rider
+effects:
+  - activation: {passive: true}
+    parts:
+      - kind: trigger
+        on: hit
+        limit: once per turn
+        when:
+          - the attack uses a finesse or ranged weapon
+          - any_of:
+              - the attack roll has advantage
+              - all_of: [an ally is within 5 feet of the target, that ally is not incapacitated, the attack roll has no disadvantage]
+        then:
+          - kind: damage
+            dice: {scale: sneak-attack}
+            damage_type: same as the weapon

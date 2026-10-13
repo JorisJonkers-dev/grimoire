@@ -1,0 +1,15 @@
+entry: spells/commune
+name: Commune
+automation: exception
+exception: The answers are the DM's to give; nothing in the rules computes them.
+pattern: knowledge-the-dm-supplies
+effects:
+  - activation:
+      cost: {minutes: 1}
+      ritual: true
+      components: [verbal, somatic, material]
+      targeting: {pick: self}
+      duration: {minutes: 1}
+    parts:
+      - kind: manual
+        prompt: Answer up to three yes-or-no questions truthfully, or "unclear" where the deity cannot know.
