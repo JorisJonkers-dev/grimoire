@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PROTOTYPE: one kind, one place</title>
+<style>
+  :root { --bg:#15130f; --panel:#1e1b15; --line:#3a3326; --ink:#e9e2d0; --dim:#a39a84; --gold:#c9a24a; --bad:#d9705a; --ok:#7fb37a; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.5 -apple-system, "Segoe UI", sans-serif; }
+  main { max-width:1280px; margin:0 auto; padding:32px 40px 80px; }
+  h1 { font-size:26px; margin:0 0 6px; } h2 { font-size:15px; letter-spacing:.06em; text-transform:uppercase; color:var(--gold); margin:0 0 12px; }
+  h3 { font-size:14px; margin:0 0 6px; }
+  p { margin:0 0 10px; } .dim { color:var(--dim); } .tag { color:var(--bad); font-size:12px; letter-spacing:.08em; }
+  .grid { display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-top:20px; }
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:18px 20px; }
+  .wide { grid-column: 1 / -1; }
+  button { background:transparent; color:var(--ink); border:1px solid var(--line); border-radius:5px; padding:6px 12px; font:inherit; cursor:pointer; }
+  button:hover { border-color:var(--gold); } button.go { border-color:var(--gold); color:var(--gold); } button:disabled { opacity:.4; cursor:default; }
+  button.done { opacity:.45; } button.next { background:var(--gold); color:#15130f; border-color:var(--gold); }
+  input[type=text], input[type=number], select { background:#14120e; color:var(--ink); border:1px solid var(--line); border-radius:5px; padding:6px 8px; font:inherit; width:100%; }
+  label { display:block; font-size:12px; color:var(--dim); margin-bottom:3px; }
+  .fields { display:grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap:10px 14px; }
+  .part { border-top:1px solid var(--line); padding:12px 0; } .part:first-child { border-top:0; }
+  .parthead { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; }
+  .mode { margin:10px 0 0 18px; padding-left:14px; border-left:2px solid var(--line); }
+  .checks label { display:inline-block; margin-right:14px; color:var(--ink); font-size:14px; }
+  pre { margin:0; white-space:pre-wrap; font:13px/1.5 ui-monospace, Menlo, monospace; color:var(--ink); }
+  .bad { color:var(--bad); } .ok { color:var(--ok); }
+  .tabs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; } .tabs button.on { border-color:var(--gold); color:var(--gold); }
+  .steps { display:flex; gap:8px; flex-wrap:wrap; }
+  table { border-collapse:collapse; width:100%; font-size:13px; } td, th { text-align:left; padding:4px 10px 4px 0; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { color:var(--dim); font-weight:normal; }
+  .kinds span { display:inline-block; border:1px solid var(--line); border-radius:5px; padding:3px 9px; margin:0 6px 6px 0; font-size:13px; }
+  .kinds span.new { border-color:var(--gold); color:var(--gold); }
+  ul { margin:0; padding-left:18px; } li { margin-bottom:3px; }
+  code { font:13px ui-monospace, Menlo, monospace; color:var(--gold); }
+</style>
+</head>
+<body>
+<main>
+  <div class="tag">PROTOTYPE · THROWAWAY · grimoire issue 255</div>
+  <h1>One kind, one place</h1>
+  <p class="dim" style="max-width:900px">The question: can everything the system needs from one Effect component kind come from a single definition, so that adding a kind adds new files and edits nothing shared, and the builder form needs no hand-written page? The kind definitions below were printed by real Go code, one file per kind. This page builds the form, the checks, the rules text, the Design file and the database rows from those definitions alone. It knows nothing about any single kind.</p>
+
+  <div class="grid">
+    <section class="panel wide">
+      <h2>Guided walkthroughs</h2>
+      <div class="tabs" id="tabs"></div>
+      <p id="story" class="dim"></p>
+      <div class="steps" id="steps"></div>
+    </section>
+
+    <section class="panel">
+      <h2>The builder (generated)</h2>
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:8px">
+        <div><label>Effect name</label><input type="text" id="name"></div>
+        <div><label>Add a part</label><select id="add"></select></div>
+      </div>
+      <div id="parts"></div>
+    </section>
+
+    <section class="panel">
+      <h2>What the definition produces</h2>
+      <h3>Rules text</h3><p id="text"></p>
+      <h3 style="margin-top:14px">Checks</h3><div id="problems"></div>
+      <h3 style="margin-top:14px">Design file</h3><pre id="design"></pre>
+    </section>
+
+    <section class="panel">
+      <h2>Database rows</h2>
+      <p class="dim">One typed table per kind. No JSON column. Kinds allowed in <code>effect_components.kind</code> come from a lookup table each kind adds its own row to, not from one shared constraint.</p>
+      <div id="rows"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Kinds the engine knows</h2>
+      <div class="kinds" id="kinds"></div>
+      <button class="go" id="merge">Merge the Heal kind</button>
+      <h3 style="margin-top:16px">Files a new kind touches</h3>
+      <table>
+        <tr><th>Today</th><th>One kind, one place</th></tr>
+        <tr><td>
+          <ul>
+            <li>edit <code>effects.go</code>: type, marker, up to 6 switches</li>
+            <li>edit <code>shape.go</code>, <code>text.go</code>: 6 switches</li>
+            <li>edit <code>pgstore/effects.go</code>: 4 switches</li>
+            <li>edit <code>queries/effects.sql</code></li>
+            <li>new numbered migration that redefines the shared kind constraint</li>
+            <li>edit <code>spellbuild.go</code> and <code>openapi.yaml</code> (shared part schema)</li>
+            <li>edit <code>SpellBuilderPage.vue</code></li>
+          </ul>
+        </td><td id="files"></td></tr>
+      </table>
+    </section>
+  </div>
+</main>
+
+<script>
+// ---- kind definitions, printed by the Go prototype (kindproto-dump) ----
+const DEFINITIONS = [
+ {
+  "slug": "area",
+  "label": "Area",
+  "summary": "The template the parts after it cover.",
+  "fields": [
+   {
+    "name": "shape",
+    "label": "Shape",
+    "type": "enum",
+    "options": [
+     "sphere",
+     "cone",
+     "line",
+     "cube",
+     "cylinder",
+     "emanation"
+    ],
+    "required": true
+   },
+   {
+    "name": "size_ft",
+    "label": "Size (ft)",
+    "type": "int",
+    "required": true,
+    "min": 5,
+    "max": 1000
+   },
+   {
+    "name": "range_ft",
+    "label": "Range (ft)",
+    "type": "int",
+    "max": 5000,
+    "help": "0 starts at the caster."
+   }
+  ],
+  "children": "",
+  "table": {
+   "name": "effect_areas",
+   "columns": [
+    "shape text CHECK (shape IN (...))",
+    "size_ft integer CHECK (size_ft BETWEEN 5 AND 1000)",
+    "range_ft integer CHECK (range_ft BETWEEN 0 AND 5000)"
+   ]
+  },
+  "template": "A {size_ft}-foot {shape}{?range_ft: within {range_ft} feet}.",
+  "files": [
+   "api/internal/rules/effects/kind_area.go",
+   "api/internal/compendium/pgstore/kind_area.go",
+   "api/db/queries/effect_kind_area.sql",
+   "api/db/migrations/<timestamp>_effect_kind_area.sql"
+  ]
+ },
+ {
+  "slug": "bonus_die",
+  "label": "Bonus die",
+  "summary": "Adds a die to some of the bearer's rolls while the Effect lasts.",
+  "fields": [
+   {
+    "name": "dice",
+    "label": "Die",
+    "type": "dice",
+    "required": true,
+    "help": "Such as 1d4."
+   },
+   {
+    "name": "on",
+    "label": "Added to",
+    "type": "enums",
+    "options": [
+     "attack rolls",
+     "saving throws"
+    ],
+    "required": true
+   }
+  ],
+  "children": "",
+  "table": {
+   "name": "effect_bonus_dice",
+   "columns": [
+    "dice text CHECK (dice ~ '^[0-9]+d[0-9]+$')",
+    "on_attacks boolean",
+    "on_saves boolean"
+   ]
+  },
+  "template": "The bearer adds {dice} to its {on}.",
+  "files": [
+   "api/internal/rules/effects/kind_bonus_die.go",
+   "api/internal/compendium/pgstore/kind_bonus_die.go",
+   "api/db/queries/effect_kind_bonus_die.sql",
+   "api/db/migrations/<timestamp>_effect_kind_bonus_die.sql"
+  ]
+ },
+ {
+  "slug": "choice",
+  "label": "Choice of modes",
+  "summary": "The one activating picks one mode; each mode has parts of its own.",
+  "fields": null,
+  "children": "modes",
+  "table": {
+   "name": "effect_modes",
+   "columns": [
+    "name text CHECK (char_length(name) BETWEEN 1 AND 40)",
+    "parent integer REFERENCES effect_components"
+   ]
+  },
+  "template": "Choose one: {modes}.",
+  "files": [
+   "api/internal/rules/effects/kind_choice.go",
+   "api/internal/compendium/pgstore/kind_choice.go",
+   "api/db/queries/effect_kind_choice.sql",
+   "api/db/migrations/<timestamp>_effect_kind_choice.sql"
+  ]
+ },
+ {
+  "slug": "heal",
+  "label": "Heal",
+  "summary": "The target regains Hit Points.",
+  "fields": [
+   {
+    "name": "dice",
+    "label": "Hit Points",
+    "type": "dice",
+    "required": true,
+    "help": "Such as 2d8."
+   },
+   {
+    "name": "bonus",
+    "label": "Plus",
+    "type": "enum",
+    "options": [
+     "nothing",
+     "spellcasting ability modifier"
+    ]
+   }
+  ],
+  "children": "",
+  "table": {
+   "name": "effect_heals",
+   "columns": [
+    "dice text CHECK (dice ~ '^[0-9]+d[0-9]+$')",
+    "bonus text CHECK (bonus IN ('nothing', 'spellcasting ability modifier'))"
+   ]
+  },
+  "template": "The target regains {dice}{?bonus: plus your {bonus}} Hit Points.",
+  "files": [
+   "api/internal/rules/effects/kind_heal.go",
+   "api/internal/compendium/pgstore/kind_heal.go",
+   "api/db/queries/effect_kind_heal.sql",
+   "api/db/migrations/<timestamp>_effect_kind_heal.sql"
+  ]
+ },
+ {
+  "slug": "save_damage",
+  "label": "Save for damage",
+  "summary": "Each creature in the area saves or takes damage.",
+  "fields": [
+   {
+    "name": "ability",
+    "label": "Saving throw",
+    "type": "enum",
+    "options": [
+     "strength",
+     "dexterity",
+     "constitution",
+     "intelligence",
+     "wisdom",
+     "charisma"
+    ],
+    "required": true
+   },
+   {
+    "name": "dice",
+    "label": "Damage",
+    "type": "dice",
+    "required": true,
+    "help": "Such as 8d6."
+   },
+   {
+    "name": "damage_type",
+    "label": "Damage type",
+    "type": "enum",
+    "options": [
+     "acid",
+     "cold",
+     "fire",
+     "force",
+     "lightning",
+     "necrotic",
+     "poison",
+     "psychic",
+     "radiant",
+     "thunder"
+    ],
+    "required": true
+   },
+   {
+    "name": "half",
+    "label": "Half damage on a success",
+    "type": "bool"
+   }
+  ],
+  "children": "",
+  "table": {
+   "name": "effect_save_damage",
+   "columns": [
+    "ability text CHECK (ability IN (...))",
+    "dice text CHECK (dice ~ '^[0-9]+d[0-9]+$')",
+    "damage_type text CHECK (damage_type IN (...))",
+    "half boolean"
+   ]
+  },
+  "template": "Each creature in the area makes a {ability} saving throw, taking {dice} {damage_type} damage on a failure{?half:, or half as much on a success}.",
+  "files": [
+   "api/internal/rules/effects/kind_save_damage.go",
+   "api/internal/compendium/pgstore/kind_save_damage.go",
+   "api/db/queries/effect_kind_save_damage.sql",
+   "api/db/migrations/<timestamp>_effect_kind_save_damage.sql"
+  ]
+ }
+];
+
+// ---- the liftable part: pure functions over definitions and an Effect tree. No DOM in here. ----
+const Logic = (() => {
+  const blank = (def) => ({ kind: def.slug, values: Object.fromEntries((def.fields || []).map(f => [f.name, f.type === 'bool' ? false : f.type === 'enums' ? [] : ''])), modes: def.children === 'modes' ? [{ name: '', parts: [] }, { name: '', parts: [] }] : undefined });
+  const at = (effect, path) => path.reduce((node, step) => node[step], effect);
+  const act = (state, a) => {
+    const s = structuredClone(state);
+    if (a.do === 'name') s.effect.name = a.value;
+    if (a.do === 'merge') s.known = [...new Set([...s.known, a.kind])].sort();
+    if (a.do === 'add') at(s.effect, a.path).push(blank(a.def));
+    if (a.do === 'remove') at(s.effect, a.path.slice(0, -1)).splice(a.path.at(-1), 1);
+    if (a.do === 'field') at(s.effect, a.path).values[a.name] = a.value;
+    if (a.do === 'mode') at(s.effect, a.path).name = a.value;
+    if (a.do === 'load') return { known: s.known, effect: structuredClone(a.effect) };
+    return s;
+  };
+  const check = (part, defs, where, out) => {
+    const def = defs[part.kind];
+    if (!def) { out.push(`${where}: the engine does not know the kind "${part.kind}".`); return; }
+    for (const f of def.fields || []) {
+      const v = part.values[f.name];
+      const empty = v === '' || v === undefined || (Array.isArray(v) && !v.length);
+      if (f.required && empty) out.push(`${where} · ${def.label}: ${f.label} is required.`);
+      else if (f.type === 'dice' && !empty && !/^[0-9]+d[0-9]+$/.test(v)) out.push(`${where} · ${def.label}: ${f.label} must read like 1d4.`);
+      else if (f.type === 'int' && !empty && (Number(v) < (f.min ?? -Infinity) || Number(v) > (f.max ?? Infinity))) out.push(`${where} · ${def.label}: ${f.label} must be ${f.min} to ${f.max}.`);
+      else if (f.type === 'enum' && !empty && !f.options.includes(v)) out.push(`${where} · ${def.label}: ${f.label} is not one of its options.`);
+    }
+    if (part.modes) {
+      if (part.modes.some(m => !m.name.trim())) out.push(`${where} · ${def.label}: every mode needs a name.`);
+      part.modes.forEach((m, i) => { if (!m.parts.length) out.push(`${where} · ${def.label}: mode ${m.name || i + 1} has no parts.`); m.parts.forEach((p, j) => check(p, defs, `${where}.${m.name || i + 1}.${j + 1}`, out)); });
+    }
+  };
+  const problems = (effect, defs) => { const out = []; if (!effect.name.trim()) out.push('The Effect needs a name.'); if (!effect.parts.length) out.push('The Effect has no parts.'); effect.parts.forEach((p, i) => check(p, defs, `Part ${i + 1}`, out)); return out; };
+  const sentence = (part, defs) => {
+    const def = defs[part.kind]; if (!def) return `[unknown kind ${part.kind}]`;
+    const show = (v) => Array.isArray(v) ? v.join(' and ') : String(v);
+    const vals = { ...part.values, modes: (part.modes || []).map(m => m.name || '…').join(' or ') };
+    const filled = (n) => vals[n] !== '' && vals[n] !== false && vals[n] !== undefined && vals[n] !== 'nothing' && vals[n] !== 0 && !(Array.isArray(vals[n]) && !vals[n].length);
+    let t = def.template.replace(/\{\?(\w+):((?:[^{}]|\{\w+\})*)\}/g, (_, n, body) => filled(n) ? body : '');
+    t = t.replace(/\{(\w+)\}/g, (_, n) => filled(n) ? show(vals[n]) : '…');
+    for (const m of part.modes || []) t += ` ${m.name || '…'}: ${m.parts.map(p => sentence(p, defs)).join(' ') || '…'}`;
+    return t;
+  };
+  const text = (effect, defs) => effect.parts.map(p => sentence(p, defs)).join(' ');
+  const yaml = (parts, pad) => parts.map(p => {
+    let s = `${pad}- kind: ${p.kind}\n`;
+    for (const [k, v] of Object.entries(p.values)) if (v !== '' && v !== false && !(Array.isArray(v) && !v.length)) s += `${pad}  ${k}: ${Array.isArray(v) ? '[' + v.join(', ') + ']' : v}\n`;
+    if (p.modes) { s += `${pad}  modes:\n`; for (const m of p.modes) s += `${pad}    - name: ${m.name}\n${pad}      parts:\n${yaml(m.parts, pad + '        ')}`; }
+    return s;
+  }).join('');
+  const design = (effect) => `name: ${effect.name}\nparts:\n${yaml(effect.parts, '  ')}`;
+  const rows = (effect, defs) => {
+    const tables = { 'effect_components (ordinal, kind, parent)': [] }; let n = 0;
+    const put = (t, r) => (tables[t] ||= []).push(r);
+    const walk = (parts, parent) => parts.forEach(p => {
+      const ord = n++; const def = defs[p.kind]; put('effect_components (ordinal, kind, parent)', `${ord}, ${p.kind}, ${parent ?? 'null'}`);
+      if (!def) return;
+      const cols = Object.entries(p.values).filter(([, v]) => !Array.isArray(v)).map(([k, v]) => `${k}=${v === '' ? 'null' : v}`);
+      if (cols.length) put(def.table.name, `${ord}: ${cols.join(', ')}`);
+      for (const [k, v] of Object.entries(p.values)) if (Array.isArray(v)) v.forEach(x => put(`${def.table.name}_${k} (child rows)`, `${ord}: ${x}`));
+      for (const m of p.modes || []) { const mo = n++; put('effect_components (ordinal, kind, parent)', `${mo}, mode, ${ord}`); put(def.table.name, `${mo}: name=${m.name || 'null'}`); walk(m.parts, mo); }
+    });
+    walk(effect.parts, null); return tables;
+  };
+  const used = (effect) => { const out = new Set(); const walk = (ps) => ps.forEach(p => { out.add(p.kind); (p.modes || []).forEach(m => walk(m.parts)); }); walk(effect.parts); return [...out]; };
+  return { act, problems, text, design, rows, used, blank };
+})();
+
+// ---- the page: a thin shell over Logic ----
+const ALL = Object.fromEntries(DEFINITIONS.map(d => [d.slug, d]));
+const START = { known: ['area', 'bonus_die', 'choice', 'save_damage'], effect: { name: '', parts: [] } };
+let state = structuredClone(START);
+const defs = () => Object.fromEntries(state.known.map(k => [k, ALL[k]]));
+const $ = (id) => document.getElementById(id);
+const el = (tag, props = {}, kids = []) => { const e = Object.assign(document.createElement(tag), props); kids.forEach(k => e.append(k)); return e; };
+const send = (a) => { state = Logic.act(state, a); render(); };
+
+function field(f, part, path) {
+  const set = (value) => send({ do: 'field', path, name: f.name, value });
+  const v = part.values[f.name];
+  let input;
+  if (f.type === 'enum') { input = el('select', { onchange: (e) => set(e.target.value) }, [el('option', { value: '', textContent: '—' }), ...f.options.map(o => el('option', { value: o, textContent: o, selected: o === v }))]); }
+  else if (f.type === 'enums') { input = el('div', { className: 'checks' }, f.options.map(o => el('label', {}, [el('input', { type: 'checkbox', checked: v.includes(o), onchange: (e) => set(e.target.checked ? [...v, o] : v.filter(x => x !== o)) }), ' ' + o]))); }
+  else if (f.type === 'bool') { input = el('div', { className: 'checks' }, [el('label', {}, [el('input', { type: 'checkbox', checked: !!v, onchange: (e) => set(e.target.checked) }), ' yes'])]); }
+  else { input = el('input', { type: f.type === 'int' ? 'number' : 'text', value: v, placeholder: f.help || '', onchange: (e) => set(f.type === 'int' && e.target.value !== '' ? Number(e.target.value) : e.target.value) }); }
+  return el('div', {}, [el('label', { textContent: f.label + (f.required ? ' *' : '') }), input]);
+}
+function adder(path) {
+  const s = el('select', { onchange: (e) => { if (e.target.value) send({ do: 'add', path, def: ALL[e.target.value] }); } }, [el('option', { value: '', textContent: 'Add a part…' }), ...state.known.map(k => el('option', { value: k, textContent: ALL[k].label }))]);
+  return s;
+}
+function partView(part, path) {
+  const def = ALL[part.kind];
+  const box = el('div', { className: 'part' }, [el('div', { className: 'parthead' }, [el('div', {}, [el('strong', { textContent: def.label }), el('span', { className: 'dim', textContent: '  ' + def.summary })]), el('button', { textContent: 'Remove', onclick: () => send({ do: 'remove', path }) })])]);
+  if (def.fields?.length) box.append(el('div', { className: 'fields' }, def.fields.map(f => field(f, part, path))));
+  (part.modes || []).forEach((m, i) => {
+    const mp = [...path, 'modes', i];
+    box.append(el('div', { className: 'mode' }, [el('label', { textContent: 'Mode name *' }), el('input', { type: 'text', value: m.name, onchange: (e) => send({ do: 'mode', path: mp, value: e.target.value }) }), ...m.parts.map((p, j) => partView(p, [...mp, 'parts', j])), el('div', { style: 'margin-top:8px' }, [adder([...mp, 'parts'])])]));
+  });
+  return box;
+}
+function render() {
+  const d = defs();
+  $('name').value = state.effect.name;
+  $('add').replaceWith(Object.assign(adder(['parts']), { id: 'add' }));
+  $('parts').replaceChildren(...state.effect.parts.map((p, i) => partView(p, ['parts', i])));
+  if (!state.effect.parts.length) $('parts').append(el('p', { className: 'dim', textContent: 'No parts yet. Add one, or start a walkthrough above.' }));
+  $('text').textContent = Logic.text(state.effect, d) || '—';
+  const probs = Logic.problems(state.effect, d);
+  $('problems').replaceChildren(probs.length ? el('ul', { className: 'bad' }, probs.map(p => el('li', { textContent: p }))) : el('p', { className: 'ok', textContent: 'Nothing wrong. This Effect can be saved.' }));
+  $('design').textContent = Logic.design(state.effect);
+  $('rows').replaceChildren(...Object.entries(Logic.rows(state.effect, d)).filter(([, r]) => r.length).map(([t, r]) => el('div', { style: 'margin-bottom:10px' }, [el('h3', { textContent: t }), el('pre', { textContent: r.join('\n') })])));
+  $('kinds').replaceChildren(...state.known.map(k => el('span', { textContent: ALL[k].label, className: k === 'heal' ? 'new' : '' })));
+  $('merge').disabled = state.known.includes('heal');
+  $('merge').textContent = state.known.includes('heal') ? 'Heal kind merged' : 'Merge the Heal kind';
+  $('files').replaceChildren(el('ul', {}, [...ALL.heal.files.map(f => el('li', {}, ['new ', el('code', { textContent: f })])), el('li', {}, ['one sorted line in ', el('code', { textContent: 'kinds.go' })]), el('li', { className: 'dim', textContent: 'builder page, API schema, Design file schema: nothing' })]));
+  renderSteps();
+}
+$('name').onchange = (e) => send({ do: 'name', value: e.target.value });
+$('merge').onclick = () => send({ do: 'merge', kind: 'heal' });
+
+const part = (kind, values, modes) => ({ kind, values, modes });
+const WALKS = [
+  { name: 'Bless: one flat part', story: 'The simplest case. One part, two fields. Watch the form appear from the definition, and the rules text, Design file and rows follow.', steps: [
+    ['Start a new Effect called Bless', () => send({ do: 'load', effect: { name: 'Bless', parts: [] } })],
+    ['Add a Bonus die part', () => send({ do: 'add', path: ['parts'], def: ALL.bonus_die })],
+    ['Set the die to 1d4', () => send({ do: 'field', path: ['parts', 0], name: 'dice', value: '1d4' })],
+    ['Add it to attack rolls and saving throws', () => send({ do: 'field', path: ['parts', 0], name: 'on', value: ['attack rolls', 'saving throws'] })] ] },
+  { name: 'Fireball: two parts', story: 'An area, then a save for damage. Two kinds, each from its own file, composed without either knowing about the other.', steps: [
+    ['Load Fireball', () => send({ do: 'load', effect: { name: 'Fireball', parts: [part('area', { shape: 'sphere', size_ft: 20, range_ft: 150 }), part('save_damage', { ability: 'dexterity', dice: '8d6', damage_type: 'fire', half: true })] } })],
+    ['Turn off half damage on a success', () => send({ do: 'field', path: ['parts', 1], name: 'half', value: false })],
+    ['Turn it back on', () => send({ do: 'field', path: ['parts', 1], name: 'half', value: true })] ] },
+  { name: 'A choice with parts inside', story: 'The awkward case: a part that holds other parts. A made-up demo Effect (not an SRD spell) with two modes. Watch the parent column in the rows.', steps: [
+    ['Start "Elemental Burst (demo)" with an area', () => send({ do: 'load', effect: { name: 'Elemental Burst (demo)', parts: [part('area', { shape: 'cone', size_ft: 30, range_ft: 0 })] } })],
+    ['Add a Choice of modes', () => send({ do: 'add', path: ['parts'], def: ALL.choice })],
+    ['Name the modes Fire and Cold', () => { send({ do: 'mode', path: ['parts', 1, 'modes', 0], value: 'Fire' }); send({ do: 'mode', path: ['parts', 1, 'modes', 1], value: 'Cold' }); }],
+    ['Give each mode a save for damage', () => { send({ do: 'add', path: ['parts', 1, 'modes', 0, 'parts'], def: ALL.save_damage }); send({ do: 'add', path: ['parts', 1, 'modes', 1, 'parts'], def: ALL.save_damage }); }],
+    ['Fill both in', () => { for (const [i, t] of [[0, 'fire'], [1, 'cold']]) for (const [n, v] of [['ability', 'dexterity'], ['dice', '6d6'], ['damage_type', t], ['half', true]]) send({ do: 'field', path: ['parts', 1, 'modes', i, 'parts', 0], name: n, value: v }); }] ] },
+  { name: 'A new kind arrives', story: 'Cure Wounds needs a Heal kind the engine does not have. Merging it means one new definition. Nothing on this page changes, yet the builder can author it.', steps: [
+    ['Try to load Cure Wounds before the kind exists', () => send({ do: 'load', effect: { name: 'Cure Wounds', parts: [part('heal', { dice: '2d8', bonus: 'spellcasting ability modifier' })] } })],
+    ['Merge the Heal kind', () => send({ do: 'merge', kind: 'heal' })],
+    ['Load Cure Wounds again', () => send({ do: 'load', effect: { name: 'Cure Wounds', parts: [part('heal', { dice: '2d8', bonus: 'spellcasting ability modifier' })] } })] ] },
+  { name: 'Values that should be refused', story: 'The same definition that draws the form also refuses bad values, in the builder and when a Design file is loaded.', steps: [
+    ['Load a broken Fireball', () => send({ do: 'load', effect: { name: '', parts: [part('area', { shape: 'sphere', size_ft: 2, range_ft: 150 }), part('save_damage', { ability: '', dice: 'lots', damage_type: 'fire', half: true })] } })],
+    ['Fix the size', () => send({ do: 'field', path: ['parts', 0], name: 'size_ft', value: 20 })],
+    ['Fix the damage and the save', () => { send({ do: 'field', path: ['parts', 1], name: 'dice', value: '8d6' }); send({ do: 'field', path: ['parts', 1], name: 'ability', value: 'dexterity' }); }],
+    ['Name it', () => send({ do: 'name', value: 'Fireball' })] ] },
+];
+let walk = 0, step = 0;
+function renderSteps() {
+  $('tabs').replaceChildren(...WALKS.map((w, i) => el('button', { textContent: w.name, className: i === walk ? 'on' : '', onclick: () => { walk = i; step = 0; state = structuredClone(START); render(); } })));
+  $('story').textContent = WALKS[walk].story;
+  $('steps').replaceChildren(...WALKS[walk].steps.map(([label, run], i) => el('button', { textContent: `${i + 1}. ${label}`, className: i < step ? 'done' : i === step ? 'next' : '', disabled: i !== step, onclick: () => { step = i + 1; run(); } })));
+}
+render();
+</script>
+</body>
+</html>
