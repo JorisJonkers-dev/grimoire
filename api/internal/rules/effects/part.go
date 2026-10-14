@@ -3,6 +3,8 @@ package effects
 import (
 	"regexp"
 	"slices"
+	"strconv"
+	"unicode/utf8"
 )
 
 // Part is a Component of a kind defined in a file of its own, kind_<slug>.go, which holds its type,
@@ -47,7 +49,8 @@ const (
 	ChoicesField FieldType = "choices"
 )
 
-// Field is one value an author fills in for a Part. Min and Max bound a number.
+// Field is one value an author fills in for a Part. Min and Max bound a number; Max also bounds the
+// length of a text.
 type Field struct {
 	Name     string
 	Label    string
@@ -93,14 +96,57 @@ func refuse(field, reason string) error {
 	return ValueError{Field: field, Reason: reason}
 }
 
+// Held is an Effect as its bearer holds it: the name its notes and reasons carry, and how many levels
+// of it count.
+type Held struct {
+	Name   string
+	Levels int
+}
+
 // AttackFolder is a passive Part that changes the attacks its bearer makes.
 type AttackFolder interface {
-	FoldAttacking(p *AttackProfile, effect string)
+	FoldAttacking(p *AttackProfile, h Held)
+}
+
+// Attacker is who attacks the bearer: whether it is the Effect's own source, and whether it attacks
+// from within 5 feet.
+type Attacker struct {
+	Source     bool
+	WithinFive bool
+}
+
+// AttackedFolder is a passive Part that changes the attacks made against its bearer.
+type AttackedFolder interface {
+	FoldAttacked(p *AttackProfile, h Held, by Attacker)
 }
 
 // SaveFolder is a passive Part that changes its bearer's saving throws.
 type SaveFolder interface {
-	FoldSave(p *SaveProfile, effect, ability string)
+	FoldSave(p *SaveProfile, h Held, ability string)
+}
+
+// MoveFolder is a passive Part that changes how its bearer moves.
+type MoveFolder interface {
+	FoldMove(p *MoveProfile, h Held)
+}
+
+// ActionFolder is a passive Part that changes what its bearer can do: whether it acts at all, and the
+// reactions it has.
+type ActionFolder interface {
+	FoldActions(p *ActionProfile, h Held)
+}
+
+// Stacker is a Part that makes its Effect stack: applied again, it adds a level instead of a copy.
+type Stacker interface {
+	// Cap is the highest level the Effect rises to; 0 has no cap.
+	Cap() int
+	// Kills reports whether that many levels kill the bearer.
+	Kills(levels int) bool
+}
+
+// BearerLander is a Part that acts on its bearer the moment its Effect lands on it.
+type BearerLander interface {
+	LandsOnBearer() []Act
 }
 
 // Lander is a Part that acts when its Effect lands on an area: it asks for its rolls once, and then
@@ -148,9 +194,38 @@ type Hurt struct {
 	Type   string
 }
 
-func (RollSave) isAct()   {}
-func (RollDamage) isAct() {}
-func (Hurt) isAct()       {}
+// GainTempHP gives the bearer Amount temporary hit points, which replace smaller ones rather than add.
+type GainTempHP struct {
+	Amount int
+}
+
+// EndSpells ends every spell on the bearer.
+type EndSpells struct{}
+
+// Grant gives the bearer a feature, which the DM notes down.
+type Grant struct {
+	Feature string
+}
+
+// ChangeUses gives back (Delta above 0) or takes uses of the bearer's Resource.
+type ChangeUses struct {
+	Resource string
+	Delta    int
+}
+
+// TeleportCaster moves the caster up to RangeFt to an open hex.
+type TeleportCaster struct {
+	RangeFt int
+}
+
+func (RollSave) isAct()       {}
+func (RollDamage) isAct()     {}
+func (Hurt) isAct()           {}
+func (GainTempHP) isAct()     {}
+func (EndSpells) isAct()      {}
+func (Grant) isAct()          {}
+func (ChangeUses) isAct()     {}
+func (TeleportCaster) isAct() {}
 
 var dicePattern = regexp.MustCompile(`^[1-9][0-9]?d(4|6|8|10|12|20)$`)
 
@@ -168,4 +243,33 @@ func oneOf(field, value string, options []string) error {
 		return refuse(field, "choose one of the options")
 	}
 	return nil
+}
+
+// field is one of a kind's fields by name; every name a kind decodes is one it describes.
+func (d Description) field(name string) Field {
+	return d.Fields[slices.IndexFunc(d.Fields, func(f Field) bool { return f.Name == name })]
+}
+
+// number reads a number field, refusing one outside the field's bounds.
+func (v Values) number(f Field) (int, error) {
+	n := v[f.Name].Number
+	if n < f.Min || n > f.Max {
+		return 0, refuse(f.Name, "runs from "+strconv.Itoa(f.Min)+" to "+strconv.Itoa(f.Max))
+	}
+	return n, nil
+}
+
+// text reads a text field of up to the field's Max letters, refusing an empty one.
+func (v Values) text(f Field) (string, error) {
+	s := v[f.Name].Text
+	if s == "" || utf8.RuneCountInString(s) > f.Max {
+		return "", refuse(f.Name, "write up to "+strconv.Itoa(f.Max)+" letters")
+	}
+	return s, nil
+}
+
+// choice reads a choice field, refusing anything but one of its options.
+func (v Values) choice(f Field) (string, error) {
+	s := v[f.Name].Text
+	return s, oneOf(f.Name, s, f.Options)
 }

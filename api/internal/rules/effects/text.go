@@ -35,12 +35,6 @@ func sentence(c Component) string {
 	switch c := c.(type) {
 	case Part:
 		return c.Text()
-	case Edge:
-		return edgeText(c)
-	case ExtraDamage:
-		return "The source deals an extra " + c.Dice + " damage whenever it hits the target."
-	case MoveCost:
-		return "Every foot of movement costs " + strconv.Itoa(c.Multiplier) + " feet."
 	case Manual:
 		return c.Instruction
 	case Area:
@@ -49,31 +43,6 @@ func sentence(c Component) string {
 		return "On a failed " + title(c.Ability) + " saving throw, a creature has the " + title(c.Slug) + " condition."
 	case CreateSurface:
 		return "The area is covered in " + string(c.Kind) + " for " + plural(c.Rounds, "round") + "."
-	default:
-		return moreSentence(c)
-	}
-}
-
-func moreSentence(c Component) string {
-	switch c := c.(type) {
-	case Incapacitated:
-		return "The target has the Incapacitated condition."
-	case Immobile:
-		return "The target's Speed is 0."
-	case SaveEdge:
-		return saveEdgeText(c)
-	case CritWithin:
-		return "Any hit against the target from within " + strconv.Itoa(c.Feet) + " feet is a Critical Hit."
-	case Exhausting:
-		return stackingText(c)
-	case SpeedPenalty:
-		return "The target's Speed is reduced by " + strconv.Itoa(c.Ft) + " feet."
-	case Reacts:
-		return "When the target is " + c.Trigger + ", it can take a Reaction: " + c.Instruction
-	case TempHP:
-		return "The target gains " + strconv.Itoa(c.Amount) + " Temporary Hit Points."
-	case Teleport:
-		return "The caster teleports up to " + strconv.Itoa(c.RangeFt) + " feet to an unoccupied space it can see."
 	case ForcedMove:
 		if c.Toward {
 			return "A creature that fails is pulled up to " + strconv.Itoa(c.Ft) + " feet straight toward the caster."
@@ -86,12 +55,6 @@ func moreSentence(c Component) string {
 
 func lastSentence(c Component) string {
 	switch c := c.(type) {
-	case Dispel:
-		return "Every spell on the target ends."
-	case Counter:
-		return "As a Reaction, the caster interrupts a creature it can see casting a spell within " + strconv.Itoa(c.RangeFt) + " feet; the spell fails."
-	case GrantFeature:
-		return "The target gains " + c.Name + "."
 	case Summon:
 		return summonText(c)
 	case Form:
@@ -102,11 +65,6 @@ func lastSentence(c Component) string {
 			names = append(names, title(q))
 		}
 		return "Every creature and object in the area loses " + strings.Join(names, " and ") + ", whatever anyone's senses."
-	case ResourceChange:
-		if c.Delta > 0 {
-			return "The target regains " + plural(c.Delta, "use") + " of " + title(c.Resource) + "."
-		}
-		return "The target expends " + plural(-c.Delta, "use") + " of " + title(c.Resource) + "."
 	case AreaSave:
 		return "Each creature in the area makes a " + title(c.Ability) + " saving throw."
 	case Light:
@@ -149,25 +107,6 @@ func formText(f Form) string {
 		"; it reverts when they are gone or the effect ends, and any damage left over carries to its own Hit Points."
 }
 
-func edgeText(e Edge) string {
-	kind := map[bool]string{true: "Advantage", false: "Disadvantage"}[e.Advantage]
-	text := "The target has " + kind + " on attack rolls"
-	if e.Against {
-		text = "Attack rolls against the target have " + kind
-		if e.SourceOnly {
-			text = "The source's attack rolls against the target have " + kind
-		}
-	}
-	switch e.Range {
-	case WithinFive:
-		text += " from within 5 feet"
-	case BeyondFive:
-		text += " from more than 5 feet away"
-	case AnyRange:
-	}
-	return text + "."
-}
-
 func areaText(a Area) string {
 	size := strconv.Itoa(a.SizeFt) + "-foot " + title(string(a.Shape))
 	switch {
@@ -177,17 +116,6 @@ func areaText(a Area) string {
 		return "A " + size + " extends from the caster."
 	}
 	return "A " + size + " appears at a point within " + strconv.Itoa(a.RangeFt) + " feet."
-}
-
-func saveEdgeText(s SaveEdge) string {
-	switch s.Mode {
-	case SaveFails:
-		return "The target automatically fails " + title(s.Ability) + " saving throws."
-	case SaveAdvantage:
-		return "The target has Advantage on " + title(s.Ability) + " saving throws."
-	case SaveDisadvantage:
-	}
-	return "The target has Disadvantage on " + title(s.Ability) + " saving throws."
 }
 
 // Text writes a Duration as a rules line; empty when the Effect leaves its length open.
@@ -256,26 +184,4 @@ func article(word string) string {
 		return "an"
 	}
 	return "a"
-}
-
-// stackingText reads a stacking Effect: what each level takes, when it kills, and how high it rises.
-func stackingText(c Exhausting) string {
-	var each []string
-	if c.D20PerLevel > 0 {
-		each = append(each, "gives a −"+strconv.Itoa(c.D20PerLevel)+" penalty to D20 Tests")
-	}
-	if c.SpeedFtPerLevel > 0 {
-		each = append(each, "reduces Speed by "+strconv.Itoa(c.SpeedFtPerLevel)+" feet")
-	}
-	text := "It stacks"
-	if len(each) > 0 {
-		text = "Each level " + strings.Join(each, " and ")
-	}
-	if c.DeathAt > 0 {
-		text += "; a creature dies at level " + strconv.Itoa(c.DeathAt)
-	}
-	if c.MaxLevel > 0 {
-		text += "; it rises to level " + strconv.Itoa(c.MaxLevel) + " at most"
-	}
-	return text + "."
 }

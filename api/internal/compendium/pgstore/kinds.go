@@ -28,7 +28,23 @@ func kindRows() []partRows {
 	return []partRows{
 		bonusDieRows{},
 		branchRows{},
+		counterRows{},
+		critWithinRows{},
+		dispelRows{},
+		edgeRows{},
+		exhaustingRows{},
+		extraDamageRows{},
+		grantFeatureRows{},
+		immobileRows{},
+		incapacitatedRows{},
+		moveCostRows{},
+		reactsRows{},
+		resourceChangeRows{},
 		saveDamageRows{},
+		saveEdgeRows{},
+		speedPenaltyRows{},
+		teleportRows{},
+		tempHPRows{},
 	}
 }
 
@@ -57,6 +73,18 @@ func readParts(ctx context.Context, q *queries.Queries, into map[slot]effects.Co
 		if err := r.read(ctx, q, into); err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+// bare puts a Part that is the whole of its kind at every component row of that kind.
+func bare(ctx context.Context, q *queries.Queries, into map[slot]effects.Component, p effects.Part) error {
+	rows, err := q.ListEffectComponentsOfKind(ctx, p.Kind())
+	if err != nil {
+		return err
+	}
+	for _, r := range rows {
+		into[slot{r.EffectID, r.Ordinal}] = p
 	}
 	return nil
 }

@@ -5,7 +5,6 @@ package effects
 import (
 	"slices"
 	"sort"
-	"strconv"
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/surface"
@@ -15,35 +14,6 @@ import (
 //
 //sumtype:decl
 type Component interface{ isComponent() }
-
-// Range limits an advantage source by how far the attacker is from the bearer.
-type Range int
-
-// Ranges.
-const (
-	AnyRange Range = iota
-	WithinFive
-	BeyondFive
-)
-
-// Edge gives advantage or disadvantage: on the bearer's own attacks, or on attacks against the bearer.
-// A SourceOnly edge against the bearer counts only for the Effect's source (Vex).
-type Edge struct {
-	Against    bool
-	Advantage  bool
-	Range      Range
-	SourceOnly bool
-}
-
-// ExtraDamage adds dice to hits against the bearer by the effect's source (Hunter's Mark).
-type ExtraDamage struct {
-	Dice string
-}
-
-// MoveCost multiplies what each foot of movement costs the bearer (crawling while prone).
-type MoveCost struct {
-	Multiplier int
-}
 
 // Manual is a part the engine cannot compute yet; the DM resolves it from a prompt.
 type Manual struct {
@@ -67,81 +37,6 @@ type SaveCondition struct {
 type CreateSurface struct {
 	Kind   surface.Kind
 	Rounds int
-}
-
-// Incapacitated takes away the bearer's actions, bonus actions and reactions.
-type Incapacitated struct{}
-
-// Immobile holds the bearer's speed at zero.
-type Immobile struct{}
-
-// SaveMode is what a SaveEdge does to a saving throw.
-type SaveMode string
-
-// Save modes.
-const (
-	SaveAdvantage    SaveMode = "advantage"
-	SaveDisadvantage SaveMode = "disadvantage"
-	SaveFails        SaveMode = "fail"
-)
-
-// SaveEdge changes the bearer's saving throws of one ability: advantage, disadvantage or a sure failure.
-type SaveEdge struct {
-	Ability string
-	Mode    SaveMode
-}
-
-// CritWithin makes every hit on the bearer from within Feet a Critical Hit.
-type CritWithin struct {
-	Feet int
-}
-
-// SpeedPenalty takes feet off the bearer's speed (Slow); several do not add up.
-type SpeedPenalty struct {
-	Ft int
-}
-
-// Reacts lets the bearer take a reaction when Trigger happens (damaged: a creature it can see damages
-// it); the DM resolves what it does from Instruction.
-type Reacts struct {
-	Trigger     string
-	Instruction string
-}
-
-// TempHP gives the bearer temporary hit points when the Effect lands (False Life, Heroism).
-type TempHP struct {
-	Amount int
-}
-
-// Teleport moves its caster up to RangeFt to an open hex (Misty Step).
-type Teleport struct {
-	RangeFt int
-}
-
-// ForcedMove pushes creatures that fail the save Ft feet straight away from the origin, or pulls them
-// toward it (Thunderwave).
-type ForcedMove struct {
-	Ft     int
-	Toward bool
-}
-
-// Dispel ends every spell on the bearer when the Effect lands (Dispel Magic).
-type Dispel struct{}
-
-// Counter lets the bearer counter, with its reaction, a spell cast within RangeFt (Counterspell).
-type Counter struct {
-	RangeFt int
-}
-
-// GrantFeature gives the bearer a feature while the Effect lasts.
-type GrantFeature struct {
-	Name string
-}
-
-// ResourceChange gives back (Delta above 0) or takes uses of a Resource when the Effect lands.
-type ResourceChange struct {
-	Resource string
-	Delta    int
 }
 
 // Summon brings creatures in under the caster's control: Count of one monster, acting on the caster's
@@ -168,40 +63,21 @@ type Reveal struct {
 	Qualities []string
 }
 
-// Exhausting is exhaustion, or any condition that stacks: each level takes D20PerLevel from every d20
-// test and SpeedFtPerLevel from speed, at DeathAt levels the bearer dies, and it rises no higher than
-// MaxLevel (0 has no cap).
-type Exhausting struct {
-	D20PerLevel     int
-	SpeedFtPerLevel int
-	DeathAt         int
-	MaxLevel        int
+// ForcedMove pushes creatures that fail the save Ft feet straight away from the origin, or pulls them
+// toward it (Thunderwave).
+type ForcedMove struct {
+	Ft     int
+	Toward bool
 }
 
-func (Incapacitated) isComponent()  {}
-func (Immobile) isComponent()       {}
-func (SaveEdge) isComponent()       {}
-func (CritWithin) isComponent()     {}
-func (Exhausting) isComponent()     {}
-func (Summon) isComponent()         {}
-func (Form) isComponent()           {}
-func (Reveal) isComponent()         {}
-func (SpeedPenalty) isComponent()   {}
-func (Reacts) isComponent()         {}
-func (TempHP) isComponent()         {}
-func (Teleport) isComponent()       {}
-func (ForcedMove) isComponent()     {}
-func (Dispel) isComponent()         {}
-func (Counter) isComponent()        {}
-func (GrantFeature) isComponent()   {}
-func (ResourceChange) isComponent() {}
-func (Edge) isComponent()           {}
-func (ExtraDamage) isComponent()    {}
-func (MoveCost) isComponent()       {}
-func (Manual) isComponent()         {}
-func (Area) isComponent()           {}
-func (SaveCondition) isComponent()  {}
-func (CreateSurface) isComponent()  {}
+func (Summon) isComponent()        {}
+func (Form) isComponent()          {}
+func (Reveal) isComponent()        {}
+func (ForcedMove) isComponent()    {}
+func (Manual) isComponent()        {}
+func (Area) isComponent()          {}
+func (SaveCondition) isComponent() {}
+func (CreateSurface) isComponent() {}
 
 // Definition is an Effect: what it is called, what owns it, whether it needs concentration, and what it does.
 type Definition struct {
@@ -281,113 +157,33 @@ type AttackProfile struct {
 func (cat Catalog) ForAttack(attacker, target []Active, attackerID string, withinFive bool) AttackProfile {
 	var p AttackProfile
 	for _, a := range attacker {
-		p.attacking(cat[a.Slug], a)
+		d := cat[a.Slug]
+		for _, c := range d.Parts(a.Mode) {
+			if f, ok := c.(AttackFolder); ok {
+				f.FoldAttacking(&p, a.held(d))
+			}
+		}
 	}
 	for _, a := range target {
-		p.attacked(cat[a.Slug], a, a.Source == attackerID, withinFive)
+		d := cat[a.Slug]
+		by := Attacker{Source: a.Source == attackerID, WithinFive: withinFive}
+		for _, c := range d.Parts(a.Mode) {
+			if f, ok := c.(AttackedFolder); ok {
+				f.FoldAttacked(&p, a.held(d), by)
+			}
+		}
 	}
 	return p
 }
 
-// attacking applies an effect on the attacker.
-func (p *AttackProfile) attacking(d Definition, a Active) {
-	levels := a.levels()
-	for _, c := range d.Parts(a.Mode) {
-		switch c := c.(type) {
-		case Part:
-			if f, ok := c.(AttackFolder); ok {
-				f.FoldAttacking(p, d.Name)
-			}
-		case Edge:
-			if !c.Against {
-				p.add(d.Name, c)
-			}
-		case Exhausting:
-			p.Penalty += c.D20PerLevel * levels
-			p.Notes = append(p.Notes, d.Name+" "+strconv.Itoa(levels)+": -"+strconv.Itoa(c.D20PerLevel*levels)+" to hit")
-		case ExtraDamage, MoveCost, Manual, Area, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, CritWithin, SpeedPenalty, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange, Choice, Summon, Form, Reveal, AreaSave, Light:
-		}
-	}
-}
-
-// attacked applies an effect on the target; extra damage only counts for the effect's own source.
-func (p *AttackProfile) attacked(d Definition, a Active, bySource, withinFive bool) {
-	for _, c := range d.Parts(a.Mode) {
-		switch c := c.(type) {
-		case Edge:
-			if c.Against && c.Range.covers(withinFive) && (!c.SourceOnly || bySource) {
-				p.add(d.Name, c)
-			}
-		case ExtraDamage:
-			if bySource {
-				p.DamageDice = append(p.DamageDice, c.Dice)
-				p.Notes = append(p.Notes, d.Name+": +"+c.Dice+" damage")
-			}
-		case CritWithin:
-			if withinFive && c.Feet >= 5 && !p.Crit {
-				p.Crit = true
-				p.Notes = append(p.Notes, d.Name+": a hit from this close is a Critical Hit")
-			}
-		case Part, MoveCost, Manual, Area, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, Exhausting, SpeedPenalty, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange, Choice, Summon, Form, Reveal, AreaSave, Light:
-		}
-	}
-}
-
-func (r Range) covers(withinFive bool) bool {
-	switch r {
-	case WithinFive:
-		return withinFive
-	case BeyondFive:
-		return !withinFive
-	case AnyRange:
-	}
-	return true
-}
-
-func (p *AttackProfile) add(name string, e Edge) {
-	if e.Advantage {
-		p.Advantages = append(p.Advantages, name+": advantage")
-		return
-	}
-	p.Disadvantages = append(p.Disadvantages, name+": disadvantage")
+// held is the Effect as its bearer holds it.
+func (a Active) held(d Definition) Held {
+	return Held{Name: d.Name, Levels: a.levels()}
 }
 
 // SaveDice are the dice a creature's effects add to its saving throws, whatever the ability.
 func (cat Catalog) SaveDice(bearer []Active) []string {
 	return cat.ForSave(bearer, "").Dice
-}
-
-// MoveMultiplier is what each foot of movement costs a creature: the steepest of its effects.
-func (cat Catalog) MoveMultiplier(bearer []Active) int {
-	most := 1
-	for _, a := range bearer {
-		for _, c := range cat[a.Slug].Parts(a.Mode) {
-			if m, ok := c.(MoveCost); ok {
-				most = max(most, m.Multiplier)
-			}
-		}
-	}
-	return most
-}
-
-// has reports whether any of the bearer's effects has a component that passes the test.
-func (cat Catalog) has(bearer []Active, test func(Component) bool) bool {
-	for _, a := range bearer {
-		if slices.ContainsFunc(cat[a.Slug].Parts(a.Mode), test) {
-			return true
-		}
-	}
-	return false
-}
-
-// Incapacitated reports whether the bearer can take no action, bonus action or reaction.
-func (cat Catalog) Incapacitated(bearer []Active) bool {
-	return cat.has(bearer, func(c Component) bool { _, ok := c.(Incapacitated); return ok })
-}
-
-// Immobile reports whether the bearer's speed is held at zero.
-func (cat Catalog) Immobile(bearer []Active) bool {
-	return cat.has(bearer, func(c Component) bool { _, ok := c.(Immobile); return ok })
 }
 
 // SaveProfile is what effects do to one saving throw: a sure failure, advantage and disadvantage with
@@ -406,66 +202,83 @@ func (cat Catalog) ForSave(bearer []Active, ability string) SaveProfile {
 	for _, a := range bearer {
 		d := cat[a.Slug]
 		for _, c := range d.Parts(a.Mode) {
-			p.fold(d.Name, a, c, ability)
+			if f, ok := c.(SaveFolder); ok {
+				f.FoldSave(&p, a.held(d), ability)
+			}
 		}
 	}
 	return p
 }
 
-// fold applies one component of an Effect on the bearer to a saving throw of an ability.
-func (p *SaveProfile) fold(name string, a Active, c Component, ability string) {
-	switch c := c.(type) {
-	case Part:
-		if f, ok := c.(SaveFolder); ok {
-			f.FoldSave(p, name, ability)
+// MoveProfile is what effects do to how a creature moves: speed held at zero, what each foot costs,
+// and the feet taken off its speed.
+type MoveProfile struct {
+	Immobile bool
+	// Multiplier is what each foot costs: the steepest of the effects, 1 with none.
+	Multiplier int
+	// StackedFt adds up across effects and levels; LargestFt is the largest single penalty, since those
+	// do not add up.
+	StackedFt int
+	LargestFt int
+}
+
+// ForMove folds the bearer's effects into how it moves.
+func (cat Catalog) ForMove(bearer []Active) MoveProfile {
+	p := MoveProfile{Immobile: false, Multiplier: 1, StackedFt: 0, LargestFt: 0}
+	for _, a := range bearer {
+		d := cat[a.Slug]
+		for _, c := range d.Parts(a.Mode) {
+			if f, ok := c.(MoveFolder); ok {
+				f.FoldMove(&p, a.held(d))
+			}
 		}
-	case SaveEdge:
-		if c.Ability != ability {
-			return
-		}
-		switch c.Mode {
-		case SaveFails:
-			p.Fails = true
-		case SaveAdvantage:
-			p.Advantages = append(p.Advantages, name+": advantage")
-		case SaveDisadvantage:
-			p.Disadvantages = append(p.Disadvantages, name+": disadvantage")
-		}
-	case Exhausting:
-		p.Penalty += c.D20PerLevel * a.levels()
-	case Edge, ExtraDamage, MoveCost, Manual, Area, SaveCondition, CreateSurface, Incapacitated, Immobile, CritWithin, SpeedPenalty, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange, Choice, Summon, Form, Reveal, AreaSave, Light:
 	}
+	return p
+}
+
+// MoveMultiplier is what each foot of movement costs a creature: the steepest of its effects.
+func (cat Catalog) MoveMultiplier(bearer []Active) int {
+	return cat.ForMove(bearer).Multiplier
+}
+
+// Immobile reports whether the bearer's speed is held at zero.
+func (cat Catalog) Immobile(bearer []Active) bool {
+	return cat.ForMove(bearer).Immobile
 }
 
 // SpeedPenaltyFt is how many feet the bearer's effects take off its speed: exhaustion by level, plus
 // the largest single SpeedPenalty.
 func (cat Catalog) SpeedPenaltyFt(bearer []Active) int {
-	ft, worst := 0, 0
-	for _, a := range bearer {
-		for _, c := range cat[a.Slug].Parts(a.Mode) {
-			switch c := c.(type) {
-			case Exhausting:
-				ft += c.SpeedFtPerLevel * a.levels()
-			case SpeedPenalty:
-				worst = max(worst, c.Ft)
-			case Part, Edge, ExtraDamage, MoveCost, Manual, Area, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, CritWithin, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange, Choice, Summon, Form, Reveal, AreaSave, Light:
-			}
-		}
-	}
-	return ft + worst
+	p := cat.ForMove(bearer)
+	return p.StackedFt + p.LargestFt
 }
 
-// Fatal names the effect that kills the bearer at its level, if any (six levels of exhaustion).
-func (cat Catalog) Fatal(bearer []Active) (string, bool) {
+// ActionProfile is what effects do to what a creature can do: whether it can act at all, the reactions
+// they give it by what triggers them, and the longest counter with the Effect that gives it.
+type ActionProfile struct {
+	Incapacitated bool
+	Reactions     map[string][]Reaction
+	CounterFt     int
+	CounterBy     string
+}
+
+// ForActions folds the bearer's effects into what it can do.
+func (cat Catalog) ForActions(bearer []Active) ActionProfile {
+	p := ActionProfile{Incapacitated: false, Reactions: nil, CounterFt: 0, CounterBy: ""}
 	for _, a := range bearer {
 		d := cat[a.Slug]
 		for _, c := range d.Parts(a.Mode) {
-			if e, ok := c.(Exhausting); ok && e.DeathAt > 0 && a.levels() >= e.DeathAt {
-				return d.Name, true
+			if f, ok := c.(ActionFolder); ok {
+				f.FoldActions(&p, a.held(d))
 			}
 		}
 	}
-	return "", false
+	return p
+}
+
+// Incapacitated reports whether the bearer can take no action, bonus action or reaction.
+func (cat Catalog) Incapacitated(bearer []Active) bool {
+	return cat.ForActions(bearer).Incapacitated
 }
 
 // Reaction is a reaction an Effect gives: the Effect's name and what the DM resolves.
@@ -476,16 +289,41 @@ type Reaction struct {
 
 // ReactionsTo lists the reactions the bearer's effects give it when a trigger happens.
 func (cat Catalog) ReactionsTo(bearer []Active, trigger string) []Reaction {
-	var out []Reaction
+	return cat.ForActions(bearer).Reactions[trigger]
+}
+
+// CounterOf is the longest counter among the bearer's effects, with its Effect's name.
+func (cat Catalog) CounterOf(bearer []Active) (int, string, bool) {
+	p := cat.ForActions(bearer)
+	return p.CounterFt, p.CounterBy, p.CounterFt > 0
+}
+
+// Fatal names the effect that kills the bearer at its level, if any (six levels of exhaustion).
+func (cat Catalog) Fatal(bearer []Active) (string, bool) {
 	for _, a := range bearer {
 		d := cat[a.Slug]
 		for _, c := range d.Parts(a.Mode) {
-			if r, ok := c.(Reacts); ok && r.Trigger == trigger {
-				out = append(out, Reaction{Name: d.Name, Instruction: r.Instruction})
+			if s, ok := c.(Stacker); ok && s.Kills(a.levels()) {
+				return d.Name, true
 			}
 		}
 	}
-	return out
+	return "", false
+}
+
+// Stacks reports whether applying the Effect again adds a level instead of a second copy.
+func (cat Catalog) Stacks(slug string) bool {
+	return slices.ContainsFunc(cat[slug].Components, func(c Component) bool { _, ok := c.(Stacker); return ok })
+}
+
+// MaxLevel is the highest level a stacking Effect rises to; 0 when it has no cap or does not stack.
+func (cat Catalog) MaxLevel(slug string) int {
+	for _, c := range cat[slug].Components {
+		if s, ok := c.(Stacker); ok {
+			return s.Cap()
+		}
+	}
+	return 0
 }
 
 // Landing is what an Effect does the moment it lands on its bearer.
@@ -503,47 +341,51 @@ func (cat Catalog) LandingOf(slug, mode string) Landing {
 	var out Landing
 	for _, c := range cat[slug].Parts(mode) {
 		switch c := c.(type) {
-		case TempHP:
-			out.TempHP = max(out.TempHP, c.Amount)
-		case Dispel:
-			out.Dispels = true
-		case GrantFeature:
-			out.Grants = append(out.Grants, c.Name)
+		case Part:
+			if l, ok := c.(BearerLander); ok {
+				for _, act := range l.LandsOnBearer() {
+					out.take(act)
+				}
+			}
 		case Reveal:
 			out.Reveals = append(out.Reveals, c.Qualities...)
 		case Form:
 			out.Form = &c
-		case ResourceChange:
-			out.Resources = append(out.Resources, c)
-		case Part, Edge, ExtraDamage, MoveCost, Manual, Area, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge,
-			CritWithin, Exhausting, SpeedPenalty, Reacts, Teleport, ForcedMove, Counter, Choice, Summon, AreaSave, Light:
+		case Manual, Area, SaveCondition, CreateSurface, ForcedMove, Choice, Summon, AreaSave, Light:
 		}
 	}
 	return out
 }
 
+// take applies one act to the bearer: temporary hit points keep the highest, and the rest add up.
+func (l *Landing) take(act Act) {
+	switch act := act.(type) {
+	case GainTempHP:
+		l.TempHP = max(l.TempHP, act.Amount)
+	case EndSpells:
+		l.Dispels = true
+	case Grant:
+		l.Grants = append(l.Grants, act.Feature)
+	case ChangeUses:
+		l.Resources = append(l.Resources, ResourceChange(act))
+	case TeleportCaster, RollSave, RollDamage, Hurt:
+	}
+}
+
 // TeleportOf is how far an Effect teleports its caster, if it does.
 func (cat Catalog) TeleportOf(slug string) (int, bool) {
 	for _, c := range cat[slug].Components {
-		if t, ok := c.(Teleport); ok {
-			return t.RangeFt, true
+		l, ok := c.(BearerLander)
+		if !ok {
+			continue
 		}
-	}
-	return 0, false
-}
-
-// CounterOf is the longest counter among the bearer's effects, with its Effect's name.
-func (cat Catalog) CounterOf(bearer []Active) (int, string, bool) {
-	best, name := 0, ""
-	for _, a := range bearer {
-		d := cat[a.Slug]
-		for _, c := range d.Parts(a.Mode) {
-			if k, ok := c.(Counter); ok && k.RangeFt > best {
-				best, name = k.RangeFt, d.Name
+		for _, act := range l.LandsOnBearer() {
+			if t, ok := act.(TeleportCaster); ok {
+				return t.RangeFt, true
 			}
 		}
 	}
-	return best, name, best > 0
+	return 0, false
 }
 
 // SummonOf is what an Effect summons, if it does.
@@ -559,21 +401,6 @@ func (cat Catalog) SummonOf(slug string) (Summon, bool) {
 // Spell reports whether an Effect belongs to a spell, the kind Dispel ends.
 func (cat Catalog) Spell(slug string) bool {
 	return cat[slug].Owner == OwnedBySpell
-}
-
-// Stacks reports whether applying the Effect again adds a level instead of a second copy.
-func (cat Catalog) Stacks(slug string) bool {
-	return slices.ContainsFunc(cat[slug].Components, func(c Component) bool { _, ok := c.(Exhausting); return ok })
-}
-
-// MaxLevel is the highest level a stacking Effect rises to; 0 when it has no cap or does not stack.
-func (cat Catalog) MaxLevel(slug string) int {
-	for _, c := range cat[slug].Components {
-		if e, ok := c.(Exhausting); ok {
-			return e.MaxLevel
-		}
-	}
-	return 0
 }
 
 // Instructions are the parts of an Effect the DM resolves by hand; an unknown Effect is one whole
@@ -616,7 +443,7 @@ func (a *AreaSpell) ask(l Lander) {
 			a.Save = act.Ability
 		case RollDamage:
 			a.Damage = act
-		case Hurt:
+		case Hurt, GainTempHP, EndSpells, Grant, ChangeUses, TeleportCaster:
 		}
 	}
 	a.landers = append(a.landers, l)
@@ -659,7 +486,7 @@ func (cat Catalog) AreaOf(slug string) (AreaSpell, bool) {
 			out.Save = c.Ability
 		case Light:
 			out.Light = c
-		case Edge, ExtraDamage, MoveCost, Incapacitated, Immobile, SaveEdge, CritWithin, Exhausting, SpeedPenalty, Reacts, TempHP, Teleport, Dispel, Counter, GrantFeature, ResourceChange, Choice, Summon, Form:
+		case Choice, Summon, Form:
 		}
 	}
 	return out, known && found

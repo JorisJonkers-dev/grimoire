@@ -499,6 +499,7 @@ type Querier interface {
 	ListEffectBonusDice(ctx context.Context) ([]ListEffectBonusDiceRow, error)
 	ListEffectBranches(ctx context.Context) ([]ListEffectBranchesRow, error)
 	ListEffectComponents(ctx context.Context) ([]CompendiumEffectComponent, error)
+	ListEffectComponentsOfKind(ctx context.Context, kind string) ([]ListEffectComponentsOfKindRow, error)
 	ListEffectCounters(ctx context.Context) ([]ListEffectCountersRow, error)
 	ListEffectCrits(ctx context.Context) ([]ListEffectCritsRow, error)
 	ListEffectDefinitions(ctx context.Context) ([]ListEffectDefinitionsRow, error)

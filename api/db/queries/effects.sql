@@ -13,16 +13,6 @@ DELETE FROM compendium.effect_components WHERE effect_id = @effect_id;
 -- name: InsertEffectComponent :exec
 INSERT INTO compendium.effect_components (effect_id, ordinal, kind, parent) VALUES (@effect_id, @ordinal, @kind, sqlc.narg(parent));
 
--- name: InsertEffectEdge :exec
-INSERT INTO compendium.effect_edges (effect_id, ordinal, against, advantage, reach, source_only)
-VALUES (@effect_id, @ordinal, @against, @advantage, @reach, @source_only);
-
--- name: InsertEffectExtraDamage :exec
-INSERT INTO compendium.effect_extra_damage (effect_id, ordinal, dice) VALUES (@effect_id, @ordinal, @dice);
-
--- name: InsertEffectMoveCost :exec
-INSERT INTO compendium.effect_move_costs (effect_id, ordinal, multiplier) VALUES (@effect_id, @ordinal, @multiplier);
-
 -- name: InsertEffectManual :exec
 INSERT INTO compendium.effect_manual (effect_id, ordinal, instruction) VALUES (@effect_id, @ordinal, @instruction);
 
@@ -43,14 +33,8 @@ SELECT id, slug, name, concentration, owner_kind, duration_kind, duration_amount
 -- name: ListEffectComponents :many
 SELECT effect_id, ordinal, kind, parent FROM compendium.effect_components ORDER BY effect_id, ordinal;
 
--- name: ListEffectEdges :many
-SELECT effect_id, ordinal, against, advantage, reach, source_only FROM compendium.effect_edges;
-
--- name: ListEffectExtraDamage :many
-SELECT effect_id, ordinal, dice FROM compendium.effect_extra_damage;
-
--- name: ListEffectMoveCosts :many
-SELECT effect_id, ordinal, multiplier FROM compendium.effect_move_costs;
+-- name: ListEffectComponentsOfKind :many
+SELECT effect_id, ordinal FROM compendium.effect_components WHERE kind = @kind;
 
 -- name: ListEffectManual :many
 SELECT effect_id, ordinal, instruction FROM compendium.effect_manual;
@@ -64,72 +48,11 @@ SELECT effect_id, ordinal, ability, condition_slug FROM compendium.effect_save_c
 -- name: ListEffectSurfaces :many
 SELECT effect_id, ordinal, surface, rounds FROM compendium.effect_surfaces;
 
--- name: InsertEffectSaveEdge :exec
-INSERT INTO compendium.effect_save_edges (effect_id, ordinal, ability, mode) VALUES (@effect_id, @ordinal, @ability, @mode);
-
--- name: InsertEffectCrit :exec
-INSERT INTO compendium.effect_crits (effect_id, ordinal, feet) VALUES (@effect_id, @ordinal, @feet);
-
--- name: InsertEffectExhaustion :exec
-INSERT INTO compendium.effect_exhaustion (effect_id, ordinal, d20_per_level, speed_ft_per_level, death_at)
-VALUES (@effect_id, @ordinal, @d20_per_level, @speed_ft_per_level, @death_at);
-
--- name: ListEffectSaveEdges :many
-SELECT effect_id, ordinal, ability, mode FROM compendium.effect_save_edges;
-
--- name: ListEffectCrits :many
-SELECT effect_id, ordinal, feet FROM compendium.effect_crits;
-
--- name: ListEffectExhaustion :many
-SELECT effect_id, ordinal, d20_per_level, speed_ft_per_level, death_at FROM compendium.effect_exhaustion;
-
--- name: InsertEffectSpeedPenalty :exec
-INSERT INTO compendium.effect_speed_penalties (effect_id, ordinal, ft) VALUES (@effect_id, @ordinal, @ft);
-
--- name: ListEffectSpeedPenalties :many
-SELECT effect_id, ordinal, ft FROM compendium.effect_speed_penalties;
-
--- name: InsertEffectReaction :exec
-INSERT INTO compendium.effect_reactions (effect_id, ordinal, trigger, instruction) VALUES (@effect_id, @ordinal, @trigger, @instruction);
-
--- name: ListEffectReactions :many
-SELECT effect_id, ordinal, trigger, instruction FROM compendium.effect_reactions;
-
--- name: InsertEffectTempHP :exec
-INSERT INTO compendium.effect_temp_hp (effect_id, ordinal, amount) VALUES (@effect_id, @ordinal, @amount);
-
--- name: ListEffectTempHPs :many
-SELECT effect_id, ordinal, amount FROM compendium.effect_temp_hp;
-
--- name: InsertEffectTeleport :exec
-INSERT INTO compendium.effect_teleports (effect_id, ordinal, range_ft) VALUES (@effect_id, @ordinal, @range_ft);
-
--- name: ListEffectTeleports :many
-SELECT effect_id, ordinal, range_ft FROM compendium.effect_teleports;
-
 -- name: InsertEffectForcedMove :exec
 INSERT INTO compendium.effect_forced_moves (effect_id, ordinal, ft, toward) VALUES (@effect_id, @ordinal, @ft, @toward);
 
 -- name: ListEffectForcedMoves :many
 SELECT effect_id, ordinal, ft, toward FROM compendium.effect_forced_moves;
-
--- name: InsertEffectCounter :exec
-INSERT INTO compendium.effect_counters (effect_id, ordinal, range_ft) VALUES (@effect_id, @ordinal, @range_ft);
-
--- name: ListEffectCounters :many
-SELECT effect_id, ordinal, range_ft FROM compendium.effect_counters;
-
--- name: InsertEffectGrant :exec
-INSERT INTO compendium.effect_grants (effect_id, ordinal, name) VALUES (@effect_id, @ordinal, @name);
-
--- name: ListEffectGrants :many
-SELECT effect_id, ordinal, name FROM compendium.effect_grants;
-
--- name: InsertEffectResourceChange :exec
-INSERT INTO compendium.effect_resource_changes (effect_id, ordinal, resource_slug, delta) VALUES (@effect_id, @ordinal, @resource_slug, @delta);
-
--- name: ListEffectResourceChanges :many
-SELECT effect_id, ordinal, resource_slug, delta FROM compendium.effect_resource_changes;
 
 -- name: InsertEffectMode :exec
 INSERT INTO compendium.effect_modes (effect_id, ordinal, name) VALUES (@effect_id, @ordinal, @name);
