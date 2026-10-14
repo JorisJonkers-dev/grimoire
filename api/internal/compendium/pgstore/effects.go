@@ -89,7 +89,7 @@ func saveComponents(ctx context.Context, q *queries.Queries, id int64, next *int
 	return nil
 }
 
-// saveChildren writes a Choice's modes and a Branch's components under them.
+// saveChildren writes a Choice's modes, and the Parts beneath a Part that holds any, under them.
 func saveChildren(ctx context.Context, q *queries.Queries, id int64, next *int32, ord int32, c effects.Component) error {
 	under := pgtype.Int4{Int32: ord, Valid: true}
 	switch c := c.(type) {
@@ -107,8 +107,10 @@ func saveChildren(ctx context.Context, q *queries.Queries, id int64, next *int32
 				return err
 			}
 		}
-	case effects.Branch:
-		return saveComponents(ctx, q, id, next, under, c.Then)
+	case effects.Part:
+		if h, ok := holdingOf(c.Kind()); ok {
+			return saveComponents(ctx, q, id, next, under, h.beneath(c))
+		}
 	default:
 	}
 	return nil
@@ -129,11 +131,13 @@ func pgText(s string) pgtype.Text {
 // componentRow names a component's kind and returns the insert for its typed row.
 func componentRow(ctx context.Context, q *queries.Queries, id int64, ord int32, c effects.Component) (string, func() error) {
 	switch c := c.(type) {
-	case effects.BonusDie:
-		return "bonus_die", func() error {
-			return q.InsertEffectBonusDie(ctx, queries.InsertEffectBonusDieParams{
-				EffectID: id, Ordinal: ord, Dice: c.Dice, OnAttacks: has(c.On, effects.AttackRolls), OnSaves: has(c.On, effects.SavingThrows),
-			})
+	case effects.Part:
+		return c.Kind(), func() error {
+			rows, err := rowsOf(c.Kind())
+			if err != nil {
+				return err
+			}
+			return rows.insert(ctx, q, slot{id, ord}, c)
 		}
 	case effects.Edge:
 		return "edge", func() error {
@@ -157,12 +161,6 @@ func componentRow(ctx context.Context, q *queries.Queries, id int64, ord int32, 
 		return "area", func() error {
 			return q.InsertEffectArea(ctx, queries.InsertEffectAreaParams{
 				EffectID: id, Ordinal: ord, Shape: string(c.Shape), SizeFt: int32(c.SizeFt), RangeFt: int32(c.RangeFt), //nolint:gosec // bounded by checks
-			})
-		}
-	case effects.SaveDamage:
-		return "save_damage", func() error {
-			return q.InsertEffectSaveDamage(ctx, queries.InsertEffectSaveDamageParams{
-				EffectID: id, Ordinal: ord, Ability: c.Ability, Dice: c.Dice, DamageType: c.Type, Half: c.Half,
 			})
 		}
 	case effects.SaveCondition:
@@ -217,12 +215,6 @@ func componentRow(ctx context.Context, q *queries.Queries, id int64, ord int32, 
 				EffectID: id, Ordinal: ord, MonsterSlug: c.Monster, Count: int32(c.Count), SharesTurn: c.Shares, NeedsCommand: c.NeedsCommand, //nolint:gosec // bounded by a check
 			})
 		}
-	case effects.Branch:
-		return "branch", func() error {
-			return q.InsertEffectBranch(ctx, queries.InsertEffectBranchParams{
-				EffectID: id, Ordinal: ord, Condition: string(c.When.Kind), N: int32(c.When.N), CreatureType: c.When.Type, //nolint:gosec // bounded by a check
-			})
-		}
 	case effects.AreaSave, effects.Light:
 		// The Effect builder's parts live in a spell's design, never in the catalogue's tables.
 	}
@@ -260,20 +252,11 @@ func widerRow(ctx context.Context, q *queries.Queries, id int64, ord int32, c ef
 		return "resource_change", func() error {
 			return q.InsertEffectResourceChange(ctx, queries.InsertEffectResourceChangeParams{EffectID: id, Ordinal: ord, ResourceSlug: c.Resource, Delta: int32(c.Delta)})
 		}
-	case effects.BonusDie, effects.Edge, effects.ExtraDamage, effects.MoveCost, effects.Manual, effects.Area, effects.SaveDamage, effects.SaveCondition,
+	case effects.Part, effects.Edge, effects.ExtraDamage, effects.MoveCost, effects.Manual, effects.Area, effects.SaveCondition,
 		effects.CreateSurface, effects.Incapacitated, effects.Immobile, effects.SaveEdge, effects.CritWithin, effects.Exhausting, effects.SpeedPenalty, effects.Reacts,
-		effects.Choice, effects.Branch, effects.Summon, effects.Form, effects.Reveal, effects.AreaSave, effects.Light:
+		effects.Choice, effects.Summon, effects.Form, effects.Reveal, effects.AreaSave, effects.Light:
 	}
 	return "", func() error { return nil }
-}
-
-func has(rolls []effects.Roll, r effects.Roll) bool {
-	for _, x := range rolls {
-		if x == r {
-			return true
-		}
-	}
-	return false
 }
 
 // slot is one component's place in an Effect.
@@ -325,7 +308,8 @@ func (s *Store) Effects(ctx context.Context) (effects.Catalog, error) {
 	return out, nil
 }
 
-// tree assembles an Effect's components from their rows, nesting each mode's and branch's children.
+// tree assembles an Effect's components from their rows, nesting the children of each mode and of each
+// Part that holds Parts beneath it.
 func tree(rows []queries.CompendiumEffectComponent, parts map[slot]effects.Component, names map[slot]string) []effects.Component {
 	children := map[int32][]queries.CompendiumEffectComponent{}
 	var top []queries.CompendiumEffectComponent
@@ -347,9 +331,8 @@ func tree(rows []queries.CompendiumEffectComponent, parts map[slot]effects.Compo
 					c.Modes = append(c.Modes, effects.Mode{Name: names[slot{m.EffectID, m.Ordinal}], Components: build(children[m.Ordinal])})
 				}
 				out = append(out, c)
-			case effects.Branch:
-				c.Then = build(children[o.Ordinal])
-				out = append(out, c)
+			case effects.Part:
+				out = append(out, nested(c, build(children[o.Ordinal])))
 			default:
 				out = append(out, c)
 			}
@@ -357,6 +340,14 @@ func tree(rows []queries.CompendiumEffectComponent, parts map[slot]effects.Compo
 		return out
 	}
 	return build(top)
+}
+
+// nested puts the Parts read beneath a Part back under it, when its kind holds any.
+func nested(p effects.Part, beneath []effects.Component) effects.Component {
+	if h, ok := holdingOf(p.Kind()); ok {
+		return h.nest(p, beneath)
+	}
+	return p
 }
 
 // scalings reads every Effect's Scaling with its steps.
@@ -400,19 +391,8 @@ func componentOf(kind string, typed effects.Component) effects.Component {
 // componentsBySlot reads every typed component row.
 func (s *Store) componentsBySlot(ctx context.Context) (map[slot]effects.Component, error) {
 	out := map[slot]effects.Component{}
-	bonus, err := s.q.ListEffectBonusDice(ctx)
-	if err != nil {
+	if err := readParts(ctx, s.q, out); err != nil {
 		return nil, err
-	}
-	for _, r := range bonus {
-		var on []effects.Roll
-		if r.OnAttacks {
-			on = append(on, effects.AttackRolls)
-		}
-		if r.OnSaves {
-			on = append(on, effects.SavingThrows)
-		}
-		out[slot{r.EffectID, r.Ordinal}] = effects.BonusDie{On: on, Dice: r.Dice}
 	}
 	edges, err := s.q.ListEffectEdges(ctx)
 	if err != nil {
@@ -453,13 +433,6 @@ func (s *Store) areaComponents(ctx context.Context, out map[slot]effects.Compone
 	}
 	for _, r := range areas {
 		out[slot{r.EffectID, r.Ordinal}] = effects.Area{Shape: hex.Shape(r.Shape), SizeFt: int(r.SizeFt), RangeFt: int(r.RangeFt)}
-	}
-	damage, err := s.q.ListEffectSaveDamage(ctx)
-	if err != nil {
-		return nil, err
-	}
-	for _, r := range damage {
-		out[slot{r.EffectID, r.Ordinal}] = effects.SaveDamage{Ability: r.Ability, Dice: r.Dice, Type: r.DamageType, Half: r.Half}
 	}
 	conds, err := s.q.ListEffectSaveConditions(ctx)
 	if err != nil {
@@ -565,15 +538,8 @@ func (s *Store) widerComponents(ctx context.Context, out map[slot]effects.Compon
 	return s.shapeComponents(ctx, out)
 }
 
-// shapeComponents reads the branches that give components their structure.
+// shapeComponents reads the components that summon and transform.
 func (s *Store) shapeComponents(ctx context.Context, out map[slot]effects.Component) (map[slot]effects.Component, error) {
-	branches, err := s.q.ListEffectBranches(ctx)
-	if err != nil {
-		return nil, err
-	}
-	for _, r := range branches {
-		out[slot{r.EffectID, r.Ordinal}] = effects.Branch{When: effects.Condition{Kind: effects.ConditionKind(r.Condition), N: int(r.N), Type: r.CreatureType}, Then: nil}
-	}
 	summons, err := s.q.ListEffectSummons(ctx)
 	if err != nil {
 		return nil, err
