@@ -1066,13 +1066,15 @@ OpenAPI paths → `task gen` → handler → tests (unit, adapter, contract) →
 
 **Add an Effect kind** ([ADR-0014](docs/adr/0014-one-definition-per-effect-kind.md)):
 `rules/effects/kind_<slug>.go` with the type, `Kind()`, `Text()`, its definition (`Describe`, `Decode`
-with its checks) and the capabilities it has in play (`AttackFolder`, `SaveFolder`, `Lander`,
+with its checks) and the capabilities it has in play (the folds `AttackFolder`, `AttackedFolder`,
+`SaveFolder`, `MoveFolder`, `ActionFolder`; `Stacker`; the landings `Lander` and `BearerLander`;
 `Holder`) → one sorted line in `rules/effects/kinds.go` → `compendium/pgstore/kind_<slug>.go` and one
 sorted line in `compendium/pgstore/kinds.go` → `db/queries/effect_kind_<slug>.sql` →
 `db/migrations/<yyyymmddhhmmss>_effect_kind_<slug>.sql` creating its table and its row in
-`compendium.effect_kinds` → decode, text, capability and round-trip tests → gremlins clean. Kinds not
-yet moved there are variants of the sealed union, and changing one still edits the switches that
-name it.
+`compendium.effect_kinds` (a kind that is the whole of its Part, like `dispel`, has no table or query
+file: its store reads its rows through `bare`) → decode, text, capability and round-trip tests →
+gremlins clean. Kinds not yet moved there are variants of the sealed union, and changing one still
+edits the switches that name it.
 
 **Add a live command:** OpenAPI component (`Command` variant + resulting `Update` variants) →
 `task gen` → domain command + validation via rules → runtime handler (one transaction + typed

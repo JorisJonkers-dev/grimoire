@@ -6,6 +6,22 @@ func Kinds() []Kind {
 	return []Kind{
 		bonusDieKind{},
 		branchKind{},
+		counterKind{},
+		critWithinKind{},
+		dispelKind{},
+		edgeKind{},
+		exhaustingKind{},
+		extraDamageKind{},
+		grantFeatureKind{},
+		immobileKind{},
+		incapacitatedKind{},
+		moveCostKind{},
+		reactsKind{},
+		resourceChangeKind{},
 		saveDamageKind{},
+		saveEdgeKind{},
+		speedPenaltyKind{},
+		teleportKind{},
+		tempHPKind{},
 	}
 }

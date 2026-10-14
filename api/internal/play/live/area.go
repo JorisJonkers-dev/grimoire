@@ -272,7 +272,7 @@ func (s *state) outcomes(c *domain.AreaCast, spell effects.AreaSpell, totals map
 			switch act := act.(type) {
 			case effects.Hurt:
 				amount += act.Amount
-			case effects.RollSave, effects.RollDamage:
+			case effects.RollSave, effects.RollDamage, effects.GainTempHP, effects.EndSpells, effects.Grant, effects.ChangeUses, effects.TeleportCaster:
 			}
 		}
 		if amount > 0 {

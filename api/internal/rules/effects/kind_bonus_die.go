@@ -35,15 +35,15 @@ func (b BonusDie) Text() string {
 }
 
 // FoldAttacking adds the die to the bearer's attack rolls, with a note naming the Effect.
-func (b BonusDie) FoldAttacking(p *AttackProfile, effect string) {
+func (b BonusDie) FoldAttacking(p *AttackProfile, h Held) {
 	if slices.Contains(b.On, AttackRolls) {
 		p.AttackDice = append(p.AttackDice, b.Dice)
-		p.Notes = append(p.Notes, effect+": +"+b.Dice+" to hit")
+		p.Notes = append(p.Notes, h.Name+": +"+b.Dice+" to hit")
 	}
 }
 
 // FoldSave adds the die to the bearer's saving throws, whatever the ability.
-func (b BonusDie) FoldSave(p *SaveProfile, _, _ string) {
+func (b BonusDie) FoldSave(p *SaveProfile, _ Held, _ string) {
 	if slices.Contains(b.On, SavingThrows) {
 		p.Dice = append(p.Dice, b.Dice)
 	}

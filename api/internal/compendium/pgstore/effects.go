@@ -13,18 +13,6 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/surface"
 )
 
-// reachName stores a Range by name.
-func reachName(r effects.Range) string {
-	switch r {
-	case effects.WithinFive:
-		return "within_five"
-	case effects.BeyondFive:
-		return "beyond_five"
-	case effects.AnyRange:
-	}
-	return "any"
-}
-
 // SaveEffect stores an Effect and replaces its components, in one transaction.
 func (s *Store) SaveEffect(ctx context.Context, owner effects.Owner, d effects.Definition) error {
 	err := pgx.BeginFunc(ctx, s.pool, func(tx pgx.Tx) error {
@@ -139,20 +127,6 @@ func componentRow(ctx context.Context, q *queries.Queries, id int64, ord int32, 
 			}
 			return rows.insert(ctx, q, slot{id, ord}, c)
 		}
-	case effects.Edge:
-		return "edge", func() error {
-			return q.InsertEffectEdge(ctx, queries.InsertEffectEdgeParams{
-				EffectID: id, Ordinal: ord, Against: c.Against, Advantage: c.Advantage, Reach: reachName(c.Range), SourceOnly: c.SourceOnly,
-			})
-		}
-	case effects.ExtraDamage:
-		return "extra_damage", func() error {
-			return q.InsertEffectExtraDamage(ctx, queries.InsertEffectExtraDamageParams{EffectID: id, Ordinal: ord, Dice: c.Dice})
-		}
-	case effects.MoveCost:
-		return "move_cost", func() error {
-			return q.InsertEffectMoveCost(ctx, queries.InsertEffectMoveCostParams{EffectID: id, Ordinal: ord, Multiplier: int32(c.Multiplier)}) //nolint:gosec // bounded by a check
-		}
 	case effects.Manual:
 		return "manual", func() error {
 			return q.InsertEffectManual(ctx, queries.InsertEffectManualParams{EffectID: id, Ordinal: ord, Instruction: c.Instruction})
@@ -171,34 +145,10 @@ func componentRow(ctx context.Context, q *queries.Queries, id int64, ord int32, 
 		return "create_surface", func() error {
 			return q.InsertEffectSurface(ctx, queries.InsertEffectSurfaceParams{EffectID: id, Ordinal: ord, Surface: string(c.Kind), Rounds: int32(c.Rounds)}) //nolint:gosec // bounded by a check
 		}
-	case effects.SpeedPenalty:
-		return "speed_penalty", func() error {
-			return q.InsertEffectSpeedPenalty(ctx, queries.InsertEffectSpeedPenaltyParams{EffectID: id, Ordinal: ord, Ft: int32(c.Ft)}) //nolint:gosec // bounded by a check
+	case effects.ForcedMove:
+		return "forced_move", func() error {
+			return q.InsertEffectForcedMove(ctx, queries.InsertEffectForcedMoveParams{EffectID: id, Ordinal: ord, Ft: int32(c.Ft), Toward: c.Toward}) //nolint:gosec // bounded by a check
 		}
-	case effects.Reacts:
-		return "reacts", func() error {
-			return q.InsertEffectReaction(ctx, queries.InsertEffectReactionParams{EffectID: id, Ordinal: ord, Trigger: c.Trigger, Instruction: c.Instruction})
-		}
-	case effects.Incapacitated:
-		return "incapacitated", func() error { return nil }
-	case effects.Immobile:
-		return "immobile", func() error { return nil }
-	case effects.SaveEdge:
-		return "save_edge", func() error {
-			return q.InsertEffectSaveEdge(ctx, queries.InsertEffectSaveEdgeParams{EffectID: id, Ordinal: ord, Ability: c.Ability, Mode: string(c.Mode)})
-		}
-	case effects.CritWithin:
-		return "crit_within", func() error {
-			return q.InsertEffectCrit(ctx, queries.InsertEffectCritParams{EffectID: id, Ordinal: ord, Feet: int32(c.Feet)}) //nolint:gosec // bounded by a check
-		}
-	case effects.Exhausting:
-		return "exhausting", func() error {
-			return q.InsertEffectExhaustion(ctx, queries.InsertEffectExhaustionParams{
-				EffectID: id, Ordinal: ord, D20PerLevel: int32(c.D20PerLevel), SpeedFtPerLevel: int32(c.SpeedFtPerLevel), DeathAt: int32(c.DeathAt), //nolint:gosec // bounded by checks
-			})
-		}
-	case effects.TempHP, effects.Teleport, effects.ForcedMove, effects.Dispel, effects.Counter, effects.GrantFeature, effects.ResourceChange:
-		return widerRow(ctx, q, id, ord, c)
 	case effects.Choice:
 		return "choice", func() error { return nil }
 	case effects.Reveal:
@@ -217,44 +167,6 @@ func componentRow(ctx context.Context, q *queries.Queries, id int64, ord int32, 
 		}
 	case effects.AreaSave, effects.Light:
 		// The Effect builder's parts live in a spell's design, never in the catalogue's tables.
-	}
-	return "", func() error { return nil }
-}
-
-// widerRow names and inserts the components that move, protect, dispel, counter and grant.
-//
-//nolint:gosec // every number is bounded by a check
-func widerRow(ctx context.Context, q *queries.Queries, id int64, ord int32, c effects.Component) (string, func() error) {
-	switch c := c.(type) {
-	case effects.TempHP:
-		return "temp_hp", func() error {
-			return q.InsertEffectTempHP(ctx, queries.InsertEffectTempHPParams{EffectID: id, Ordinal: ord, Amount: int32(c.Amount)})
-		}
-	case effects.Teleport:
-		return "teleport", func() error {
-			return q.InsertEffectTeleport(ctx, queries.InsertEffectTeleportParams{EffectID: id, Ordinal: ord, RangeFt: int32(c.RangeFt)})
-		}
-	case effects.ForcedMove:
-		return "forced_move", func() error {
-			return q.InsertEffectForcedMove(ctx, queries.InsertEffectForcedMoveParams{EffectID: id, Ordinal: ord, Ft: int32(c.Ft), Toward: c.Toward})
-		}
-	case effects.Dispel:
-		return "dispel", func() error { return nil }
-	case effects.Counter:
-		return "counter", func() error {
-			return q.InsertEffectCounter(ctx, queries.InsertEffectCounterParams{EffectID: id, Ordinal: ord, RangeFt: int32(c.RangeFt)})
-		}
-	case effects.GrantFeature:
-		return "grant_feature", func() error {
-			return q.InsertEffectGrant(ctx, queries.InsertEffectGrantParams{EffectID: id, Ordinal: ord, Name: c.Name})
-		}
-	case effects.ResourceChange:
-		return "resource_change", func() error {
-			return q.InsertEffectResourceChange(ctx, queries.InsertEffectResourceChangeParams{EffectID: id, Ordinal: ord, ResourceSlug: c.Resource, Delta: int32(c.Delta)})
-		}
-	case effects.Part, effects.Edge, effects.ExtraDamage, effects.MoveCost, effects.Manual, effects.Area, effects.SaveCondition,
-		effects.CreateSurface, effects.Incapacitated, effects.Immobile, effects.SaveEdge, effects.CritWithin, effects.Exhausting, effects.SpeedPenalty, effects.Reacts,
-		effects.Choice, effects.Summon, effects.Form, effects.Reveal, effects.AreaSave, effects.Light:
 	}
 	return "", func() error { return nil }
 }
@@ -375,14 +287,7 @@ func (s *Store) scalings(ctx context.Context) (map[int64]*effects.Scaling, error
 
 // componentOf is a component read from its typed row, or made from its kind when it carries no data.
 func componentOf(kind string, typed effects.Component) effects.Component {
-	switch kind {
-	case "incapacitated":
-		return effects.Incapacitated{}
-	case "immobile":
-		return effects.Immobile{}
-	case "dispel":
-		return effects.Dispel{}
-	case "choice":
+	if kind == "choice" {
 		return effects.Choice{}
 	}
 	return typed
@@ -394,27 +299,6 @@ func (s *Store) componentsBySlot(ctx context.Context) (map[slot]effects.Componen
 	if err := readParts(ctx, s.q, out); err != nil {
 		return nil, err
 	}
-	edges, err := s.q.ListEffectEdges(ctx)
-	if err != nil {
-		return nil, err
-	}
-	for _, r := range edges {
-		out[slot{r.EffectID, r.Ordinal}] = effects.Edge{Against: r.Against, Advantage: r.Advantage, Range: reachOf(r.Reach), SourceOnly: r.SourceOnly}
-	}
-	extra, err := s.q.ListEffectExtraDamage(ctx)
-	if err != nil {
-		return nil, err
-	}
-	for _, r := range extra {
-		out[slot{r.EffectID, r.Ordinal}] = effects.ExtraDamage{Dice: r.Dice}
-	}
-	moves, err := s.q.ListEffectMoveCosts(ctx)
-	if err != nil {
-		return nil, err
-	}
-	for _, r := range moves {
-		out[slot{r.EffectID, r.Ordinal}] = effects.MoveCost{Multiplier: int(r.Multiplier)}
-	}
 	manual, err := s.q.ListEffectManual(ctx)
 	if err != nil {
 		return nil, err
@@ -425,7 +309,7 @@ func (s *Store) componentsBySlot(ctx context.Context) (map[slot]effects.Componen
 	return s.areaComponents(ctx, out)
 }
 
-// areaComponents reads the components that shape and resolve an area.
+// areaComponents reads the components that shape and resolve an area, and push creatures out of it.
 func (s *Store) areaComponents(ctx context.Context, out map[slot]effects.Component) (map[slot]effects.Component, error) {
 	areas, err := s.q.ListEffectAreas(ctx)
 	if err != nil {
@@ -448,92 +332,12 @@ func (s *Store) areaComponents(ctx context.Context, out map[slot]effects.Compone
 	for _, r := range surfaces {
 		out[slot{r.EffectID, r.Ordinal}] = effects.CreateSurface{Kind: surface.Kind(r.Surface), Rounds: int(r.Rounds)}
 	}
-	return s.conditionComponents(ctx, out)
-}
-
-// conditionComponents reads the components conditions are made of.
-func (s *Store) conditionComponents(ctx context.Context, out map[slot]effects.Component) (map[slot]effects.Component, error) {
-	edges, err := s.q.ListEffectSaveEdges(ctx)
-	if err != nil {
-		return nil, err
-	}
-	for _, r := range edges {
-		out[slot{r.EffectID, r.Ordinal}] = effects.SaveEdge{Ability: r.Ability, Mode: effects.SaveMode(r.Mode)}
-	}
-	crits, err := s.q.ListEffectCrits(ctx)
-	if err != nil {
-		return nil, err
-	}
-	for _, r := range crits {
-		out[slot{r.EffectID, r.Ordinal}] = effects.CritWithin{Feet: int(r.Feet)}
-	}
-	tired, err := s.q.ListEffectExhaustion(ctx)
-	if err != nil {
-		return nil, err
-	}
-	for _, r := range tired {
-		out[slot{r.EffectID, r.Ordinal}] = effects.Exhausting{D20PerLevel: int(r.D20PerLevel), SpeedFtPerLevel: int(r.SpeedFtPerLevel), DeathAt: int(r.DeathAt), MaxLevel: 0}
-	}
-	slow, err := s.q.ListEffectSpeedPenalties(ctx)
-	if err != nil {
-		return nil, err
-	}
-	for _, r := range slow {
-		out[slot{r.EffectID, r.Ordinal}] = effects.SpeedPenalty{Ft: int(r.Ft)}
-	}
-	reacts, err := s.q.ListEffectReactions(ctx)
-	if err != nil {
-		return nil, err
-	}
-	for _, r := range reacts {
-		out[slot{r.EffectID, r.Ordinal}] = effects.Reacts{Trigger: r.Trigger, Instruction: r.Instruction}
-	}
-	return s.widerComponents(ctx, out)
-}
-
-// widerComponents reads the components that move, protect, counter and grant.
-func (s *Store) widerComponents(ctx context.Context, out map[slot]effects.Component) (map[slot]effects.Component, error) {
-	temp, err := s.q.ListEffectTempHPs(ctx)
-	if err != nil {
-		return nil, err
-	}
-	for _, r := range temp {
-		out[slot{r.EffectID, r.Ordinal}] = effects.TempHP{Amount: int(r.Amount)}
-	}
-	jumps, err := s.q.ListEffectTeleports(ctx)
-	if err != nil {
-		return nil, err
-	}
-	for _, r := range jumps {
-		out[slot{r.EffectID, r.Ordinal}] = effects.Teleport{RangeFt: int(r.RangeFt)}
-	}
 	pushes, err := s.q.ListEffectForcedMoves(ctx)
 	if err != nil {
 		return nil, err
 	}
 	for _, r := range pushes {
 		out[slot{r.EffectID, r.Ordinal}] = effects.ForcedMove{Ft: int(r.Ft), Toward: r.Toward}
-	}
-	counters, err := s.q.ListEffectCounters(ctx)
-	if err != nil {
-		return nil, err
-	}
-	for _, r := range counters {
-		out[slot{r.EffectID, r.Ordinal}] = effects.Counter{RangeFt: int(r.RangeFt)}
-	}
-	grants, err := s.q.ListEffectGrants(ctx)
-	if err != nil {
-		return nil, err
-	}
-	for _, r := range grants {
-		out[slot{r.EffectID, r.Ordinal}] = effects.GrantFeature{Name: r.Name}
-	}
-	changes, err := s.q.ListEffectResourceChanges(ctx)
-	if err != nil {
-		return nil, err
-	}
-	for _, r := range changes {
-		out[slot{r.EffectID, r.Ordinal}] = effects.ResourceChange{Resource: r.ResourceSlug, Delta: int(r.Delta)}
 	}
 	return s.shapeComponents(ctx, out)
 }
@@ -562,15 +366,4 @@ func (s *Store) shapeComponents(ctx context.Context, out map[slot]effects.Compon
 		out[slot{r.EffectID, r.Ordinal}] = effects.Reveal{Qualities: r.Qualities}
 	}
 	return out, nil
-}
-
-// reachOf reads a stored reach; the database allows only the three names.
-func reachOf(s string) effects.Range {
-	switch s {
-	case "within_five":
-		return effects.WithinFive
-	case "beyond_five":
-		return effects.BeyondFive
-	}
-	return effects.AnyRange
 }
