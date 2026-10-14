@@ -342,6 +342,7 @@ type Querier interface {
 	InsertEdge(ctx context.Context, arg InsertEdgeParams) error
 	InsertEffect(ctx context.Context, arg InsertEffectParams) error
 	InsertEffectArea(ctx context.Context, arg InsertEffectAreaParams) error
+	InsertEffectAreaSave(ctx context.Context, arg InsertEffectAreaSaveParams) error
 	InsertEffectBonusDie(ctx context.Context, arg InsertEffectBonusDieParams) error
 	InsertEffectBranch(ctx context.Context, arg InsertEffectBranchParams) error
 	InsertEffectComponent(ctx context.Context, arg InsertEffectComponentParams) error
@@ -354,8 +355,8 @@ type Querier interface {
 	InsertEffectForcedMove(ctx context.Context, arg InsertEffectForcedMoveParams) error
 	InsertEffectForm(ctx context.Context, arg InsertEffectFormParams) error
 	InsertEffectGrant(ctx context.Context, arg InsertEffectGrantParams) error
+	InsertEffectLight(ctx context.Context, arg InsertEffectLightParams) error
 	InsertEffectManual(ctx context.Context, arg InsertEffectManualParams) error
-	InsertEffectMode(ctx context.Context, arg InsertEffectModeParams) error
 	InsertEffectMoveCost(ctx context.Context, arg InsertEffectMoveCostParams) error
 	InsertEffectReaction(ctx context.Context, arg InsertEffectReactionParams) error
 	InsertEffectResourceChange(ctx context.Context, arg InsertEffectResourceChangeParams) error
@@ -495,6 +496,7 @@ type Querier interface {
 	ListCompanions(ctx context.Context, campaignID uuid.UUID) ([]CampaignCompanion, error)
 	ListConversations(ctx context.Context, me uuid.UUID) ([]ListConversationsRow, error)
 	ListDowntimeLog(ctx context.Context, campaignID uuid.UUID) ([]ListDowntimeLogRow, error)
+	ListEffectAreaSaves(ctx context.Context) ([]ListEffectAreaSavesRow, error)
 	ListEffectAreas(ctx context.Context) ([]ListEffectAreasRow, error)
 	ListEffectBonusDice(ctx context.Context) ([]ListEffectBonusDiceRow, error)
 	ListEffectBranches(ctx context.Context) ([]ListEffectBranchesRow, error)
@@ -509,8 +511,8 @@ type Querier interface {
 	ListEffectForcedMoves(ctx context.Context) ([]ListEffectForcedMovesRow, error)
 	ListEffectForms(ctx context.Context) ([]ListEffectFormsRow, error)
 	ListEffectGrants(ctx context.Context) ([]ListEffectGrantsRow, error)
+	ListEffectLights(ctx context.Context) ([]ListEffectLightsRow, error)
 	ListEffectManual(ctx context.Context) ([]ListEffectManualRow, error)
-	ListEffectModes(ctx context.Context) ([]ListEffectModesRow, error)
 	ListEffectMoveCosts(ctx context.Context) ([]ListEffectMoveCostsRow, error)
 	ListEffectReactions(ctx context.Context) ([]ListEffectReactionsRow, error)
 	ListEffectResourceChanges(ctx context.Context) ([]ListEffectResourceChangesRow, error)

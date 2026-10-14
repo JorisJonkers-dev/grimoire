@@ -5,17 +5,15 @@ import (
 	"slices"
 	"strconv"
 	"unicode/utf8"
+
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/surface"
 )
 
 // Part is a Component of a kind defined in a file of its own, kind_<slug>.go, which holds its type,
-// its definition, its rules text and what it does in play. No switch over kinds names it: the
-// switches that still list the older kinds reach a Part through this interface and its capabilities.
+// its definition, its rules text and what it does in play. Nothing switches over kinds: play reaches
+// a Part through the capabilities it implements.
 type Part interface {
 	Component
-	// Kind is the slug of the Part's kind, the one its definition in Kinds describes.
-	Kind() string
-	// Text is the Part's rules sentence.
-	Text() string
 }
 
 // Kind is what one kind of Part declares once: what an author fills in, and how those values become
@@ -34,6 +32,8 @@ type Description struct {
 	Fields  []Field
 	// Groups names the groups of Parts the kind holds beneath it; most kinds hold none.
 	Groups []string
+	// OpenGroups lets the author name each group, as a choice names its modes.
+	OpenGroups bool
 }
 
 // FieldType is the sort of value a field holds.
@@ -73,13 +73,23 @@ type Value struct {
 // Values are a Part's authored values by field name, before they are checked.
 type Values map[string]Value
 
-// Groups are the Parts beneath a Part by group name, already decoded.
-type Groups map[string][]Component
-
 // Group is one named group of Parts beneath a Part.
 type Group struct {
 	Name  string
 	Parts []Component
+}
+
+// Groups are the Parts beneath a Part in their named groups, in order, already decoded.
+type Groups []Group
+
+// Of is the Parts of one group; none when it is not given.
+func (gs Groups) Of(name string) []Component {
+	for _, g := range gs {
+		if g.Name == name {
+			return g.Parts
+		}
+	}
+	return nil
 }
 
 // ValueError is an authored value a kind refuses, with the field it is in.
@@ -149,11 +159,17 @@ type BearerLander interface {
 	LandsOnBearer() []Act
 }
 
-// Lander is a Part that acts when its Effect lands on an area: it asks for its rolls once, and then
-// says what happens to each creature. Both are Acts the runtime applies.
-type Lander interface {
+// Asker is a Part that shapes an area Effect: it asks once for what the area's plan needs, such as
+// its template, its rolls and what it lays down.
+type Asker interface {
 	Part
 	Asks() []Act
+}
+
+// Lander is an area Part that then says what happens to each creature once the rolls are in. Both are
+// Acts the runtime applies.
+type Lander interface {
+	Asker
 	Lands(o Outcome) []Act
 }
 
@@ -163,12 +179,24 @@ type Outcome struct {
 	Damage int
 }
 
-// Holder is a Part with Parts beneath it, in the groups its kind declares.
-type Holder interface {
+// Grouper is a Part with Parts beneath it, in named groups.
+type Grouper interface {
 	Part
 	Groups() []Group
+}
+
+// Holder is a Part whose Parts beneath come into play as the Effect lands.
+type Holder interface {
+	Grouper
 	// Landed is the Parts beneath that come into play for one creature as the Effect lands on it.
 	Landed(s Situation) []Component
+}
+
+// Chooser is a Part whose groups are modes; whoever applies the Effect picks one.
+type Chooser interface {
+	Grouper
+	// Chosen is the Parts of the mode picked; none when no mode of that name is offered.
+	Chosen(mode string) []Component
 }
 
 // Act is one thing the runtime does when an Effect lands. The set is small and closed: kinds are
@@ -218,14 +246,75 @@ type TeleportCaster struct {
 	RangeFt int
 }
 
-func (RollSave) isAct()       {}
-func (RollDamage) isAct()     {}
-func (Hurt) isAct()           {}
-func (GainTempHP) isAct()     {}
-func (EndSpells) isAct()      {}
-func (Grant) isAct()          {}
-func (ChangeUses) isAct()     {}
-func (TeleportCaster) isAct() {}
+// Template lays the area out on the board.
+type Template struct {
+	Area Area
+}
+
+// Afflict puts a condition on a creature.
+type Afflict struct {
+	Condition string
+}
+
+// LaySurface covers the area in a Surface for some rounds.
+type LaySurface struct {
+	Surface surface.Kind
+	Rounds  int
+}
+
+// Push moves a creature that failed Ft feet straight away from the origin, or toward it.
+type Push struct {
+	Ft     int
+	Toward bool
+}
+
+// ShedLight sheds bright light out to BrightFt and dim light DimFt beyond it.
+type ShedLight struct {
+	BrightFt int
+	DimFt    int
+}
+
+// StripQualities strips Visibility Qualities from everything they touch.
+type StripQualities struct {
+	Qualities []string
+}
+
+// AskDM gives the DM an instruction to resolve by hand.
+type AskDM struct {
+	Instruction string
+}
+
+// TakeForm overlays the bearer's stat block with a creature's.
+type TakeForm struct {
+	Monster string
+	TempHP  int
+}
+
+// SummonCreatures brings creatures in under the caster's control.
+type SummonCreatures struct {
+	Monster      string
+	Count        int
+	Shares       bool
+	NeedsCommand bool
+}
+
+func (RollSave) isAct()        {}
+func (RollDamage) isAct()      {}
+func (Hurt) isAct()            {}
+func (GainTempHP) isAct()      {}
+func (EndSpells) isAct()       {}
+func (Grant) isAct()           {}
+func (ChangeUses) isAct()      {}
+func (TeleportCaster) isAct()  {}
+func (Template) isAct()        {}
+func (Afflict) isAct()         {}
+func (LaySurface) isAct()      {}
+func (Push) isAct()            {}
+func (ShedLight) isAct()       {}
+func (StripQualities) isAct()  {}
+func (AskDM) isAct()           {}
+func (TakeForm) isAct()        {}
+func (SummonCreatures) isAct() {}
 
 var dicePattern = regexp.MustCompile(`^[1-9][0-9]?d(4|6|8|10|12|20)$`)
 
@@ -266,6 +355,29 @@ func (v Values) text(f Field) (string, error) {
 		return "", refuse(f.Name, "write up to "+strconv.Itoa(f.Max)+" letters")
 	}
 	return s, nil
+}
+
+// optionalText reads a text field that may be empty, of up to the field's Max letters.
+func (v Values) optionalText(f Field) (string, error) {
+	s := v[f.Name].Text
+	if utf8.RuneCountInString(s) > f.Max {
+		return "", refuse(f.Name, "write up to "+strconv.Itoa(f.Max)+" letters")
+	}
+	return s, nil
+}
+
+// choices reads a choices field: at least one option, each once.
+func (v Values) choices(f Field) ([]string, error) {
+	got := v[f.Name].Texts
+	for _, s := range got {
+		if err := oneOf(f.Name, s, f.Options); err != nil {
+			return nil, err
+		}
+	}
+	if len(got) == 0 || len(slices.Compact(slices.Sorted(slices.Values(got)))) != len(got) {
+		return nil, refuse(f.Name, "choose each option once")
+	}
+	return got, nil
 }
 
 // choice reads a choice field, refusing anything but one of its options.

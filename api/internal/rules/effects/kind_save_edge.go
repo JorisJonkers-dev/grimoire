@@ -61,7 +61,7 @@ func (saveEdgeKind) Describe() Description {
 			{Name: "ability", Label: "Saving throw", Type: ChoiceField, Options: abilities(), Required: true, Min: 0, Max: 0},
 			{Name: "mode", Label: "Edge", Type: ChoiceField, Options: saveModes(), Required: true, Min: 0, Max: 0},
 		},
-		Groups: nil,
+		Groups: nil, OpenGroups: false,
 	}
 }
 

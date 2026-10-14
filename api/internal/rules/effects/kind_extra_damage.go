@@ -31,7 +31,7 @@ func (extraDamageKind) Describe() Description {
 		Fields: []Field{
 			{Name: "dice", Label: "Damage", Type: DiceField, Options: nil, Required: true, Min: 0, Max: 0},
 		},
-		Groups: nil,
+		Groups: nil, OpenGroups: false,
 	}
 }
 

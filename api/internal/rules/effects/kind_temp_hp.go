@@ -30,7 +30,7 @@ func (tempHPKind) Describe() Description {
 		Fields: []Field{
 			{Name: "amount", Label: "Hit points", Type: NumberField, Options: nil, Required: true, Min: 1, Max: 500},
 		},
-		Groups: nil,
+		Groups: nil, OpenGroups: false,
 	}
 }
 

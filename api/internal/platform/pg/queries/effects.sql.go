@@ -38,39 +38,17 @@ func (q *Queries) ClearSurfaceReactions(ctx context.Context, surface string) err
 	return err
 }
 
-const insertEffectArea = `-- name: InsertEffectArea :exec
-INSERT INTO compendium.effect_areas (effect_id, ordinal, shape, size_ft, range_ft)
+const insertEffectComponent = `-- name: InsertEffectComponent :exec
+INSERT INTO compendium.effect_components (effect_id, ordinal, kind, parent, group_name)
 VALUES ($1, $2, $3, $4, $5)
 `
 
-type InsertEffectAreaParams struct {
-	EffectID int64
-	Ordinal  int32
-	Shape    string
-	SizeFt   int32
-	RangeFt  int32
-}
-
-func (q *Queries) InsertEffectArea(ctx context.Context, arg InsertEffectAreaParams) error {
-	_, err := q.db.Exec(ctx, insertEffectArea,
-		arg.EffectID,
-		arg.Ordinal,
-		arg.Shape,
-		arg.SizeFt,
-		arg.RangeFt,
-	)
-	return err
-}
-
-const insertEffectComponent = `-- name: InsertEffectComponent :exec
-INSERT INTO compendium.effect_components (effect_id, ordinal, kind, parent) VALUES ($1, $2, $3, $4)
-`
-
 type InsertEffectComponentParams struct {
-	EffectID int64
-	Ordinal  int32
-	Kind     string
-	Parent   pgtype.Int4
+	EffectID  int64
+	Ordinal   int32
+	Kind      string
+	Parent    pgtype.Int4
+	GroupName pgtype.Text
 }
 
 func (q *Queries) InsertEffectComponent(ctx context.Context, arg InsertEffectComponentParams) error {
@@ -79,115 +57,7 @@ func (q *Queries) InsertEffectComponent(ctx context.Context, arg InsertEffectCom
 		arg.Ordinal,
 		arg.Kind,
 		arg.Parent,
-	)
-	return err
-}
-
-const insertEffectForcedMove = `-- name: InsertEffectForcedMove :exec
-INSERT INTO compendium.effect_forced_moves (effect_id, ordinal, ft, toward) VALUES ($1, $2, $3, $4)
-`
-
-type InsertEffectForcedMoveParams struct {
-	EffectID int64
-	Ordinal  int32
-	Ft       int32
-	Toward   bool
-}
-
-func (q *Queries) InsertEffectForcedMove(ctx context.Context, arg InsertEffectForcedMoveParams) error {
-	_, err := q.db.Exec(ctx, insertEffectForcedMove,
-		arg.EffectID,
-		arg.Ordinal,
-		arg.Ft,
-		arg.Toward,
-	)
-	return err
-}
-
-const insertEffectForm = `-- name: InsertEffectForm :exec
-INSERT INTO compendium.effect_forms (effect_id, ordinal, monster_slug, temp_hp) VALUES ($1, $2, $3, $4)
-`
-
-type InsertEffectFormParams struct {
-	EffectID    int64
-	Ordinal     int32
-	MonsterSlug string
-	TempHp      int32
-}
-
-func (q *Queries) InsertEffectForm(ctx context.Context, arg InsertEffectFormParams) error {
-	_, err := q.db.Exec(ctx, insertEffectForm,
-		arg.EffectID,
-		arg.Ordinal,
-		arg.MonsterSlug,
-		arg.TempHp,
-	)
-	return err
-}
-
-const insertEffectManual = `-- name: InsertEffectManual :exec
-INSERT INTO compendium.effect_manual (effect_id, ordinal, instruction) VALUES ($1, $2, $3)
-`
-
-type InsertEffectManualParams struct {
-	EffectID    int64
-	Ordinal     int32
-	Instruction string
-}
-
-func (q *Queries) InsertEffectManual(ctx context.Context, arg InsertEffectManualParams) error {
-	_, err := q.db.Exec(ctx, insertEffectManual, arg.EffectID, arg.Ordinal, arg.Instruction)
-	return err
-}
-
-const insertEffectMode = `-- name: InsertEffectMode :exec
-INSERT INTO compendium.effect_modes (effect_id, ordinal, name) VALUES ($1, $2, $3)
-`
-
-type InsertEffectModeParams struct {
-	EffectID int64
-	Ordinal  int32
-	Name     string
-}
-
-func (q *Queries) InsertEffectMode(ctx context.Context, arg InsertEffectModeParams) error {
-	_, err := q.db.Exec(ctx, insertEffectMode, arg.EffectID, arg.Ordinal, arg.Name)
-	return err
-}
-
-const insertEffectReveal = `-- name: InsertEffectReveal :exec
-INSERT INTO compendium.effect_reveals (effect_id, ordinal, qualities) VALUES ($1, $2, $3::text[])
-`
-
-type InsertEffectRevealParams struct {
-	EffectID  int64
-	Ordinal   int32
-	Qualities []string
-}
-
-func (q *Queries) InsertEffectReveal(ctx context.Context, arg InsertEffectRevealParams) error {
-	_, err := q.db.Exec(ctx, insertEffectReveal, arg.EffectID, arg.Ordinal, arg.Qualities)
-	return err
-}
-
-const insertEffectSaveCondition = `-- name: InsertEffectSaveCondition :exec
-INSERT INTO compendium.effect_save_conditions (effect_id, ordinal, ability, condition_slug)
-VALUES ($1, $2, $3, $4)
-`
-
-type InsertEffectSaveConditionParams struct {
-	EffectID      int64
-	Ordinal       int32
-	Ability       string
-	ConditionSlug string
-}
-
-func (q *Queries) InsertEffectSaveCondition(ctx context.Context, arg InsertEffectSaveConditionParams) error {
-	_, err := q.db.Exec(ctx, insertEffectSaveCondition,
-		arg.EffectID,
-		arg.Ordinal,
-		arg.Ability,
-		arg.ConditionSlug,
+		arg.GroupName,
 	)
 	return err
 }
@@ -233,53 +103,6 @@ func (q *Queries) InsertEffectScalingStep(ctx context.Context, arg InsertEffectS
 	return err
 }
 
-const insertEffectSummon = `-- name: InsertEffectSummon :exec
-INSERT INTO compendium.effect_summons (effect_id, ordinal, monster_slug, count, shares_turn, needs_command)
-VALUES ($1, $2, $3, $4, $5, $6)
-`
-
-type InsertEffectSummonParams struct {
-	EffectID     int64
-	Ordinal      int32
-	MonsterSlug  string
-	Count        int32
-	SharesTurn   bool
-	NeedsCommand bool
-}
-
-func (q *Queries) InsertEffectSummon(ctx context.Context, arg InsertEffectSummonParams) error {
-	_, err := q.db.Exec(ctx, insertEffectSummon,
-		arg.EffectID,
-		arg.Ordinal,
-		arg.MonsterSlug,
-		arg.Count,
-		arg.SharesTurn,
-		arg.NeedsCommand,
-	)
-	return err
-}
-
-const insertEffectSurface = `-- name: InsertEffectSurface :exec
-INSERT INTO compendium.effect_surfaces (effect_id, ordinal, surface, rounds) VALUES ($1, $2, $3, $4)
-`
-
-type InsertEffectSurfaceParams struct {
-	EffectID int64
-	Ordinal  int32
-	Surface  string
-	Rounds   int32
-}
-
-func (q *Queries) InsertEffectSurface(ctx context.Context, arg InsertEffectSurfaceParams) error {
-	_, err := q.db.Exec(ctx, insertEffectSurface,
-		arg.EffectID,
-		arg.Ordinal,
-		arg.Surface,
-		arg.Rounds,
-	)
-	return err
-}
-
 const insertSurfaceReaction = `-- name: InsertSurfaceReaction :exec
 INSERT INTO compendium.surface_reactions (surface, damage_type, becomes) VALUES ($1, $2, $3)
 `
@@ -295,46 +118,8 @@ func (q *Queries) InsertSurfaceReaction(ctx context.Context, arg InsertSurfaceRe
 	return err
 }
 
-const listEffectAreas = `-- name: ListEffectAreas :many
-SELECT effect_id, ordinal, shape, size_ft, range_ft FROM compendium.effect_areas
-`
-
-type ListEffectAreasRow struct {
-	EffectID int64
-	Ordinal  int32
-	Shape    string
-	SizeFt   int32
-	RangeFt  int32
-}
-
-func (q *Queries) ListEffectAreas(ctx context.Context) ([]ListEffectAreasRow, error) {
-	rows, err := q.db.Query(ctx, listEffectAreas)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []ListEffectAreasRow{}
-	for rows.Next() {
-		var i ListEffectAreasRow
-		if err := rows.Scan(
-			&i.EffectID,
-			&i.Ordinal,
-			&i.Shape,
-			&i.SizeFt,
-			&i.RangeFt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const listEffectComponents = `-- name: ListEffectComponents :many
-SELECT effect_id, ordinal, kind, parent FROM compendium.effect_components ORDER BY effect_id, ordinal
+SELECT effect_id, ordinal, kind, parent, group_name FROM compendium.effect_components ORDER BY effect_id, ordinal
 `
 
 func (q *Queries) ListEffectComponents(ctx context.Context) ([]CompendiumEffectComponent, error) {
@@ -351,6 +136,7 @@ func (q *Queries) ListEffectComponents(ctx context.Context) ([]CompendiumEffectC
 			&i.Ordinal,
 			&i.Kind,
 			&i.Parent,
+			&i.GroupName,
 		); err != nil {
 			return nil, err
 		}
@@ -435,204 +221,6 @@ func (q *Queries) ListEffectDefinitions(ctx context.Context) ([]ListEffectDefini
 	return items, nil
 }
 
-const listEffectForcedMoves = `-- name: ListEffectForcedMoves :many
-SELECT effect_id, ordinal, ft, toward FROM compendium.effect_forced_moves
-`
-
-type ListEffectForcedMovesRow struct {
-	EffectID int64
-	Ordinal  int32
-	Ft       int32
-	Toward   bool
-}
-
-func (q *Queries) ListEffectForcedMoves(ctx context.Context) ([]ListEffectForcedMovesRow, error) {
-	rows, err := q.db.Query(ctx, listEffectForcedMoves)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []ListEffectForcedMovesRow{}
-	for rows.Next() {
-		var i ListEffectForcedMovesRow
-		if err := rows.Scan(
-			&i.EffectID,
-			&i.Ordinal,
-			&i.Ft,
-			&i.Toward,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listEffectForms = `-- name: ListEffectForms :many
-SELECT effect_id, ordinal, monster_slug, temp_hp FROM compendium.effect_forms
-`
-
-type ListEffectFormsRow struct {
-	EffectID    int64
-	Ordinal     int32
-	MonsterSlug string
-	TempHp      int32
-}
-
-func (q *Queries) ListEffectForms(ctx context.Context) ([]ListEffectFormsRow, error) {
-	rows, err := q.db.Query(ctx, listEffectForms)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []ListEffectFormsRow{}
-	for rows.Next() {
-		var i ListEffectFormsRow
-		if err := rows.Scan(
-			&i.EffectID,
-			&i.Ordinal,
-			&i.MonsterSlug,
-			&i.TempHp,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listEffectManual = `-- name: ListEffectManual :many
-SELECT effect_id, ordinal, instruction FROM compendium.effect_manual
-`
-
-type ListEffectManualRow struct {
-	EffectID    int64
-	Ordinal     int32
-	Instruction string
-}
-
-func (q *Queries) ListEffectManual(ctx context.Context) ([]ListEffectManualRow, error) {
-	rows, err := q.db.Query(ctx, listEffectManual)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []ListEffectManualRow{}
-	for rows.Next() {
-		var i ListEffectManualRow
-		if err := rows.Scan(&i.EffectID, &i.Ordinal, &i.Instruction); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listEffectModes = `-- name: ListEffectModes :many
-SELECT effect_id, ordinal, name FROM compendium.effect_modes
-`
-
-type ListEffectModesRow struct {
-	EffectID int64
-	Ordinal  int32
-	Name     string
-}
-
-func (q *Queries) ListEffectModes(ctx context.Context) ([]ListEffectModesRow, error) {
-	rows, err := q.db.Query(ctx, listEffectModes)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []ListEffectModesRow{}
-	for rows.Next() {
-		var i ListEffectModesRow
-		if err := rows.Scan(&i.EffectID, &i.Ordinal, &i.Name); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listEffectReveals = `-- name: ListEffectReveals :many
-SELECT effect_id, ordinal, qualities FROM compendium.effect_reveals
-`
-
-type ListEffectRevealsRow struct {
-	EffectID  int64
-	Ordinal   int32
-	Qualities []string
-}
-
-func (q *Queries) ListEffectReveals(ctx context.Context) ([]ListEffectRevealsRow, error) {
-	rows, err := q.db.Query(ctx, listEffectReveals)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []ListEffectRevealsRow{}
-	for rows.Next() {
-		var i ListEffectRevealsRow
-		if err := rows.Scan(&i.EffectID, &i.Ordinal, &i.Qualities); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listEffectSaveConditions = `-- name: ListEffectSaveConditions :many
-SELECT effect_id, ordinal, ability, condition_slug FROM compendium.effect_save_conditions
-`
-
-type ListEffectSaveConditionsRow struct {
-	EffectID      int64
-	Ordinal       int32
-	Ability       string
-	ConditionSlug string
-}
-
-func (q *Queries) ListEffectSaveConditions(ctx context.Context) ([]ListEffectSaveConditionsRow, error) {
-	rows, err := q.db.Query(ctx, listEffectSaveConditions)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []ListEffectSaveConditionsRow{}
-	for rows.Next() {
-		var i ListEffectSaveConditionsRow
-		if err := rows.Scan(
-			&i.EffectID,
-			&i.Ordinal,
-			&i.Ability,
-			&i.ConditionSlug,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const listEffectScalingSteps = `-- name: ListEffectScalingSteps :many
 SELECT effect_id, at_level, dice FROM compendium.effect_scaling_steps ORDER BY effect_id, at_level
 `
@@ -677,82 +265,6 @@ func (q *Queries) ListEffectScalings(ctx context.Context) ([]CompendiumEffectSca
 			&i.ColumnName,
 			&i.BaseLevel,
 			&i.Dice,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listEffectSummons = `-- name: ListEffectSummons :many
-SELECT effect_id, ordinal, monster_slug, count, shares_turn, needs_command FROM compendium.effect_summons
-`
-
-type ListEffectSummonsRow struct {
-	EffectID     int64
-	Ordinal      int32
-	MonsterSlug  string
-	Count        int32
-	SharesTurn   bool
-	NeedsCommand bool
-}
-
-func (q *Queries) ListEffectSummons(ctx context.Context) ([]ListEffectSummonsRow, error) {
-	rows, err := q.db.Query(ctx, listEffectSummons)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []ListEffectSummonsRow{}
-	for rows.Next() {
-		var i ListEffectSummonsRow
-		if err := rows.Scan(
-			&i.EffectID,
-			&i.Ordinal,
-			&i.MonsterSlug,
-			&i.Count,
-			&i.SharesTurn,
-			&i.NeedsCommand,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listEffectSurfaces = `-- name: ListEffectSurfaces :many
-SELECT effect_id, ordinal, surface, rounds FROM compendium.effect_surfaces
-`
-
-type ListEffectSurfacesRow struct {
-	EffectID int64
-	Ordinal  int32
-	Surface  string
-	Rounds   int32
-}
-
-func (q *Queries) ListEffectSurfaces(ctx context.Context) ([]ListEffectSurfacesRow, error) {
-	rows, err := q.db.Query(ctx, listEffectSurfaces)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []ListEffectSurfacesRow{}
-	for rows.Next() {
-		var i ListEffectSurfacesRow
-		if err := rows.Scan(
-			&i.EffectID,
-			&i.Ordinal,
-			&i.Surface,
-			&i.Rounds,
 		); err != nil {
 			return nil, err
 		}

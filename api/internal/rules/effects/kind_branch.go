@@ -111,12 +111,12 @@ func (branchKind) Describe() Description {
 			{Name: "n", Label: "By or at most", Type: NumberField, Options: nil, Required: false, Min: 0, Max: 1000},
 			{Name: "creature_type", Label: "Creature type", Type: TextField, Options: nil, Required: false, Min: 0, Max: 0},
 		},
-		Groups: []string{"then"},
+		Groups: []string{"then"}, OpenGroups: false,
 	}
 }
 
 func (branchKind) Decode(v Values, beneath Groups) (Part, error) {
-	b := Branch{When: Condition{Kind: ConditionKind(v["when"].Text), N: v["n"].Number, Type: v["creature_type"].Text}, Then: beneath["then"]}
+	b := Branch{When: Condition{Kind: ConditionKind(v["when"].Text), N: v["n"].Number, Type: v["creature_type"].Text}, Then: beneath.Of("then")}
 	if err := oneOf("when", string(b.When.Kind), conditionKinds()); err != nil {
 		return nil, err
 	}

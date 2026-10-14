@@ -710,6 +710,13 @@ type CompendiumEffectArea struct {
 	RangeFt  int32
 }
 
+type CompendiumEffectAreaSafe struct {
+	EffectID int64
+	Ordinal  int32
+	Kind     string
+	Ability  string
+}
+
 type CompendiumEffectBonusDice struct {
 	EffectID  int64
 	Ordinal   int32
@@ -729,10 +736,11 @@ type CompendiumEffectBranch struct {
 }
 
 type CompendiumEffectComponent struct {
-	EffectID int64
-	Ordinal  int32
-	Kind     string
-	Parent   pgtype.Int4
+	EffectID  int64
+	Ordinal   int32
+	Kind      string
+	Parent    pgtype.Int4
+	GroupName pgtype.Text
 }
 
 type CompendiumEffectCounter struct {
@@ -813,6 +821,14 @@ type CompendiumEffectGrant struct {
 
 type CompendiumEffectKind struct {
 	Slug string
+}
+
+type CompendiumEffectLight struct {
+	EffectID int64
+	Ordinal  int32
+	Kind     string
+	BrightFt int32
+	DimFt    int32
 }
 
 type CompendiumEffectManual struct {

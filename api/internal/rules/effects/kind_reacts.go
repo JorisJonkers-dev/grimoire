@@ -34,7 +34,7 @@ func (reactsKind) Describe() Description {
 			{Name: "trigger", Label: "When the bearer is", Type: ChoiceField, Options: []string{"damaged"}, Required: true, Min: 0, Max: 0},
 			{Name: "instruction", Label: "What it does", Type: TextField, Options: nil, Required: true, Min: 0, Max: 500},
 		},
-		Groups: nil,
+		Groups: nil, OpenGroups: false,
 	}
 }
 

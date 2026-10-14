@@ -5,79 +5,18 @@ package effects
 import (
 	"slices"
 	"sort"
-
-	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
-	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/surface"
 )
 
 // Component is one typed part of an Effect.
 //
 //sumtype:decl
-type Component interface{ isComponent() }
-
-// Manual is a part the engine cannot compute yet; the DM resolves it from a prompt.
-type Manual struct {
-	Instruction string
+type Component interface {
+	isComponent()
+	// Kind is the slug of the Part's kind, the one its definition in Kinds describes.
+	Kind() string
+	// Text is the Part's rules sentence.
+	Text() string
 }
-
-// Area is an effect's template; RangeFt is how far away its point may be, 0 when it starts at the caster.
-type Area struct {
-	Shape   hex.Shape
-	SizeFt  int
-	RangeFt int
-}
-
-// SaveCondition puts a condition on every creature in the area that fails the save.
-type SaveCondition struct {
-	Ability string
-	Slug    string
-}
-
-// CreateSurface leaves a Surface on the area for some rounds.
-type CreateSurface struct {
-	Kind   surface.Kind
-	Rounds int
-}
-
-// Summon brings creatures in under the caster's control: Count of one monster, acting on the caster's
-// turn (Shares) or on their own Initiative, and taking only the Dodge action unless the caster spends a
-// Bonus Action to command them (NeedsCommand).
-type Summon struct {
-	Monster      string
-	Count        int
-	Shares       bool
-	NeedsCommand bool
-}
-
-// Form overlays the bearer's stat block with a creature's (Polymorph, Wild Shape). Monster empty lets
-// whoever applies it choose the creature. The form's hit points are Temporary Hit Points: TempHP of
-// them, or the creature's Hit Point maximum when TempHP is 0. The bearer reverts when they are gone.
-type Form struct {
-	Monster string
-	TempHP  int
-}
-
-// Reveal strips Visibility Qualities from every creature and object in the Effect's area, for
-// everyone, whatever their Senses (Faerie Fire outlining the invisible).
-type Reveal struct {
-	Qualities []string
-}
-
-// ForcedMove pushes creatures that fail the save Ft feet straight away from the origin, or pulls them
-// toward it (Thunderwave).
-type ForcedMove struct {
-	Ft     int
-	Toward bool
-}
-
-func (Summon) isComponent()        {}
-func (Form) isComponent()          {}
-func (Reveal) isComponent()        {}
-func (ForcedMove) isComponent()    {}
-func (Manual) isComponent()        {}
-func (Area) isComponent()          {}
-func (SaveCondition) isComponent() {}
-func (CreateSurface) isComponent() {}
 
 // Definition is an Effect: what it is called, what owns it, whether it needs concentration, and what it does.
 type Definition struct {
@@ -94,7 +33,7 @@ type Definition struct {
 func (d Definition) Automated() bool {
 	automated := true
 	walk(d.Components, func(c Component) {
-		if _, manual := c.(Manual); manual {
+		if len(prompts(c)) > 0 {
 			automated = false
 		}
 	})
@@ -340,24 +279,23 @@ type Landing struct {
 func (cat Catalog) LandingOf(slug, mode string) Landing {
 	var out Landing
 	for _, c := range cat[slug].Parts(mode) {
-		switch c := c.(type) {
-		case Part:
-			if l, ok := c.(BearerLander); ok {
-				for _, act := range l.LandsOnBearer() {
-					out.take(act)
-				}
-			}
-		case Reveal:
-			out.Reveals = append(out.Reveals, c.Qualities...)
-		case Form:
-			out.Form = &c
-		case Manual, Area, SaveCondition, CreateSurface, ForcedMove, Choice, Summon, AreaSave, Light:
+		for _, act := range landsOnBearer(c) {
+			out.take(act)
 		}
 	}
 	return out
 }
 
-// take applies one act to the bearer: temporary hit points keep the highest, and the rest add up.
+// landsOnBearer is what a Part does on its bearer as its Effect lands; nothing for most.
+func landsOnBearer(c Component) []Act {
+	if l, ok := c.(BearerLander); ok {
+		return l.LandsOnBearer()
+	}
+	return nil
+}
+
+// take applies one act to the bearer: temporary hit points keep the highest, the last form holds,
+// and the rest add up.
 func (l *Landing) take(act Act) {
 	switch act := act.(type) {
 	case GainTempHP:
@@ -368,18 +306,19 @@ func (l *Landing) take(act Act) {
 		l.Grants = append(l.Grants, act.Feature)
 	case ChangeUses:
 		l.Resources = append(l.Resources, ResourceChange(act))
-	case TeleportCaster, RollSave, RollDamage, Hurt:
+	case StripQualities:
+		l.Reveals = append(l.Reveals, act.Qualities...)
+	case TakeForm:
+		f := Form(act)
+		l.Form = &f
+	case TeleportCaster, SummonCreatures, Afflict, AskDM, RollSave, RollDamage, Hurt, Template, LaySurface, Push, ShedLight:
 	}
 }
 
 // TeleportOf is how far an Effect teleports its caster, if it does.
 func (cat Catalog) TeleportOf(slug string) (int, bool) {
 	for _, c := range cat[slug].Components {
-		l, ok := c.(BearerLander)
-		if !ok {
-			continue
-		}
-		for _, act := range l.LandsOnBearer() {
+		for _, act := range landsOnBearer(c) {
 			if t, ok := act.(TeleportCaster); ok {
 				return t.RangeFt, true
 			}
@@ -391,11 +330,24 @@ func (cat Catalog) TeleportOf(slug string) (int, bool) {
 // SummonOf is what an Effect summons, if it does.
 func (cat Catalog) SummonOf(slug string) (Summon, bool) {
 	for _, c := range cat[slug].Components {
-		if s, ok := c.(Summon); ok {
-			return s, true
+		for _, act := range landsOnBearer(c) {
+			if s, ok := act.(SummonCreatures); ok {
+				return Summon(s), true
+			}
 		}
 	}
 	return Summon{Monster: "", Count: 0, Shares: false, NeedsCommand: false}, false
+}
+
+// prompts are the instructions a Part leaves the DM as its Effect lands.
+func prompts(c Component) []string {
+	var out []string
+	for _, act := range landsOnBearer(c) {
+		if a, ok := act.(AskDM); ok {
+			out = append(out, a.Instruction)
+		}
+	}
+	return out
 }
 
 // Spell reports whether an Effect belongs to a spell, the kind Dispel ends.
@@ -412,9 +364,7 @@ func (cat Catalog) Instructions(slug, name, mode string) []string {
 	}
 	var out []string
 	for _, c := range d.Parts(mode) {
-		if m, ok := c.(Manual); ok {
-			out = append(out, m.Instruction)
-		}
+		out = append(out, prompts(c)...)
 	}
 	return out
 }
@@ -432,21 +382,39 @@ type AreaSpell struct {
 	Instructions []string
 	// Light is the light the spell sheds where it lands, zero for none.
 	Light   Light
+	shaped  bool
 	landers []Lander
 }
 
-// ask takes what a landing Part asks for into the area's plan, and keeps the Part to land later.
-func (a *AreaSpell) ask(l Lander) {
-	for _, act := range l.Asks() {
+// ask takes what an area Part asks for into the area's plan: the later of two settings wins, and
+// reveals and instructions add up. A Part that lands is kept to land later.
+func (a *AreaSpell) ask(p Asker) {
+	for _, act := range p.Asks() {
 		switch act := act.(type) {
+		case Template:
+			a.Area, a.shaped = act.Area, true
 		case RollSave:
 			a.Save = act.Ability
 		case RollDamage:
 			a.Damage = act
-		case Hurt, GainTempHP, EndSpells, Grant, ChangeUses, TeleportCaster:
+		case Afflict:
+			a.Condition = act.Condition
+		case LaySurface:
+			a.Surface = CreateSurface(act)
+		case Push:
+			a.Push = ForcedMove(act)
+		case StripQualities:
+			a.Reveals = append(a.Reveals, act.Qualities...)
+		case AskDM:
+			a.Instructions = append(a.Instructions, act.Instruction)
+		case ShedLight:
+			a.Light = Light(act)
+		case Hurt, GainTempHP, EndSpells, Grant, ChangeUses, TeleportCaster, TakeForm, SummonCreatures:
 		}
 	}
-	a.landers = append(a.landers, l)
+	if l, ok := p.(Lander); ok {
+		a.landers = append(a.landers, l)
+	}
 }
 
 // Lands is what the area's Parts do to one creature once its rolls are in.
@@ -463,33 +431,12 @@ func (cat Catalog) AreaOf(slug string) (AreaSpell, bool) {
 	d, known := cat[slug]
 	var out AreaSpell
 	out.Name = d.Name
-	found := false
 	for _, c := range d.Components {
-		switch c := c.(type) {
-		case Area:
-			out.Area, found = c, true
-		case Part:
-			if l, ok := c.(Lander); ok {
-				out.ask(l)
-			}
-		case SaveCondition:
-			out.Condition, out.Save = c.Slug, c.Ability
-		case CreateSurface:
-			out.Surface = c
-		case Manual:
-			out.Instructions = append(out.Instructions, c.Instruction)
-		case Reveal:
-			out.Reveals = append(out.Reveals, c.Qualities...)
-		case ForcedMove:
-			out.Push = c
-		case AreaSave:
-			out.Save = c.Ability
-		case Light:
-			out.Light = c
-		case Choice, Summon, Form:
+		if a, ok := c.(Asker); ok {
+			out.ask(a)
 		}
 	}
-	return out, known && found
+	return out, known && out.shaped
 }
 
 // Lookup finds a modelled Effect.

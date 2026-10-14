@@ -33,7 +33,7 @@ func (resourceChangeKind) Describe() Description {
 			{Name: "resource", Label: "Resource", Type: TextField, Options: nil, Required: true, Min: 0, Max: 80},
 			{Name: "delta", Label: "Uses given back, or taken when below 0", Type: NumberField, Options: nil, Required: true, Min: -20, Max: 20},
 		},
-		Groups: nil,
+		Groups: nil, OpenGroups: false,
 	}
 }
 

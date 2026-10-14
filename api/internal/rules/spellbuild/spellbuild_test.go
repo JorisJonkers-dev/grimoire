@@ -44,7 +44,7 @@ func TestTheMarshLanternBuildsIntoAnEffect(t *testing.T) {
 			effects.Reveal{Qualities: []string{"invisible"}},
 			effects.Branch{When: effects.Condition{Kind: effects.CreatureIs, Type: "undead"}, Then: []effects.Component{failed}},
 			effects.Branch{When: effects.Condition{Kind: effects.CreatureIs, Type: "fey"}, Then: []effects.Component{failed}},
-			effects.CreateSurface{Kind: "hb-lantern-ground", Rounds: 10},
+			effects.CreateSurface{Surface: "hb-lantern-ground", Rounds: 10},
 		},
 	}
 	if !reflect.DeepEqual(b.Definition, want) {
@@ -89,7 +89,7 @@ func TestOtherPartsAndMetadata(t *testing.T) {
 	if len(comps) != 5 || comps[1] != (effects.SaveDamage{Ability: "dexterity", Dice: "8d6", Type: "fire", Half: true}) || b.Surface != nil {
 		t.Fatalf("components = %+v", comps)
 	}
-	if comps[3] != (effects.CreateSurface{Kind: "grease", Rounds: 3}) || comps[4] != (effects.Manual{Instruction: "Flammable objects ignite."}) {
+	if comps[3] != (effects.CreateSurface{Surface: "grease", Rounds: 3}) || comps[4] != (effects.Manual{Instruction: "Flammable objects ignite."}) {
 		t.Fatalf("surface and manual = %+v", comps[3:])
 	}
 	for i, want := range []string{

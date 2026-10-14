@@ -48,7 +48,7 @@ func (saveDamageKind) Describe() Description {
 			{Name: "damage_type", Label: "Damage type", Type: ChoiceField, Options: damageTypes(), Required: true, Min: 0, Max: 0},
 			{Name: "half", Label: "Half damage on a successful save", Type: FlagField, Options: nil, Required: false, Min: 0, Max: 0},
 		},
-		Groups: nil,
+		Groups: nil, OpenGroups: false,
 	}
 }
 

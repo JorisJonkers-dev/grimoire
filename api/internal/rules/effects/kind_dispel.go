@@ -21,7 +21,7 @@ type dispelKind struct{}
 func (dispelKind) Describe() Description {
 	return Description{
 		Slug: "dispel", Label: "Dispel", Summary: "Ends every spell on the bearer as the Effect lands.",
-		Fields: nil, Groups: nil,
+		Fields: nil, Groups: nil, OpenGroups: false,
 	}
 }
 

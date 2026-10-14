@@ -8,7 +8,7 @@ import (
 )
 
 // branchRows stores branches in compendium.effect_branches; the Parts a branch adds are component
-// rows that name it as their parent.
+// rows that name it as their parent, in its group then.
 type branchRows struct{}
 
 func (branchRows) kind() string { return effects.Branch{}.Kind() }
@@ -32,13 +32,8 @@ func (branchRows) read(ctx context.Context, q *queries.Queries, into map[slot]ef
 	return nil
 }
 
-func (branchRows) beneath(p effects.Part) []effects.Component {
+func (branchRows) nest(p effects.Part, groups []effects.Group) effects.Part {
 	b, _ := p.(effects.Branch)
-	return b.Then
-}
-
-func (branchRows) nest(p effects.Part, beneath []effects.Component) effects.Part {
-	b, _ := p.(effects.Branch)
-	b.Then = beneath
+	b.Then = effects.Groups(groups).Of("then")
 	return b
 }

@@ -306,7 +306,7 @@ func (b *builder) turnDamage(p Part) error {
 	}
 	b.ground = true
 	b.surface = &Surface{Slug: b.slug + "-ground", Name: b.name, Dice: p.Dice, Type: p.DamageType}
-	b.comps = append(b.comps, effects.CreateSurface{Kind: surface.Kind(b.surface.Slug), Rounds: b.rounds()})
+	b.comps = append(b.comps, effects.CreateSurface{Surface: surface.Kind(b.surface.Slug), Rounds: b.rounds()})
 	b.text = append(b.text, "A creature that starts its turn in the area takes "+p.Dice+" "+p.DamageType+" damage.")
 	return nil
 }
@@ -386,7 +386,7 @@ func (b *builder) lay(p Part) error {
 		return DesignError("a Surface lasts 1 to 100 rounds")
 	}
 	b.ground = true
-	b.comps = append(b.comps, effects.CreateSurface{Kind: surface.Kind(p.Surface), Rounds: p.Rounds})
+	b.comps = append(b.comps, effects.CreateSurface{Surface: surface.Kind(p.Surface), Rounds: p.Rounds})
 	b.text = append(b.text, "The area is covered in "+strings.ReplaceAll(p.Surface, "-", " ")+" for "+strconv.Itoa(p.Rounds)+" rounds.")
 	return nil
 }

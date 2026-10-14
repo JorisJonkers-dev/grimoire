@@ -21,7 +21,7 @@ type immobileKind struct{}
 func (immobileKind) Describe() Description {
 	return Description{
 		Slug: "immobile", Label: "Speed 0", Summary: "Holds the bearer's speed at zero.",
-		Fields: nil, Groups: nil,
+		Fields: nil, Groups: nil, OpenGroups: false,
 	}
 }
 

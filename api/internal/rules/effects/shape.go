@@ -5,21 +5,7 @@ import (
 	"strings"
 )
 
-// Choice offers modes; whoever applies the Effect picks one, and only that mode's components count
-// (Enlarge/Reduce).
-type Choice struct {
-	Modes []Mode
-}
-
-// Mode is one option of a Choice.
-type Mode struct {
-	Name       string
-	Components []Component
-}
-
-func (Choice) isComponent() {}
-
-// Parts are the components that count for an Effect applied in a mode: its own, with each Choice
+// Parts are the components that count for an Effect applied in a mode: its own, with each choice
 // replaced by the chosen mode's. Parts beneath a Holder count only once it lands.
 func (d Definition) Parts(mode string) []Component {
 	return parts(d.Components, mode)
@@ -28,15 +14,11 @@ func (d Definition) Parts(mode string) []Component {
 func parts(cs []Component, mode string) []Component {
 	var out []Component
 	for _, c := range cs {
-		switch c := c.(type) {
-		case Choice:
-			for _, m := range c.Modes {
-				if m.Name == mode {
-					out = append(out, parts(m.Components, mode)...)
-				}
-			}
-		case Holder:
-		default:
+		if ch, ok := c.(Chooser); ok {
+			out = append(out, parts(ch.Chosen(mode), mode)...)
+			continue
+		}
+		if _, ok := c.(Holder); !ok {
 			out = append(out, c)
 		}
 	}
@@ -47,9 +29,9 @@ func parts(cs []Component, mode string) []Component {
 func (d Definition) Modes() []string {
 	var out []string
 	for _, c := range d.Components {
-		if ch, ok := c.(Choice); ok {
-			for _, m := range ch.Modes {
-				out = append(out, m.Name)
+		if ch, ok := c.(Chooser); ok {
+			for _, g := range ch.Groups() {
+				out = append(out, g.Name)
 			}
 		}
 	}
@@ -64,18 +46,13 @@ func (d Definition) Branches(mode string, s Situation) []Component {
 func branches(cs []Component, mode string, s Situation) []Component {
 	var out []Component
 	for _, c := range cs {
-		switch c := c.(type) {
-		case Holder:
-			then := c.Landed(s)
+		if h, ok := c.(Holder); ok {
+			then := h.Landed(s)
 			out = append(out, parts(then, mode)...)
 			out = append(out, branches(then, mode, s)...)
-		case Choice:
-			for _, m := range c.Modes {
-				if m.Name == mode {
-					out = append(out, branches(m.Components, mode, s)...)
-				}
-			}
-		default:
+		}
+		if ch, ok := c.(Chooser); ok {
+			out = append(out, branches(ch.Chosen(mode), mode, s)...)
 		}
 	}
 	return out
@@ -85,16 +62,10 @@ func branches(cs []Component, mode string, s Situation) []Component {
 func walk(cs []Component, visit func(Component)) {
 	for _, c := range cs {
 		visit(c)
-		switch c := c.(type) {
-		case Choice:
-			for _, m := range c.Modes {
-				walk(m.Components, visit)
+		if g, ok := c.(Grouper); ok {
+			for _, group := range g.Groups() {
+				walk(group.Parts, visit)
 			}
-		case Holder:
-			for _, g := range c.Groups() {
-				walk(g.Parts, visit)
-			}
-		default:
 		}
 	}
 }

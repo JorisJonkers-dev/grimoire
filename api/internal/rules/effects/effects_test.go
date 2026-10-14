@@ -90,11 +90,11 @@ func TestAreaSpells(t *testing.T) {
 	t.Parallel()
 	fb, ok := srd().AreaOf("fireball")
 	if !ok || fb.Name != "Fireball" || fb.Area.Shape != hex.SphereArea || fb.Area.SizeFt != 20 || fb.Area.RangeFt != 150 || fb.Save != "dexterity" ||
-		fb.Damage.Dice != "8d6" || fb.Damage.Type != "fire" || !reflect.DeepEqual(fb.Lands(effects.Outcome{Saved: true, Damage: 8}), []effects.Act{effects.Hurt{Amount: 4, Type: "fire"}}) || fb.Condition != "" || fb.Surface.Kind != surface.None || fb.Instructions != nil {
+		fb.Damage.Dice != "8d6" || fb.Damage.Type != "fire" || !reflect.DeepEqual(fb.Lands(effects.Outcome{Saved: true, Damage: 8}), []effects.Act{effects.Hurt{Amount: 4, Type: "fire"}}) || fb.Condition != "" || fb.Surface.Surface != surface.None || fb.Instructions != nil {
 		t.Fatalf("fireball = %+v", fb)
 	}
 	g, _ := srd().AreaOf("grease")
-	if g.Save != "dexterity" || g.Condition != "prone" || g.Surface.Kind != surface.Grease || g.Surface.Rounds != 10 || g.Damage.Dice != "" {
+	if g.Save != "dexterity" || g.Condition != "prone" || g.Surface.Surface != surface.Grease || g.Surface.Rounds != 10 || g.Damage.Dice != "" {
 		t.Fatalf("grease = %+v", g)
 	}
 	if tw, _ := srd().AreaOf("thunderwave"); len(tw.Instructions) != 1 || tw.Save != "constitution" {
@@ -349,7 +349,7 @@ func srd() effects.Catalog {
 		}},
 		"grease": {Slug: "grease", Name: "Grease", Concentration: false, Components: []effects.Component{
 			effects.Area{Shape: hex.CylinderArea, SizeFt: 5, RangeFt: 60},
-			effects.CreateSurface{Kind: surface.Grease, Rounds: 10},
+			effects.CreateSurface{Surface: surface.Grease, Rounds: 10},
 			effects.SaveCondition{Ability: "dexterity", Slug: "prone"},
 		}},
 		"prone": {Slug: "prone", Name: "Prone", Concentration: false, Components: []effects.Component{

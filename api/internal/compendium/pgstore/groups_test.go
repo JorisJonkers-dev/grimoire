@@ -33,7 +33,7 @@ func TestStructuralPartsNestThroughTheDatabase(t *testing.T) {
 					effects.SaveCondition{Ability: "dexterity", Slug: "prone"},
 					effects.Branch{When: effects.Condition{Kind: effects.HPAtMost, N: 20, Type: ""}, Then: []effects.Component{
 						effects.Choice{Modes: []effects.Mode{
-							{Name: "Freeze", Components: []effects.Component{effects.CreateSurface{Kind: surface.Grease, Rounds: 2}}},
+							{Name: "Freeze", Components: []effects.Component{effects.CreateSurface{Surface: surface.Grease, Rounds: 2}}},
 							{Name: "Shatter", Components: []effects.Component{effects.ForcedMove{Ft: 10, Toward: false}, effects.Manual{Instruction: "Ice cracks."}}},
 						}},
 					}},
@@ -150,5 +150,74 @@ func TestStackingPartsKeepTheirCap(t *testing.T) {
 		effects.Exhausting{D20PerLevel: 1, MaxLevel: 11},
 	}}); err == nil {
 		t.Fatal("a cap above 10 was stored")
+	}
+}
+
+// A Part beneath another names its group in its own row: a mode is a named group of the choice, not a
+// row of its own, and a group of no Parts is refused rather than lost.
+func TestGroupsOfPartsHaveNames(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	pool := openPool(t)
+	s := pgstore.New(pool)
+	d := effects.Definition{Slug: "lantern-choice", Name: "Lantern Choice", Owner: effects.OwnedBySpell, Components: []effects.Component{
+		effects.Area{Shape: hex.EmanationArea, SizeFt: 10, RangeFt: 0},
+		effects.AreaSave{Ability: "wisdom"},
+		effects.Choice{Modes: []effects.Mode{
+			{Name: "Bright", Components: []effects.Component{effects.Light{BrightFt: 20, DimFt: 20}}},
+			{Name: "Dim", Components: []effects.Component{effects.Light{BrightFt: 5, DimFt: 40}, effects.Branch{
+				When: effects.Condition{Kind: effects.FailsBy, N: 5, Type: ""}, Then: []effects.Component{effects.SaveCondition{Ability: "wisdom", Slug: "blinded"}},
+			}}},
+		}},
+	}}
+	if err := s.SaveEffect(ctx, effects.Owner{Kind: effects.OwnedBySpell, Slug: d.Slug}, d); err != nil {
+		t.Fatal(err)
+	}
+	got, err := s.Effects(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(got[d.Slug], d) {
+		t.Fatalf("lantern choice:\n got %+v\nwant %+v", got[d.Slug], d)
+	}
+	rows, err := pool.Query(ctx, `SELECT c.kind, coalesce(c.group_name, ''), coalesce(p.kind, '') FROM compendium.effect_components c
+		JOIN compendium.effect_definitions d ON d.id = c.effect_id
+		LEFT JOIN compendium.effect_components p ON p.effect_id = c.effect_id AND p.ordinal = c.parent
+		WHERE d.slug = 'lantern-choice' ORDER BY c.ordinal`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var stored []string
+	for rows.Next() {
+		var kind, group, parent string
+		if err := rows.Scan(&kind, &group, &parent); err != nil {
+			t.Fatal(err)
+		}
+		stored = append(stored, kind+"/"+group+"/"+parent)
+	}
+	want := []string{"area//", "area_save//", "choice//", "light/Bright/choice", "light/Dim/choice", "branch/Dim/choice", "save_condition/then/branch"}
+	if !reflect.DeepEqual(stored, want) {
+		t.Fatalf("rows = %v", stored)
+	}
+	var modes int
+	if err := pool.QueryRow(ctx, "SELECT count(*) FROM compendium.effect_kinds WHERE slug = 'mode'").Scan(&modes); err != nil || modes != 0 {
+		t.Fatalf("a mode is no kind of Part = %d, %v", modes, err)
+	}
+	for _, bad := range []effects.Definition{
+		{Slug: "empty-mode", Name: "x", Components: []effects.Component{effects.Choice{Modes: []effects.Mode{{Name: "Hot", Components: []effects.Component{effects.Dispel{}}}, {Name: "Cold", Components: nil}}}}},
+		{Slug: "empty-branch", Name: "x", Components: []effects.Component{effects.Branch{When: effects.Condition{Kind: effects.FirstEachTurn, N: 0, Type: ""}, Then: nil}}},
+		{Slug: "unnamed-mode", Name: "x", Components: []effects.Component{effects.Choice{Modes: []effects.Mode{{Name: "", Components: []effects.Component{effects.Dispel{}}}}}}},
+	} {
+		if err := s.SaveEffect(ctx, effects.Owner{Kind: effects.OwnedBySpell, Slug: bad.Slug}, bad); err == nil {
+			t.Errorf("%s saved", bad.Slug)
+		}
+	}
+	for _, q := range []string{
+		"UPDATE compendium.effect_components SET group_name = NULL WHERE kind = 'light' AND effect_id = (SELECT id FROM compendium.effect_definitions WHERE slug = 'lantern-choice')",
+		"UPDATE compendium.effect_components SET group_name = 'x' WHERE kind = 'area' AND effect_id = (SELECT id FROM compendium.effect_definitions WHERE slug = 'lantern-choice')",
+	} {
+		if _, err := pool.Exec(ctx, q); err == nil {
+			t.Errorf("a Part beneath another names its group, and only such a Part: %s", q)
+		}
 	}
 }

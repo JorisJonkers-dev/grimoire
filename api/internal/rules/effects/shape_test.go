@@ -227,7 +227,7 @@ func TestRulesText(t *testing.T) {
 			effects.SaveDamage{Ability: "dexterity", Dice: "8d6", Type: "fire", Half: true},
 			effects.SaveDamage{Ability: "constitution", Dice: "2d8", Type: "thunder"},
 			effects.SaveCondition{Ability: "wisdom", Slug: "frightened"},
-			effects.CreateSurface{Kind: surface.Grease, Rounds: 1},
+			effects.CreateSurface{Surface: surface.Grease, Rounds: 1},
 			effects.Incapacitated{},
 			effects.Immobile{},
 			effects.SaveEdge{Ability: "dexterity", Mode: effects.SaveFails},
@@ -344,7 +344,7 @@ func TestWhereEachStructuralKindIsRead(t *testing.T) {
 		effects.Area{Shape: hex.LineArea, SizeFt: 60},
 		effects.AreaSave{Ability: "charisma"},
 		effects.SaveCondition{Ability: "wisdom", Slug: "charmed"},
-		effects.CreateSurface{Kind: surface.Grease, Rounds: 2},
+		effects.CreateSurface{Surface: surface.Grease, Rounds: 2},
 		effects.ForcedMove{Ft: 20, Toward: true},
 		effects.Light{BrightFt: 40, DimFt: 40},
 		effects.Reveal{Qualities: []string{"secret"}},
@@ -359,14 +359,14 @@ func TestWhereEachStructuralKindIsRead(t *testing.T) {
 		effects.Area{Shape: hex.SphereArea, SizeFt: 10, RangeFt: 60},
 		effects.AreaSave{Ability: "strength"},
 		effects.SaveCondition{Ability: "constitution", Slug: "stunned"},
-		effects.CreateSurface{Kind: surface.Grease, Rounds: 1},
+		effects.CreateSurface{Surface: surface.Grease, Rounds: 1},
 		effects.ForcedMove{Ft: 5},
 		effects.Light{BrightFt: 10, DimFt: 10},
 		effects.Reveal{Qualities: []string{"invisible"}},
 		effects.Manual{Instruction: "Thunder."},
 		effects.Area{Shape: hex.CubeArea, SizeFt: 20, RangeFt: 90},
 		effects.AreaSave{Ability: "dexterity"},
-		effects.CreateSurface{Kind: surface.Grease, Rounds: 3},
+		effects.CreateSurface{Surface: surface.Grease, Rounds: 3},
 		effects.ForcedMove{Ft: 15},
 		effects.Light{BrightFt: 20, DimFt: 30},
 		effects.Reveal{Qualities: []string{"hidden", "disguised"}},
@@ -383,7 +383,7 @@ func TestWhereEachStructuralKindIsRead(t *testing.T) {
 	a, ok := cat.AreaOf("storm")
 	want := effects.AreaSpell{
 		Name: "Storm", Area: effects.Area{Shape: hex.CubeArea, SizeFt: 20, RangeFt: 90}, Save: "dexterity", Condition: "stunned",
-		Surface: effects.CreateSurface{Kind: surface.Grease, Rounds: 3}, Push: effects.ForcedMove{Ft: 15},
+		Surface: effects.CreateSurface{Surface: surface.Grease, Rounds: 3}, Push: effects.ForcedMove{Ft: 15},
 		Reveals: []string{"invisible", "hidden", "disguised"}, Instructions: []string{"Thunder.", "Rain."}, Light: effects.Light{BrightFt: 20, DimFt: 30},
 	}
 	if !ok || a.Name != want.Name || a.Area != want.Area || a.Save != want.Save || a.Condition != want.Condition || a.Surface != want.Surface ||

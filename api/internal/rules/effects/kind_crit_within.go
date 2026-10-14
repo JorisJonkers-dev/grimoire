@@ -33,7 +33,7 @@ func (critWithinKind) Describe() Description {
 		Fields: []Field{
 			{Name: "feet", Label: "Within feet", Type: NumberField, Options: nil, Required: true, Min: 0, Max: 120},
 		},
-		Groups: nil,
+		Groups: nil, OpenGroups: false,
 	}
 }
 

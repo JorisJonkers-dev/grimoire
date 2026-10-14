@@ -62,7 +62,7 @@ func (bonusDieKind) Describe() Description {
 			{Name: "dice", Label: "Die", Type: DiceField, Options: nil, Required: true, Min: 0, Max: 0},
 			{Name: "on", Label: "Added to", Type: ChoicesField, Options: []string{"attack_rolls", "saving_throws"}, Required: true, Min: 0, Max: 0},
 		},
-		Groups: nil,
+		Groups: nil, OpenGroups: false,
 	}
 }
 

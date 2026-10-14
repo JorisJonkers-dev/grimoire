@@ -272,7 +272,9 @@ func (s *state) outcomes(c *domain.AreaCast, spell effects.AreaSpell, totals map
 			switch act := act.(type) {
 			case effects.Hurt:
 				amount += act.Amount
-			case effects.RollSave, effects.RollDamage, effects.GainTempHP, effects.EndSpells, effects.Grant, effects.ChangeUses, effects.TeleportCaster:
+			case effects.RollSave, effects.RollDamage, effects.GainTempHP, effects.EndSpells, effects.Grant, effects.ChangeUses, effects.TeleportCaster,
+				effects.Template, effects.Afflict, effects.LaySurface, effects.Push, effects.ShedLight, effects.StripQualities, effects.AskDM,
+				effects.TakeForm, effects.SummonCreatures:
 			}
 		}
 		if amount > 0 {
@@ -299,14 +301,32 @@ func (s *state) branched(c *domain.AreaCast, totals map[domain.RollID]int) ([]do
 			at.Saved, at.Margin = total >= c.DC, c.DC-total
 		}
 		for _, part := range def.Branches("", at) {
-			switch part := part.(type) {
-			case effects.SaveCondition:
-				cond, _ := s.catalog.Lookup(part.Slug)
-				fx = append(fx, domain.Effect{ID: domain.EffectID(uuid.New()), Target: t.ID, Slug: part.Slug, Name: cond.Name, Level: 1})
-			case effects.Manual:
-				out = append(out, domain.ManualPrompt{ID: uuid.New(), Text: t.Label + ": " + part.Instruction})
-			default:
-			}
+			e, prompts := s.landOn(t, part)
+			fx, out = append(fx, e...), append(out, prompts...)
+		}
+	}
+	return fx, out
+}
+
+// landOn is what a Part a branch adds does to one target: conditions to put on, and parts the DM
+// resolves.
+func (s *state) landOn(t domain.Token, part effects.Component) ([]domain.Effect, []domain.ManualPrompt) {
+	l, ok := part.(effects.BearerLander)
+	if !ok {
+		return nil, nil
+	}
+	var fx []domain.Effect
+	var out []domain.ManualPrompt
+	for _, act := range l.LandsOnBearer() {
+		switch act := act.(type) {
+		case effects.Afflict:
+			cond, _ := s.catalog.Lookup(act.Condition)
+			fx = append(fx, domain.Effect{ID: domain.EffectID(uuid.New()), Target: t.ID, Slug: act.Condition, Name: cond.Name, Level: 1})
+		case effects.AskDM:
+			out = append(out, domain.ManualPrompt{ID: uuid.New(), Text: t.Label + ": " + act.Instruction})
+		case effects.RollSave, effects.RollDamage, effects.Hurt, effects.GainTempHP, effects.EndSpells, effects.Grant, effects.ChangeUses,
+			effects.TeleportCaster, effects.Template, effects.LaySurface, effects.Push, effects.ShedLight, effects.StripQualities,
+			effects.TakeForm, effects.SummonCreatures:
 		}
 	}
 	return fx, out
@@ -349,7 +369,7 @@ func (r *runtime) planTerrain(cmd Command) (Write, string) {
 	case cmd.Rounds < 0 || cmd.Rounds > 100:
 		return Write{}, "Surfaces last 0 to 100 rounds."
 	}
-	return Write{Kind: domain.ActionSurfacesSet, Hexes: hs, terrain: true, created: effects.CreateSurface{Kind: k, Rounds: cmd.Rounds}}, ""
+	return Write{Kind: domain.ActionSurfacesSet, Hexes: hs, terrain: true, created: effects.CreateSurface{Surface: k, Rounds: cmd.Rounds}}, ""
 }
 
 // applyTerrain changes Surfaces and height: painted by the DM, or left by an area spell's damage.
@@ -378,8 +398,8 @@ func applyTerrain(s *state, w *Write) {
 	for _, c := range w.Hexes {
 		now := s.surfaces[c]
 		now.Kind = s.terrainKinds.React(now.Kind, w.damageType)
-		if w.Kind == domain.ActionSurfacesSet || w.created.Kind != surface.None {
-			now = domain.Surface{Kind: w.created.Kind, RoundsLeft: w.created.Rounds}
+		if w.Kind == domain.ActionSurfacesSet || w.created.Surface != surface.None {
+			now = domain.Surface{Kind: w.created.Surface, RoundsLeft: w.created.Rounds}
 		}
 		s.surfaces[c] = now
 		if now.Kind == surface.None {

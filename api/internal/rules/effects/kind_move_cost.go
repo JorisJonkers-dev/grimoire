@@ -30,7 +30,7 @@ func (moveCostKind) Describe() Description {
 		Fields: []Field{
 			{Name: "multiplier", Label: "Feet per foot", Type: NumberField, Options: nil, Required: true, Min: 1, Max: 4},
 		},
-		Groups: nil,
+		Groups: nil, OpenGroups: false,
 	}
 }
 
