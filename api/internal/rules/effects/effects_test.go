@@ -443,3 +443,90 @@ func TestStackingEffectsRiseToTheirCap(t *testing.T) {
 		t.Fatalf("three levels of frostbite = %d feet", ft)
 	}
 }
+
+// Where each passive and bearer-landing kind is read: a chosen mode counts for folds, landing and
+// death, while teleporting, stacking and the level cap read only an Effect's own Parts; Parts beneath
+// a branch count for none of them until it lands.
+func TestWhereEachPassiveKindIsRead(t *testing.T) {
+	t.Parallel()
+	cat := effects.Catalog{
+		"moody": {Name: "Moody", Components: []effects.Component{effects.Choice{Modes: []effects.Mode{{Name: "Grim", Components: []effects.Component{
+			effects.Edge{Against: false, Advantage: true, Range: effects.AnyRange, SourceOnly: true},
+			effects.Edge{Against: true, Advantage: false, Range: effects.AnyRange, SourceOnly: false},
+			effects.ExtraDamage{Dice: "1d8"},
+			effects.CritWithin{Feet: 30},
+			effects.SaveEdge{Ability: "wisdom", Mode: effects.SaveFails},
+			effects.Exhausting{D20PerLevel: 1, SpeedFtPerLevel: 5, DeathAt: 2, MaxLevel: 4},
+			effects.MoveCost{Multiplier: 3},
+			effects.MoveCost{Multiplier: 2},
+			effects.SpeedPenalty{Ft: 10},
+			effects.SpeedPenalty{Ft: 20},
+			effects.Incapacitated{},
+			effects.Immobile{},
+			effects.Reacts{Trigger: "damaged", Instruction: "Hiss."},
+			effects.Counter{RangeFt: 30},
+			effects.TempHP{Amount: 4},
+			effects.TempHP{Amount: 7},
+			effects.Dispel{},
+			effects.GrantFeature{Name: "Gloom"},
+			effects.ResourceChange{Resource: "ki", Delta: -1},
+			effects.Teleport{RangeFt: 30},
+		}}}}}},
+		"later": {Name: "Later", Components: []effects.Component{effects.Branch{When: effects.Condition{Kind: effects.FirstEachTurn}, Then: []effects.Component{
+			effects.Edge{Against: false, Advantage: true},
+			effects.Exhausting{D20PerLevel: 1, DeathAt: 1},
+			effects.Incapacitated{},
+			effects.Immobile{},
+			effects.MoveCost{Multiplier: 4},
+			effects.Reacts{Trigger: "damaged"},
+			effects.Counter{RangeFt: 60},
+			effects.TempHP{Amount: 9},
+			effects.Teleport{RangeFt: 60},
+		}}}},
+		"echo": {Name: "Echo", Components: []effects.Component{effects.Reacts{Trigger: "damaged", Instruction: "Echo."}, effects.Reacts{Trigger: "hit", Instruction: "No."}, effects.Counter{RangeFt: 30}}},
+	}
+	grim := []effects.Active{{Slug: "moody", Source: "aria", Level: 2, Mode: "Grim"}}
+	p := cat.ForAttack(grim, grim, "brom", true)
+	want := effects.AttackProfile{
+		Advantages: []string{"Moody: advantage"}, Disadvantages: []string{"Moody: disadvantage"}, DamageDice: nil, AttackDice: nil,
+		Notes: []string{"Moody 2: -2 to hit", "Moody: a hit from this close is a Critical Hit"}, Penalty: 2, Crit: true,
+	}
+	if !reflect.DeepEqual(p, want) {
+		t.Errorf("a chosen mode on both sides = %+v", p)
+	}
+	if s := cat.ForSave(grim, "wisdom"); !s.Fails || s.Penalty != 2 || s.Advantages != nil || s.Dice != nil {
+		t.Errorf("a chosen mode's save = %+v", s)
+	}
+	if !cat.Incapacitated(grim) || !cat.Immobile(grim) || cat.MoveMultiplier(grim) != 3 || cat.SpeedPenaltyFt(grim) != 30 {
+		t.Errorf("a chosen mode's movement = %v %v %d %d", cat.Incapacitated(grim), cat.Immobile(grim), cat.MoveMultiplier(grim), cat.SpeedPenaltyFt(grim))
+	}
+	if name, dead := cat.Fatal(grim); !dead || name != "Moody" {
+		t.Errorf("two levels kill = %q %v", name, dead)
+	}
+	if got := cat.ReactionsTo(append(grim, effects.Active{Slug: "echo"}), "damaged"); !reflect.DeepEqual(got, []effects.Reaction{{Name: "Moody", Instruction: "Hiss."}, {Name: "Echo", Instruction: "Echo."}}) {
+		t.Errorf("reactions in order = %+v", got)
+	}
+	if ft, name, ok := cat.CounterOf(append(grim, effects.Active{Slug: "echo"})); !ok || ft != 30 || name != "Moody" {
+		t.Errorf("the first of equal counters = %d %s %v", ft, name, ok)
+	}
+	land := cat.LandingOf("moody", "Grim")
+	if !reflect.DeepEqual(land, effects.Landing{TempHP: 7, Dispels: true, Grants: []string{"Gloom"}, Resources: []effects.ResourceChange{{Resource: "ki", Delta: -1}}}) {
+		t.Errorf("a chosen mode lands = %+v", land)
+	}
+	if got := cat.LandingOf("moody", ""); !reflect.DeepEqual(got, effects.Landing{}) {
+		t.Errorf("no mode chosen lands nothing = %+v", got)
+	}
+	if _, ok := cat.TeleportOf("moody"); ok || cat.Stacks("moody") || cat.MaxLevel("moody") != 0 {
+		t.Error("teleporting and stacking read only the Effect's own Parts")
+	}
+	later := []effects.Active{{Slug: "later", Level: 5}}
+	if p := cat.ForAttack(later, later, "x", true); !reflect.DeepEqual(p, effects.AttackProfile{}) {
+		t.Errorf("a branch folds nothing before it lands = %+v", p)
+	}
+	_, dead := cat.Fatal(later)
+	_, _, counters := cat.CounterOf(later)
+	if _, ok := cat.TeleportOf("later"); ok || dead || counters || cat.Incapacitated(later) || cat.Immobile(later) || cat.MoveMultiplier(later) != 1 ||
+		cat.ReactionsTo(later, "damaged") != nil || cat.Stacks("later") || !reflect.DeepEqual(cat.LandingOf("later", ""), effects.Landing{}) {
+		t.Error("nor does it act on its bearer")
+	}
+}
