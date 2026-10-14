@@ -428,6 +428,8 @@ generator rerolls stay exact. The clock is injected the same way.
 - **goose** applies forward-only SQL migrations embedded in the binary (`grimoire migrate`);
   **squawk** lints them in CI and blocks locking or destructive changes; two-phase drops; backfills
   are separate migrations or River jobs ([ADR-0005](docs/adr/0005-goose-and-squawk-for-migrations.md)).
+  New migrations take timestamp versions and may apply out of order
+  ([ADR-0014](docs/adr/0014-one-definition-per-effect-kind.md)).
 - sqlc queries live in `db/queries/<context>/*.sql`; no ORM, no lazy loading, so N+1 is
   structurally absent. A pgx tracer asserts query counts in adapter tests for list endpoints.
 
@@ -1062,9 +1064,15 @@ estate's one-job rule targets private-repo billing and does not apply here.
 import mapping (Open5e + 5e-bits cross-check) → effect components if it does anything → use case →
 OpenAPI paths → `task gen` → handler → tests (unit, adapter, contract) → attribution.
 
-**Add a rules behaviour / effect component:** new variant in the sealed union (compiler + linter
-point at every switch) → EffectEngine/resolver handling → property + table tests → gremlins clean →
-map import data to it → coverage report shrinks.
+**Add an Effect kind** ([ADR-0014](docs/adr/0014-one-definition-per-effect-kind.md)):
+`rules/effects/kind_<slug>.go` with the type, `Kind()`, `Text()`, its definition (`Describe`, `Decode`
+with its checks) and the capabilities it has in play (`AttackFolder`, `SaveFolder`, `Lander`,
+`Holder`) → one sorted line in `rules/effects/kinds.go` → `compendium/pgstore/kind_<slug>.go` and one
+sorted line in `compendium/pgstore/kinds.go` → `db/queries/effect_kind_<slug>.sql` →
+`db/migrations/<yyyymmddhhmmss>_effect_kind_<slug>.sql` creating its table and its row in
+`compendium.effect_kinds` → decode, text, capability and round-trip tests → gremlins clean. Kinds not
+yet moved there are variants of the sealed union, and changing one still edits the switches that
+name it.
 
 **Add a live command:** OpenAPI component (`Command` variant + resulting `Update` variants) →
 `task gen` → domain command + validation via rules → runtime handler (one transaction + typed

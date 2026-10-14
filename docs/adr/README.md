@@ -18,3 +18,4 @@ Numbered sequentially; one short file each.
 | [0011](0011-linked-library-with-campaign-overrides.md) | Library entries are linked into Campaigns, with Campaign Overrides |
 | [0012](0012-gpu-rendered-dice-with-server-results.md) | Dice are 3D on the GPU; the server decides the result |
 | [0013](0013-faction-standing-is-tiered-and-dm-confirmed.md) | Factions ship as archetypes; Standing is tiered and the DM confirms changes |
+| [0014](0014-one-definition-per-effect-kind.md) | One definition per Effect kind, and timestamped migrations that may run out of order |
