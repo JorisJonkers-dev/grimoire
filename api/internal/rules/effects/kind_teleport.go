@@ -7,7 +7,7 @@ type Teleport struct {
 	RangeFt int
 }
 
-func (Teleport) isComponent() {}
+func (Teleport) isPart() {}
 
 // Kind is teleport.
 func (Teleport) Kind() string { return "teleport" }
@@ -30,7 +30,7 @@ func (teleportKind) Describe() Description {
 		Fields: []Field{
 			{Name: "range_ft", Label: "Range in feet", Type: NumberField, Options: nil, Required: true, Min: 5, Max: 5280},
 		},
-		Groups: nil,
+		Groups: nil, OpenGroups: false,
 	}
 }
 

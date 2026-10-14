@@ -3,7 +3,7 @@ package effects
 // Immobile holds the bearer's speed at zero.
 type Immobile struct{}
 
-func (Immobile) isComponent() {}
+func (Immobile) isPart() {}
 
 // Kind is immobile.
 func (Immobile) Kind() string { return "immobile" }
@@ -21,7 +21,7 @@ type immobileKind struct{}
 func (immobileKind) Describe() Description {
 	return Description{
 		Slug: "immobile", Label: "Speed 0", Summary: "Holds the bearer's speed at zero.",
-		Fields: nil, Groups: nil,
+		Fields: nil, Groups: nil, OpenGroups: false,
 	}
 }
 

@@ -10,6 +10,8 @@ sql:
         sql_package: pgx/v5
         emit_interface: true
         emit_empty_slices: true
+        rename:
+          compendium_effect_component: CompendiumEffectPart
         overrides:
           - db_type: timestamptz
             go_type: time.Time

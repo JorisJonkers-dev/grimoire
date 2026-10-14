@@ -18,7 +18,7 @@ func (moveCostRows) insert(ctx context.Context, q *queries.Queries, at slot, p e
 	return q.InsertEffectMoveCost(ctx, queries.InsertEffectMoveCostParams{EffectID: at.effect, Ordinal: at.ordinal, Multiplier: int32(m.Multiplier)})
 }
 
-func (moveCostRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Component) error {
+func (moveCostRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Part) error {
 	rows, err := q.ListEffectMoveCosts(ctx)
 	if err != nil {
 		return err

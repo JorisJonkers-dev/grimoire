@@ -18,7 +18,7 @@ func (counterRows) insert(ctx context.Context, q *queries.Queries, at slot, p ef
 	return q.InsertEffectCounter(ctx, queries.InsertEffectCounterParams{EffectID: at.effect, Ordinal: at.ordinal, RangeFt: int32(c.RangeFt)})
 }
 
-func (counterRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Component) error {
+func (counterRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Part) error {
 	rows, err := q.ListEffectCounters(ctx)
 	if err != nil {
 		return err

@@ -8,6 +8,8 @@ import (
 	"testing"
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/effects"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/surface"
 )
 
 // Every kind is listed once, in slug order, and describes the fields an author fills in; only a kind
@@ -17,7 +19,7 @@ func TestKindsAreListedOnceInOrder(t *testing.T) {
 	var slugs []string
 	for _, k := range effects.Kinds() {
 		d := k.Describe()
-		bare := slices.Contains([]string{"dispel", "immobile", "incapacitated"}, d.Slug)
+		bare := slices.Contains([]string{"choice", "dispel", "immobile", "incapacitated"}, d.Slug)
 		if d.Label == "" || d.Summary == "" || (len(d.Fields) == 0) != bare {
 			t.Errorf("%s describes too little or too much: %+v", d.Slug, d)
 		}
@@ -26,14 +28,15 @@ func TestKindsAreListedOnceInOrder(t *testing.T) {
 				t.Errorf("%s has a field without a name, label or type: %+v", d.Slug, f)
 			}
 		}
-		if d.Slug != "branch" && d.Groups != nil {
-			t.Errorf("only a branch holds Parts beneath it = %+v", d)
+		if (d.Slug != "branch" && d.Groups != nil) || (d.Slug == "choice") != d.OpenGroups {
+			t.Errorf("only a branch holds Parts beneath it in a group of its own, and only a choice in groups the author names = %+v", d)
 		}
 		slugs = append(slugs, d.Slug)
 	}
 	want := []string{
-		"bonus_die", "branch", "counter", "crit_within", "dispel", "edge", "exhausting", "extra_damage", "grant_feature", "immobile",
-		"incapacitated", "move_cost", "reacts", "resource_change", "save_damage", "save_edge", "speed_penalty", "teleport", "temp_hp",
+		"area", "area_save", "bonus_die", "branch", "choice", "counter", "create_surface", "crit_within", "dispel", "edge", "exhausting",
+		"extra_damage", "forced_move", "form", "grant_feature", "immobile", "incapacitated", "light", "manual", "move_cost", "reacts",
+		"resource_change", "reveal", "save_condition", "save_damage", "save_edge", "speed_penalty", "summon", "teleport", "temp_hp",
 	}
 	if !reflect.DeepEqual(slugs, want) {
 		t.Fatalf("kinds = %v", slugs)
@@ -47,6 +50,15 @@ func TestKindsAreListedOnceInOrder(t *testing.T) {
 	}
 	if mult := kind(t, "move_cost").Describe().Fields[0]; mult.Type != effects.NumberField || mult.Min != 1 || mult.Max != 4 {
 		t.Fatalf("a move cost is bounded as its table is = %+v", mult)
+	}
+	if shape := kind(t, "area").Describe().Fields[0]; shape.Type != effects.ChoiceField || len(shape.Options) != 8 || !slices.Contains(shape.Options, "wall") {
+		t.Fatalf("an area names its shape = %+v", shape)
+	}
+	if q := kind(t, "reveal").Describe().Fields[0]; q.Type != effects.ChoicesField || !reflect.DeepEqual(q.Options, []string{"hidden", "invisible", "disguised", "illusory", "ethereal", "darkness", "heavy", "secret"}) {
+		t.Fatalf("a reveal strips Visibility Qualities = %+v", q)
+	}
+	if note := kind(t, "manual").Describe(); note.Label != "Manual Effect" {
+		t.Fatalf("a manual Part is a Manual Effect = %+v", note)
 	}
 }
 
@@ -97,15 +109,15 @@ func TestKindsDecodeAuthoredValues(t *testing.T) {
 		{
 			"branch",
 			effects.Values{"when": {Text: "fails_by"}, "n": {Number: 5}},
-			effects.Groups{"then": {stun}},
-			effects.Branch{When: effects.Condition{Kind: effects.FailsBy, N: 5}, Then: []effects.Component{stun}},
+			effects.Groups{{Name: "then", Parts: []effects.Part{stun}}},
+			effects.Branch{When: effects.Condition{Kind: effects.FailsBy, N: 5}, Then: []effects.Part{stun}},
 			"If a creature fails the save by 5 or more, on a failed Constitution saving throw, a creature has the Stunned condition.",
 		},
 		{
 			"branch",
 			effects.Values{"when": {Text: "creature_is"}, "creature_type": {Text: "undead"}},
-			effects.Groups{"then": {effects.Dispel{}}},
-			effects.Branch{When: effects.Condition{Kind: effects.CreatureIs, Type: "undead"}, Then: []effects.Component{effects.Dispel{}}},
+			effects.Groups{{Name: "then", Parts: []effects.Part{effects.Dispel{}}}},
+			effects.Branch{When: effects.Condition{Kind: effects.CreatureIs, Type: "undead"}, Then: []effects.Part{effects.Dispel{}}},
 			"If the creature is an undead, every spell on the target ends.",
 		},
 		{
@@ -174,6 +186,80 @@ func TestKindsDecodeAuthoredValues(t *testing.T) {
 		{"speed_penalty", effects.Values{"ft": {Number: 10}}, nil, effects.SpeedPenalty{Ft: 10}, "The target's Speed is reduced by 10 feet."},
 		{"teleport", effects.Values{"range_ft": {Number: 30}}, nil, effects.Teleport{RangeFt: 30}, "The caster teleports up to 30 feet to an unoccupied space it can see."},
 		{"temp_hp", effects.Values{"amount": {Number: 9}}, nil, effects.TempHP{Amount: 9}, "The target gains 9 Temporary Hit Points."},
+		{
+			"area",
+			effects.Values{"shape": {Text: "sphere"}, "size_ft": {Number: 20}, "range_ft": {Number: 150}},
+			nil,
+			effects.Area{Shape: hex.SphereArea, SizeFt: 20, RangeFt: 150},
+			"A 20-foot Sphere appears at a point within 150 feet.",
+		},
+		{"area_save", effects.Values{"ability": {Text: "wisdom"}}, nil, effects.AreaSave{Ability: "wisdom"}, "Each creature in the area makes a Wisdom saving throw."},
+		{
+			"choice",
+			nil,
+			effects.Groups{{Name: "Enlarge", Parts: []effects.Part{effects.TempHP{Amount: 1}}}, {Name: "Reduce", Parts: []effects.Part{effects.Dispel{}, effects.Immobile{}}}},
+			effects.Choice{Modes: []effects.Group{{Name: "Enlarge", Parts: []effects.Part{effects.TempHP{Amount: 1}}}, {Name: "Reduce", Parts: []effects.Part{effects.Dispel{}, effects.Immobile{}}}}},
+			"Choose one: Enlarge: The target gains 1 Temporary Hit Points. Or Reduce: Every spell on the target ends. The target's Speed is 0.",
+		},
+		{
+			"create_surface",
+			effects.Values{"surface": {Text: "plant-growth"}, "rounds": {Number: 10}},
+			nil,
+			effects.CreateSurface{Surface: surface.PlantGrowth, Rounds: 10},
+			"The area is covered in plant-growth for 10 rounds.",
+		},
+		{"forced_move", effects.Values{"ft": {Number: 10}}, nil, effects.ForcedMove{Ft: 10}, "A creature that fails is pushed up to 10 feet straight away from the caster."},
+		{"forced_move", effects.Values{"ft": {Number: 15}, "toward": {Flag: true}}, nil, effects.ForcedMove{Ft: 15, Toward: true}, "A creature that fails is pulled up to 15 feet straight toward the caster."},
+		{
+			"form",
+			effects.Values{"monster": {Text: "owl"}, "temp_hp": {Number: 5}},
+			nil,
+			effects.Form{Monster: "owl", TempHP: 5},
+			"The target takes the form of an Owl, using its statistics and gaining 5 Temporary Hit Points; it reverts when they are gone or the effect ends, and any damage left over carries to its own Hit Points.",
+		},
+		{
+			"form",
+			nil,
+			nil,
+			effects.Form{},
+			"The target takes the form of a creature of the caster's choice, using its statistics and gaining Temporary Hit Points equal to that creature's Hit Point maximum; it reverts when they are gone or the effect ends, and any damage left over carries to its own Hit Points.",
+		},
+		{
+			"light",
+			effects.Values{"bright_ft": {Number: 20}, "dim_ft": {Number: 20}},
+			nil,
+			effects.Light{BrightFt: 20, DimFt: 20},
+			"Bright light fills 20 feet around where it lands, and dim light another 20 feet.",
+		},
+		{"manual", effects.Values{"instruction": {Text: "The DM decides."}}, nil, effects.Manual{Instruction: "The DM decides."}, "The DM decides."},
+		{
+			"reveal",
+			effects.Values{"qualities": {Texts: []string{"invisible", "hidden"}}},
+			nil,
+			effects.Reveal{Qualities: []string{"invisible", "hidden"}},
+			"Every creature and object in the area loses Invisible and Hidden, whatever anyone's senses.",
+		},
+		{
+			"save_condition",
+			effects.Values{"ability": {Text: "wisdom"}, "condition": {Text: "frightened"}},
+			nil,
+			effects.SaveCondition{Ability: "wisdom", Slug: "frightened"},
+			"On a failed Wisdom saving throw, a creature has the Frightened condition.",
+		},
+		{
+			"summon",
+			effects.Values{"monster": {Text: "skeleton"}, "count": {Number: 2}, "needs_command": {Flag: true}},
+			nil,
+			effects.Summon{Monster: "skeleton", Count: 2, NeedsCommand: true},
+			"The caster summons 2 Skeleton creatures, which roll their own Initiative. They take the Dodge action unless the caster commands them with a Bonus Action.",
+		},
+		{
+			"summon",
+			effects.Values{"monster": {Text: "owl"}, "count": {Number: 1}, "shares": {Flag: true}},
+			nil,
+			effects.Summon{Monster: "owl", Count: 1, Shares: true},
+			"The caster summons an Owl, which acts on the caster's turn.",
+		},
 	} {
 		got, err := kind(t, c.kind).Decode(c.values, c.groups)
 		if err != nil || !reflect.DeepEqual(got, c.want) {
@@ -189,7 +275,7 @@ func TestKindsDecodeAuthoredValues(t *testing.T) {
 // A kind refuses values its rules cannot hold, naming the field.
 func TestKindsRefuseValuesTheyCannotHold(t *testing.T) {
 	t.Parallel()
-	then := effects.Groups{"then": {effects.Dispel{}}}
+	then := effects.Groups{{Name: "then", Parts: []effects.Part{effects.Dispel{}}}}
 	for _, c := range []struct {
 		kind, field string
 		values      effects.Values
@@ -240,6 +326,43 @@ func TestKindsRefuseValuesTheyCannotHold(t *testing.T) {
 		{"teleport", "range_ft", effects.Values{"range_ft": {Number: 5281}}, nil},
 		{"temp_hp", "amount", effects.Values{"amount": {Number: 0}}, nil},
 		{"temp_hp", "amount", effects.Values{"amount": {Number: 501}}, nil},
+		{"area", "shape", effects.Values{"shape": {Text: "pyramid"}, "size_ft": {Number: 10}}, nil},
+		{"area", "size_ft", effects.Values{"shape": {Text: "cube"}, "size_ft": {Number: 4}}, nil},
+		{"area", "size_ft", effects.Values{"shape": {Text: "cube"}, "size_ft": {Number: 501}}, nil},
+		{"area", "range_ft", effects.Values{"shape": {Text: "cube"}, "size_ft": {Number: 10}, "range_ft": {Number: -1}}, nil},
+		{"area", "range_ft", effects.Values{"shape": {Text: "cube"}, "size_ft": {Number: 10}, "range_ft": {Number: 5281}}, nil},
+		{"area_save", "ability", effects.Values{"ability": {Text: "luck"}}, nil},
+		{"choice", "modes", nil, nil},
+		{"choice", "modes", nil, effects.Groups{{Name: "", Parts: []effects.Part{effects.Dispel{}}}}},
+		{"choice", "modes", nil, effects.Groups{{Name: strings.Repeat("é", 81), Parts: []effects.Part{effects.Dispel{}}}}},
+		{"choice", "modes", nil, effects.Groups{{Name: "Hot", Parts: []effects.Part{effects.Dispel{}}}, {Name: "Hot", Parts: []effects.Part{effects.Immobile{}}}}},
+		{"choice", "modes", nil, effects.Groups{{Name: "Hot", Parts: []effects.Part{effects.Dispel{}}}, {Name: "Cold", Parts: nil}}},
+		{"create_surface", "surface", effects.Values{"surface": {Text: "Lava"}, "rounds": {Number: 1}}, nil},
+		{"create_surface", "surface", effects.Values{"surface": {Text: ""}, "rounds": {Number: 1}}, nil},
+		{"create_surface", "surface", effects.Values{"surface": {Text: "a" + strings.Repeat("b", 40)}, "rounds": {Number: 1}}, nil},
+		{"create_surface", "rounds", effects.Values{"surface": {Text: "fire"}, "rounds": {Number: 0}}, nil},
+		{"create_surface", "rounds", effects.Values{"surface": {Text: "fire"}, "rounds": {Number: 1001}}, nil},
+		{"forced_move", "ft", effects.Values{"ft": {Number: 4}}, nil},
+		{"forced_move", "ft", effects.Values{"ft": {Number: 121}}, nil},
+		{"form", "monster", effects.Values{"monster": {Text: strings.Repeat("é", 81)}}, nil},
+		{"form", "temp_hp", effects.Values{"temp_hp": {Number: -1}}, nil},
+		{"form", "temp_hp", effects.Values{"temp_hp": {Number: 1000}}, nil},
+		{"light", "bright_ft", effects.Values{"bright_ft": {Number: 4}}, nil},
+		{"light", "bright_ft", effects.Values{"bright_ft": {Number: 121}}, nil},
+		{"light", "dim_ft", effects.Values{"bright_ft": {Number: 5}, "dim_ft": {Number: -1}}, nil},
+		{"light", "dim_ft", effects.Values{"bright_ft": {Number: 5}, "dim_ft": {Number: 121}}, nil},
+		{"manual", "instruction", effects.Values{}, nil},
+		{"manual", "instruction", effects.Values{"instruction": {Text: strings.Repeat("x", 301)}}, nil},
+		{"reveal", "qualities", effects.Values{}, nil},
+		{"reveal", "qualities", effects.Values{"qualities": {Texts: []string{"shiny"}}}, nil},
+		{"reveal", "qualities", effects.Values{"qualities": {Texts: []string{"hidden", "hidden"}}}, nil},
+		{"save_condition", "ability", effects.Values{"ability": {Text: "luck"}, "condition": {Text: "prone"}}, nil},
+		{"save_condition", "condition", effects.Values{"ability": {Text: "wisdom"}}, nil},
+		{"save_condition", "condition", effects.Values{"ability": {Text: "wisdom"}, "condition": {Text: strings.Repeat("x", 81)}}, nil},
+		{"summon", "monster", effects.Values{"count": {Number: 1}}, nil},
+		{"summon", "monster", effects.Values{"monster": {Text: strings.Repeat("x", 81)}, "count": {Number: 1}}, nil},
+		{"summon", "count", effects.Values{"monster": {Text: "wolf"}, "count": {Number: 0}}, nil},
+		{"summon", "count", effects.Values{"monster": {Text: "wolf"}, "count": {Number: 21}}, nil},
 	} {
 		_, err := kind(t, c.kind).Decode(c.values, c.groups)
 		var bad effects.ValueError
@@ -271,6 +394,19 @@ func TestKindsRefuseValuesTheyCannotHold(t *testing.T) {
 		{"teleport", effects.Values{"range_ft": {Number: 5280}}},
 		{"temp_hp", effects.Values{"amount": {Number: 1}}},
 		{"temp_hp", effects.Values{"amount": {Number: 500}}},
+		{"area", effects.Values{"shape": {Text: "wall"}, "size_ft": {Number: 5}, "range_ft": {Number: 0}}},
+		{"area", effects.Values{"shape": {Text: "line"}, "size_ft": {Number: 500}, "range_ft": {Number: 5280}}},
+		{"create_surface", effects.Values{"surface": {Text: "a" + strings.Repeat("b", 39)}, "rounds": {Number: 1000}}},
+		{"create_surface", effects.Values{"surface": {Text: "w"}, "rounds": {Number: 1}}},
+		{"forced_move", effects.Values{"ft": {Number: 5}}},
+		{"forced_move", effects.Values{"ft": {Number: 120}}},
+		{"form", effects.Values{"monster": {Text: strings.Repeat("é", 80)}, "temp_hp": {Number: 999}}},
+		{"light", effects.Values{"bright_ft": {Number: 5}, "dim_ft": {Number: 0}}},
+		{"light", effects.Values{"bright_ft": {Number: 120}, "dim_ft": {Number: 120}}},
+		{"manual", effects.Values{"instruction": {Text: strings.Repeat("x", 300)}}},
+		{"reveal", effects.Values{"qualities": {Texts: []string{"hidden", "invisible", "disguised", "illusory", "ethereal", "darkness", "heavy", "secret"}}}},
+		{"save_condition", effects.Values{"ability": {Text: "wisdom"}, "condition": {Text: strings.Repeat("x", 80)}}},
+		{"summon", effects.Values{"monster": {Text: strings.Repeat("x", 80)}, "count": {Number: 20}}},
 	} {
 		if _, err := kind(t, c.kind).Decode(c.values, nil); err != nil {
 			t.Errorf("%s %v is at its bounds = %v", c.kind, c.values, err)
@@ -283,6 +419,80 @@ func TestKindsRefuseValuesTheyCannotHold(t *testing.T) {
 	edge = effects.Values{"when": {Text: "creature_is"}, "creature_type": {Text: strings.Repeat("x", 40)}}
 	if _, err := kind(t, "branch").Decode(edge, then); err != nil {
 		t.Errorf("a creature type runs to 40 letters = %v", err)
+	}
+	one := effects.Groups{{Name: strings.Repeat("é", 80), Parts: []effects.Part{effects.Dispel{}}}}
+	if _, err := kind(t, "choice").Decode(nil, one); err != nil {
+		t.Errorf("one mode of up to 80 letters is a choice = %v", err)
+	}
+}
+
+// An area Part asks for what the area's plan needs once; a Part that lands on its bearer says what it
+// does there; a choice gives the Parts of the mode chosen; each in acts from the closed set.
+func TestAreaAndStructuralPartsActThroughTheirCapabilities(t *testing.T) {
+	t.Parallel()
+	for _, c := range []struct {
+		part effects.Asker
+		want []effects.Act
+	}{
+		{effects.Area{Shape: hex.ConeArea, SizeFt: 15}, []effects.Act{effects.Template{Area: effects.Area{Shape: hex.ConeArea, SizeFt: 15}}}},
+		{effects.AreaSave{Ability: "wisdom"}, []effects.Act{effects.RollSave{Ability: "wisdom"}}},
+		{effects.SaveCondition{Ability: "dexterity", Slug: "prone"}, []effects.Act{effects.RollSave{Ability: "dexterity"}, effects.Afflict{Condition: "prone"}}},
+		{effects.CreateSurface{Surface: surface.Grease, Rounds: 10}, []effects.Act{effects.LaySurface{Surface: surface.Grease, Rounds: 10}}},
+		{effects.ForcedMove{Ft: 10, Toward: true}, []effects.Act{effects.Push{Ft: 10, Toward: true}}},
+		{effects.Light{BrightFt: 20, DimFt: 40}, []effects.Act{effects.ShedLight{BrightFt: 20, DimFt: 40}}},
+		{effects.Reveal{Qualities: []string{"invisible"}}, []effects.Act{effects.StripQualities{Qualities: []string{"invisible"}}}},
+		{effects.Manual{Instruction: "Ask."}, []effects.Act{effects.AskDM{Instruction: "Ask."}}},
+	} {
+		if got := c.part.Asks(); !reflect.DeepEqual(got, c.want) {
+			t.Errorf("%+v asks %+v", c.part, got)
+		}
+		if _, hurts := c.part.(effects.Lander); hurts {
+			t.Errorf("%+v asks the area's plan only, and lands nothing per creature", c.part)
+		}
+	}
+	for _, c := range []struct {
+		part effects.BearerLander
+		want []effects.Act
+	}{
+		{effects.SaveCondition{Ability: "dexterity", Slug: "prone"}, []effects.Act{effects.Afflict{Condition: "prone"}}},
+		{effects.Reveal{Qualities: []string{"hidden"}}, []effects.Act{effects.StripQualities{Qualities: []string{"hidden"}}}},
+		{effects.Manual{Instruction: "Ask."}, []effects.Act{effects.AskDM{Instruction: "Ask."}}},
+		{effects.Form{Monster: "owl", TempHP: 4}, []effects.Act{effects.TakeForm{Monster: "owl", TempHP: 4}}},
+		{effects.Summon{Monster: "wolf", Count: 2, Shares: true, NeedsCommand: true}, []effects.Act{effects.SummonCreatures{Monster: "wolf", Count: 2, Shares: true, NeedsCommand: true}}},
+	} {
+		if got := c.part.LandsOnBearer(); !reflect.DeepEqual(got, c.want) {
+			t.Errorf("%+v lands %+v", c.part, got)
+		}
+	}
+	for _, p := range []effects.Part{effects.Area{}, effects.AreaSave{}, effects.CreateSurface{}, effects.ForcedMove{}, effects.Light{}} {
+		if _, lands := p.(effects.BearerLander); lands {
+			t.Errorf("%+v shapes an area and lands nothing on a bearer", p)
+		}
+	}
+	for _, p := range []effects.Part{effects.Form{}, effects.Summon{}} {
+		if _, asks := p.(effects.Asker); asks {
+			t.Errorf("%+v asks nothing of an area", p)
+		}
+	}
+
+	hot := []effects.Part{effects.ExtraDamage{Dice: "1d6"}}
+	var choice effects.Part = effects.Choice{Modes: []effects.Group{{Name: "Hot", Parts: hot}, {Name: "Cold", Parts: []effects.Part{effects.Immobile{}}}}}
+	ch := choice.(effects.Chooser)
+	if !reflect.DeepEqual(ch.Groups(), []effects.Group{{Name: "Hot", Parts: hot}, {Name: "Cold", Parts: []effects.Part{effects.Immobile{}}}}) {
+		t.Fatalf("a choice's modes are its groups = %+v", ch.Groups())
+	}
+	if !reflect.DeepEqual(ch.Chosen("Hot"), hot) || ch.Chosen("Warm") != nil {
+		t.Fatalf("the mode chosen = %+v %+v", ch.Chosen("Hot"), ch.Chosen("Warm"))
+	}
+	if _, lands := choice.(effects.Holder); lands {
+		t.Fatal("a choice is made as the Effect is applied, not as it lands")
+	}
+	var branch effects.Grouper = effects.Branch{When: effects.Condition{Kind: effects.FirstEachTurn}, Then: hot}
+	if !reflect.DeepEqual(branch.Groups(), []effects.Group{{Name: "then", Parts: hot}}) {
+		t.Fatalf("a branch's group = %+v", branch.Groups())
+	}
+	if got := (effects.Groups{{Name: "a", Parts: hot}}).Of("b"); got != nil {
+		t.Fatalf("a group not given holds nothing = %+v", got)
 	}
 }
 
@@ -330,12 +540,12 @@ func TestPartsActThroughTheirCapabilities(t *testing.T) {
 	}
 
 	blind := effects.SaveCondition{Ability: "constitution", Slug: "blinded"}
-	var branch effects.Part = effects.Branch{When: effects.Condition{Kind: effects.FailsBy, N: 1}, Then: []effects.Component{blind}}
+	var branch effects.Part = effects.Branch{When: effects.Condition{Kind: effects.FailsBy, N: 1}, Then: []effects.Part{blind}}
 	h := branch.(effects.Holder)
-	if !reflect.DeepEqual(h.Groups(), []effects.Group{{Name: "then", Parts: []effects.Component{blind}}}) {
+	if !reflect.DeepEqual(h.Groups(), []effects.Group{{Name: "then", Parts: []effects.Part{blind}}}) {
 		t.Fatalf("groups = %+v", h.Groups())
 	}
-	if got := h.Landed(effects.Situation{Saved: false, Margin: 1}); !reflect.DeepEqual(got, []effects.Component{blind}) {
+	if got := h.Landed(effects.Situation{Saved: false, Margin: 1}); !reflect.DeepEqual(got, []effects.Part{blind}) {
 		t.Fatalf("a failed save lands the branch = %+v", got)
 	}
 	if got := h.Landed(effects.Situation{Saved: true}); got != nil {

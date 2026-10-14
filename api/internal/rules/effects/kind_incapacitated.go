@@ -3,7 +3,7 @@ package effects
 // Incapacitated takes away the bearer's actions, bonus actions and reactions.
 type Incapacitated struct{}
 
-func (Incapacitated) isComponent() {}
+func (Incapacitated) isPart() {}
 
 // Kind is incapacitated.
 func (Incapacitated) Kind() string { return "incapacitated" }
@@ -21,7 +21,7 @@ type incapacitatedKind struct{}
 func (incapacitatedKind) Describe() Description {
 	return Description{
 		Slug: "incapacitated", Label: "Incapacitated", Summary: "Takes away the bearer's actions, bonus actions and reactions.",
-		Fields: nil, Groups: nil,
+		Fields: nil, Groups: nil, OpenGroups: false,
 	}
 }
 

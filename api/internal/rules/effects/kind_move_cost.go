@@ -7,7 +7,7 @@ type MoveCost struct {
 	Multiplier int
 }
 
-func (MoveCost) isComponent() {}
+func (MoveCost) isPart() {}
 
 // Kind is move_cost.
 func (MoveCost) Kind() string { return "move_cost" }
@@ -30,7 +30,7 @@ func (moveCostKind) Describe() Description {
 		Fields: []Field{
 			{Name: "multiplier", Label: "Feet per foot", Type: NumberField, Options: nil, Required: true, Min: 1, Max: 4},
 		},
-		Groups: nil,
+		Groups: nil, OpenGroups: false,
 	}
 }
 

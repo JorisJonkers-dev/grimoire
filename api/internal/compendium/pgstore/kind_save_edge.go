@@ -17,7 +17,7 @@ func (saveEdgeRows) insert(ctx context.Context, q *queries.Queries, at slot, p e
 	return q.InsertEffectSaveEdge(ctx, queries.InsertEffectSaveEdgeParams{EffectID: at.effect, Ordinal: at.ordinal, Ability: s.Ability, Mode: string(s.Mode)})
 }
 
-func (saveEdgeRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Component) error {
+func (saveEdgeRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Part) error {
 	rows, err := q.ListEffectSaveEdges(ctx)
 	if err != nil {
 		return err

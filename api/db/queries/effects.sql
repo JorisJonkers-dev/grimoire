@@ -7,58 +7,21 @@ ON CONFLICT (slug) DO UPDATE SET
     duration_kind = EXCLUDED.duration_kind, duration_amount = EXCLUDED.duration_amount, repeat_save = EXCLUDED.repeat_save
 RETURNING id;
 
--- name: ClearEffectComponents :exec
+-- name: ClearEffectParts :exec
 DELETE FROM compendium.effect_components WHERE effect_id = @effect_id;
 
--- name: InsertEffectComponent :exec
-INSERT INTO compendium.effect_components (effect_id, ordinal, kind, parent) VALUES (@effect_id, @ordinal, @kind, sqlc.narg(parent));
-
--- name: InsertEffectManual :exec
-INSERT INTO compendium.effect_manual (effect_id, ordinal, instruction) VALUES (@effect_id, @ordinal, @instruction);
-
--- name: InsertEffectArea :exec
-INSERT INTO compendium.effect_areas (effect_id, ordinal, shape, size_ft, range_ft)
-VALUES (@effect_id, @ordinal, @shape, @size_ft, @range_ft);
-
--- name: InsertEffectSaveCondition :exec
-INSERT INTO compendium.effect_save_conditions (effect_id, ordinal, ability, condition_slug)
-VALUES (@effect_id, @ordinal, @ability, @condition_slug);
-
--- name: InsertEffectSurface :exec
-INSERT INTO compendium.effect_surfaces (effect_id, ordinal, surface, rounds) VALUES (@effect_id, @ordinal, @surface, @rounds);
+-- name: InsertEffectPart :exec
+INSERT INTO compendium.effect_components (effect_id, ordinal, kind, parent, group_name)
+VALUES (@effect_id, @ordinal, @kind, sqlc.narg(parent), sqlc.narg(group_name));
 
 -- name: ListEffectDefinitions :many
 SELECT id, slug, name, concentration, owner_kind, duration_kind, duration_amount, repeat_save FROM compendium.effect_definitions ORDER BY slug;
 
--- name: ListEffectComponents :many
-SELECT effect_id, ordinal, kind, parent FROM compendium.effect_components ORDER BY effect_id, ordinal;
+-- name: ListEffectParts :many
+SELECT effect_id, ordinal, kind, parent, group_name FROM compendium.effect_components ORDER BY effect_id, ordinal;
 
--- name: ListEffectComponentsOfKind :many
+-- name: ListEffectPartsOfKind :many
 SELECT effect_id, ordinal FROM compendium.effect_components WHERE kind = @kind;
-
--- name: ListEffectManual :many
-SELECT effect_id, ordinal, instruction FROM compendium.effect_manual;
-
--- name: ListEffectAreas :many
-SELECT effect_id, ordinal, shape, size_ft, range_ft FROM compendium.effect_areas;
-
--- name: ListEffectSaveConditions :many
-SELECT effect_id, ordinal, ability, condition_slug FROM compendium.effect_save_conditions;
-
--- name: ListEffectSurfaces :many
-SELECT effect_id, ordinal, surface, rounds FROM compendium.effect_surfaces;
-
--- name: InsertEffectForcedMove :exec
-INSERT INTO compendium.effect_forced_moves (effect_id, ordinal, ft, toward) VALUES (@effect_id, @ordinal, @ft, @toward);
-
--- name: ListEffectForcedMoves :many
-SELECT effect_id, ordinal, ft, toward FROM compendium.effect_forced_moves;
-
--- name: InsertEffectMode :exec
-INSERT INTO compendium.effect_modes (effect_id, ordinal, name) VALUES (@effect_id, @ordinal, @name);
-
--- name: ListEffectModes :many
-SELECT effect_id, ordinal, name FROM compendium.effect_modes;
 
 -- name: ClearEffectScaling :exec
 DELETE FROM compendium.effect_scalings WHERE effect_id = @effect_id;
@@ -75,25 +38,6 @@ SELECT effect_id, axis, class_slug, column_name, base_level, dice FROM compendiu
 
 -- name: ListEffectScalingSteps :many
 SELECT effect_id, at_level, dice FROM compendium.effect_scaling_steps ORDER BY effect_id, at_level;
-
--- name: InsertEffectSummon :exec
-INSERT INTO compendium.effect_summons (effect_id, ordinal, monster_slug, count, shares_turn, needs_command)
-VALUES (@effect_id, @ordinal, @monster_slug, @count, @shares_turn, @needs_command);
-
--- name: ListEffectSummons :many
-SELECT effect_id, ordinal, monster_slug, count, shares_turn, needs_command FROM compendium.effect_summons;
-
--- name: InsertEffectForm :exec
-INSERT INTO compendium.effect_forms (effect_id, ordinal, monster_slug, temp_hp) VALUES (@effect_id, @ordinal, @monster_slug, @temp_hp);
-
--- name: ListEffectForms :many
-SELECT effect_id, ordinal, monster_slug, temp_hp FROM compendium.effect_forms;
-
--- name: InsertEffectReveal :exec
-INSERT INTO compendium.effect_reveals (effect_id, ordinal, qualities) VALUES (@effect_id, @ordinal, @qualities::text[]);
-
--- name: ListEffectReveals :many
-SELECT effect_id, ordinal, qualities FROM compendium.effect_reveals;
 
 -- name: ListSurfaceDefinitions :many
 SELECT slug, name, cost, obscures, hazard_dice, hazard_type, every_step, effect_slug FROM compendium.surface_definitions ORDER BY slug;

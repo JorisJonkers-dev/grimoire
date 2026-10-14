@@ -224,7 +224,7 @@ func TestGrantsAndResourceChanges(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 	w, tb, ids := restingParty(t)
-	boost := effects.Definition{Slug: "battle-hymn", Name: "Battle Hymn", Owner: effects.OwnedBySpell, Components: []effects.Component{
+	boost := effects.Definition{Slug: "battle-hymn", Name: "Battle Hymn", Owner: effects.OwnedBySpell, Parts: []effects.Part{
 		effects.GrantFeature{Name: "Darkvision"}, effects.ResourceChange{Resource: "rage", Delta: 2},
 	}}
 	if err := comppg.New(w.pool).SaveEffect(ctx, effects.Owner{Kind: effects.OwnedBySpell, Slug: boost.Slug}, boost); err != nil {

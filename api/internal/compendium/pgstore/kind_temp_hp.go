@@ -18,7 +18,7 @@ func (tempHPRows) insert(ctx context.Context, q *queries.Queries, at slot, p eff
 	return q.InsertEffectTempHP(ctx, queries.InsertEffectTempHPParams{EffectID: at.effect, Ordinal: at.ordinal, Amount: int32(t.Amount)})
 }
 
-func (tempHPRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Component) error {
+func (tempHPRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Part) error {
 	rows, err := q.ListEffectTempHPs(ctx)
 	if err != nil {
 		return err

@@ -12,37 +12,47 @@ import (
 type partRows interface {
 	kind() string
 	insert(ctx context.Context, q *queries.Queries, at slot, p effects.Part) error
-	read(ctx context.Context, q *queries.Queries, into map[slot]effects.Component) error
+	read(ctx context.Context, q *queries.Queries, into map[slot]effects.Part) error
 }
 
-// holdingRows is the store of a kind with Parts beneath it: they are written under the Part's row,
-// and put back beneath it when it is read.
+// holdingRows is the store of a kind with Parts beneath it: they are written under the Part's row in
+// their named groups, and put back beneath it when it is read.
 type holdingRows interface {
-	beneath(p effects.Part) []effects.Component
-	nest(p effects.Part, beneath []effects.Component) effects.Part
+	nest(p effects.Part, groups []effects.Group) effects.Part
 }
 
-// kindRows lists the store of every kind defined in a file of its own, in the order of effects.Kinds.
+// kindRows lists the store of every kind, in the order of effects.Kinds.
 // It is this layer's one shared line per kind: rules cannot name their adapters.
 func kindRows() []partRows {
 	return []partRows{
+		areaRows{},
+		areaSaveRows{},
 		bonusDieRows{},
 		branchRows{},
+		choiceRows{},
 		counterRows{},
+		createSurfaceRows{},
 		critWithinRows{},
 		dispelRows{},
 		edgeRows{},
 		exhaustingRows{},
 		extraDamageRows{},
+		forcedMoveRows{},
+		formRows{},
 		grantFeatureRows{},
 		immobileRows{},
 		incapacitatedRows{},
+		lightRows{},
+		manualRows{},
 		moveCostRows{},
 		reactsRows{},
 		resourceChangeRows{},
+		revealRows{},
+		saveConditionRows{},
 		saveDamageRows{},
 		saveEdgeRows{},
 		speedPenaltyRows{},
+		summonRows{},
 		teleportRows{},
 		tempHPRows{},
 	}
@@ -67,8 +77,8 @@ func holdingOf(kind string) (holdingRows, bool) {
 	return h, ok
 }
 
-// readParts reads the rows of every kind defined in a file of its own.
-func readParts(ctx context.Context, q *queries.Queries, into map[slot]effects.Component) error {
+// readParts reads the rows of every kind.
+func readParts(ctx context.Context, q *queries.Queries, into map[slot]effects.Part) error {
 	for _, r := range kindRows() {
 		if err := r.read(ctx, q, into); err != nil {
 			return err
@@ -77,9 +87,9 @@ func readParts(ctx context.Context, q *queries.Queries, into map[slot]effects.Co
 	return nil
 }
 
-// bare puts a Part that is the whole of its kind at every component row of that kind.
-func bare(ctx context.Context, q *queries.Queries, into map[slot]effects.Component, p effects.Part) error {
-	rows, err := q.ListEffectComponentsOfKind(ctx, p.Kind())
+// bare puts a Part that is the whole of its kind at every Part row of that kind.
+func bare(ctx context.Context, q *queries.Queries, into map[slot]effects.Part, p effects.Part) error {
+	rows, err := q.ListEffectPartsOfKind(ctx, p.Kind())
 	if err != nil {
 		return err
 	}

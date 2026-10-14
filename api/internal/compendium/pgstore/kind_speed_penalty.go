@@ -18,7 +18,7 @@ func (speedPenaltyRows) insert(ctx context.Context, q *queries.Queries, at slot,
 	return q.InsertEffectSpeedPenalty(ctx, queries.InsertEffectSpeedPenaltyParams{EffectID: at.effect, Ordinal: at.ordinal, Ft: int32(s.Ft)})
 }
 
-func (speedPenaltyRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Component) error {
+func (speedPenaltyRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Part) error {
 	rows, err := q.ListEffectSpeedPenalties(ctx)
 	if err != nil {
 		return err

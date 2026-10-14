@@ -7,7 +7,7 @@ type Counter struct {
 	RangeFt int
 }
 
-func (Counter) isComponent() {}
+func (Counter) isPart() {}
 
 // Kind is counter.
 func (Counter) Kind() string { return "counter" }
@@ -33,7 +33,7 @@ func (counterKind) Describe() Description {
 		Fields: []Field{
 			{Name: "range_ft", Label: "Range in feet", Type: NumberField, Options: nil, Required: true, Min: 5, Max: 5280},
 		},
-		Groups: nil,
+		Groups: nil, OpenGroups: false,
 	}
 }
 

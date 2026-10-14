@@ -7,7 +7,7 @@ type TempHP struct {
 	Amount int
 }
 
-func (TempHP) isComponent() {}
+func (TempHP) isPart() {}
 
 // Kind is temp_hp.
 func (TempHP) Kind() string { return "temp_hp" }
@@ -30,7 +30,7 @@ func (tempHPKind) Describe() Description {
 		Fields: []Field{
 			{Name: "amount", Label: "Hit points", Type: NumberField, Options: nil, Required: true, Min: 1, Max: 500},
 		},
-		Groups: nil,
+		Groups: nil, OpenGroups: false,
 	}
 }
 

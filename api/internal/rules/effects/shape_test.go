@@ -10,12 +10,12 @@ import (
 )
 
 func enlarge() effects.Definition {
-	return effects.Definition{Slug: "enlarge-reduce", Name: "Enlarge/Reduce", Owner: effects.OwnedBySpell, Concentration: true, Components: []effects.Component{
-		effects.Choice{Modes: []effects.Mode{
-			{Name: "Enlarge", Components: []effects.Component{effects.SaveEdge{Ability: "strength", Mode: effects.SaveAdvantage}, effects.ExtraDamage{Dice: "1d4"}}},
-			{Name: "Reduce", Components: []effects.Component{effects.SaveEdge{Ability: "strength", Mode: effects.SaveDisadvantage}, effects.Manual{Instruction: "Weapon damage drops by 1d4."}}},
+	return effects.Definition{Slug: "enlarge-reduce", Name: "Enlarge/Reduce", Owner: effects.OwnedBySpell, Concentration: true, Parts: []effects.Part{
+		effects.Choice{Modes: []effects.Group{
+			{Name: "Enlarge", Parts: []effects.Part{effects.SaveEdge{Ability: "strength", Mode: effects.SaveAdvantage}, effects.ExtraDamage{Dice: "1d4"}}},
+			{Name: "Reduce", Parts: []effects.Part{effects.SaveEdge{Ability: "strength", Mode: effects.SaveDisadvantage}, effects.Manual{Instruction: "Weapon damage drops by 1d4."}}},
 		}},
-		effects.Branch{When: effects.Condition{Kind: effects.FailsBy, N: 5}, Then: []effects.Component{effects.SaveCondition{Ability: "constitution", Slug: "stunned"}}},
+		effects.Branch{When: effects.Condition{Kind: effects.FailsBy, N: 5}, Then: []effects.Part{effects.SaveCondition{Ability: "constitution", Slug: "stunned"}}},
 	}}
 }
 
@@ -26,10 +26,10 @@ func TestChoicesAndBranches(t *testing.T) {
 	if !reflect.DeepEqual(d.Modes(), []string{"Enlarge", "Reduce"}) || (effects.Definition{}).Modes() != nil {
 		t.Fatalf("modes = %v", d.Modes())
 	}
-	if got := d.Parts("Enlarge"); !reflect.DeepEqual(got, []effects.Component{effects.SaveEdge{Ability: "strength", Mode: effects.SaveAdvantage}, effects.ExtraDamage{Dice: "1d4"}}) {
+	if got := d.PartsIn("Enlarge"); !reflect.DeepEqual(got, []effects.Part{effects.SaveEdge{Ability: "strength", Mode: effects.SaveAdvantage}, effects.ExtraDamage{Dice: "1d4"}}) {
 		t.Fatalf("enlarged = %+v", got)
 	}
-	if got := d.Parts(""); got != nil {
+	if got := d.PartsIn(""); got != nil {
 		t.Fatalf("no mode chosen = %+v", got)
 	}
 	cat := effects.Catalog{d.Slug: d}
@@ -40,27 +40,27 @@ func TestChoicesAndBranches(t *testing.T) {
 		t.Fatalf("reduce leaves the DM a note = %v", got)
 	}
 	failedBadly := effects.Situation{Saved: false, Margin: 5}
-	if got := d.Branches("Enlarge", failedBadly); !reflect.DeepEqual(got, []effects.Component{effects.SaveCondition{Ability: "constitution", Slug: "stunned"}}) {
+	if got := d.Branches("Enlarge", failedBadly); !reflect.DeepEqual(got, []effects.Part{effects.SaveCondition{Ability: "constitution", Slug: "stunned"}}) {
 		t.Fatalf("failed by 5 = %+v", got)
 	}
 	if got := d.Branches("Enlarge", effects.Situation{Saved: false, Margin: 4}); got != nil {
 		t.Fatalf("failed by 4 = %+v", got)
 	}
-	nested := effects.Definition{Components: []effects.Component{
-		effects.Choice{Modes: []effects.Mode{{Name: "Hot", Components: []effects.Component{
-			effects.Branch{When: effects.Condition{Kind: effects.CreatureIs, Type: "undead"}, Then: []effects.Component{
+	nested := effects.Definition{Parts: []effects.Part{
+		effects.Choice{Modes: []effects.Group{{Name: "Hot", Parts: []effects.Part{
+			effects.Branch{When: effects.Condition{Kind: effects.CreatureIs, Type: "undead"}, Then: []effects.Part{
 				effects.ExtraDamage{Dice: "2d6"},
-				effects.Branch{When: effects.Condition{Kind: effects.HPAtMost, N: 10}, Then: []effects.Component{effects.Dispel{}}},
+				effects.Branch{When: effects.Condition{Kind: effects.HPAtMost, N: 10}, Then: []effects.Part{effects.Dispel{}}},
 			}},
 		}}}},
 	}}
-	if got := nested.Branches("Hot", effects.Situation{Type: "Undead", HP: 8}); !reflect.DeepEqual(got, []effects.Component{effects.ExtraDamage{Dice: "2d6"}, effects.Dispel{}}) {
+	if got := nested.Branches("Hot", effects.Situation{Type: "Undead", HP: 8}); !reflect.DeepEqual(got, []effects.Part{effects.ExtraDamage{Dice: "2d6"}, effects.Dispel{}}) {
 		t.Fatalf("nested branches = %+v", got)
 	}
 	if got := nested.Branches("Cold", effects.Situation{Type: "undead"}); got != nil {
 		t.Fatalf("another mode's branches = %+v", got)
 	}
-	if !nested.Automated() || (effects.Definition{Components: []effects.Component{effects.Branch{Then: []effects.Component{effects.Manual{}}}}}).Automated() {
+	if !nested.Automated() || (effects.Definition{Parts: []effects.Part{effects.Branch{Then: []effects.Part{effects.Manual{}}}}}).Automated() {
 		t.Fatal("a manual part inside a branch makes the Effect partial")
 	}
 }
@@ -68,7 +68,7 @@ func TestChoicesAndBranches(t *testing.T) {
 func TestSummons(t *testing.T) {
 	t.Parallel()
 	owl := effects.Summon{Monster: "owl", Count: 1, Shares: true}
-	cat := effects.Catalog{"find-familiar": {Slug: "find-familiar", Components: []effects.Component{effects.Manual{}, owl}}, "bless": {Slug: "bless"}}
+	cat := effects.Catalog{"find-familiar": {Slug: "find-familiar", Parts: []effects.Part{effects.Manual{}, owl}}, "bless": {Slug: "bless"}}
 	if got, ok := cat.SummonOf("find-familiar"); !ok || got != owl {
 		t.Fatalf("summon = %+v %v", got, ok)
 	}
@@ -79,7 +79,7 @@ func TestSummons(t *testing.T) {
 
 func TestRevealsInAreas(t *testing.T) {
 	t.Parallel()
-	cat := effects.Catalog{"outline": {Slug: "outline", Components: []effects.Component{
+	cat := effects.Catalog{"outline": {Slug: "outline", Parts: []effects.Part{
 		effects.Area{Shape: hex.CubeArea, SizeFt: 20, RangeFt: 60}, effects.Reveal{Qualities: []string{"invisible"}}, effects.Reveal{Qualities: []string{"hidden"}},
 	}}}
 	if a, ok := cat.AreaOf("outline"); !ok || !reflect.DeepEqual(a.Reveals, []string{"invisible", "hidden"}) {
@@ -89,11 +89,11 @@ func TestRevealsInAreas(t *testing.T) {
 
 func TestFormsLand(t *testing.T) {
 	t.Parallel()
-	cat := effects.Catalog{"polymorph": {Slug: "polymorph", Components: []effects.Component{effects.Form{Monster: "", TempHP: 0}}}}
+	cat := effects.Catalog{"polymorph": {Slug: "polymorph", Parts: []effects.Part{effects.Form{Monster: "", TempHP: 0}}}}
 	if l := cat.LandingOf("polymorph", ""); l.Form == nil || *l.Form != (effects.Form{}) {
 		t.Fatalf("polymorph lands a form = %+v", l)
 	}
-	cat["outline"] = effects.Definition{Components: []effects.Component{effects.Reveal{Qualities: []string{"invisible"}}}}
+	cat["outline"] = effects.Definition{Parts: []effects.Part{effects.Reveal{Qualities: []string{"invisible"}}}}
 	if l := cat.LandingOf("outline", ""); !reflect.DeepEqual(l.Reveals, []string{"invisible"}) {
 		t.Fatalf("outline reveals = %+v", l)
 	}
@@ -207,13 +207,13 @@ func TestScaling(t *testing.T) {
 	}
 }
 
-// Rules text reads every component, the duration, the repeat save and the scaling.
+// Rules text reads every Part, the duration, the repeat save and the scaling.
 func TestRulesText(t *testing.T) {
 	t.Parallel()
 	every := effects.Definition{
 		Concentration: true, Duration: effects.Duration{Kind: effects.Minutes, Amount: 1, RepeatSave: "wisdom"},
 		Scaling: &effects.Scaling{Axis: effects.SlotLevel, Base: 2, Dice: "1d8"},
-		Components: []effects.Component{
+		Parts: []effects.Part{
 			effects.BonusDie{On: []effects.Roll{effects.AttackRolls, effects.SavingThrows}, Dice: "1d4"},
 			effects.Edge{Against: false, Advantage: true},
 			effects.Edge{Against: true, Advantage: true, Range: effects.WithinFive},
@@ -227,7 +227,7 @@ func TestRulesText(t *testing.T) {
 			effects.SaveDamage{Ability: "dexterity", Dice: "8d6", Type: "fire", Half: true},
 			effects.SaveDamage{Ability: "constitution", Dice: "2d8", Type: "thunder"},
 			effects.SaveCondition{Ability: "wisdom", Slug: "frightened"},
-			effects.CreateSurface{Kind: surface.Grease, Rounds: 1},
+			effects.CreateSurface{Surface: surface.Grease, Rounds: 1},
 			effects.Incapacitated{},
 			effects.Immobile{},
 			effects.SaveEdge{Ability: "dexterity", Mode: effects.SaveFails},
@@ -249,11 +249,11 @@ func TestRulesText(t *testing.T) {
 			effects.GrantFeature{Name: "Darkvision"},
 			effects.ResourceChange{Resource: "channel-divinity", Delta: 1},
 			effects.ResourceChange{Resource: "rage", Delta: -2},
-			effects.Choice{Modes: []effects.Mode{{Name: "Enlarge", Components: []effects.Component{effects.TempHP{Amount: 1}}}, {Name: "Reduce", Components: []effects.Component{effects.Dispel{}}}}},
-			effects.Branch{When: effects.Condition{Kind: effects.FailsBy, N: 5}, Then: []effects.Component{effects.Incapacitated{}}},
-			effects.Branch{When: effects.Condition{Kind: effects.HPAtMost, N: 50}, Then: []effects.Component{effects.Dispel{}}},
-			effects.Branch{When: effects.Condition{Kind: effects.FirstEachTurn}, Then: []effects.Component{effects.ExtraDamage{Dice: "1d8"}}},
-			effects.Branch{When: effects.Condition{Kind: effects.CreatureIs, Type: "undead"}, Then: []effects.Component{effects.Immobile{}}},
+			effects.Choice{Modes: []effects.Group{{Name: "Enlarge", Parts: []effects.Part{effects.TempHP{Amount: 1}}}, {Name: "Reduce", Parts: []effects.Part{effects.Dispel{}}}}},
+			effects.Branch{When: effects.Condition{Kind: effects.FailsBy, N: 5}, Then: []effects.Part{effects.Incapacitated{}}},
+			effects.Branch{When: effects.Condition{Kind: effects.HPAtMost, N: 50}, Then: []effects.Part{effects.Dispel{}}},
+			effects.Branch{When: effects.Condition{Kind: effects.FirstEachTurn}, Then: []effects.Part{effects.ExtraDamage{Dice: "1d8"}}},
+			effects.Branch{When: effects.Condition{Kind: effects.CreatureIs, Type: "undead"}, Then: []effects.Part{effects.Immobile{}}},
 			effects.Branch{When: effects.Condition{Kind: effects.CreatureIs, Type: "fiend"}, Then: nil},
 			effects.Summon{Monster: "owl", Count: 1, Shares: true},
 			effects.Summon{Monster: "skeleton", Count: 2, NeedsCommand: true},
@@ -326,10 +326,119 @@ func TestRulesText(t *testing.T) {
 			t.Errorf("line %d = %q, want %q", i, got[i], want[i])
 		}
 	}
-	if got := (effects.Definition{Components: []effects.Component{effects.ResourceChange{Resource: "ki", Delta: 0}}}).Text(); got[0] != "The target expends 0 uses of Ki." {
+	if got := (effects.Definition{Parts: []effects.Part{effects.ResourceChange{Resource: "ki", Delta: 0}}}).Text(); got[0] != "The target expends 0 uses of Ki." {
 		t.Errorf("no change reads %q", got[0])
 	}
 	if got := (effects.Definition{}).Text(); len(got) != 0 {
 		t.Errorf("an empty Effect reads %v", got)
+	}
+}
+
+// Where each area and structural kind is read: an area reads only the Effect's own Parts, the later
+// of two settings wins and reveals and instructions add up; a chosen mode counts for landing and for
+// the DM's instructions, and holds choices and branches of its own; Parts beneath a branch count only
+// once it lands, and a Manual Part anywhere makes the Effect partial.
+func TestWhereEachStructuralKindIsRead(t *testing.T) {
+	t.Parallel()
+	inMode := []effects.Part{
+		effects.Area{Shape: hex.LineArea, SizeFt: 60},
+		effects.AreaSave{Ability: "charisma"},
+		effects.SaveCondition{Ability: "wisdom", Slug: "charmed"},
+		effects.CreateSurface{Surface: surface.Grease, Rounds: 2},
+		effects.ForcedMove{Ft: 20, Toward: true},
+		effects.Light{BrightFt: 40, DimFt: 40},
+		effects.Reveal{Qualities: []string{"secret"}},
+		effects.Manual{Instruction: "Sing."},
+		effects.Form{Monster: "bear", TempHP: 0},
+		effects.Summon{Monster: "bat", Count: 1},
+		effects.Choice{Modes: []effects.Group{{Name: "Grim", Parts: []effects.Part{effects.Manual{Instruction: "Deeper."}}}}},
+		effects.Branch{When: effects.Condition{Kind: effects.FirstEachTurn}, Then: []effects.Part{effects.SaveCondition{Ability: "dexterity", Slug: "prone"}}},
+	}
+	beneath := []effects.Part{effects.Reveal{Qualities: []string{"hidden"}}, effects.Manual{Instruction: "Later."}, effects.Form{Monster: "owl"}, effects.Summon{Monster: "rat", Count: 2}}
+	cat := effects.Catalog{"storm": {Name: "Storm", Parts: []effects.Part{
+		effects.Area{Shape: hex.SphereArea, SizeFt: 10, RangeFt: 60},
+		effects.AreaSave{Ability: "strength"},
+		effects.SaveCondition{Ability: "constitution", Slug: "stunned"},
+		effects.CreateSurface{Surface: surface.Grease, Rounds: 1},
+		effects.ForcedMove{Ft: 5},
+		effects.Light{BrightFt: 10, DimFt: 10},
+		effects.Reveal{Qualities: []string{"invisible"}},
+		effects.Manual{Instruction: "Thunder."},
+		effects.Area{Shape: hex.CubeArea, SizeFt: 20, RangeFt: 90},
+		effects.AreaSave{Ability: "dexterity"},
+		effects.CreateSurface{Surface: surface.Grease, Rounds: 3},
+		effects.ForcedMove{Ft: 15},
+		effects.Light{BrightFt: 20, DimFt: 30},
+		effects.Reveal{Qualities: []string{"hidden", "disguised"}},
+		effects.Manual{Instruction: "Rain."},
+		effects.Form{Monster: "wolf", TempHP: 3},
+		effects.Form{Monster: "hawk", TempHP: 1},
+		effects.Summon{Monster: "owl", Count: 1, Shares: true},
+		effects.Summon{Monster: "cat", Count: 1},
+		effects.Choice{Modes: []effects.Group{{Name: "Grim", Parts: inMode}, {Name: "Calm", Parts: nil}}},
+		effects.Choice{Modes: []effects.Group{{Name: "Loud", Parts: []effects.Part{effects.Dispel{}}}}},
+		effects.Branch{When: effects.Condition{Kind: effects.FailsBy, N: 1}, Then: beneath},
+	}}}
+
+	a, ok := cat.AreaOf("storm")
+	want := effects.AreaSpell{
+		Name: "Storm", Area: effects.Area{Shape: hex.CubeArea, SizeFt: 20, RangeFt: 90}, Save: "dexterity", Condition: "stunned",
+		Surface: effects.CreateSurface{Surface: surface.Grease, Rounds: 3}, Push: effects.ForcedMove{Ft: 15},
+		Reveals: []string{"invisible", "hidden", "disguised"}, Instructions: []string{"Thunder.", "Rain."}, Light: effects.Light{BrightFt: 20, DimFt: 30},
+	}
+	if !ok || a.Name != want.Name || a.Area != want.Area || a.Save != want.Save || a.Condition != want.Condition || a.Surface != want.Surface ||
+		a.Push != want.Push || !reflect.DeepEqual(a.Reveals, want.Reveals) || !reflect.DeepEqual(a.Instructions, want.Instructions) || a.Light != want.Light || a.Damage != (effects.RollDamage{}) {
+		t.Errorf("the area reads its own Parts, the later winning = %+v", a)
+	}
+	if a.Lands(effects.Outcome{Saved: false, Damage: 9}) != nil {
+		t.Errorf("none of them hurts = %+v", a.Lands(effects.Outcome{Damage: 9}))
+	}
+	order := effects.Catalog{"order": {Parts: []effects.Part{effects.SaveCondition{Ability: "wisdom", Slug: "frightened"}, effects.AreaSave{Ability: "strength"}, effects.Area{Shape: hex.SphereArea, SizeFt: 5}}}}
+	if o, _ := order.AreaOf("order"); o.Save != "strength" || o.Condition != "frightened" {
+		t.Errorf("a later save sets the ability, and the condition stays = %+v", o)
+	}
+	if _, ok := (effects.Catalog{"bare": {Parts: []effects.Part{effects.AreaSave{Ability: "wisdom"}, effects.Light{BrightFt: 5}}}}).AreaOf("bare"); ok {
+		t.Error("an Effect without an area is no area spell")
+	}
+
+	if got := cat["storm"].Modes(); !reflect.DeepEqual(got, []string{"Grim", "Calm", "Loud"}) {
+		t.Errorf("modes of every choice, in order = %v", got)
+	}
+	grim := cat["storm"].PartsIn("Grim")
+	if len(grim) != 30 || !reflect.DeepEqual(grim[19:], append(inMode[:10:10], effects.Manual{Instruction: "Deeper."})) {
+		t.Errorf("the chosen mode, with its own choice in the same mode, and no branch = %+v", grim[19:])
+	}
+	if got := cat["storm"].PartsIn("Calm"); len(got) != 19 {
+		t.Errorf("an empty mode adds nothing = %d", len(got))
+	}
+	land := cat.LandingOf("storm", "Grim")
+	if !reflect.DeepEqual(land.Reveals, []string{"invisible", "hidden", "disguised", "secret"}) || land.Form == nil || *land.Form != (effects.Form{Monster: "bear"}) {
+		t.Errorf("a chosen mode lands its reveal and the last form = %+v", land)
+	}
+	if l := cat.LandingOf("storm", ""); l.Form == nil || *l.Form != (effects.Form{Monster: "hawk", TempHP: 1}) || l.TempHP != 0 {
+		t.Errorf("the Effect's own last form = %+v", l)
+	}
+	if got := cat.Instructions("storm", "Storm", "Grim"); !reflect.DeepEqual(got, []string{"Thunder.", "Rain.", "Sing.", "Deeper."}) {
+		t.Errorf("instructions of the Effect and its chosen mode, not its branch = %v", got)
+	}
+	if s, ok := cat.SummonOf("storm"); !ok || s != (effects.Summon{Monster: "owl", Count: 1, Shares: true}) {
+		t.Errorf("the first summon of the Effect's own Parts = %+v", s)
+	}
+	if _, ok := (effects.Catalog{"deep": {Parts: []effects.Part{effects.Choice{Modes: []effects.Group{{Name: "A", Parts: []effects.Part{effects.Summon{Monster: "rat"}}}}}, effects.Branch{Then: beneath}}}}).SummonOf("deep"); ok {
+		t.Error("a summon in a mode or a branch is not the Effect's own")
+	}
+	lands := cat["storm"].Branches("Grim", effects.Situation{Saved: false, Margin: 2, First: true})
+	if !reflect.DeepEqual(lands, append([]effects.Part{effects.SaveCondition{Ability: "dexterity", Slug: "prone"}}, beneath...)) {
+		t.Errorf("what lands, in the order the Parts come = %+v", lands)
+	}
+	if got := cat["storm"].Branches("Calm", effects.Situation{Saved: true}); got != nil {
+		t.Errorf("a save keeps the branch off = %+v", got)
+	}
+	automated := effects.Definition{Parts: []effects.Part{effects.Choice{Modes: []effects.Group{{Name: "A", Parts: []effects.Part{effects.Reveal{}, effects.Form{}}}}}, effects.Branch{Then: []effects.Part{effects.Summon{}}}}}
+	if !automated.Automated() || cat["storm"].Automated() {
+		t.Error("only a Manual Part, wherever it sits, makes an Effect partial")
+	}
+	if (effects.Definition{Parts: []effects.Part{effects.Choice{Modes: []effects.Group{{Name: "A", Parts: []effects.Part{effects.Choice{Modes: []effects.Group{{Name: "B", Parts: []effects.Part{effects.Manual{}}}}}}}}}}}).Automated() {
+		t.Error("a Manual Part in a mode within a mode")
 	}
 }

@@ -15,7 +15,7 @@ type Exhausting struct {
 	MaxLevel        int
 }
 
-func (Exhausting) isComponent() {}
+func (Exhausting) isPart() {}
 
 // Kind is exhausting.
 func (Exhausting) Kind() string { return "exhausting" }
@@ -77,7 +77,7 @@ func (exhaustingKind) Describe() Description {
 			{Name: "death_at", Label: "Dies at level", Type: NumberField, Options: nil, Required: false, Min: 0, Max: 10},
 			{Name: "max_level", Label: "Highest level", Type: NumberField, Options: nil, Required: false, Min: 0, Max: 10},
 		},
-		Groups: nil,
+		Groups: nil, OpenGroups: false,
 	}
 }
 

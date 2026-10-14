@@ -19,7 +19,7 @@ func (saveDamageRows) insert(ctx context.Context, q *queries.Queries, at slot, p
 	})
 }
 
-func (saveDamageRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Component) error {
+func (saveDamageRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Part) error {
 	rows, err := q.ListEffectSaveDamage(ctx)
 	if err != nil {
 		return err

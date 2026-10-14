@@ -5,38 +5,20 @@ import (
 	"strings"
 )
 
-// Choice offers modes; whoever applies the Effect picks one, and only that mode's components count
-// (Enlarge/Reduce).
-type Choice struct {
-	Modes []Mode
+// PartsIn are the Parts that count for an Effect applied in a mode: its own, with each choice
+// replaced by the chosen mode's. PartsIn beneath a Holder count only once it lands.
+func (d Definition) PartsIn(mode string) []Part {
+	return parts(d.Parts, mode)
 }
 
-// Mode is one option of a Choice.
-type Mode struct {
-	Name       string
-	Components []Component
-}
-
-func (Choice) isComponent() {}
-
-// Parts are the components that count for an Effect applied in a mode: its own, with each Choice
-// replaced by the chosen mode's. Parts beneath a Holder count only once it lands.
-func (d Definition) Parts(mode string) []Component {
-	return parts(d.Components, mode)
-}
-
-func parts(cs []Component, mode string) []Component {
-	var out []Component
+func parts(cs []Part, mode string) []Part {
+	var out []Part
 	for _, c := range cs {
-		switch c := c.(type) {
-		case Choice:
-			for _, m := range c.Modes {
-				if m.Name == mode {
-					out = append(out, parts(m.Components, mode)...)
-				}
-			}
-		case Holder:
-		default:
+		if ch, ok := c.(Chooser); ok {
+			out = append(out, parts(ch.Chosen(mode), mode)...)
+			continue
+		}
+		if _, ok := c.(Holder); !ok {
 			out = append(out, c)
 		}
 	}
@@ -46,55 +28,44 @@ func parts(cs []Component, mode string) []Component {
 // Modes lists the names of an Effect's modes, empty when it offers no choice.
 func (d Definition) Modes() []string {
 	var out []string
-	for _, c := range d.Components {
-		if ch, ok := c.(Choice); ok {
-			for _, m := range ch.Modes {
-				out = append(out, m.Name)
+	for _, c := range d.Parts {
+		if ch, ok := c.(Chooser); ok {
+			for _, g := range ch.Groups() {
+				out = append(out, g.Name)
 			}
 		}
 	}
 	return out
 }
 
-// Branches lists the components an Effect adds for a creature in a situation, in order.
-func (d Definition) Branches(mode string, s Situation) []Component {
-	return branches(d.Components, mode, s)
+// Branches lists the Parts an Effect adds for a creature in a situation, in order.
+func (d Definition) Branches(mode string, s Situation) []Part {
+	return branches(d.Parts, mode, s)
 }
 
-func branches(cs []Component, mode string, s Situation) []Component {
-	var out []Component
+func branches(cs []Part, mode string, s Situation) []Part {
+	var out []Part
 	for _, c := range cs {
-		switch c := c.(type) {
-		case Holder:
-			then := c.Landed(s)
+		if h, ok := c.(Holder); ok {
+			then := h.Landed(s)
 			out = append(out, parts(then, mode)...)
 			out = append(out, branches(then, mode, s)...)
-		case Choice:
-			for _, m := range c.Modes {
-				if m.Name == mode {
-					out = append(out, branches(m.Components, mode, s)...)
-				}
-			}
-		default:
+		}
+		if ch, ok := c.(Chooser); ok {
+			out = append(out, branches(ch.Chosen(mode), mode, s)...)
 		}
 	}
 	return out
 }
 
-// walk calls visit on every component of an Effect, in modes and branches too.
-func walk(cs []Component, visit func(Component)) {
+// walk calls visit on every Part of an Effect, in modes and branches too.
+func walk(cs []Part, visit func(Part)) {
 	for _, c := range cs {
 		visit(c)
-		switch c := c.(type) {
-		case Choice:
-			for _, m := range c.Modes {
-				walk(m.Components, visit)
+		if g, ok := c.(Grouper); ok {
+			for _, group := range g.Groups() {
+				walk(group.Parts, visit)
 			}
-		case Holder:
-			for _, g := range c.Groups() {
-				walk(g.Parts, visit)
-			}
-		default:
 		}
 	}
 }

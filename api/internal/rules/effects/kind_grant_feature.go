@@ -5,7 +5,7 @@ type GrantFeature struct {
 	Name string
 }
 
-func (GrantFeature) isComponent() {}
+func (GrantFeature) isPart() {}
 
 // Kind is grant_feature.
 func (GrantFeature) Kind() string { return "grant_feature" }
@@ -26,7 +26,7 @@ func (grantFeatureKind) Describe() Description {
 		Fields: []Field{
 			{Name: "name", Label: "Feature", Type: TextField, Options: nil, Required: true, Min: 0, Max: 120},
 		},
-		Groups: nil,
+		Groups: nil, OpenGroups: false,
 	}
 }
 

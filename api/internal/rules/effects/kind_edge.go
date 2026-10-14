@@ -21,7 +21,7 @@ type Edge struct {
 	SourceOnly bool
 }
 
-func (Edge) isComponent() {}
+func (Edge) isPart() {}
 
 // Kind is edge.
 func (Edge) Kind() string { return "edge" }
@@ -95,7 +95,7 @@ func (edgeKind) Describe() Description {
 			{Name: "range", Label: "From", Type: ChoiceField, Options: rangeNames(), Required: true, Min: 0, Max: 0},
 			{Name: "source_only", Label: "Only for the Effect's source", Type: FlagField, Options: nil, Required: false, Min: 0, Max: 0},
 		},
-		Groups: nil,
+		Groups: nil, OpenGroups: false,
 	}
 }
 

@@ -10,7 +10,7 @@ import (
 
 func TestAnAreaCanDeclareItsSaveAndShedLight(t *testing.T) {
 	t.Parallel()
-	cat := effects.Catalog{"lantern": {Slug: "lantern", Name: "Lantern", Components: []effects.Component{
+	cat := effects.Catalog{"lantern": {Slug: "lantern", Name: "Lantern", Parts: []effects.Part{
 		effects.Area{Shape: hex.EmanationArea, SizeFt: 10},
 		effects.AreaSave{Ability: "wisdom"},
 		effects.Light{BrightFt: 20, DimFt: 20},

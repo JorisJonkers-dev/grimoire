@@ -10,8 +10,8 @@ import (
 )
 
 const insertEffectExhaustion = `-- name: InsertEffectExhaustion :exec
-INSERT INTO compendium.effect_exhaustion (effect_id, ordinal, d20_per_level, speed_ft_per_level, death_at)
-VALUES ($1, $2, $3, $4, $5)
+INSERT INTO compendium.effect_exhaustion (effect_id, ordinal, d20_per_level, speed_ft_per_level, death_at, max_level)
+VALUES ($1, $2, $3, $4, $5, $6)
 `
 
 type InsertEffectExhaustionParams struct {
@@ -20,6 +20,7 @@ type InsertEffectExhaustionParams struct {
 	D20PerLevel     int32
 	SpeedFtPerLevel int32
 	DeathAt         int32
+	MaxLevel        int32
 }
 
 func (q *Queries) InsertEffectExhaustion(ctx context.Context, arg InsertEffectExhaustionParams) error {
@@ -29,12 +30,13 @@ func (q *Queries) InsertEffectExhaustion(ctx context.Context, arg InsertEffectEx
 		arg.D20PerLevel,
 		arg.SpeedFtPerLevel,
 		arg.DeathAt,
+		arg.MaxLevel,
 	)
 	return err
 }
 
 const listEffectExhaustion = `-- name: ListEffectExhaustion :many
-SELECT effect_id, ordinal, d20_per_level, speed_ft_per_level, death_at FROM compendium.effect_exhaustion
+SELECT effect_id, ordinal, d20_per_level, speed_ft_per_level, death_at, max_level FROM compendium.effect_exhaustion
 `
 
 type ListEffectExhaustionRow struct {
@@ -43,6 +45,7 @@ type ListEffectExhaustionRow struct {
 	D20PerLevel     int32
 	SpeedFtPerLevel int32
 	DeathAt         int32
+	MaxLevel        int32
 }
 
 func (q *Queries) ListEffectExhaustion(ctx context.Context) ([]ListEffectExhaustionRow, error) {
@@ -60,6 +63,7 @@ func (q *Queries) ListEffectExhaustion(ctx context.Context) ([]ListEffectExhaust
 			&i.D20PerLevel,
 			&i.SpeedFtPerLevel,
 			&i.DeathAt,
+			&i.MaxLevel,
 		); err != nil {
 			return nil, err
 		}

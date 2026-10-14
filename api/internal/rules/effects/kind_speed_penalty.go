@@ -7,7 +7,7 @@ type SpeedPenalty struct {
 	Ft int
 }
 
-func (SpeedPenalty) isComponent() {}
+func (SpeedPenalty) isPart() {}
 
 // Kind is speed_penalty.
 func (SpeedPenalty) Kind() string { return "speed_penalty" }
@@ -30,7 +30,7 @@ func (speedPenaltyKind) Describe() Description {
 		Fields: []Field{
 			{Name: "ft", Label: "Feet", Type: NumberField, Options: nil, Required: true, Min: 0, Max: 120},
 		},
-		Groups: nil,
+		Groups: nil, OpenGroups: false,
 	}
 }
 

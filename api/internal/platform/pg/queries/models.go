@@ -710,6 +710,13 @@ type CompendiumEffectArea struct {
 	RangeFt  int32
 }
 
+type CompendiumEffectAreaSafe struct {
+	EffectID int64
+	Ordinal  int32
+	Kind     string
+	Ability  string
+}
+
 type CompendiumEffectBonusDice struct {
 	EffectID  int64
 	Ordinal   int32
@@ -726,13 +733,6 @@ type CompendiumEffectBranch struct {
 	Condition    string
 	N            int32
 	CreatureType string
-}
-
-type CompendiumEffectComponent struct {
-	EffectID int64
-	Ordinal  int32
-	Kind     string
-	Parent   pgtype.Int4
 }
 
 type CompendiumEffectCounter struct {
@@ -778,6 +778,7 @@ type CompendiumEffectExhaustion struct {
 	D20PerLevel     int32
 	SpeedFtPerLevel int32
 	DeathAt         int32
+	MaxLevel        int32
 }
 
 type CompendiumEffectExtraDamage struct {
@@ -814,6 +815,14 @@ type CompendiumEffectKind struct {
 	Slug string
 }
 
+type CompendiumEffectLight struct {
+	EffectID int64
+	Ordinal  int32
+	Kind     string
+	BrightFt int32
+	DimFt    int32
+}
+
 type CompendiumEffectManual struct {
 	EffectID    int64
 	Ordinal     int32
@@ -833,6 +842,14 @@ type CompendiumEffectMoveCost struct {
 	Ordinal    int32
 	Kind       string
 	Multiplier int32
+}
+
+type CompendiumEffectPart struct {
+	EffectID  int64
+	Ordinal   int32
+	Kind      string
+	Parent    pgtype.Int4
+	GroupName pgtype.Text
 }
 
 type CompendiumEffectReaction struct {

@@ -5,7 +5,7 @@ type ExtraDamage struct {
 	Dice string
 }
 
-func (ExtraDamage) isComponent() {}
+func (ExtraDamage) isPart() {}
 
 // Kind is extra_damage.
 func (ExtraDamage) Kind() string { return "extra_damage" }
@@ -31,7 +31,7 @@ func (extraDamageKind) Describe() Description {
 		Fields: []Field{
 			{Name: "dice", Label: "Damage", Type: DiceField, Options: nil, Required: true, Min: 0, Max: 0},
 		},
-		Groups: nil,
+		Groups: nil, OpenGroups: false,
 	}
 }
 

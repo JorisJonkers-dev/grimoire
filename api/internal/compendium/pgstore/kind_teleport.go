@@ -18,7 +18,7 @@ func (teleportRows) insert(ctx context.Context, q *queries.Queries, at slot, p e
 	return q.InsertEffectTeleport(ctx, queries.InsertEffectTeleportParams{EffectID: at.effect, Ordinal: at.ordinal, RangeFt: int32(t.RangeFt)})
 }
 
-func (teleportRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Component) error {
+func (teleportRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Part) error {
 	rows, err := q.ListEffectTeleports(ctx)
 	if err != nil {
 		return err
