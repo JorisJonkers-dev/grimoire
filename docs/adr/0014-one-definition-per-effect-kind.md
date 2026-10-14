@@ -13,10 +13,13 @@ replaced the shared check. A kind is registered by one sorted line in a list of 
 the linter bans package globals, so kinds cannot register themselves, and the pure rules package
 cannot name its store. A test fails when the two lists disagree.
 
-In play, a passive kind folds into the profiles attacks and saves read through small capability
-interfaces it chooses to implement, and a kind that acts when its Effect lands returns acts from a
-small closed set the runtime applies. A switch over the older kinds reaches every kind defined this
-way through one `case Part:`.
+In play, a kind acts only through small capability interfaces it chooses to implement. A passive
+kind folds into the profile that reads it: the attacks its bearer makes (`AttackFolder`) or suffers
+(`AttackedFolder`), its saves (`SaveFolder`), its movement (`MoveFolder` into a `MoveProfile`) and
+what it can do on a turn (`ActionFolder` into an `ActionProfile`); a `Stacker` makes its Effect stack
+in levels, with a cap and a level that kills. A kind that acts when its Effect lands returns acts from
+a small closed set the runtime applies: on an area (`Lander`) or on its bearer (`BearerLander`). A
+switch over the older kinds reaches every kind defined this way through one `case Part:`.
 
 Migrations take timestamp versions (`yyyymmddhhmmss_name.sql`) from here on, and goose applies a
 lower version that arrives after a higher one. The numbered migrations already applied keep their
