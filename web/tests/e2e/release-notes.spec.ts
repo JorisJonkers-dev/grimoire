@@ -41,8 +41,8 @@ test('a published Release Note shows once on the Dashboard', async ({ browser, r
     ])
   }
   expect(found).toBe(true)
-  const [after] = await Promise.all([page.waitForResponse((r) => r.url().includes('/api/v1/release-notes/unseen')), page.reload()])
-  const still = (await after.json()) as { note?: { version: string } }
+  await page.reload()
+  const still = (await (await page.request.get('/api/v1/release-notes/unseen')).json()) as { note?: { version: string } }
   expect(still.note?.version).not.toBe(version)
   await context.close()
 })
