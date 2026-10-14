@@ -7,8 +7,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/effects"
 )
 
-// exhaustingRows stores stacking levels in compendium.effect_exhaustion. The table has no cap: a cap
-// comes from a homebrew condition's design, never from a stored row.
+// exhaustingRows stores stacking levels in compendium.effect_exhaustion.
 type exhaustingRows struct{}
 
 func (exhaustingRows) kind() string { return effects.Exhausting{}.Kind() }
@@ -18,6 +17,7 @@ func (exhaustingRows) insert(ctx context.Context, q *queries.Queries, at slot, p
 	e, _ := p.(effects.Exhausting)
 	return q.InsertEffectExhaustion(ctx, queries.InsertEffectExhaustionParams{
 		EffectID: at.effect, Ordinal: at.ordinal, D20PerLevel: int32(e.D20PerLevel), SpeedFtPerLevel: int32(e.SpeedFtPerLevel), DeathAt: int32(e.DeathAt),
+		MaxLevel: int32(e.MaxLevel),
 	})
 }
 
@@ -27,7 +27,7 @@ func (exhaustingRows) read(ctx context.Context, q *queries.Queries, into map[slo
 		return err
 	}
 	for _, r := range rows {
-		into[slot{r.EffectID, r.Ordinal}] = effects.Exhausting{D20PerLevel: int(r.D20PerLevel), SpeedFtPerLevel: int(r.SpeedFtPerLevel), DeathAt: int(r.DeathAt), MaxLevel: 0}
+		into[slot{r.EffectID, r.Ordinal}] = effects.Exhausting{D20PerLevel: int(r.D20PerLevel), SpeedFtPerLevel: int(r.SpeedFtPerLevel), DeathAt: int(r.DeathAt), MaxLevel: int(r.MaxLevel)}
 	}
 	return nil
 }

@@ -778,6 +778,7 @@ type CompendiumEffectExhaustion struct {
 	D20PerLevel     int32
 	SpeedFtPerLevel int32
 	DeathAt         int32
+	MaxLevel        int32
 }
 
 type CompendiumEffectExtraDamage struct {

@@ -124,3 +124,31 @@ func TestChoicesStoredAsModeRowsReadBack(t *testing.T) {
 		t.Fatalf("old choice = %+v", got["old-choice"].Components)
 	}
 }
+
+// A stacking Part keeps the highest level it rises to through the database.
+func TestStackingPartsKeepTheirCap(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	s := pgstore.New(openPool(t))
+	d := effects.Definition{Slug: "frostbite", Name: "Frostbite", Owner: effects.OwnedByCondition, Components: []effects.Component{
+		effects.Exhausting{D20PerLevel: 1, SpeedFtPerLevel: 5, DeathAt: 0, MaxLevel: 3},
+	}}
+	if err := s.SaveEffect(ctx, effects.Owner{Kind: effects.OwnedByCondition, Slug: d.Slug}, d); err != nil {
+		t.Fatal(err)
+	}
+	got, err := s.Effects(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(got[d.Slug], d) || got.MaxLevel(d.Slug) != 3 {
+		t.Fatalf("frostbite = %+v, rises to %d", got[d.Slug], got.MaxLevel(d.Slug))
+	}
+	if ex := got["exhaustion"].Components; !reflect.DeepEqual(ex, []effects.Component{effects.Exhausting{D20PerLevel: 2, SpeedFtPerLevel: 5, DeathAt: 6, MaxLevel: 0}}) {
+		t.Fatalf("stored exhaustion keeps no cap = %+v", ex)
+	}
+	if err := s.SaveEffect(ctx, effects.Owner{Kind: effects.OwnedByCondition, Slug: "too-high"}, effects.Definition{Slug: "too-high", Name: "Too High", Components: []effects.Component{
+		effects.Exhausting{D20PerLevel: 1, MaxLevel: 11},
+	}}); err == nil {
+		t.Fatal("a cap above 10 was stored")
+	}
+}
