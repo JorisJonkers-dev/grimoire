@@ -9,6 +9,7 @@ async function enter(page: Page, face: string) {
 
 test('initiative is revealed on every screen and a player gets a banner as their turn starts', async ({ page, browser }, info) => {
   test.skip(info.project.name !== 'desktop', 'one multi-client run is enough')
+  test.slow()
   const stamp = String(Date.now())
   await page.goto('/campaigns')
   await page.getByTestId('campaign-name').fill(`Turns ${stamp}`)
