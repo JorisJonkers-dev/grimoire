@@ -41,7 +41,8 @@ const spellsPage1 = `{"next":"BASE/v2/spells/?page=2","results":[{"key":"srd-202
 
 const spellsPage2 = `{"next":null,"results":[{"key":"srd-2014_teleport","document":{"key":"srd-2014"},"name":"Teleport","desc":"Go.",
  "level":7,"school":{"key":"conjuration"},"classes":[],"range_text":"10 miles","range":10,"range_unit":"miles","casting_time":"action",
- "saving_throw_ability":"wisdom","damage_types":[],"duration":"instantaneous","casting_options":[{"type":"slot_level_8","damage_roll":"2d6"}]}]}`
+ "saving_throw_ability":"wisdom","damage_types":[],"duration":"instantaneous","casting_options":[{"type":"slot_level_8","damage_roll":"2d6","target_count":3,"duration":"1 hour","shape_size":20,
+ "concentration":false,"range":"30 feet","desc":" Farther. "},{"type":"slot_level_9","damage_roll":null,"target_count":null,"desc":""}]}]}`
 
 const conditions = `{"next":null,"results":[{"key":"prone","name":"Prone","descriptions":[
  {"desc":"On the ground.","document":"srd-2024"},{"desc":"Low.","document":"srd-2014"},{"desc":"Other.","document":"a5e-ag"}]}]}`
@@ -92,9 +93,13 @@ const creatures = `{"next":null,"results":[{"key":"srd-2024_goblin","document":{
  "traits":[{"name":"Nimble","desc":"Escape."}],
  "actions":[{"name":"Scimitar","desc":"Slash.","action_type":"ACTION","attacks":[{"name":"Scimitar","attack_type":"WEAPON","to_hit_mod":4,
    "reach":5,"range":null,"long_range":null,"damage_die_count":1,"damage_die_type":"D6","damage_bonus":2,"damage_type":{"key":"slashing"},
-   "extra_damage_die_count":1,"extra_damage_die_type":"D4","extra_damage_type":{"key":"poison"}}]},
+   "extra_damage_die_count":1,"extra_damage_die_type":"D4","extra_damage_type":{"key":"poison"}}],"usage_limits":null,"legendary_action_cost":1},
   {"name":"Spit","desc":"","action_type":"BONUS_ACTION","attacks":[{"name":"Spit","attack_type":"SPELL","to_hit_mod":3,
-   "range":30,"long_range":60,"damage_die_count":0,"extra_damage_type":{"key":"acid"}}]}]},
+   "range":30,"long_range":60,"damage_die_count":0,"extra_damage_type":{"key":"acid"}}],"usage_limits":{"type":"RECHARGE","param":5}},
+  {"name":"Fire Breath","desc":"","action_type":"ACTION","attacks":[],"usage_limits":{"type":"RECHARGE_ON_ROLL","param":6}},
+  {"name":"Dominate","desc":"","action_type":"ACTION","attacks":[],"usage_limits":{"type":"PER_DAY","param":2}},
+  {"name":"Phantasms","desc":"","action_type":"ACTION","attacks":[],"usage_limits":{"type":"RECHARGE_AFTER_REST","param":null}},
+  {"name":"Wing Attack","desc":"","action_type":"LEGENDARY_ACTION","attacks":[],"legendary_action_cost":2}]},
  {"key":"x_c","document":{"key":"x"},"name":"C"}]}`
 
 func allRoutes() map[string]string {
@@ -257,5 +262,55 @@ func TestFetchSurfacesErrors(t *testing.T) {
 	}
 	if _, err := (open5e.Client{BaseURL: "://bad", HTTP: http.DefaultClient}).Fetch(context.Background()); err == nil {
 		t.Fatal("bad url ignored")
+	}
+}
+
+func TestFetchReadsCastingOptions(t *testing.T) {
+	t.Parallel()
+	srv := server(t, allRoutes())
+	snap, err := open5e.Client{BaseURL: srv.URL, HTTP: srv.Client()}.Fetch(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	teleport, bolt := snap.Spells[0], snap.Spells[1]
+	if len(bolt.CastingOptions) != 1 || bolt.CastingOptions[0] != (snapshot.CastingOption{Kind: "character", Level: 5, DamageRoll: "2d10"}) {
+		t.Fatalf("fire bolt options = %+v", bolt.CastingOptions)
+	}
+	if len(teleport.CastingOptions) != 1 {
+		t.Fatalf("teleport options = %+v", teleport.CastingOptions)
+	}
+	o := teleport.CastingOptions[0]
+	if o.Kind != "slot" || o.Level != 8 || o.DamageRoll != "2d6" || o.TargetCount == nil || *o.TargetCount != 3 || o.Duration != "1 hour" ||
+		o.ShapeSize == nil || *o.ShapeSize != 20 || o.Concentration == nil || *o.Concentration || o.Range != "30 feet" || o.Description != "Farther." {
+		t.Fatalf("teleport option = %+v", o)
+	}
+}
+
+func TestFetchReadsUsageLimitsAndLegendaryCost(t *testing.T) {
+	t.Parallel()
+	srv := server(t, allRoutes())
+	snap, err := open5e.Client{BaseURL: srv.URL, HTTP: srv.Client()}.Fetch(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	limits := map[string]*snapshot.UsageLimit{}
+	costs := map[string]int{}
+	for _, a := range snap.Monsters[0].Actions {
+		limits[a.Name], costs[a.Name] = a.UsageLimit, a.LegendaryCost
+	}
+	want := map[string]snapshot.UsageLimit{
+		"Spit": {Kind: "recharge", Param: 5}, "Fire Breath": {Kind: "recharge", Param: 6},
+		"Dominate": {Kind: "per_day", Param: 2}, "Phantasms": {Kind: "recharge_after_rest"},
+	}
+	for name, w := range want {
+		if limits[name] == nil || *limits[name] != w {
+			t.Errorf("%s usage = %+v, want %+v", name, limits[name], w)
+		}
+	}
+	if limits["Scimitar"] != nil || limits["Wing Attack"] != nil {
+		t.Errorf("usage on unlimited actions: %+v %+v", limits["Scimitar"], limits["Wing Attack"])
+	}
+	if costs["Wing Attack"] != 2 || costs["Scimitar"] != 0 || costs["Spit"] != 0 {
+		t.Errorf("legendary costs = %v", costs)
 	}
 }

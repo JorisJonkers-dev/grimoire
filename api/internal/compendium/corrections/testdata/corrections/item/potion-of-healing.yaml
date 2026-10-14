@@ -1,0 +1,10 @@
+entry: potion-of-healing
+document: srd-2024
+source:
+  document: SRD 5.2.1
+  page: 229
+fields:
+  - field: magic
+    value: true
+  - field: rarity
+    value: common

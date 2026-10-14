@@ -152,10 +152,15 @@ type apiCreature struct {
 	} `json:"resistances_and_immunities"`
 	Traits  []apiNamed `json:"traits"`
 	Actions []struct {
-		Name       string      `json:"name"`
-		Desc       string      `json:"desc"`
-		ActionType string      `json:"action_type"`
-		Attacks    []apiAttack `json:"attacks"`
+		Name        string      `json:"name"`
+		Desc        string      `json:"desc"`
+		ActionType  string      `json:"action_type"`
+		Attacks     []apiAttack `json:"attacks"`
+		UsageLimits *struct {
+			Type  string `json:"type"`
+			Param *int   `json:"param"`
+		} `json:"usage_limits"`
+		LegendaryCost *int `json:"legendary_action_cost"`
 	} `json:"actions"`
 }
 
@@ -332,9 +337,29 @@ func mapCreature(x apiCreature) snapshot.Monster {
 		for _, at := range a.Attacks {
 			action.Attacks = append(action.Attacks, mapAttack(at))
 		}
+		if u := a.UsageLimits; u != nil {
+			action.UsageLimit = &snapshot.UsageLimit{Kind: usageKind(u.Type)}
+			if u.Param != nil {
+				action.UsageLimit.Param = *u.Param
+			}
+		}
+		// Open5e also sets a cost of 1 on ordinary actions; only a legendary action has one.
+		if a.ActionType == "LEGENDARY_ACTION" && a.LegendaryCost != nil {
+			action.LegendaryCost = *a.LegendaryCost
+		}
 		m.Actions = append(m.Actions, action)
 	}
 	return m
+}
+
+// usageKind folds RECHARGE into RECHARGE_ON_ROLL: SRD 5.2 rows use both for "Recharge N-6".
+func usageKind(t string) string {
+	switch t {
+	case "RECHARGE", "RECHARGE_ON_ROLL":
+		return "recharge"
+	default:
+		return strings.ToLower(t)
+	}
 }
 
 func mapCreatureStats(x apiCreature, m *snapshot.Monster) {

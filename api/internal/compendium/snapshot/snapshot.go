@@ -35,31 +35,46 @@ type Scaling struct {
 	DamageRoll string `json:"damageRoll"`
 }
 
+// CastingOption is what changes when a spell is cast with a higher slot (Kind "slot") or at a higher
+// character level (Kind "character"); unset fields do not change.
+type CastingOption struct {
+	Kind          string `json:"kind"`
+	Level         int    `json:"level"`
+	DamageRoll    string `json:"damageRoll,omitempty"`
+	TargetCount   *int   `json:"targetCount,omitempty"`
+	Duration      string `json:"duration,omitempty"`
+	ShapeSize     *int   `json:"shapeSize,omitempty"`
+	Concentration *bool  `json:"concentration,omitempty"`
+	Range         string `json:"range,omitempty"`
+	Description   string `json:"description,omitempty"`
+}
+
 // Spell is a spell as the SRD defines it.
 type Spell struct {
-	Document      string    `json:"document"`
-	Slug          string    `json:"slug"`
-	Name          string    `json:"name"`
-	Level         int       `json:"level"`
-	School        string    `json:"school"`
-	CastingTime   string    `json:"castingTime"`
-	RangeText     string    `json:"rangeText"`
-	RangeFeet     *int      `json:"rangeFeet,omitempty"`
-	Verbal        bool      `json:"verbal"`
-	Somatic       bool      `json:"somatic"`
-	Material      bool      `json:"material"`
-	MaterialText  string    `json:"materialText,omitempty"`
-	Ritual        bool      `json:"ritual"`
-	Concentration bool      `json:"concentration"`
-	Duration      string    `json:"duration"`
-	Description   string    `json:"description"`
-	HigherLevel   string    `json:"higherLevel,omitempty"`
-	Classes       []string  `json:"classes"`
-	SaveAbility   string    `json:"saveAbility,omitempty"`
-	AttackRoll    bool      `json:"attackRoll"`
-	DamageRoll    string    `json:"damageRoll,omitempty"`
-	DamageTypes   []string  `json:"damageTypes"`
-	Scaling       []Scaling `json:"scaling"`
+	Document       string          `json:"document"`
+	Slug           string          `json:"slug"`
+	Name           string          `json:"name"`
+	Level          int             `json:"level"`
+	School         string          `json:"school"`
+	CastingTime    string          `json:"castingTime"`
+	RangeText      string          `json:"rangeText"`
+	RangeFeet      *int            `json:"rangeFeet,omitempty"`
+	Verbal         bool            `json:"verbal"`
+	Somatic        bool            `json:"somatic"`
+	Material       bool            `json:"material"`
+	MaterialText   string          `json:"materialText,omitempty"`
+	Ritual         bool            `json:"ritual"`
+	Concentration  bool            `json:"concentration"`
+	Duration       string          `json:"duration"`
+	Description    string          `json:"description"`
+	HigherLevel    string          `json:"higherLevel,omitempty"`
+	Classes        []string        `json:"classes"`
+	SaveAbility    string          `json:"saveAbility,omitempty"`
+	AttackRoll     bool            `json:"attackRoll"`
+	DamageRoll     string          `json:"damageRoll,omitempty"`
+	DamageTypes    []string        `json:"damageTypes"`
+	Scaling        []Scaling       `json:"scaling"`
+	CastingOptions []CastingOption `json:"castingOptions,omitempty"`
 }
 
 // Condition is a condition's rules text in one document.
@@ -179,12 +194,21 @@ type Attack struct {
 	ExtraType     string `json:"extraType,omitempty"`
 }
 
+// UsageLimit limits how often an action is used: Kind "recharge" with Param the lowest d6 roll that
+// recharges it, or "per_day" with Param the uses per day. Other upstream kinds keep their own name.
+type UsageLimit struct {
+	Kind  string `json:"kind"`
+	Param int    `json:"param,omitempty"`
+}
+
 // Action is a monster action, bonus action, reaction or legendary action.
 type Action struct {
-	Name        string   `json:"name"`
-	Description string   `json:"description"`
-	Type        string   `json:"type"`
-	Attacks     []Attack `json:"attacks"`
+	Name          string      `json:"name"`
+	Description   string      `json:"description"`
+	Type          string      `json:"type"`
+	Attacks       []Attack    `json:"attacks"`
+	UsageLimit    *UsageLimit `json:"usageLimit,omitempty"`
+	LegendaryCost int         `json:"legendaryCost,omitempty"`
 }
 
 // Monster is a creature's statblock.

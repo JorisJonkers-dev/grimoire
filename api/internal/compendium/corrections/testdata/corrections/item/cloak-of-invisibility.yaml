@@ -1,0 +1,15 @@
+entry: cloak-of-invisibility
+document: srd-2024
+source:
+  document: SRD 5.2.1
+  page: 214
+add:
+  name: Cloak of Invisibility
+  description: Fixture text.
+  category: wondrous-item
+  magic: true
+  rarity: legendary
+  requiresAttunement: true
+upstream:
+  title: "Cloak of Invisibility (srd-2024): missing"
+  body: Fixture.
