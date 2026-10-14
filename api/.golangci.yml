@@ -27,6 +27,10 @@ linters:
   settings:
     exhaustive:
       default-signifies-exhaustive: false
+    gochecksumtype:
+      # A case on an interface covers every member implementing it: one `case Part:` stands for every
+      # Effect kind defined in a file of its own.
+      include-shared-interfaces: true
     gocognit:
       min-complexity: 15
     depguard:

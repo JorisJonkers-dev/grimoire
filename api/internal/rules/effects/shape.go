@@ -17,66 +17,10 @@ type Mode struct {
 	Components []Component
 }
 
-// Branch adds components when its condition holds at the moment the Effect resolves against a
-// creature ("if the save fails by 5 or more").
-type Branch struct {
-	When Condition
-	Then []Component
-}
-
 func (Choice) isComponent() {}
-func (Branch) isComponent() {}
-
-// ConditionKind is what a Branch tests.
-type ConditionKind string
-
-// Condition kinds.
-const (
-	// FailsBy holds when the creature failed its save by at least N.
-	FailsBy ConditionKind = "fails_by"
-	// HPAtMost holds when the creature has N hit points or fewer.
-	HPAtMost ConditionKind = "hp_at_most"
-	// FirstEachTurn holds the first time the Effect touches the creature on a turn.
-	FirstEachTurn ConditionKind = "first_each_turn"
-	// CreatureIs holds for creatures of one type.
-	CreatureIs ConditionKind = "creature_is"
-)
-
-// Condition is a Branch's test.
-type Condition struct {
-	Kind ConditionKind
-	N    int
-	Type string
-}
-
-// Situation is what a Branch is tested against: how a save went, the creature's hit points and type,
-// and whether this is the first time on the turn.
-type Situation struct {
-	Saved bool
-	// Margin is the DC minus the save's total: how far a failed save fell short.
-	Margin int
-	HP     int
-	First  bool
-	Type   string
-}
-
-// Holds reports whether a condition is true in a situation.
-func (c Condition) Holds(s Situation) bool {
-	switch c.Kind {
-	case FailsBy:
-		return !s.Saved && s.Margin >= c.N
-	case HPAtMost:
-		return s.HP <= c.N
-	case FirstEachTurn:
-		return s.First
-	case CreatureIs:
-		return strings.EqualFold(s.Type, c.Type)
-	}
-	return false
-}
 
 // Parts are the components that count for an Effect applied in a mode: its own, with each Choice
-// replaced by the chosen mode's. Branches count only when tested.
+// replaced by the chosen mode's. Parts beneath a Holder count only once it lands.
 func (d Definition) Parts(mode string) []Component {
 	return parts(d.Components, mode)
 }
@@ -91,7 +35,7 @@ func parts(cs []Component, mode string) []Component {
 					out = append(out, parts(m.Components, mode)...)
 				}
 			}
-		case Branch:
+		case Holder:
 		default:
 			out = append(out, c)
 		}
@@ -121,11 +65,10 @@ func branches(cs []Component, mode string, s Situation) []Component {
 	var out []Component
 	for _, c := range cs {
 		switch c := c.(type) {
-		case Branch:
-			if c.When.Holds(s) {
-				out = append(out, parts(c.Then, mode)...)
-				out = append(out, branches(c.Then, mode, s)...)
-			}
+		case Holder:
+			then := c.Landed(s)
+			out = append(out, parts(then, mode)...)
+			out = append(out, branches(then, mode, s)...)
 		case Choice:
 			for _, m := range c.Modes {
 				if m.Name == mode {
@@ -147,8 +90,10 @@ func walk(cs []Component, visit func(Component)) {
 			for _, m := range c.Modes {
 				walk(m.Components, visit)
 			}
-		case Branch:
-			walk(c.Then, visit)
+		case Holder:
+			for _, g := range c.Groups() {
+				walk(g.Parts, visit)
+			}
 		default:
 		}
 	}

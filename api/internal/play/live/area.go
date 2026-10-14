@@ -249,8 +249,8 @@ func (r *runtime) castTotals(c *domain.AreaCast) (map[domain.RollID]int, domain.
 	return totals, actor, true
 }
 
-// outcomes works out who failed their save and how much damage each target takes: all of it, half on a
-// save when the spell halves, or none.
+// outcomes works out who failed their save and how much damage each target takes, as the spell's Parts
+// land on each in acts.
 func (s *state) outcomes(c *domain.AreaCast, spell effects.AreaSpell, totals map[domain.RollID]int) ([]domain.Token, []HPChange) {
 	var failed []domain.Token
 	var hits []HPChange
@@ -263,12 +263,17 @@ func (s *state) outcomes(c *domain.AreaCast, spell effects.AreaSpell, totals map
 		if !saved {
 			failed = append(failed, t)
 		}
-		amount := 0
+		rolled := 0
 		if c.DamageRoll != nil {
-			amount = totals[*c.DamageRoll]
+			rolled = totals[*c.DamageRoll]
 		}
-		if saved {
-			amount = map[bool]int{true: amount / 2, false: 0}[spell.Damage.Half]
+		amount := 0
+		for _, act := range spell.Lands(effects.Outcome{Saved: saved, Damage: rolled}) {
+			switch act := act.(type) {
+			case effects.Hurt:
+				amount += act.Amount
+			case effects.RollSave, effects.RollDamage:
+			}
 		}
 		if amount > 0 {
 			hits = append(hits, damage(t, amount, false))

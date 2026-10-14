@@ -33,8 +33,8 @@ func sentences(cs []Component) []string {
 
 func sentence(c Component) string {
 	switch c := c.(type) {
-	case BonusDie:
-		return "Add " + c.Dice + " to " + rolls(c.On) + "."
+	case Part:
+		return c.Text()
 	case Edge:
 		return edgeText(c)
 	case ExtraDamage:
@@ -45,12 +45,6 @@ func sentence(c Component) string {
 		return c.Instruction
 	case Area:
 		return areaText(c)
-	case SaveDamage:
-		text := "Each creature in the area makes a " + title(c.Ability) + " saving throw, taking " + c.Dice + " " + c.Type + " damage on a failed save"
-		if c.Half {
-			return text + " or half as much damage on a successful one."
-		}
-		return text + "."
 	case SaveCondition:
 		return "On a failed " + title(c.Ability) + " saving throw, a creature has the " + title(c.Slug) + " condition."
 	case CreateSurface:
@@ -117,15 +111,13 @@ func lastSentence(c Component) string {
 		return "Each creature in the area makes a " + title(c.Ability) + " saving throw."
 	case Light:
 		return "Bright light fills " + strconv.Itoa(c.BrightFt) + " feet around where it lands, and dim light another " + strconv.Itoa(c.DimFt) + " feet."
-	case Choice:
-		modes := make([]string, 0, len(c.Modes))
-		for _, m := range c.Modes {
+	default:
+		ch, _ := c.(Choice)
+		modes := make([]string, 0, len(ch.Modes))
+		for _, m := range ch.Modes {
 			modes = append(modes, m.Name+": "+strings.Join(sentences(m.Components), " "))
 		}
 		return "Choose one: " + strings.Join(modes, " Or ")
-	default:
-		b, _ := c.(Branch)
-		return b.When.Text() + ", " + lower(strings.Join(sentences(b.Then), " "))
 	}
 }
 
@@ -155,14 +147,6 @@ func formText(f Form) string {
 	}
 	return "The target takes the form of " + what + ", using its statistics and gaining " + pool +
 		"; it reverts when they are gone or the effect ends, and any damage left over carries to its own Hit Points."
-}
-
-func rolls(on []Roll) string {
-	names := make([]string, 0, len(on))
-	for _, r := range on {
-		names = append(names, map[Roll]string{AttackRolls: "attack rolls", SavingThrows: "saving throws"}[r])
-	}
-	return strings.Join(names, " and ")
 }
 
 func edgeText(e Edge) string {
@@ -204,20 +188,6 @@ func saveEdgeText(s SaveEdge) string {
 	case SaveDisadvantage:
 	}
 	return "The target has Disadvantage on " + title(s.Ability) + " saving throws."
-}
-
-// Text writes a Branch's condition as the start of a sentence.
-func (c Condition) Text() string {
-	switch c.Kind {
-	case FailsBy:
-		return "If a creature fails the save by " + strconv.Itoa(c.N) + " or more"
-	case HPAtMost:
-		return "If a creature has " + strconv.Itoa(c.N) + " Hit Points or fewer"
-	case FirstEachTurn:
-		return "The first time on a turn the effect touches a creature"
-	case CreatureIs:
-	}
-	return "If the creature is " + article(c.Type) + " " + c.Type
 }
 
 // Text writes a Duration as a rules line; empty when the Effect leaves its length open.
