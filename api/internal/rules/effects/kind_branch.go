@@ -9,7 +9,7 @@ import (
 // ("if the save fails by 5 or more").
 type Branch struct {
 	When Condition
-	Then []Component
+	Then []Part
 }
 
 // ConditionKind is what a Branch tests.
@@ -74,7 +74,7 @@ func (c Condition) Text() string {
 	return "If the creature is " + article(c.Type) + " " + c.Type
 }
 
-func (Branch) isComponent() {}
+func (Branch) isPart() {}
 
 // Kind is branch.
 func (Branch) Kind() string { return "branch" }
@@ -90,7 +90,7 @@ func (b Branch) Groups() []Group {
 }
 
 // Landed is the branch's Parts when its condition holds for the creature, and none otherwise.
-func (b Branch) Landed(s Situation) []Component {
+func (b Branch) Landed(s Situation) []Part {
 	if b.When.Holds(s) {
 		return b.Then
 	}

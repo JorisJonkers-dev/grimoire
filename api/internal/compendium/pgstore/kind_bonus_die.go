@@ -21,7 +21,7 @@ func (bonusDieRows) insert(ctx context.Context, q *queries.Queries, at slot, p e
 	})
 }
 
-func (bonusDieRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Component) error {
+func (bonusDieRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Part) error {
 	rows, err := q.ListEffectBonusDice(ctx)
 	if err != nil {
 		return err

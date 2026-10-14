@@ -19,7 +19,7 @@ func (edgeRows) insert(ctx context.Context, q *queries.Queries, at slot, p effec
 	})
 }
 
-func (edgeRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Component) error {
+func (edgeRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Part) error {
 	rows, err := q.ListEffectEdges(ctx)
 	if err != nil {
 		return err

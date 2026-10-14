@@ -17,7 +17,7 @@ func (reactsRows) insert(ctx context.Context, q *queries.Queries, at slot, p eff
 	return q.InsertEffectReaction(ctx, queries.InsertEffectReactionParams{EffectID: at.effect, Ordinal: at.ordinal, Trigger: r.Trigger, Instruction: r.Instruction})
 }
 
-func (reactsRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Component) error {
+func (reactsRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Part) error {
 	rows, err := q.ListEffectReactions(ctx)
 	if err != nil {
 		return err

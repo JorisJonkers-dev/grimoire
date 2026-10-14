@@ -13,7 +13,7 @@ type Area struct {
 	RangeFt int
 }
 
-func (Area) isComponent() {}
+func (Area) isPart() {}
 
 // Kind is area.
 func (Area) Kind() string { return "area" }

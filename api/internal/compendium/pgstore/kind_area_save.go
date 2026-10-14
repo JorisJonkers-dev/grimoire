@@ -17,7 +17,7 @@ func (areaSaveRows) insert(ctx context.Context, q *queries.Queries, at slot, p e
 	return q.InsertEffectAreaSave(ctx, queries.InsertEffectAreaSaveParams{EffectID: at.effect, Ordinal: at.ordinal, Ability: s.Ability})
 }
 
-func (areaSaveRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Component) error {
+func (areaSaveRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Part) error {
 	rows, err := q.ListEffectAreaSaves(ctx)
 	if err != nil {
 		return err

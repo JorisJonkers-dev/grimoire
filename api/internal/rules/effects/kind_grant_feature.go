@@ -5,7 +5,7 @@ type GrantFeature struct {
 	Name string
 }
 
-func (GrantFeature) isComponent() {}
+func (GrantFeature) isPart() {}
 
 // Kind is grant_feature.
 func (GrantFeature) Kind() string { return "grant_feature" }

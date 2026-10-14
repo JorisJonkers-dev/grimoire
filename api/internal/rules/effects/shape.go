@@ -5,14 +5,14 @@ import (
 	"strings"
 )
 
-// Parts are the components that count for an Effect applied in a mode: its own, with each choice
-// replaced by the chosen mode's. Parts beneath a Holder count only once it lands.
-func (d Definition) Parts(mode string) []Component {
-	return parts(d.Components, mode)
+// PartsIn are the Parts that count for an Effect applied in a mode: its own, with each choice
+// replaced by the chosen mode's. PartsIn beneath a Holder count only once it lands.
+func (d Definition) PartsIn(mode string) []Part {
+	return parts(d.Parts, mode)
 }
 
-func parts(cs []Component, mode string) []Component {
-	var out []Component
+func parts(cs []Part, mode string) []Part {
+	var out []Part
 	for _, c := range cs {
 		if ch, ok := c.(Chooser); ok {
 			out = append(out, parts(ch.Chosen(mode), mode)...)
@@ -28,7 +28,7 @@ func parts(cs []Component, mode string) []Component {
 // Modes lists the names of an Effect's modes, empty when it offers no choice.
 func (d Definition) Modes() []string {
 	var out []string
-	for _, c := range d.Components {
+	for _, c := range d.Parts {
 		if ch, ok := c.(Chooser); ok {
 			for _, g := range ch.Groups() {
 				out = append(out, g.Name)
@@ -38,13 +38,13 @@ func (d Definition) Modes() []string {
 	return out
 }
 
-// Branches lists the components an Effect adds for a creature in a situation, in order.
-func (d Definition) Branches(mode string, s Situation) []Component {
-	return branches(d.Components, mode, s)
+// Branches lists the Parts an Effect adds for a creature in a situation, in order.
+func (d Definition) Branches(mode string, s Situation) []Part {
+	return branches(d.Parts, mode, s)
 }
 
-func branches(cs []Component, mode string, s Situation) []Component {
-	var out []Component
+func branches(cs []Part, mode string, s Situation) []Part {
+	var out []Part
 	for _, c := range cs {
 		if h, ok := c.(Holder); ok {
 			then := h.Landed(s)
@@ -58,8 +58,8 @@ func branches(cs []Component, mode string, s Situation) []Component {
 	return out
 }
 
-// walk calls visit on every component of an Effect, in modes and branches too.
-func walk(cs []Component, visit func(Component)) {
+// walk calls visit on every Part of an Effect, in modes and branches too.
+func walk(cs []Part, visit func(Part)) {
 	for _, c := range cs {
 		visit(c)
 		if g, ok := c.(Grouper); ok {

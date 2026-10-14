@@ -12,7 +12,7 @@ import (
 type partRows interface {
 	kind() string
 	insert(ctx context.Context, q *queries.Queries, at slot, p effects.Part) error
-	read(ctx context.Context, q *queries.Queries, into map[slot]effects.Component) error
+	read(ctx context.Context, q *queries.Queries, into map[slot]effects.Part) error
 }
 
 // holdingRows is the store of a kind with Parts beneath it: they are written under the Part's row in
@@ -78,7 +78,7 @@ func holdingOf(kind string) (holdingRows, bool) {
 }
 
 // readParts reads the rows of every kind.
-func readParts(ctx context.Context, q *queries.Queries, into map[slot]effects.Component) error {
+func readParts(ctx context.Context, q *queries.Queries, into map[slot]effects.Part) error {
 	for _, r := range kindRows() {
 		if err := r.read(ctx, q, into); err != nil {
 			return err
@@ -87,9 +87,9 @@ func readParts(ctx context.Context, q *queries.Queries, into map[slot]effects.Co
 	return nil
 }
 
-// bare puts a Part that is the whole of its kind at every component row of that kind.
-func bare(ctx context.Context, q *queries.Queries, into map[slot]effects.Component, p effects.Part) error {
-	rows, err := q.ListEffectComponentsOfKind(ctx, p.Kind())
+// bare puts a Part that is the whole of its kind at every Part row of that kind.
+func bare(ctx context.Context, q *queries.Queries, into map[slot]effects.Part, p effects.Part) error {
+	rows, err := q.ListEffectPartsOfKind(ctx, p.Kind())
 	if err != nil {
 		return err
 	}

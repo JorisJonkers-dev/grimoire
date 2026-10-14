@@ -16,7 +16,7 @@ type SaveEdge struct {
 	Mode    SaveMode
 }
 
-func (SaveEdge) isComponent() {}
+func (SaveEdge) isPart() {}
 
 // Kind is save_edge.
 func (SaveEdge) Kind() string { return "save_edge" }

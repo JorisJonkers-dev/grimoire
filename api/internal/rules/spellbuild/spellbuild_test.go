@@ -34,16 +34,16 @@ func TestTheMarshLanternBuildsIntoAnEffect(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	failed := effects.Branch{When: effects.Condition{Kind: effects.FailsBy, N: 1}, Then: []effects.Component{effects.SaveCondition{Ability: "wisdom", Slug: "charmed"}}}
+	failed := effects.Branch{When: effects.Condition{Kind: effects.FailsBy, N: 1}, Then: []effects.Part{effects.SaveCondition{Ability: "wisdom", Slug: "charmed"}}}
 	want := effects.Definition{
 		Slug: "hb-lantern", Name: "Marsh Lantern", Owner: effects.OwnedBySpell, Concentration: true, Duration: effects.Duration{Kind: effects.Minutes, Amount: 1},
-		Components: []effects.Component{
+		Parts: []effects.Part{
 			effects.Area{Shape: hex.EmanationArea, SizeFt: 10},
 			effects.AreaSave{Ability: "wisdom"},
 			effects.Light{BrightFt: 20, DimFt: 20},
 			effects.Reveal{Qualities: []string{"invisible"}},
-			effects.Branch{When: effects.Condition{Kind: effects.CreatureIs, Type: "undead"}, Then: []effects.Component{failed}},
-			effects.Branch{When: effects.Condition{Kind: effects.CreatureIs, Type: "fey"}, Then: []effects.Component{failed}},
+			effects.Branch{When: effects.Condition{Kind: effects.CreatureIs, Type: "undead"}, Then: []effects.Part{failed}},
+			effects.Branch{When: effects.Condition{Kind: effects.CreatureIs, Type: "fey"}, Then: []effects.Part{failed}},
 			effects.CreateSurface{Surface: "hb-lantern-ground", Rounds: 10},
 		},
 	}
@@ -85,9 +85,9 @@ func TestOtherPartsAndMetadata(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	comps := b.Definition.Components
+	comps := b.Definition.Parts
 	if len(comps) != 5 || comps[1] != (effects.SaveDamage{Ability: "dexterity", Dice: "8d6", Type: "fire", Half: true}) || b.Surface != nil {
-		t.Fatalf("components = %+v", comps)
+		t.Fatalf("parts = %+v", comps)
 	}
 	if comps[3] != (effects.CreateSurface{Surface: "grease", Rounds: 3}) || comps[4] != (effects.Manual{Instruction: "Flammable objects ignite."}) {
 		t.Fatalf("surface and manual = %+v", comps[3:])
@@ -114,7 +114,7 @@ func TestOtherPartsAndMetadata(t *testing.T) {
 		t.Fatalf("text = %v", b.Text)
 	}
 	d.CastingTime, d.Save, d.Parts = spellbuild.CastingTime{Kind: "bonus_action"}, "", nil
-	if b, _ := spellbuild.Build("hb-x", "X", d, surfaces); b.Text[0] != "Casting Time: 1 bonus action." || len(b.Definition.Components) != 1 {
+	if b, _ := spellbuild.Build("hb-x", "X", d, surfaces); b.Text[0] != "Casting Time: 1 bonus action." || len(b.Definition.Parts) != 1 {
 		t.Fatalf("a bare spell = %+v", b)
 	}
 }

@@ -18,7 +18,7 @@ func (resourceChangeRows) insert(ctx context.Context, q *queries.Queries, at slo
 	return q.InsertEffectResourceChange(ctx, queries.InsertEffectResourceChangeParams{EffectID: at.effect, Ordinal: at.ordinal, ResourceSlug: r.Resource, Delta: int32(r.Delta)})
 }
 
-func (resourceChangeRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Component) error {
+func (resourceChangeRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Part) error {
 	rows, err := q.ListEffectResourceChanges(ctx)
 	if err != nil {
 		return err

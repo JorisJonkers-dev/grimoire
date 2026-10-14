@@ -8,7 +8,7 @@ import (
 // Text writes an Effect as rules text, one sentence per part, in the order the parts come: what it
 // does, how long it lasts, and how it scales.
 func (d Definition) Text() []string {
-	out := sentences(d.Components)
+	out := sentences(d.Parts)
 	if line := d.Duration.Text(d.Concentration); line != "" {
 		out = append(out, line)
 	}
@@ -21,7 +21,7 @@ func (d Definition) Text() []string {
 	return out
 }
 
-func sentences(cs []Component) []string {
+func sentences(cs []Part) []string {
 	out := make([]string, 0, len(cs))
 	for _, c := range cs {
 		out = append(out, c.Text())

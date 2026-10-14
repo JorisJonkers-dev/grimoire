@@ -18,7 +18,7 @@ func (critWithinRows) insert(ctx context.Context, q *queries.Queries, at slot, p
 	return q.InsertEffectCrit(ctx, queries.InsertEffectCritParams{EffectID: at.effect, Ordinal: at.ordinal, Feet: int32(c.Feet)})
 }
 
-func (critWithinRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Component) error {
+func (critWithinRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Part) error {
 	rows, err := q.ListEffectCrits(ctx)
 	if err != nil {
 		return err

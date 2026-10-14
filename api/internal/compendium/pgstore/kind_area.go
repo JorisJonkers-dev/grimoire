@@ -19,7 +19,7 @@ func (areaRows) insert(ctx context.Context, q *queries.Queries, at slot, p effec
 	return q.InsertEffectArea(ctx, queries.InsertEffectAreaParams{EffectID: at.effect, Ordinal: at.ordinal, Shape: string(a.Shape), SizeFt: int32(a.SizeFt), RangeFt: int32(a.RangeFt)})
 }
 
-func (areaRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Component) error {
+func (areaRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Part) error {
 	rows, err := q.ListEffectAreas(ctx)
 	if err != nil {
 		return err

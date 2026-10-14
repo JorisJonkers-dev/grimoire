@@ -7,7 +7,7 @@ type CritWithin struct {
 	Feet int
 }
 
-func (CritWithin) isComponent() {}
+func (CritWithin) isPart() {}
 
 // Kind is crit_within.
 func (CritWithin) Kind() string { return "crit_within" }

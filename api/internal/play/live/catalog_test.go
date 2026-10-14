@@ -18,7 +18,7 @@ func TestStoredEffectsReachTheTable(t *testing.T) {
 	w := setup(t)
 	w.hub.Stats = bestiary{owner: w.player.ID}
 	slug := "war-chant-" + uuid.NewString()[:8]
-	chant := effects.Definition{Slug: slug, Name: "War Chant", Components: []effects.Component{effects.Manual{Instruction: "War Chant: add 1d4 to the next check."}}}
+	chant := effects.Definition{Slug: slug, Name: "War Chant", Parts: []effects.Part{effects.Manual{Instruction: "War Chant: add 1d4 to the next check."}}}
 	if err := comppg.New(w.pool).SaveEffect(ctx, effects.Owner{Kind: effects.OwnedBySpell, Slug: slug}, chant); err != nil {
 		t.Fatal(err)
 	}

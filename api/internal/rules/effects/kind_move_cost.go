@@ -7,7 +7,7 @@ type MoveCost struct {
 	Multiplier int
 }
 
-func (MoveCost) isComponent() {}
+func (MoveCost) isPart() {}
 
 // Kind is move_cost.
 func (MoveCost) Kind() string { return "move_cost" }

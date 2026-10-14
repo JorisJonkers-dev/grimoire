@@ -12,7 +12,7 @@ type CreateSurface struct {
 	Rounds  int
 }
 
-func (CreateSurface) isComponent() {}
+func (CreateSurface) isPart() {}
 
 // Kind is create_surface.
 func (CreateSurface) Kind() string { return "create_surface" }

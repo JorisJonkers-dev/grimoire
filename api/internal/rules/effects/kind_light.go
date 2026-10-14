@@ -8,7 +8,7 @@ type Light struct {
 	DimFt    int
 }
 
-func (Light) isComponent() {}
+func (Light) isPart() {}
 
 // Kind is light.
 func (Light) Kind() string { return "light" }

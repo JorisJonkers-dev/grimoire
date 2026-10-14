@@ -11,7 +11,7 @@ import (
 )
 
 // Every kind the rules define has a store of its own and a row in the lookup table of kinds; the
-// lookup table, not a shared check, decides which kinds a component row may name.
+// lookup table, not a shared check, decides which kinds a Part row may name.
 func TestEveryKindHasItsStoreAndItsRow(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()

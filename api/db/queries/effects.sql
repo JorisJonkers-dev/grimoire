@@ -7,20 +7,20 @@ ON CONFLICT (slug) DO UPDATE SET
     duration_kind = EXCLUDED.duration_kind, duration_amount = EXCLUDED.duration_amount, repeat_save = EXCLUDED.repeat_save
 RETURNING id;
 
--- name: ClearEffectComponents :exec
+-- name: ClearEffectParts :exec
 DELETE FROM compendium.effect_components WHERE effect_id = @effect_id;
 
--- name: InsertEffectComponent :exec
+-- name: InsertEffectPart :exec
 INSERT INTO compendium.effect_components (effect_id, ordinal, kind, parent, group_name)
 VALUES (@effect_id, @ordinal, @kind, sqlc.narg(parent), sqlc.narg(group_name));
 
 -- name: ListEffectDefinitions :many
 SELECT id, slug, name, concentration, owner_kind, duration_kind, duration_amount, repeat_save FROM compendium.effect_definitions ORDER BY slug;
 
--- name: ListEffectComponents :many
+-- name: ListEffectParts :many
 SELECT effect_id, ordinal, kind, parent, group_name FROM compendium.effect_components ORDER BY effect_id, ordinal;
 
--- name: ListEffectComponentsOfKind :many
+-- name: ListEffectPartsOfKind :many
 SELECT effect_id, ordinal FROM compendium.effect_components WHERE kind = @kind;
 
 -- name: ClearEffectScaling :exec

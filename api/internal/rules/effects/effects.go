@@ -1,4 +1,4 @@
-// Package effects describes what spells, features and conditions do as typed components, and folds a
+// Package effects describes what spells, features and conditions do as typed Parts, and folds a
 // creature's active effects into what attacks, saves and movement use. Nothing is special-cased by name.
 package effects
 
@@ -7,11 +7,13 @@ import (
 	"sort"
 )
 
-// Component is one typed part of an Effect.
+// Part is one typed piece of an Effect, of a kind defined in a file of its own (kind_<slug>.go) with
+// its type, its definition, its rules text and what it does in play. Nothing switches over kinds:
+// play reaches a Part through the capabilities it implements.
 //
 //sumtype:decl
-type Component interface {
-	isComponent()
+type Part interface {
+	isPart()
 	// Kind is the slug of the Part's kind, the one its definition in Kinds describes.
 	Kind() string
 	// Text is the Part's rules sentence.
@@ -26,13 +28,13 @@ type Definition struct {
 	Concentration bool
 	Duration      Duration
 	Scaling       *Scaling
-	Components    []Component
+	Parts         []Part
 }
 
 // Automated reports whether the engine computes every part of an Effect.
 func (d Definition) Automated() bool {
 	automated := true
-	walk(d.Components, func(c Component) {
+	walk(d.Parts, func(c Part) {
 		if len(prompts(c)) > 0 {
 			automated = false
 		}
@@ -97,7 +99,7 @@ func (cat Catalog) ForAttack(attacker, target []Active, attackerID string, withi
 	var p AttackProfile
 	for _, a := range attacker {
 		d := cat[a.Slug]
-		for _, c := range d.Parts(a.Mode) {
+		for _, c := range d.PartsIn(a.Mode) {
 			if f, ok := c.(AttackFolder); ok {
 				f.FoldAttacking(&p, a.held(d))
 			}
@@ -106,7 +108,7 @@ func (cat Catalog) ForAttack(attacker, target []Active, attackerID string, withi
 	for _, a := range target {
 		d := cat[a.Slug]
 		by := Attacker{Source: a.Source == attackerID, WithinFive: withinFive}
-		for _, c := range d.Parts(a.Mode) {
+		for _, c := range d.PartsIn(a.Mode) {
 			if f, ok := c.(AttackedFolder); ok {
 				f.FoldAttacked(&p, a.held(d), by)
 			}
@@ -140,7 +142,7 @@ func (cat Catalog) ForSave(bearer []Active, ability string) SaveProfile {
 	p := SaveProfile{Fails: false, Advantages: nil, Disadvantages: nil, Dice: nil, Penalty: 0}
 	for _, a := range bearer {
 		d := cat[a.Slug]
-		for _, c := range d.Parts(a.Mode) {
+		for _, c := range d.PartsIn(a.Mode) {
 			if f, ok := c.(SaveFolder); ok {
 				f.FoldSave(&p, a.held(d), ability)
 			}
@@ -166,7 +168,7 @@ func (cat Catalog) ForMove(bearer []Active) MoveProfile {
 	p := MoveProfile{Immobile: false, Multiplier: 1, StackedFt: 0, LargestFt: 0}
 	for _, a := range bearer {
 		d := cat[a.Slug]
-		for _, c := range d.Parts(a.Mode) {
+		for _, c := range d.PartsIn(a.Mode) {
 			if f, ok := c.(MoveFolder); ok {
 				f.FoldMove(&p, a.held(d))
 			}
@@ -206,7 +208,7 @@ func (cat Catalog) ForActions(bearer []Active) ActionProfile {
 	p := ActionProfile{Incapacitated: false, Reactions: nil, CounterFt: 0, CounterBy: ""}
 	for _, a := range bearer {
 		d := cat[a.Slug]
-		for _, c := range d.Parts(a.Mode) {
+		for _, c := range d.PartsIn(a.Mode) {
 			if f, ok := c.(ActionFolder); ok {
 				f.FoldActions(&p, a.held(d))
 			}
@@ -241,7 +243,7 @@ func (cat Catalog) CounterOf(bearer []Active) (int, string, bool) {
 func (cat Catalog) Fatal(bearer []Active) (string, bool) {
 	for _, a := range bearer {
 		d := cat[a.Slug]
-		for _, c := range d.Parts(a.Mode) {
+		for _, c := range d.PartsIn(a.Mode) {
 			if s, ok := c.(Stacker); ok && s.Kills(a.levels()) {
 				return d.Name, true
 			}
@@ -252,12 +254,12 @@ func (cat Catalog) Fatal(bearer []Active) (string, bool) {
 
 // Stacks reports whether applying the Effect again adds a level instead of a second copy.
 func (cat Catalog) Stacks(slug string) bool {
-	return slices.ContainsFunc(cat[slug].Components, func(c Component) bool { _, ok := c.(Stacker); return ok })
+	return slices.ContainsFunc(cat[slug].Parts, func(c Part) bool { _, ok := c.(Stacker); return ok })
 }
 
 // MaxLevel is the highest level a stacking Effect rises to; 0 when it has no cap or does not stack.
 func (cat Catalog) MaxLevel(slug string) int {
-	for _, c := range cat[slug].Components {
+	for _, c := range cat[slug].Parts {
 		if s, ok := c.(Stacker); ok {
 			return s.Cap()
 		}
@@ -278,7 +280,7 @@ type Landing struct {
 // LandingOf is what an Effect does as it lands.
 func (cat Catalog) LandingOf(slug, mode string) Landing {
 	var out Landing
-	for _, c := range cat[slug].Parts(mode) {
+	for _, c := range cat[slug].PartsIn(mode) {
 		for _, act := range landsOnBearer(c) {
 			out.take(act)
 		}
@@ -287,7 +289,7 @@ func (cat Catalog) LandingOf(slug, mode string) Landing {
 }
 
 // landsOnBearer is what a Part does on its bearer as its Effect lands; nothing for most.
-func landsOnBearer(c Component) []Act {
+func landsOnBearer(c Part) []Act {
 	if l, ok := c.(BearerLander); ok {
 		return l.LandsOnBearer()
 	}
@@ -317,7 +319,7 @@ func (l *Landing) take(act Act) {
 
 // TeleportOf is how far an Effect teleports its caster, if it does.
 func (cat Catalog) TeleportOf(slug string) (int, bool) {
-	for _, c := range cat[slug].Components {
+	for _, c := range cat[slug].Parts {
 		for _, act := range landsOnBearer(c) {
 			if t, ok := act.(TeleportCaster); ok {
 				return t.RangeFt, true
@@ -329,7 +331,7 @@ func (cat Catalog) TeleportOf(slug string) (int, bool) {
 
 // SummonOf is what an Effect summons, if it does.
 func (cat Catalog) SummonOf(slug string) (Summon, bool) {
-	for _, c := range cat[slug].Components {
+	for _, c := range cat[slug].Parts {
 		for _, act := range landsOnBearer(c) {
 			if s, ok := act.(SummonCreatures); ok {
 				return Summon(s), true
@@ -340,7 +342,7 @@ func (cat Catalog) SummonOf(slug string) (Summon, bool) {
 }
 
 // prompts are the instructions a Part leaves the DM as its Effect lands.
-func prompts(c Component) []string {
+func prompts(c Part) []string {
 	var out []string
 	for _, act := range landsOnBearer(c) {
 		if a, ok := act.(AskDM); ok {
@@ -363,7 +365,7 @@ func (cat Catalog) Instructions(slug, name, mode string) []string {
 		return []string{"Resolve " + name + " by hand."}
 	}
 	var out []string
-	for _, c := range d.Parts(mode) {
+	for _, c := range d.PartsIn(mode) {
 		out = append(out, prompts(c)...)
 	}
 	return out
@@ -431,7 +433,7 @@ func (cat Catalog) AreaOf(slug string) (AreaSpell, bool) {
 	d, known := cat[slug]
 	var out AreaSpell
 	out.Name = d.Name
-	for _, c := range d.Components {
+	for _, c := range d.Parts {
 		if a, ok := c.(Asker); ok {
 			out.ask(a)
 		}

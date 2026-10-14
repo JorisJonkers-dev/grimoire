@@ -7,7 +7,7 @@ type Teleport struct {
 	RangeFt int
 }
 
-func (Teleport) isComponent() {}
+func (Teleport) isPart() {}
 
 // Kind is teleport.
 func (Teleport) Kind() string { return "teleport" }

@@ -12,7 +12,7 @@ type Summon struct {
 	NeedsCommand bool
 }
 
-func (Summon) isComponent() {}
+func (Summon) isPart() {}
 
 // Kind is summon.
 func (Summon) Kind() string { return "summon" }

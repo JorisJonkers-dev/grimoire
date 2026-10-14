@@ -7,8 +7,8 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/effects"
 )
 
-// branchRows stores branches in compendium.effect_branches; the Parts a branch adds are component
-// rows that name it as their parent, in its group then.
+// branchRows stores branches in compendium.effect_branches; the Parts a branch adds are Part rows
+// that name it as their parent, in its group then.
 type branchRows struct{}
 
 func (branchRows) kind() string { return effects.Branch{}.Kind() }
@@ -21,7 +21,7 @@ func (branchRows) insert(ctx context.Context, q *queries.Queries, at slot, p eff
 	})
 }
 
-func (branchRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Component) error {
+func (branchRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Part) error {
 	rows, err := q.ListEffectBranches(ctx)
 	if err != nil {
 		return err

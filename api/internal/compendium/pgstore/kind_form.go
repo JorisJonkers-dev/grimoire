@@ -18,7 +18,7 @@ func (formRows) insert(ctx context.Context, q *queries.Queries, at slot, p effec
 	return q.InsertEffectForm(ctx, queries.InsertEffectFormParams{EffectID: at.effect, Ordinal: at.ordinal, MonsterSlug: f.Monster, TempHp: int32(f.TempHP)})
 }
 
-func (formRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Component) error {
+func (formRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Part) error {
 	rows, err := q.ListEffectForms(ctx)
 	if err != nil {
 		return err

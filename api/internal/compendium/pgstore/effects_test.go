@@ -94,13 +94,13 @@ func TestSeededEffectsRoundTripThroughTheDatabase(t *testing.T) {
 	}
 }
 
-// Saving an Effect again replaces its components rather than adding to them.
-func TestSavingAnEffectReplacesItsComponents(t *testing.T) {
+// Saving an Effect again replaces its Parts rather than adding to them.
+func TestSavingAnEffectReplacesItsParts(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 	s := pgstore.New(openPool(t))
 	owner := effects.Owner{Kind: effects.OwnedBySpell, Slug: "frost-ring"}
-	first := effects.Definition{Slug: "frost-ring", Name: "Frost Ring", Components: []effects.Component{
+	first := effects.Definition{Slug: "frost-ring", Name: "Frost Ring", Parts: []effects.Part{
 		effects.Area{Shape: hex.SphereArea, SizeFt: 10, RangeFt: 30},
 		effects.SaveDamage{Ability: "constitution", Dice: "2d6", Type: "cold", Half: true},
 		effects.Manual{Instruction: "Frost Ring: the ground freezes."},
@@ -108,7 +108,7 @@ func TestSavingAnEffectReplacesItsComponents(t *testing.T) {
 	if err := s.SaveEffect(ctx, owner, first); err != nil {
 		t.Fatal(err)
 	}
-	second := effects.Definition{Slug: "frost-ring", Name: "Frost Ring", Owner: effects.OwnedBySpell, Concentration: true, Components: []effects.Component{
+	second := effects.Definition{Slug: "frost-ring", Name: "Frost Ring", Owner: effects.OwnedBySpell, Concentration: true, Parts: []effects.Part{
 		effects.MoveCost{Multiplier: 2},
 		effects.TempHP{Amount: 5},
 		effects.Teleport{RangeFt: 30},
@@ -142,15 +142,15 @@ func TestShapedEffectsRoundTrip(t *testing.T) {
 		Slug: "frost-choice", Name: "Frost Choice", Owner: effects.OwnedBySpell, Concentration: true,
 		Duration: effects.Duration{Kind: effects.Minutes, Amount: 1, RepeatSave: "wisdom"},
 		Scaling:  &effects.Scaling{Axis: effects.CharacterLevel, Class: "", Column: "", Base: 0, Dice: "", Steps: []effects.Step{{At: 5, Dice: "2d10"}, {At: 11, Dice: "3d10"}}},
-		Components: []effects.Component{
+		Parts: []effects.Part{
 			effects.Manual{Instruction: "Frost forms."},
-			effects.Choice{Modes: []effects.Mode{
-				{Name: "Bite", Components: []effects.Component{effects.ExtraDamage{Dice: "1d6"}, effects.Branch{
-					When: effects.Condition{Kind: effects.CreatureIs, N: 0, Type: "fiend"}, Then: []effects.Component{effects.Dispel{}},
+			effects.Choice{Modes: []effects.Group{
+				{Name: "Bite", Parts: []effects.Part{effects.ExtraDamage{Dice: "1d6"}, effects.Branch{
+					When: effects.Condition{Kind: effects.CreatureIs, N: 0, Type: "fiend"}, Then: []effects.Part{effects.Dispel{}},
 				}}},
-				{Name: "Numb", Components: []effects.Component{effects.SpeedPenalty{Ft: 10}}},
+				{Name: "Numb", Parts: []effects.Part{effects.SpeedPenalty{Ft: 10}}},
 			}},
-			effects.Branch{When: effects.Condition{Kind: effects.FailsBy, N: 5, Type: ""}, Then: []effects.Component{effects.Incapacitated{}, effects.MoveCost{Multiplier: 2}}},
+			effects.Branch{When: effects.Condition{Kind: effects.FailsBy, N: 5, Type: ""}, Then: []effects.Part{effects.Incapacitated{}, effects.MoveCost{Multiplier: 2}}},
 			effects.TempHP{Amount: 3},
 		},
 	}
@@ -187,16 +187,16 @@ func TestInvalidEffectsAreRefused(t *testing.T) {
 	owner := effects.Owner{Kind: effects.OwnedBySpell, Slug: "bad"}
 	bad := []effects.Definition{
 		{Slug: "Bad Slug", Name: "x"},
-		{Slug: "bad-dice", Name: "x", Components: []effects.Component{effects.ExtraDamage{Dice: "lots"}}},
-		{Slug: "bad-shape", Name: "x", Components: []effects.Component{effects.Area{Shape: "pyramid", SizeFt: 10}}},
-		{Slug: "no-roll", Name: "x", Components: []effects.Component{effects.BonusDie{Dice: "1d4"}}},
+		{Slug: "bad-dice", Name: "x", Parts: []effects.Part{effects.ExtraDamage{Dice: "lots"}}},
+		{Slug: "bad-shape", Name: "x", Parts: []effects.Part{effects.Area{Shape: "pyramid", SizeFt: 10}}},
+		{Slug: "no-roll", Name: "x", Parts: []effects.Part{effects.BonusDie{Dice: "1d4"}}},
 		{Slug: "bad-duration", Name: "x", Duration: effects.Duration{Kind: "fortnight"}},
 		{Slug: "bad-scaling", Name: "x", Scaling: &effects.Scaling{Axis: effects.SlotLevel, Base: 1, Dice: "lots"}},
 		{Slug: "bad-step", Name: "x", Scaling: &effects.Scaling{Axis: effects.CharacterLevel, Steps: []effects.Step{{At: 30, Dice: "1d6"}}}},
-		{Slug: "bad-branch", Name: "x", Components: []effects.Component{effects.Branch{When: effects.Condition{Kind: "full_moon"}}}},
-		{Slug: "bad-reveal", Name: "x", Components: []effects.Component{effects.Reveal{Qualities: []string{"shiny"}}}},
-		{Slug: "bad-mode", Name: "x", Components: []effects.Component{effects.Choice{Modes: []effects.Mode{{Name: ""}}}}},
-		{Slug: "bad-nested", Name: "x", Components: []effects.Component{effects.Branch{When: effects.Condition{Kind: effects.FirstEachTurn}, Then: []effects.Component{effects.ExtraDamage{Dice: "lots"}}}}},
+		{Slug: "bad-branch", Name: "x", Parts: []effects.Part{effects.Branch{When: effects.Condition{Kind: "full_moon"}}}},
+		{Slug: "bad-reveal", Name: "x", Parts: []effects.Part{effects.Reveal{Qualities: []string{"shiny"}}}},
+		{Slug: "bad-mode", Name: "x", Parts: []effects.Part{effects.Choice{Modes: []effects.Group{{Name: ""}}}}},
+		{Slug: "bad-nested", Name: "x", Parts: []effects.Part{effects.Branch{When: effects.Condition{Kind: effects.FirstEachTurn}, Then: []effects.Part{effects.ExtraDamage{Dice: "lots"}}}}},
 	}
 	for _, d := range bad {
 		if err := s.SaveEffect(ctx, owner, d); err == nil {

@@ -26,21 +26,21 @@ func TestStructuralPartsNestThroughTheDatabase(t *testing.T) {
 	s := pgstore.New(openPool(t))
 	d := effects.Definition{
 		Slug: "deep-storm", Name: "Deep Storm", Owner: effects.OwnedBySpell,
-		Components: []effects.Component{
+		Parts: []effects.Part{
 			effects.Area{Shape: hex.CylinderArea, SizeFt: 20, RangeFt: 120},
-			effects.Choice{Modes: []effects.Mode{
-				{Name: "Hail", Components: []effects.Component{
+			effects.Choice{Modes: []effects.Group{
+				{Name: "Hail", Parts: []effects.Part{
 					effects.SaveCondition{Ability: "dexterity", Slug: "prone"},
-					effects.Branch{When: effects.Condition{Kind: effects.HPAtMost, N: 20, Type: ""}, Then: []effects.Component{
-						effects.Choice{Modes: []effects.Mode{
-							{Name: "Freeze", Components: []effects.Component{effects.CreateSurface{Surface: surface.Grease, Rounds: 2}}},
-							{Name: "Shatter", Components: []effects.Component{effects.ForcedMove{Ft: 10, Toward: false}, effects.Manual{Instruction: "Ice cracks."}}},
+					effects.Branch{When: effects.Condition{Kind: effects.HPAtMost, N: 20, Type: ""}, Then: []effects.Part{
+						effects.Choice{Modes: []effects.Group{
+							{Name: "Freeze", Parts: []effects.Part{effects.CreateSurface{Surface: surface.Grease, Rounds: 2}}},
+							{Name: "Shatter", Parts: []effects.Part{effects.ForcedMove{Ft: 10, Toward: false}, effects.Manual{Instruction: "Ice cracks."}}},
 						}},
 					}},
 				}},
-				{Name: "Fog", Components: []effects.Component{
+				{Name: "Fog", Parts: []effects.Part{
 					effects.Reveal{Qualities: []string{"hidden"}},
-					effects.Choice{Modes: []effects.Mode{{Name: "Thick", Components: []effects.Component{effects.Summon{Monster: "mist-wolf", Count: 2, Shares: false, NeedsCommand: true}}}}},
+					effects.Choice{Modes: []effects.Group{{Name: "Thick", Parts: []effects.Part{effects.Summon{Monster: "mist-wolf", Count: 2, Shares: false, NeedsCommand: true}}}}},
 				}},
 			}},
 			effects.Form{Monster: "cloud", TempHP: 6},
@@ -113,15 +113,15 @@ func TestChoicesStoredAsModeRowsReadBack(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := []effects.Component{
-		effects.Choice{Modes: []effects.Mode{
-			{Name: "Away", Components: []effects.Component{effects.Teleport{RangeFt: 30}, effects.Branch{When: effects.Condition{Kind: effects.FirstEachTurn, N: 0, Type: ""}, Then: []effects.Component{effects.Dispel{}}}}},
-			{Name: "Stay", Components: []effects.Component{effects.Immobile{}}},
+	want := []effects.Part{
+		effects.Choice{Modes: []effects.Group{
+			{Name: "Away", Parts: []effects.Part{effects.Teleport{RangeFt: 30}, effects.Branch{When: effects.Condition{Kind: effects.FirstEachTurn, N: 0, Type: ""}, Then: []effects.Part{effects.Dispel{}}}}},
+			{Name: "Stay", Parts: []effects.Part{effects.Immobile{}}},
 		}},
 		effects.TempHP{Amount: 5},
 	}
-	if !reflect.DeepEqual(got["old-choice"].Components, want) {
-		t.Fatalf("old choice = %+v", got["old-choice"].Components)
+	if !reflect.DeepEqual(got["old-choice"].Parts, want) {
+		t.Fatalf("old choice = %+v", got["old-choice"].Parts)
 	}
 }
 
@@ -130,7 +130,7 @@ func TestStackingPartsKeepTheirCap(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 	s := pgstore.New(openPool(t))
-	d := effects.Definition{Slug: "frostbite", Name: "Frostbite", Owner: effects.OwnedByCondition, Components: []effects.Component{
+	d := effects.Definition{Slug: "frostbite", Name: "Frostbite", Owner: effects.OwnedByCondition, Parts: []effects.Part{
 		effects.Exhausting{D20PerLevel: 1, SpeedFtPerLevel: 5, DeathAt: 0, MaxLevel: 3},
 	}}
 	if err := s.SaveEffect(ctx, effects.Owner{Kind: effects.OwnedByCondition, Slug: d.Slug}, d); err != nil {
@@ -143,10 +143,10 @@ func TestStackingPartsKeepTheirCap(t *testing.T) {
 	if !reflect.DeepEqual(got[d.Slug], d) || got.MaxLevel(d.Slug) != 3 {
 		t.Fatalf("frostbite = %+v, rises to %d", got[d.Slug], got.MaxLevel(d.Slug))
 	}
-	if ex := got["exhaustion"].Components; !reflect.DeepEqual(ex, []effects.Component{effects.Exhausting{D20PerLevel: 2, SpeedFtPerLevel: 5, DeathAt: 6, MaxLevel: 0}}) {
+	if ex := got["exhaustion"].Parts; !reflect.DeepEqual(ex, []effects.Part{effects.Exhausting{D20PerLevel: 2, SpeedFtPerLevel: 5, DeathAt: 6, MaxLevel: 0}}) {
 		t.Fatalf("stored exhaustion keeps no cap = %+v", ex)
 	}
-	if err := s.SaveEffect(ctx, effects.Owner{Kind: effects.OwnedByCondition, Slug: "too-high"}, effects.Definition{Slug: "too-high", Name: "Too High", Components: []effects.Component{
+	if err := s.SaveEffect(ctx, effects.Owner{Kind: effects.OwnedByCondition, Slug: "too-high"}, effects.Definition{Slug: "too-high", Name: "Too High", Parts: []effects.Part{
 		effects.Exhausting{D20PerLevel: 1, MaxLevel: 11},
 	}}); err == nil {
 		t.Fatal("a cap above 10 was stored")
@@ -160,13 +160,13 @@ func TestGroupsOfPartsHaveNames(t *testing.T) {
 	ctx := context.Background()
 	pool := openPool(t)
 	s := pgstore.New(pool)
-	d := effects.Definition{Slug: "lantern-choice", Name: "Lantern Choice", Owner: effects.OwnedBySpell, Components: []effects.Component{
+	d := effects.Definition{Slug: "lantern-choice", Name: "Lantern Choice", Owner: effects.OwnedBySpell, Parts: []effects.Part{
 		effects.Area{Shape: hex.EmanationArea, SizeFt: 10, RangeFt: 0},
 		effects.AreaSave{Ability: "wisdom"},
-		effects.Choice{Modes: []effects.Mode{
-			{Name: "Bright", Components: []effects.Component{effects.Light{BrightFt: 20, DimFt: 20}}},
-			{Name: "Dim", Components: []effects.Component{effects.Light{BrightFt: 5, DimFt: 40}, effects.Branch{
-				When: effects.Condition{Kind: effects.FailsBy, N: 5, Type: ""}, Then: []effects.Component{effects.SaveCondition{Ability: "wisdom", Slug: "blinded"}},
+		effects.Choice{Modes: []effects.Group{
+			{Name: "Bright", Parts: []effects.Part{effects.Light{BrightFt: 20, DimFt: 20}}},
+			{Name: "Dim", Parts: []effects.Part{effects.Light{BrightFt: 5, DimFt: 40}, effects.Branch{
+				When: effects.Condition{Kind: effects.FailsBy, N: 5, Type: ""}, Then: []effects.Part{effects.SaveCondition{Ability: "wisdom", Slug: "blinded"}},
 			}}},
 		}},
 	}}
@@ -204,9 +204,9 @@ func TestGroupsOfPartsHaveNames(t *testing.T) {
 		t.Fatalf("a mode is no kind of Part = %d, %v", modes, err)
 	}
 	for _, bad := range []effects.Definition{
-		{Slug: "empty-mode", Name: "x", Components: []effects.Component{effects.Choice{Modes: []effects.Mode{{Name: "Hot", Components: []effects.Component{effects.Dispel{}}}, {Name: "Cold", Components: nil}}}}},
-		{Slug: "empty-branch", Name: "x", Components: []effects.Component{effects.Branch{When: effects.Condition{Kind: effects.FirstEachTurn, N: 0, Type: ""}, Then: nil}}},
-		{Slug: "unnamed-mode", Name: "x", Components: []effects.Component{effects.Choice{Modes: []effects.Mode{{Name: "", Components: []effects.Component{effects.Dispel{}}}}}}},
+		{Slug: "empty-mode", Name: "x", Parts: []effects.Part{effects.Choice{Modes: []effects.Group{{Name: "Hot", Parts: []effects.Part{effects.Dispel{}}}, {Name: "Cold", Parts: nil}}}}},
+		{Slug: "empty-branch", Name: "x", Parts: []effects.Part{effects.Branch{When: effects.Condition{Kind: effects.FirstEachTurn, N: 0, Type: ""}, Then: nil}}},
+		{Slug: "unnamed-mode", Name: "x", Parts: []effects.Part{effects.Choice{Modes: []effects.Group{{Name: "", Parts: []effects.Part{effects.Dispel{}}}}}}},
 	} {
 		if err := s.SaveEffect(ctx, effects.Owner{Kind: effects.OwnedBySpell, Slug: bad.Slug}, bad); err == nil {
 			t.Errorf("%s saved", bad.Slug)

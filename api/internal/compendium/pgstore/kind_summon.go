@@ -20,7 +20,7 @@ func (summonRows) insert(ctx context.Context, q *queries.Queries, at slot, p eff
 	})
 }
 
-func (summonRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Component) error {
+func (summonRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Part) error {
 	rows, err := q.ListEffectSummons(ctx)
 	if err != nil {
 		return err

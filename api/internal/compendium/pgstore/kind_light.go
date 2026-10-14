@@ -18,7 +18,7 @@ func (lightRows) insert(ctx context.Context, q *queries.Queries, at slot, p effe
 	return q.InsertEffectLight(ctx, queries.InsertEffectLightParams{EffectID: at.effect, Ordinal: at.ordinal, BrightFt: int32(l.BrightFt), DimFt: int32(l.DimFt)})
 }
 
-func (lightRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Component) error {
+func (lightRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Part) error {
 	rows, err := q.ListEffectLights(ctx)
 	if err != nil {
 		return err

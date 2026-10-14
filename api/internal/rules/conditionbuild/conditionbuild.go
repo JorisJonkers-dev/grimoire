@@ -150,21 +150,21 @@ func Compile(slug, name string, d Design) Condition {
 	case "cure":
 		duration.Kind = effects.UntilCured
 	}
-	components := make([]effects.Component, 0, len(d.Parts)+1)
+	parts := make([]effects.Part, 0, len(d.Parts)+1)
 	if d.Stacks {
-		components = append(components, effects.Exhausting{D20PerLevel: d.PerLevel.D20, SpeedFtPerLevel: d.PerLevel.SpeedFt, DeathAt: d.PerLevel.DeathAt, MaxLevel: d.MaxLevel})
+		parts = append(parts, effects.Exhausting{D20PerLevel: d.PerLevel.D20, SpeedFtPerLevel: d.PerLevel.SpeedFt, DeathAt: d.PerLevel.DeathAt, MaxLevel: d.MaxLevel})
 	}
 	for _, p := range d.Parts {
-		components = append(components, component(p))
+		parts = append(parts, effectPart(p))
 	}
 	return Condition{
-		Definition: effects.Definition{Slug: slug, Name: name, Owner: effects.OwnedByCondition, Concentration: false, Duration: duration, Scaling: nil, Components: components},
+		Definition: effects.Definition{Slug: slug, Name: name, Owner: effects.OwnedByCondition, Concentration: false, Duration: duration, Scaling: nil, Parts: parts},
 		Icon:       d.Icon, Color: strings.ToLower(d.Color), Text: strings.TrimSpace(d.Text), Cure: strings.TrimSpace(d.Cure), ends: d.Ends, ability: d.Ability,
 	}
 }
 
-func component(p Part) effects.Component {
-	edge := func(against, advantage bool) effects.Component {
+func effectPart(p Part) effects.Part {
+	edge := func(against, advantage bool) effects.Part {
 		return effects.Edge{Against: against, Advantage: advantage, Range: effects.AnyRange, SourceOnly: false}
 	}
 	switch p.Type {

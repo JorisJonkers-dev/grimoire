@@ -9,13 +9,6 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/surface"
 )
 
-// Part is a Component of a kind defined in a file of its own, kind_<slug>.go, which holds its type,
-// its definition, its rules text and what it does in play. Nothing switches over kinds: play reaches
-// a Part through the capabilities it implements.
-type Part interface {
-	Component
-}
-
 // Kind is what one kind of Part declares once: what an author fills in, and how those values become
 // the Part.
 type Kind interface {
@@ -76,14 +69,14 @@ type Values map[string]Value
 // Group is one named group of Parts beneath a Part.
 type Group struct {
 	Name  string
-	Parts []Component
+	Parts []Part
 }
 
 // Groups are the Parts beneath a Part in their named groups, in order, already decoded.
 type Groups []Group
 
 // Of is the Parts of one group; none when it is not given.
-func (gs Groups) Of(name string) []Component {
+func (gs Groups) Of(name string) []Part {
 	for _, g := range gs {
 		if g.Name == name {
 			return g.Parts
@@ -189,14 +182,14 @@ type Grouper interface {
 type Holder interface {
 	Grouper
 	// Landed is the Parts beneath that come into play for one creature as the Effect lands on it.
-	Landed(s Situation) []Component
+	Landed(s Situation) []Part
 }
 
 // Chooser is a Part whose groups are modes; whoever applies the Effect picks one.
 type Chooser interface {
 	Grouper
 	// Chosen is the Parts of the mode picked; none when no mode of that name is offered.
-	Chosen(mode string) []Component
+	Chosen(mode string) []Part
 }
 
 // Act is one thing the runtime does when an Effect lands. The set is small and closed: kinds are

@@ -17,7 +17,7 @@ func (extraDamageRows) insert(ctx context.Context, q *queries.Queries, at slot, 
 	return q.InsertEffectExtraDamage(ctx, queries.InsertEffectExtraDamageParams{EffectID: at.effect, Ordinal: at.ordinal, Dice: x.Dice})
 }
 
-func (extraDamageRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Component) error {
+func (extraDamageRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Part) error {
 	rows, err := q.ListEffectExtraDamage(ctx)
 	if err != nil {
 		return err

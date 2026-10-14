@@ -272,13 +272,13 @@ func withHomebrew(cat effects.Catalog, ground surface.Catalog, brew Brew) (effec
 		cat[c.Definition.Slug] = c.Definition
 	}
 	if ex, ok := cat["exhaustion"]; ok {
-		parts := slices.Clone(ex.Components)
+		parts := slices.Clone(ex.Parts)
 		for i, c := range parts {
 			if _, stacks := c.(effects.Exhausting); stacks {
 				parts[i] = brew.Exhaustion
 			}
 		}
-		ex.Components = parts
+		ex.Parts = parts
 		cat["exhaustion"] = ex
 	}
 	return cat, ground

@@ -42,7 +42,7 @@ func TestFrostbiteBuildsIntoAStackingCondition(t *testing.T) {
 	if def.Slug != "hb-0190c7a80005" || def.Name != "Frostbite" || def.Owner != effects.OwnedByCondition || def.Duration != (effects.Duration{Kind: effects.UntilRest, Amount: 0, RepeatSave: ""}) {
 		t.Fatalf("definition = %+v", def)
 	}
-	want := []effects.Component{
+	want := []effects.Part{
 		effects.Exhausting{D20PerLevel: 1, SpeedFtPerLevel: 5, DeathAt: 0, MaxLevel: 4},
 		effects.Edge{Against: false, Advantage: false, Range: effects.AnyRange, SourceOnly: false},
 		effects.Edge{Against: true, Advantage: true, Range: effects.AnyRange, SourceOnly: false},
@@ -57,8 +57,8 @@ func TestFrostbiteBuildsIntoAStackingCondition(t *testing.T) {
 		effects.CritWithin{Feet: 5},
 		effects.Manual{Instruction: "The DM decides what the cold does to gear."},
 	}
-	if !reflect.DeepEqual(def.Components, want) {
-		t.Fatalf("components = %+v", def.Components)
+	if !reflect.DeepEqual(def.Parts, want) {
+		t.Fatalf("parts = %+v", def.Parts)
 	}
 	if c.Icon != "snow" || c.Color != "#7fa8dd" || c.Text != "Cold seeps into the bones." {
 		t.Fatalf("look = %+v", c)
@@ -80,7 +80,7 @@ func TestFrostbiteBuildsIntoAStackingCondition(t *testing.T) {
 	plain := frostbite()
 	plain.Stacks, plain.Parts, plain.Text, plain.Ends, plain.Ability = false, nil, "", "save", "wisdom"
 	p := conditionbuild.Compile("hb-p", "Dazed", plain)
-	if len(p.Definition.Components) != 0 || p.Definition.Duration.RepeatSave != "wisdom" || p.Definition.Duration.Kind != effects.UntilDispelled {
+	if len(p.Definition.Parts) != 0 || p.Definition.Duration.RepeatSave != "wisdom" || p.Definition.Duration.Kind != effects.UntilDispelled {
 		t.Fatalf("a plain condition = %+v", p.Definition)
 	}
 	if got := conditionbuild.Lines(p); !reflect.DeepEqual(got, []string{"Ends when the creature succeeds on a Wisdom saving throw at the end of its turn."}) {

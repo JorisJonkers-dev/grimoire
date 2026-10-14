@@ -735,14 +735,6 @@ type CompendiumEffectBranch struct {
 	CreatureType string
 }
 
-type CompendiumEffectComponent struct {
-	EffectID  int64
-	Ordinal   int32
-	Kind      string
-	Parent    pgtype.Int4
-	GroupName pgtype.Text
-}
-
 type CompendiumEffectCounter struct {
 	EffectID int64
 	Ordinal  int32
@@ -850,6 +842,14 @@ type CompendiumEffectMoveCost struct {
 	Ordinal    int32
 	Kind       string
 	Multiplier int32
+}
+
+type CompendiumEffectPart struct {
+	EffectID  int64
+	Ordinal   int32
+	Kind      string
+	Parent    pgtype.Int4
+	GroupName pgtype.Text
 }
 
 type CompendiumEffectReaction struct {

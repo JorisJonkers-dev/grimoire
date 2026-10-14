@@ -7,7 +7,7 @@ type TempHP struct {
 	Amount int
 }
 
-func (TempHP) isComponent() {}
+func (TempHP) isPart() {}
 
 // Kind is temp_hp.
 func (TempHP) Kind() string { return "temp_hp" }

@@ -6,7 +6,7 @@ type AreaSave struct {
 	Ability string
 }
 
-func (AreaSave) isComponent() {}
+func (AreaSave) isPart() {}
 
 // Kind is area_save.
 func (AreaSave) Kind() string { return "area_save" }

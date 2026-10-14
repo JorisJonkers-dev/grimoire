@@ -21,7 +21,7 @@ func (exhaustingRows) insert(ctx context.Context, q *queries.Queries, at slot, p
 	})
 }
 
-func (exhaustingRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Component) error {
+func (exhaustingRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Part) error {
 	rows, err := q.ListEffectExhaustion(ctx)
 	if err != nil {
 		return err

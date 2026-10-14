@@ -27,10 +27,10 @@ import (
 func sunbeam() effects.Definition {
 	return effects.Definition{
 		Slug: "sunbeam", Name: "Sunbeam", Owner: effects.OwnedBySpell, Concentration: true, Duration: effects.Duration{Kind: effects.Minutes, Amount: 1},
-		Components: []effects.Component{
+		Parts: []effects.Part{
 			effects.Area{Shape: hex.LineArea, SizeFt: 60, RangeFt: 0},
 			effects.SaveDamage{Ability: "constitution", Dice: "6d8", Type: "radiant", Half: true},
-			effects.Branch{When: effects.Condition{Kind: effects.FailsBy, N: 1}, Then: []effects.Component{effects.SaveCondition{Ability: "constitution", Slug: "blinded"}}},
+			effects.Branch{When: effects.Condition{Kind: effects.FailsBy, N: 1}, Then: []effects.Part{effects.SaveCondition{Ability: "constitution", Slug: "blinded"}}},
 		},
 	}
 }
@@ -51,13 +51,13 @@ func TestKindsInTheirOwnFilesPlayInASession(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, ok := cat["bless"].Components[0].(effects.SaveFolder); !ok {
+	if _, ok := cat["bless"].Parts[0].(effects.SaveFolder); !ok {
 		t.Fatalf("bless folds into saves = %+v", cat["bless"])
 	}
-	if _, ok := cat["fireball"].Components[1].(effects.Lander); !ok {
+	if _, ok := cat["fireball"].Parts[1].(effects.Lander); !ok {
 		t.Fatalf("fireball lands = %+v", cat["fireball"])
 	}
-	if _, ok := cat["sunbeam"].Components[2].(effects.Holder); !ok {
+	if _, ok := cat["sunbeam"].Parts[2].(effects.Holder); !ok {
 		t.Fatalf("sunbeam's branch holds the blinding = %+v", cat["sunbeam"])
 	}
 

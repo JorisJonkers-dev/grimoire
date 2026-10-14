@@ -18,7 +18,7 @@ func (forcedMoveRows) insert(ctx context.Context, q *queries.Queries, at slot, p
 	return q.InsertEffectForcedMove(ctx, queries.InsertEffectForcedMoveParams{EffectID: at.effect, Ordinal: at.ordinal, Ft: int32(f.Ft), Toward: f.Toward})
 }
 
-func (forcedMoveRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Component) error {
+func (forcedMoveRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Part) error {
 	rows, err := q.ListEffectForcedMoves(ctx)
 	if err != nil {
 		return err

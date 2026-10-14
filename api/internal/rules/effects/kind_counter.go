@@ -7,7 +7,7 @@ type Counter struct {
 	RangeFt int
 }
 
-func (Counter) isComponent() {}
+func (Counter) isPart() {}
 
 // Kind is counter.
 func (Counter) Kind() string { return "counter" }

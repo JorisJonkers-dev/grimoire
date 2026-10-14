@@ -11,12 +11,12 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const clearEffectComponents = `-- name: ClearEffectComponents :exec
+const clearEffectParts = `-- name: ClearEffectParts :exec
 DELETE FROM compendium.effect_components WHERE effect_id = $1
 `
 
-func (q *Queries) ClearEffectComponents(ctx context.Context, effectID int64) error {
-	_, err := q.db.Exec(ctx, clearEffectComponents, effectID)
+func (q *Queries) ClearEffectParts(ctx context.Context, effectID int64) error {
+	_, err := q.db.Exec(ctx, clearEffectParts, effectID)
 	return err
 }
 
@@ -38,12 +38,12 @@ func (q *Queries) ClearSurfaceReactions(ctx context.Context, surface string) err
 	return err
 }
 
-const insertEffectComponent = `-- name: InsertEffectComponent :exec
+const insertEffectPart = `-- name: InsertEffectPart :exec
 INSERT INTO compendium.effect_components (effect_id, ordinal, kind, parent, group_name)
 VALUES ($1, $2, $3, $4, $5)
 `
 
-type InsertEffectComponentParams struct {
+type InsertEffectPartParams struct {
 	EffectID  int64
 	Ordinal   int32
 	Kind      string
@@ -51,8 +51,8 @@ type InsertEffectComponentParams struct {
 	GroupName pgtype.Text
 }
 
-func (q *Queries) InsertEffectComponent(ctx context.Context, arg InsertEffectComponentParams) error {
-	_, err := q.db.Exec(ctx, insertEffectComponent,
+func (q *Queries) InsertEffectPart(ctx context.Context, arg InsertEffectPartParams) error {
+	_, err := q.db.Exec(ctx, insertEffectPart,
 		arg.EffectID,
 		arg.Ordinal,
 		arg.Kind,
@@ -118,65 +118,6 @@ func (q *Queries) InsertSurfaceReaction(ctx context.Context, arg InsertSurfaceRe
 	return err
 }
 
-const listEffectComponents = `-- name: ListEffectComponents :many
-SELECT effect_id, ordinal, kind, parent, group_name FROM compendium.effect_components ORDER BY effect_id, ordinal
-`
-
-func (q *Queries) ListEffectComponents(ctx context.Context) ([]CompendiumEffectComponent, error) {
-	rows, err := q.db.Query(ctx, listEffectComponents)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []CompendiumEffectComponent{}
-	for rows.Next() {
-		var i CompendiumEffectComponent
-		if err := rows.Scan(
-			&i.EffectID,
-			&i.Ordinal,
-			&i.Kind,
-			&i.Parent,
-			&i.GroupName,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listEffectComponentsOfKind = `-- name: ListEffectComponentsOfKind :many
-SELECT effect_id, ordinal FROM compendium.effect_components WHERE kind = $1
-`
-
-type ListEffectComponentsOfKindRow struct {
-	EffectID int64
-	Ordinal  int32
-}
-
-func (q *Queries) ListEffectComponentsOfKind(ctx context.Context, kind string) ([]ListEffectComponentsOfKindRow, error) {
-	rows, err := q.db.Query(ctx, listEffectComponentsOfKind, kind)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []ListEffectComponentsOfKindRow{}
-	for rows.Next() {
-		var i ListEffectComponentsOfKindRow
-		if err := rows.Scan(&i.EffectID, &i.Ordinal); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const listEffectDefinitions = `-- name: ListEffectDefinitions :many
 SELECT id, slug, name, concentration, owner_kind, duration_kind, duration_amount, repeat_save FROM compendium.effect_definitions ORDER BY slug
 `
@@ -211,6 +152,65 @@ func (q *Queries) ListEffectDefinitions(ctx context.Context) ([]ListEffectDefini
 			&i.DurationAmount,
 			&i.RepeatSave,
 		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listEffectParts = `-- name: ListEffectParts :many
+SELECT effect_id, ordinal, kind, parent, group_name FROM compendium.effect_components ORDER BY effect_id, ordinal
+`
+
+func (q *Queries) ListEffectParts(ctx context.Context) ([]CompendiumEffectPart, error) {
+	rows, err := q.db.Query(ctx, listEffectParts)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CompendiumEffectPart{}
+	for rows.Next() {
+		var i CompendiumEffectPart
+		if err := rows.Scan(
+			&i.EffectID,
+			&i.Ordinal,
+			&i.Kind,
+			&i.Parent,
+			&i.GroupName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listEffectPartsOfKind = `-- name: ListEffectPartsOfKind :many
+SELECT effect_id, ordinal FROM compendium.effect_components WHERE kind = $1
+`
+
+type ListEffectPartsOfKindRow struct {
+	EffectID int64
+	Ordinal  int32
+}
+
+func (q *Queries) ListEffectPartsOfKind(ctx context.Context, kind string) ([]ListEffectPartsOfKindRow, error) {
+	rows, err := q.db.Query(ctx, listEffectPartsOfKind, kind)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListEffectPartsOfKindRow{}
+	for rows.Next() {
+		var i ListEffectPartsOfKindRow
+		if err := rows.Scan(&i.EffectID, &i.Ordinal); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

@@ -28,18 +28,18 @@ func shapedTable(t *testing.T) (world, *table, map[string]string) {
 	w := setup(t)
 	w.hub.Stats = bestiary{owner: w.player.ID}
 	for _, d := range []effects.Definition{
-		{Slug: "enlarge-reduce", Name: "Enlarge/Reduce", Owner: effects.OwnedBySpell, Concentration: true, Components: []effects.Component{
-			effects.Choice{Modes: []effects.Mode{
-				{Name: "Enlarge", Components: []effects.Component{effects.SaveEdge{Ability: "strength", Mode: effects.SaveAdvantage}}},
-				{Name: "Reduce", Components: []effects.Component{effects.Manual{Instruction: "Weapon damage drops by 1d4."}}},
+		{Slug: "enlarge-reduce", Name: "Enlarge/Reduce", Owner: effects.OwnedBySpell, Concentration: true, Parts: []effects.Part{
+			effects.Choice{Modes: []effects.Group{
+				{Name: "Enlarge", Parts: []effects.Part{effects.SaveEdge{Ability: "strength", Mode: effects.SaveAdvantage}}},
+				{Name: "Reduce", Parts: []effects.Part{effects.Manual{Instruction: "Weapon damage drops by 1d4."}}},
 			}},
 		}},
-		{Slug: "hold-fast", Name: "Hold Fast", Owner: effects.OwnedBySpell, Duration: effects.Duration{Kind: effects.Rounds, Amount: 3, RepeatSave: "wisdom"}, Components: []effects.Component{effects.Immobile{}}},
-		{Slug: "weary", Name: "Weary", Owner: effects.OwnedByFeature, Duration: effects.Duration{Kind: effects.UntilRest}, Components: []effects.Component{effects.SpeedPenalty{Ft: 5}}},
-		{Slug: "frost-burst", Name: "Frost Burst", Owner: effects.OwnedBySpell, Scaling: &effects.Scaling{Axis: effects.SlotLevel, Base: 1, Dice: "1d6"}, Components: []effects.Component{
+		{Slug: "hold-fast", Name: "Hold Fast", Owner: effects.OwnedBySpell, Duration: effects.Duration{Kind: effects.Rounds, Amount: 3, RepeatSave: "wisdom"}, Parts: []effects.Part{effects.Immobile{}}},
+		{Slug: "weary", Name: "Weary", Owner: effects.OwnedByFeature, Duration: effects.Duration{Kind: effects.UntilRest}, Parts: []effects.Part{effects.SpeedPenalty{Ft: 5}}},
+		{Slug: "frost-burst", Name: "Frost Burst", Owner: effects.OwnedBySpell, Scaling: &effects.Scaling{Axis: effects.SlotLevel, Base: 1, Dice: "1d6"}, Parts: []effects.Part{
 			effects.Area{Shape: hex.SphereArea, SizeFt: 5, RangeFt: 60},
 			effects.SaveDamage{Ability: "constitution", Dice: "2d6", Type: "cold", Half: true},
-			effects.Branch{When: effects.Condition{Kind: effects.FailsBy, N: 5}, Then: []effects.Component{
+			effects.Branch{When: effects.Condition{Kind: effects.FailsBy, N: 5}, Then: []effects.Part{
 				effects.SaveCondition{Ability: "constitution", Slug: "prone"}, effects.Manual{Instruction: "frost rimes its armour."},
 			}},
 		}},

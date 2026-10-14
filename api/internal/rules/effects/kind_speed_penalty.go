@@ -7,7 +7,7 @@ type SpeedPenalty struct {
 	Ft int
 }
 
-func (SpeedPenalty) isComponent() {}
+func (SpeedPenalty) isPart() {}
 
 // Kind is speed_penalty.
 func (SpeedPenalty) Kind() string { return "speed_penalty" }

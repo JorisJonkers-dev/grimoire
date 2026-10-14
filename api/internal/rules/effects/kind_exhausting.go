@@ -15,7 +15,7 @@ type Exhausting struct {
 	MaxLevel        int
 }
 
-func (Exhausting) isComponent() {}
+func (Exhausting) isPart() {}
 
 // Kind is exhausting.
 func (Exhausting) Kind() string { return "exhausting" }

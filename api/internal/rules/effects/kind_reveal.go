@@ -12,7 +12,7 @@ type Reveal struct {
 	Qualities []string
 }
 
-func (Reveal) isComponent() {}
+func (Reveal) isPart() {}
 
 // Kind is reveal.
 func (Reveal) Kind() string { return "reveal" }

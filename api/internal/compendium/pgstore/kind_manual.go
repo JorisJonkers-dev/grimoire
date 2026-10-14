@@ -17,7 +17,7 @@ func (manualRows) insert(ctx context.Context, q *queries.Queries, at slot, p eff
 	return q.InsertEffectManual(ctx, queries.InsertEffectManualParams{EffectID: at.effect, Ordinal: at.ordinal, Instruction: m.Instruction})
 }
 
-func (manualRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Component) error {
+func (manualRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Part) error {
 	rows, err := q.ListEffectManual(ctx)
 	if err != nil {
 		return err

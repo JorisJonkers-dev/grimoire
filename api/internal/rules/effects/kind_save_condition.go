@@ -6,7 +6,7 @@ type SaveCondition struct {
 	Slug    string
 }
 
-func (SaveCondition) isComponent() {}
+func (SaveCondition) isPart() {}
 
 // Kind is save_condition.
 func (SaveCondition) Kind() string { return "save_condition" }

@@ -146,7 +146,7 @@ type Querier interface {
 	ClearClassChildren(ctx context.Context, classID int64) error
 	ClearClassSpells(ctx context.Context, arg ClearClassSpellsParams) error
 	ClearContainerCoins(ctx context.Context, containerID uuid.UUID) error
-	ClearEffectComponents(ctx context.Context, effectID int64) error
+	ClearEffectParts(ctx context.Context, effectID int64) error
 	ClearEffectScaling(ctx context.Context, effectID int64) error
 	ClearEffects(ctx context.Context, sessionID uuid.UUID) error
 	ClearElevation(ctx context.Context, arg ClearElevationParams) error
@@ -345,7 +345,6 @@ type Querier interface {
 	InsertEffectAreaSave(ctx context.Context, arg InsertEffectAreaSaveParams) error
 	InsertEffectBonusDie(ctx context.Context, arg InsertEffectBonusDieParams) error
 	InsertEffectBranch(ctx context.Context, arg InsertEffectBranchParams) error
-	InsertEffectComponent(ctx context.Context, arg InsertEffectComponentParams) error
 	InsertEffectCounter(ctx context.Context, arg InsertEffectCounterParams) error
 	InsertEffectCrit(ctx context.Context, arg InsertEffectCritParams) error
 	InsertEffectEdge(ctx context.Context, arg InsertEffectEdgeParams) error
@@ -358,6 +357,7 @@ type Querier interface {
 	InsertEffectLight(ctx context.Context, arg InsertEffectLightParams) error
 	InsertEffectManual(ctx context.Context, arg InsertEffectManualParams) error
 	InsertEffectMoveCost(ctx context.Context, arg InsertEffectMoveCostParams) error
+	InsertEffectPart(ctx context.Context, arg InsertEffectPartParams) error
 	InsertEffectReaction(ctx context.Context, arg InsertEffectReactionParams) error
 	InsertEffectResourceChange(ctx context.Context, arg InsertEffectResourceChangeParams) error
 	InsertEffectReveal(ctx context.Context, arg InsertEffectRevealParams) error
@@ -500,8 +500,6 @@ type Querier interface {
 	ListEffectAreas(ctx context.Context) ([]ListEffectAreasRow, error)
 	ListEffectBonusDice(ctx context.Context) ([]ListEffectBonusDiceRow, error)
 	ListEffectBranches(ctx context.Context) ([]ListEffectBranchesRow, error)
-	ListEffectComponents(ctx context.Context) ([]CompendiumEffectComponent, error)
-	ListEffectComponentsOfKind(ctx context.Context, kind string) ([]ListEffectComponentsOfKindRow, error)
 	ListEffectCounters(ctx context.Context) ([]ListEffectCountersRow, error)
 	ListEffectCrits(ctx context.Context) ([]ListEffectCritsRow, error)
 	ListEffectDefinitions(ctx context.Context) ([]ListEffectDefinitionsRow, error)
@@ -514,6 +512,8 @@ type Querier interface {
 	ListEffectLights(ctx context.Context) ([]ListEffectLightsRow, error)
 	ListEffectManual(ctx context.Context) ([]ListEffectManualRow, error)
 	ListEffectMoveCosts(ctx context.Context) ([]ListEffectMoveCostsRow, error)
+	ListEffectParts(ctx context.Context) ([]CompendiumEffectPart, error)
+	ListEffectPartsOfKind(ctx context.Context, kind string) ([]ListEffectPartsOfKindRow, error)
 	ListEffectReactions(ctx context.Context) ([]ListEffectReactionsRow, error)
 	ListEffectResourceChanges(ctx context.Context) ([]ListEffectResourceChangesRow, error)
 	ListEffectReveals(ctx context.Context) ([]ListEffectRevealsRow, error)

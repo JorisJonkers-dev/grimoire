@@ -10,7 +10,7 @@ type Form struct {
 	TempHP  int
 }
 
-func (Form) isComponent() {}
+func (Form) isPart() {}
 
 // Kind is form.
 func (Form) Kind() string { return "form" }

@@ -236,12 +236,12 @@ func (c Components) check() error {
 	return nil
 }
 
-// builder gathers the Effect's components and text as the parts come.
+// builder gathers the Effect's Parts and text as the design's parts come.
 type builder struct {
 	slug, name string
 	d          Design
 	surfaces   []string
-	comps      []effects.Component
+	comps      []effects.Part
 	text       []string
 	surface    *Surface
 	saveDamage bool
@@ -328,7 +328,7 @@ func (b *builder) condition(p Part) error {
 			return DesignError("limit it to creature types: " + strings.Join(CreatureTypes(), ", "))
 		}
 	}
-	failed := effects.Branch{When: effects.Condition{Kind: effects.FailsBy, N: 1, Type: ""}, Then: []effects.Component{effects.SaveCondition{Ability: b.d.Save, Slug: p.Condition}}}
+	failed := effects.Branch{When: effects.Condition{Kind: effects.FailsBy, N: 1, Type: ""}, Then: []effects.Part{effects.SaveCondition{Ability: b.d.Save, Slug: p.Condition}}}
 	text := "A creature that fails the " + title(b.d.Save) + " saving throw has the " + title(p.Condition) + " condition"
 	if len(p.OnlyTypes) == 0 {
 		b.comps = append(b.comps, failed)
@@ -337,7 +337,7 @@ func (b *builder) condition(p Part) error {
 	}
 	names := make([]string, 0, len(p.OnlyTypes))
 	for _, t := range p.OnlyTypes {
-		b.comps = append(b.comps, effects.Branch{When: effects.Condition{Kind: effects.CreatureIs, N: 0, Type: t}, Then: []effects.Component{failed}})
+		b.comps = append(b.comps, effects.Branch{When: effects.Condition{Kind: effects.CreatureIs, N: 0, Type: t}, Then: []effects.Part{failed}})
 		names = append(names, title(t))
 	}
 	b.text = append(b.text, text+", if it is "+strings.Join(names, " or ")+".")
@@ -395,14 +395,14 @@ func (b *builder) lay(p Part) error {
 // then the parts in order; and the rules text with the spell's metadata.
 func (b *builder) finish() Built {
 	d := b.d
-	comps := []effects.Component{effects.Area{Shape: hex.Shape(d.Targeting.Shape), SizeFt: d.Targeting.SizeFt, RangeFt: d.Targeting.RangeFt}}
+	comps := []effects.Part{effects.Area{Shape: hex.Shape(d.Targeting.Shape), SizeFt: d.Targeting.SizeFt, RangeFt: d.Targeting.RangeFt}}
 	if d.Save != "" && !b.saveDamage {
 		comps = append(comps, effects.AreaSave{Ability: d.Save})
 	}
 	duration := effects.Duration{Kind: effects.DurationKind(d.Duration.Unit), Amount: d.Duration.Amount, RepeatSave: ""}
 	def := effects.Definition{
 		Slug: b.slug, Name: b.name, Owner: effects.OwnedBySpell, Concentration: d.Concentration, Duration: duration, Scaling: nil,
-		Components: append(comps, b.comps...),
+		Parts: append(comps, b.comps...),
 	}
 	text := []string{castingText(d), componentsText(d.Components), areaText(d.Targeting), duration.Text(d.Concentration)}
 	return Built{Definition: def, Surface: b.surface, Text: append(text, b.text...)}

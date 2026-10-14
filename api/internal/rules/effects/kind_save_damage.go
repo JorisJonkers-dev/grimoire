@@ -8,7 +8,7 @@ type SaveDamage struct {
 	Half    bool
 }
 
-func (SaveDamage) isComponent() {}
+func (SaveDamage) isPart() {}
 
 // Kind is save_damage.
 func (SaveDamage) Kind() string { return "save_damage" }

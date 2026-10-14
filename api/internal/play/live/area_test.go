@@ -35,7 +35,7 @@ func TestAreaSpellsSavesAndSurfaces(t *testing.T) {
 	w := setup(t)
 	showDCs(t, w)
 	w.hub.Stats = bestiary{owner: w.player.ID}
-	storm := effects.Definition{Slug: "storm-sphere", Name: "Storm Sphere", Concentration: true, Components: []effects.Component{
+	storm := effects.Definition{Slug: "storm-sphere", Name: "Storm Sphere", Concentration: true, Parts: []effects.Part{
 		effects.Area{Shape: hex.SphereArea, SizeFt: 20, RangeFt: 150}, effects.SaveDamage{Ability: "strength", Dice: "2d6", Type: "bludgeoning", Half: false},
 	}}
 	if err := comppg.New(w.pool).SaveEffect(ctx, effects.Owner{Kind: effects.OwnedBySpell, Slug: storm.Slug}, storm); err != nil {

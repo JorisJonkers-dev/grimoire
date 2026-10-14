@@ -310,7 +310,7 @@ func (s *state) branched(c *domain.AreaCast, totals map[domain.RollID]int) ([]do
 
 // landOn is what a Part a branch adds does to one target: conditions to put on, and parts the DM
 // resolves.
-func (s *state) landOn(t domain.Token, part effects.Component) ([]domain.Effect, []domain.ManualPrompt) {
+func (s *state) landOn(t domain.Token, part effects.Part) ([]domain.Effect, []domain.ManualPrompt) {
 	l, ok := part.(effects.BearerLander)
 	if !ok {
 		return nil, nil

@@ -17,7 +17,7 @@ func (saveConditionRows) insert(ctx context.Context, q *queries.Queries, at slot
 	return q.InsertEffectSaveCondition(ctx, queries.InsertEffectSaveConditionParams{EffectID: at.effect, Ordinal: at.ordinal, Ability: s.Ability, ConditionSlug: s.Slug})
 }
 
-func (saveConditionRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Component) error {
+func (saveConditionRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Part) error {
 	rows, err := q.ListEffectSaveConditions(ctx)
 	if err != nil {
 		return err

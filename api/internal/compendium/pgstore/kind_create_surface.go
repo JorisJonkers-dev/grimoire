@@ -19,7 +19,7 @@ func (createSurfaceRows) insert(ctx context.Context, q *queries.Queries, at slot
 	return q.InsertEffectSurface(ctx, queries.InsertEffectSurfaceParams{EffectID: at.effect, Ordinal: at.ordinal, Surface: string(c.Surface), Rounds: int32(c.Rounds)})
 }
 
-func (createSurfaceRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Component) error {
+func (createSurfaceRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Part) error {
 	rows, err := q.ListEffectSurfaces(ctx)
 	if err != nil {
 		return err

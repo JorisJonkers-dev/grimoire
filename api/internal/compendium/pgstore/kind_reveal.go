@@ -17,7 +17,7 @@ func (revealRows) insert(ctx context.Context, q *queries.Queries, at slot, p eff
 	return q.InsertEffectReveal(ctx, queries.InsertEffectRevealParams{EffectID: at.effect, Ordinal: at.ordinal, Qualities: r.Qualities})
 }
 
-func (revealRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Component) error {
+func (revealRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Part) error {
 	rows, err := q.ListEffectReveals(ctx)
 	if err != nil {
 		return err

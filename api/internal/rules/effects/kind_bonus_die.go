@@ -20,7 +20,7 @@ type BonusDie struct {
 	Dice string
 }
 
-func (BonusDie) isComponent() {}
+func (BonusDie) isPart() {}
 
 // Kind is bonus_die.
 func (BonusDie) Kind() string { return "bonus_die" }

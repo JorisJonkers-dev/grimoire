@@ -7,7 +7,7 @@ type Reacts struct {
 	Instruction string
 }
 
-func (Reacts) isComponent() {}
+func (Reacts) isPart() {}
 
 // Kind is reacts.
 func (Reacts) Kind() string { return "reacts" }

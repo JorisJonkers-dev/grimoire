@@ -5,7 +5,7 @@ type ExtraDamage struct {
 	Dice string
 }
 
-func (ExtraDamage) isComponent() {}
+func (ExtraDamage) isPart() {}
 
 // Kind is extra_damage.
 func (ExtraDamage) Kind() string { return "extra_damage" }

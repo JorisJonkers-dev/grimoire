@@ -28,18 +28,18 @@ func summonTable(t *testing.T) (world, *table, map[string]string) {
 	w := setup(t)
 	w.hub.Stats = bestiary{owner: w.player.ID}
 	for _, d := range []effects.Definition{
-		{Slug: "summon-wolf", Name: "Summon Wolf", Owner: effects.OwnedBySpell, Concentration: true, Components: []effects.Component{
+		{Slug: "summon-wolf", Name: "Summon Wolf", Owner: effects.OwnedBySpell, Concentration: true, Parts: []effects.Part{
 			effects.Summon{Monster: "wolf", Count: 1, Shares: true, NeedsCommand: true},
 		}},
-		{Slug: "wolf-pack", Name: "Wolf Pack", Owner: effects.OwnedBySpell, Components: []effects.Component{
+		{Slug: "wolf-pack", Name: "Wolf Pack", Owner: effects.OwnedBySpell, Parts: []effects.Part{
 			effects.Summon{Monster: "wolf", Count: 2, Shares: false, NeedsCommand: false},
 		}},
-		{Slug: "outlining-burst", Name: "Outlining Burst", Owner: effects.OwnedBySpell, Components: []effects.Component{
+		{Slug: "outlining-burst", Name: "Outlining Burst", Owner: effects.OwnedBySpell, Parts: []effects.Part{
 			effects.Area{Shape: hex.SphereArea, SizeFt: 5, RangeFt: 60},
 			effects.SaveDamage{Ability: "dexterity", Dice: "1d4", Type: "radiant", Half: true},
 			effects.Reveal{Qualities: []string{"invisible", "disguised"}},
 		}},
-		{Slug: "summon-owl", Name: "Summon Owl", Owner: effects.OwnedBySpell, Components: []effects.Component{
+		{Slug: "summon-owl", Name: "Summon Owl", Owner: effects.OwnedBySpell, Parts: []effects.Part{
 			effects.Summon{Monster: "owl", Count: 1, Shares: true, NeedsCommand: false},
 		}},
 	} {

@@ -5,19 +5,13 @@ import (
 	"unicode/utf8"
 )
 
-// Choice offers modes; whoever applies the Effect picks one, and only that mode's Parts count
-// (Enlarge/Reduce).
+// Choice offers modes, each a named group of Parts; whoever applies the Effect picks one, and only
+// that mode's Parts count (Enlarge/Reduce).
 type Choice struct {
-	Modes []Mode
+	Modes []Group
 }
 
-// Mode is one option of a Choice.
-type Mode struct {
-	Name       string
-	Components []Component
-}
-
-func (Choice) isComponent() {}
+func (Choice) isPart() {}
 
 // Kind is choice.
 func (Choice) Kind() string { return "choice" }
@@ -26,26 +20,22 @@ func (Choice) Kind() string { return "choice" }
 func (c Choice) Text() string {
 	modes := make([]string, 0, len(c.Modes))
 	for _, m := range c.Modes {
-		modes = append(modes, m.Name+": "+strings.Join(sentences(m.Components), " "))
+		modes = append(modes, m.Name+": "+strings.Join(sentences(m.Parts), " "))
 	}
 	return "Choose one: " + strings.Join(modes, " Or ")
 }
 
-// Groups are the modes, each named.
+// Groups are the modes.
 func (c Choice) Groups() []Group {
-	out := make([]Group, 0, len(c.Modes))
-	for _, m := range c.Modes {
-		out = append(out, Group{Name: m.Name, Parts: m.Components})
-	}
-	return out
+	return c.Modes
 }
 
 // Chosen is the Parts of the mode picked.
-func (c Choice) Chosen(mode string) []Component {
-	var out []Component
+func (c Choice) Chosen(mode string) []Part {
+	var out []Part
 	for _, m := range c.Modes {
 		if m.Name == mode {
-			out = append(out, m.Components...)
+			out = append(out, m.Parts...)
 		}
 	}
 	return out
@@ -64,7 +54,7 @@ func (choiceKind) Decode(_ Values, beneath Groups) (Part, error) {
 	if len(beneath) == 0 {
 		return nil, refuse("modes", "offer at least one mode")
 	}
-	c := Choice{Modes: make([]Mode, 0, len(beneath))}
+	c := Choice{Modes: make([]Group, 0, len(beneath))}
 	seen := map[string]bool{}
 	for _, g := range beneath {
 		if g.Name == "" || utf8.RuneCountInString(g.Name) > 80 {
@@ -77,7 +67,7 @@ func (choiceKind) Decode(_ Values, beneath Groups) (Part, error) {
 			return nil, refuse("modes", "add at least one Part to each mode")
 		}
 		seen[g.Name] = true
-		c.Modes = append(c.Modes, Mode{Name: g.Name, Components: g.Parts})
+		c.Modes = append(c.Modes, g)
 	}
 	return c, nil
 }

@@ -162,7 +162,7 @@ func TestEveryConditionDoesWhatTheRulesSay(t *testing.T) {
 	if p := cat.ForSave(on("restrained", "bless"), "dexterity"); p.Fails || !reflect.DeepEqual(p.Disadvantages, []string{"Restrained: disadvantage"}) || !reflect.DeepEqual(p.Dice, []string{"1d4"}) {
 		t.Errorf("restrained Dexterity save = %+v", p)
 	}
-	resolve := effects.Catalog{"resolve": {Name: "Resolve", Components: []effects.Component{effects.SaveEdge{Ability: "wisdom", Mode: effects.SaveAdvantage}}}}
+	resolve := effects.Catalog{"resolve": {Name: "Resolve", Parts: []effects.Part{effects.SaveEdge{Ability: "wisdom", Mode: effects.SaveAdvantage}}}}
 	if p := resolve.ForSave([]effects.Active{{Slug: "resolve"}}, "wisdom"); !reflect.DeepEqual(p.Advantages, []string{"Resolve: advantage"}) || p.Disadvantages != nil || p.Fails {
 		t.Errorf("a homebrew advantage on Wisdom saves = %+v", p)
 	}
@@ -175,7 +175,7 @@ func TestEveryConditionDoesWhatTheRulesSay(t *testing.T) {
 	if p := cat.ForAttack(nil, on("unconscious"), "x", false); p.Crit {
 		t.Error("a hit from afar is no Critical Hit")
 	}
-	near := effects.Catalog{"near": {Name: "Near", Components: []effects.Component{effects.CritWithin{Feet: 0}}}}
+	near := effects.Catalog{"near": {Name: "Near", Parts: []effects.Part{effects.CritWithin{Feet: 0}}}}
 	if p := near.ForAttack(nil, []effects.Active{{Slug: "near"}}, "x", true); p.Crit {
 		t.Error("a zero-foot reach makes no Critical Hit")
 	}
@@ -203,7 +203,7 @@ func TestExhaustionStacksAndKillsAtSix(t *testing.T) {
 	if name, dead := cat.Fatal([]effects.Active{{Slug: "exhaustion", Level: 6}}); !dead || name != "Exhaustion" {
 		t.Errorf("six levels kill = %q %v", name, dead)
 	}
-	if _, dead := (effects.Catalog{"e": {Name: "E", Components: []effects.Component{effects.Exhausting{D20PerLevel: 1, SpeedFtPerLevel: 0, DeathAt: 0, MaxLevel: 0}}}}).Fatal([]effects.Active{{Slug: "e", Level: 9}}); dead {
+	if _, dead := (effects.Catalog{"e": {Name: "E", Parts: []effects.Part{effects.Exhausting{D20PerLevel: 1, SpeedFtPerLevel: 0, DeathAt: 0, MaxLevel: 0}}}}).Fatal([]effects.Active{{Slug: "e", Level: 9}}); dead {
 		t.Error("an exhaustion without a death level never kills")
 	}
 	if !cat.Stacks("exhaustion") || cat.Stacks("prone") {
@@ -211,18 +211,18 @@ func TestExhaustionStacksAndKillsAtSix(t *testing.T) {
 	}
 }
 
-func TestTheWiderComponents(t *testing.T) {
+func TestTheWiderKinds(t *testing.T) {
 	t.Parallel()
 	cat := effects.Catalog{
-		"false-life": {Name: "False Life", Owner: effects.OwnedBySpell, Components: []effects.Component{effects.TempHP{Amount: 8}, effects.TempHP{Amount: 3}}},
-		"misty-step": {Name: "Misty Step", Owner: effects.OwnedBySpell, Components: []effects.Component{effects.Teleport{RangeFt: 30}}},
-		"dispel":     {Name: "Dispel Magic", Owner: effects.OwnedBySpell, Components: []effects.Component{effects.Dispel{}}},
-		"counter":    {Name: "Counterspell", Owner: effects.OwnedBySpell, Components: []effects.Component{effects.Counter{RangeFt: 60}}},
-		"short":      {Name: "Short", Components: []effects.Component{effects.Counter{RangeFt: 30}}},
-		"echo":       {Name: "Echo", Components: []effects.Component{effects.Counter{RangeFt: 60}}},
-		"darkvision": {Name: "Darkvision", Owner: effects.OwnedBySpell, Components: []effects.Component{effects.GrantFeature{Name: "Darkvision 60 ft"}}},
-		"second":     {Name: "Second Wind", Owner: effects.OwnedByFeature, Components: []effects.Component{effects.ResourceChange{Resource: "rage", Delta: 1}}},
-		"wave": {Name: "Wave", Components: []effects.Component{
+		"false-life": {Name: "False Life", Owner: effects.OwnedBySpell, Parts: []effects.Part{effects.TempHP{Amount: 8}, effects.TempHP{Amount: 3}}},
+		"misty-step": {Name: "Misty Step", Owner: effects.OwnedBySpell, Parts: []effects.Part{effects.Teleport{RangeFt: 30}}},
+		"dispel":     {Name: "Dispel Magic", Owner: effects.OwnedBySpell, Parts: []effects.Part{effects.Dispel{}}},
+		"counter":    {Name: "Counterspell", Owner: effects.OwnedBySpell, Parts: []effects.Part{effects.Counter{RangeFt: 60}}},
+		"short":      {Name: "Short", Parts: []effects.Part{effects.Counter{RangeFt: 30}}},
+		"echo":       {Name: "Echo", Parts: []effects.Part{effects.Counter{RangeFt: 60}}},
+		"darkvision": {Name: "Darkvision", Owner: effects.OwnedBySpell, Parts: []effects.Part{effects.GrantFeature{Name: "Darkvision 60 ft"}}},
+		"second":     {Name: "Second Wind", Owner: effects.OwnedByFeature, Parts: []effects.Part{effects.ResourceChange{Resource: "rage", Delta: 1}}},
+		"wave": {Name: "Wave", Parts: []effects.Part{
 			effects.Area{Shape: hex.CubeArea, SizeFt: 15, RangeFt: 0},
 			effects.SaveDamage{Ability: "constitution", Dice: "2d8", Type: "thunder", Half: true},
 			effects.ForcedMove{Ft: 10, Toward: false},
@@ -275,7 +275,7 @@ func TestTheWiderComponents(t *testing.T) {
 
 func TestEffectsThatReact(t *testing.T) {
 	t.Parallel()
-	cat := effects.Catalog{"rebuke": {Name: "Hellish Rebuke", Components: []effects.Component{
+	cat := effects.Catalog{"rebuke": {Name: "Hellish Rebuke", Parts: []effects.Part{
 		effects.Reacts{Trigger: "damaged", Instruction: "Hellish Rebuke: the attacker makes a Dexterity save or takes 2d10 fire damage."},
 	}}}
 	got := cat.ReactionsTo([]effects.Active{{Slug: "rebuke"}, {Slug: "bless"}}, "damaged")
@@ -318,75 +318,75 @@ func TestMasteryEffects(t *testing.T) {
 // srd mirrors the Effects the migrations seed, so the rules can be tested without a database.
 func srd() effects.Catalog {
 	return effects.Catalog{
-		"bless": {Slug: "bless", Name: "Bless", Concentration: true, Components: []effects.Component{
+		"bless": {Slug: "bless", Name: "Bless", Concentration: true, Parts: []effects.Part{
 			effects.BonusDie{On: []effects.Roll{effects.AttackRolls, effects.SavingThrows}, Dice: "1d4"},
 		}},
-		"faerie-fire": {Slug: "faerie-fire", Name: "Faerie Fire", Concentration: true, Components: []effects.Component{
+		"faerie-fire": {Slug: "faerie-fire", Name: "Faerie Fire", Concentration: true, Parts: []effects.Part{
 			effects.Edge{Against: true, Advantage: true, Range: effects.AnyRange},
 		}},
-		"hunters-mark": {Slug: "hunters-mark", Name: "Hunter's Mark", Concentration: true, Components: []effects.Component{
+		"hunters-mark": {Slug: "hunters-mark", Name: "Hunter's Mark", Concentration: true, Parts: []effects.Part{
 			effects.ExtraDamage{Dice: "1d6"},
 		}},
-		"fireball": {Slug: "fireball", Name: "Fireball", Concentration: false, Components: []effects.Component{
+		"fireball": {Slug: "fireball", Name: "Fireball", Concentration: false, Parts: []effects.Part{
 			effects.Area{Shape: hex.SphereArea, SizeFt: 20, RangeFt: 150}, effects.SaveDamage{Ability: "dexterity", Dice: "8d6", Type: "fire", Half: true},
 		}},
-		"burning-hands": {Slug: "burning-hands", Name: "Burning Hands", Concentration: false, Components: []effects.Component{
+		"burning-hands": {Slug: "burning-hands", Name: "Burning Hands", Concentration: false, Parts: []effects.Part{
 			effects.Area{Shape: hex.ConeArea, SizeFt: 15, RangeFt: 0}, effects.SaveDamage{Ability: "dexterity", Dice: "3d6", Type: "fire", Half: true},
 		}},
-		"lightning-bolt": {Slug: "lightning-bolt", Name: "Lightning Bolt", Concentration: false, Components: []effects.Component{
+		"lightning-bolt": {Slug: "lightning-bolt", Name: "Lightning Bolt", Concentration: false, Parts: []effects.Part{
 			effects.Area{Shape: hex.LineArea, SizeFt: 100, RangeFt: 0}, effects.SaveDamage{Ability: "dexterity", Dice: "8d6", Type: "lightning", Half: true},
 		}},
-		"cone-of-cold": {Slug: "cone-of-cold", Name: "Cone of Cold", Concentration: false, Components: []effects.Component{
+		"cone-of-cold": {Slug: "cone-of-cold", Name: "Cone of Cold", Concentration: false, Parts: []effects.Part{
 			effects.Area{Shape: hex.ConeArea, SizeFt: 60, RangeFt: 0}, effects.SaveDamage{Ability: "constitution", Dice: "8d8", Type: "cold", Half: true},
 		}},
-		"shatter": {Slug: "shatter", Name: "Shatter", Concentration: false, Components: []effects.Component{
+		"shatter": {Slug: "shatter", Name: "Shatter", Concentration: false, Parts: []effects.Part{
 			effects.Area{Shape: hex.SphereArea, SizeFt: 10, RangeFt: 60}, effects.SaveDamage{Ability: "constitution", Dice: "3d8", Type: "thunder", Half: true},
 		}},
-		"thunderwave": {Slug: "thunderwave", Name: "Thunderwave", Concentration: false, Components: []effects.Component{
+		"thunderwave": {Slug: "thunderwave", Name: "Thunderwave", Concentration: false, Parts: []effects.Part{
 			effects.Area{Shape: hex.CubeArea, SizeFt: 15, RangeFt: 0},
 			effects.SaveDamage{Ability: "constitution", Dice: "2d8", Type: "thunder", Half: true},
 			effects.Manual{Instruction: "Thunderwave: creatures that failed their save are pushed 10 feet away."},
 		}},
-		"grease": {Slug: "grease", Name: "Grease", Concentration: false, Components: []effects.Component{
+		"grease": {Slug: "grease", Name: "Grease", Concentration: false, Parts: []effects.Part{
 			effects.Area{Shape: hex.CylinderArea, SizeFt: 5, RangeFt: 60},
 			effects.CreateSurface{Surface: surface.Grease, Rounds: 10},
 			effects.SaveCondition{Ability: "dexterity", Slug: "prone"},
 		}},
-		"prone": {Slug: "prone", Name: "Prone", Concentration: false, Components: []effects.Component{
+		"prone": {Slug: "prone", Name: "Prone", Concentration: false, Parts: []effects.Part{
 			effects.Edge{Against: false, Advantage: false, Range: effects.AnyRange},
 			effects.Edge{Against: true, Advantage: true, Range: effects.WithinFive},
 			effects.Edge{Against: true, Advantage: false, Range: effects.BeyondFive},
 			effects.MoveCost{Multiplier: 2},
 		}},
-		"blinded": {Slug: "blinded", Name: "Blinded", Components: []effects.Component{
+		"blinded": {Slug: "blinded", Name: "Blinded", Parts: []effects.Part{
 			effects.Edge{Against: true, Advantage: true, Range: effects.AnyRange},
 			effects.Edge{Against: false, Advantage: false, Range: effects.AnyRange},
 			effects.Manual{Instruction: "Blinded: can't see, and fails any ability check that needs sight."},
 		}},
-		"charmed": {Slug: "charmed", Name: "Charmed", Components: []effects.Component{
+		"charmed": {Slug: "charmed", Name: "Charmed", Parts: []effects.Part{
 			effects.Manual{Instruction: "Charmed: can't attack the charmer or target them with harmful effects; the charmer has advantage on social checks against them."},
 		}},
-		"deafened": {Slug: "deafened", Name: "Deafened", Components: []effects.Component{
+		"deafened": {Slug: "deafened", Name: "Deafened", Parts: []effects.Part{
 			effects.Manual{Instruction: "Deafened: can't hear, and fails any ability check that needs hearing."},
 		}},
-		"sapped":     {Slug: "sapped", Name: "Sapped", Components: []effects.Component{effects.Edge{Against: false, Advantage: false, Range: effects.AnyRange}}},
-		"slowed":     {Slug: "slowed", Name: "Slowed", Components: []effects.Component{effects.SpeedPenalty{Ft: 10}}},
-		"vexed":      {Slug: "vexed", Name: "Vexed", Components: []effects.Component{effects.Edge{Against: true, Advantage: true, Range: effects.AnyRange, SourceOnly: true}}},
-		"exhaustion": {Slug: "exhaustion", Name: "Exhaustion", Components: []effects.Component{effects.Exhausting{D20PerLevel: 2, SpeedFtPerLevel: 5, DeathAt: 6, MaxLevel: 0}}},
-		"frightened": {Slug: "frightened", Name: "Frightened", Components: []effects.Component{
+		"sapped":     {Slug: "sapped", Name: "Sapped", Parts: []effects.Part{effects.Edge{Against: false, Advantage: false, Range: effects.AnyRange}}},
+		"slowed":     {Slug: "slowed", Name: "Slowed", Parts: []effects.Part{effects.SpeedPenalty{Ft: 10}}},
+		"vexed":      {Slug: "vexed", Name: "Vexed", Parts: []effects.Part{effects.Edge{Against: true, Advantage: true, Range: effects.AnyRange, SourceOnly: true}}},
+		"exhaustion": {Slug: "exhaustion", Name: "Exhaustion", Parts: []effects.Part{effects.Exhausting{D20PerLevel: 2, SpeedFtPerLevel: 5, DeathAt: 6, MaxLevel: 0}}},
+		"frightened": {Slug: "frightened", Name: "Frightened", Parts: []effects.Part{
 			effects.Edge{Against: false, Advantage: false, Range: effects.AnyRange},
 			effects.Manual{Instruction: "Frightened: can't willingly move closer to the source of its fear, and the disadvantage holds only while it can see that source."},
 		}},
-		"grappled": {Slug: "grappled", Name: "Grappled", Components: []effects.Component{
+		"grappled": {Slug: "grappled", Name: "Grappled", Parts: []effects.Part{
 			effects.Immobile{}, effects.Manual{Instruction: "Grappled: has disadvantage on attacks against anyone but the grappler, who can drag it along at half speed."},
 		}},
-		"incapacitated": {Slug: "incapacitated", Name: "Incapacitated", Components: []effects.Component{
+		"incapacitated": {Slug: "incapacitated", Name: "Incapacitated", Parts: []effects.Part{
 			effects.Incapacitated{}, effects.Manual{Instruction: "Incapacitated: can't speak, and rolls Initiative with disadvantage."},
 		}},
-		"invisible": {Slug: "invisible", Name: "Invisible", Components: []effects.Component{
+		"invisible": {Slug: "invisible", Name: "Invisible", Parts: []effects.Part{
 			effects.Edge{Against: true, Advantage: false, Range: effects.AnyRange}, effects.Edge{Against: false, Advantage: true, Range: effects.AnyRange},
 		}},
-		"paralyzed": {Slug: "paralyzed", Name: "Paralyzed", Components: []effects.Component{
+		"paralyzed": {Slug: "paralyzed", Name: "Paralyzed", Parts: []effects.Part{
 			effects.Incapacitated{},
 			effects.Immobile{},
 			effects.SaveEdge{Ability: "strength", Mode: effects.SaveFails},
@@ -394,7 +394,7 @@ func srd() effects.Catalog {
 			effects.Edge{Against: true, Advantage: true, Range: effects.AnyRange},
 			effects.CritWithin{Feet: 5},
 		}},
-		"petrified": {Slug: "petrified", Name: "Petrified", Components: []effects.Component{
+		"petrified": {Slug: "petrified", Name: "Petrified", Parts: []effects.Part{
 			effects.Incapacitated{},
 			effects.Immobile{},
 			effects.SaveEdge{Ability: "strength", Mode: effects.SaveFails},
@@ -402,19 +402,19 @@ func srd() effects.Catalog {
 			effects.Edge{Against: true, Advantage: true, Range: effects.AnyRange},
 			effects.Manual{Instruction: "Petrified: turned to stone with what it wears and carries; it resists all damage and is immune to poison."},
 		}},
-		"restrained": {Slug: "restrained", Name: "Restrained", Components: []effects.Component{
+		"restrained": {Slug: "restrained", Name: "Restrained", Parts: []effects.Part{
 			effects.Immobile{},
 			effects.Edge{Against: true, Advantage: true, Range: effects.AnyRange},
 			effects.Edge{Against: false, Advantage: false, Range: effects.AnyRange},
 			effects.SaveEdge{Ability: "dexterity", Mode: effects.SaveDisadvantage},
 		}},
-		"stunned": {Slug: "stunned", Name: "Stunned", Components: []effects.Component{
+		"stunned": {Slug: "stunned", Name: "Stunned", Parts: []effects.Part{
 			effects.Incapacitated{},
 			effects.SaveEdge{Ability: "strength", Mode: effects.SaveFails},
 			effects.SaveEdge{Ability: "dexterity", Mode: effects.SaveFails},
 			effects.Edge{Against: true, Advantage: true, Range: effects.AnyRange},
 		}},
-		"unconscious": {Slug: "unconscious", Name: "Unconscious", Components: []effects.Component{
+		"unconscious": {Slug: "unconscious", Name: "Unconscious", Parts: []effects.Part{
 			effects.Incapacitated{},
 			effects.Immobile{},
 			effects.SaveEdge{Ability: "strength", Mode: effects.SaveFails},
@@ -423,7 +423,7 @@ func srd() effects.Catalog {
 			effects.CritWithin{Feet: 5},
 			effects.Manual{Instruction: "Unconscious: drops what it holds, falls Prone and knows nothing of its surroundings."},
 		}},
-		"poisoned": {Slug: "poisoned", Name: "Poisoned", Concentration: false, Components: []effects.Component{
+		"poisoned": {Slug: "poisoned", Name: "Poisoned", Concentration: false, Parts: []effects.Part{
 			effects.Edge{Against: false, Advantage: false, Range: effects.AnyRange},
 			effects.Manual{Instruction: "Poisoned: ability checks are made with disadvantage."},
 		}},
@@ -433,8 +433,8 @@ func srd() effects.Catalog {
 func TestStackingEffectsRiseToTheirCap(t *testing.T) {
 	t.Parallel()
 	cat := effects.Catalog{
-		"frostbite": {Slug: "frostbite", Name: "Frostbite", Components: []effects.Component{effects.Exhausting{D20PerLevel: 1, SpeedFtPerLevel: 5, DeathAt: 0, MaxLevel: 3}}},
-		"bless":     {Slug: "bless", Name: "Bless", Components: []effects.Component{effects.BonusDie{On: []effects.Roll{effects.AttackRolls}, Dice: "1d4"}}},
+		"frostbite": {Slug: "frostbite", Name: "Frostbite", Parts: []effects.Part{effects.Exhausting{D20PerLevel: 1, SpeedFtPerLevel: 5, DeathAt: 0, MaxLevel: 3}}},
+		"bless":     {Slug: "bless", Name: "Bless", Parts: []effects.Part{effects.BonusDie{On: []effects.Roll{effects.AttackRolls}, Dice: "1d4"}}},
 	}
 	if !cat.Stacks("frostbite") || cat.MaxLevel("frostbite") != 3 || cat.Stacks("bless") || cat.MaxLevel("bless") != 0 || cat.MaxLevel("unknown") != 0 {
 		t.Fatal("frostbite stacks to 3; bless does not stack")
@@ -450,7 +450,7 @@ func TestStackingEffectsRiseToTheirCap(t *testing.T) {
 func TestWhereEachPassiveKindIsRead(t *testing.T) {
 	t.Parallel()
 	cat := effects.Catalog{
-		"moody": {Name: "Moody", Components: []effects.Component{effects.Choice{Modes: []effects.Mode{{Name: "Grim", Components: []effects.Component{
+		"moody": {Name: "Moody", Parts: []effects.Part{effects.Choice{Modes: []effects.Group{{Name: "Grim", Parts: []effects.Part{
 			effects.Edge{Against: false, Advantage: true, Range: effects.AnyRange, SourceOnly: true},
 			effects.Edge{Against: true, Advantage: false, Range: effects.AnyRange, SourceOnly: false},
 			effects.ExtraDamage{Dice: "1d8"},
@@ -472,7 +472,7 @@ func TestWhereEachPassiveKindIsRead(t *testing.T) {
 			effects.ResourceChange{Resource: "ki", Delta: -1},
 			effects.Teleport{RangeFt: 30},
 		}}}}}},
-		"later": {Name: "Later", Components: []effects.Component{effects.Branch{When: effects.Condition{Kind: effects.FirstEachTurn}, Then: []effects.Component{
+		"later": {Name: "Later", Parts: []effects.Part{effects.Branch{When: effects.Condition{Kind: effects.FirstEachTurn}, Then: []effects.Part{
 			effects.Edge{Against: false, Advantage: true},
 			effects.Exhausting{D20PerLevel: 1, DeathAt: 1},
 			effects.Incapacitated{},
@@ -483,7 +483,7 @@ func TestWhereEachPassiveKindIsRead(t *testing.T) {
 			effects.TempHP{Amount: 9},
 			effects.Teleport{RangeFt: 60},
 		}}}},
-		"echo": {Name: "Echo", Components: []effects.Component{effects.Reacts{Trigger: "damaged", Instruction: "Echo."}, effects.Reacts{Trigger: "hit", Instruction: "No."}, effects.Counter{RangeFt: 30}}},
+		"echo": {Name: "Echo", Parts: []effects.Part{effects.Reacts{Trigger: "damaged", Instruction: "Echo."}, effects.Reacts{Trigger: "hit", Instruction: "No."}, effects.Counter{RangeFt: 30}}},
 	}
 	grim := []effects.Active{{Slug: "moody", Source: "aria", Level: 2, Mode: "Grim"}}
 	p := cat.ForAttack(grim, grim, "brom", true)

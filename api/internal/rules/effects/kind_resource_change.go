@@ -6,7 +6,7 @@ type ResourceChange struct {
 	Delta    int
 }
 
-func (ResourceChange) isComponent() {}
+func (ResourceChange) isPart() {}
 
 // Kind is resource_change.
 func (ResourceChange) Kind() string { return "resource_change" }

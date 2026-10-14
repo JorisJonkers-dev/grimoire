@@ -109,15 +109,15 @@ func TestKindsDecodeAuthoredValues(t *testing.T) {
 		{
 			"branch",
 			effects.Values{"when": {Text: "fails_by"}, "n": {Number: 5}},
-			effects.Groups{{Name: "then", Parts: []effects.Component{stun}}},
-			effects.Branch{When: effects.Condition{Kind: effects.FailsBy, N: 5}, Then: []effects.Component{stun}},
+			effects.Groups{{Name: "then", Parts: []effects.Part{stun}}},
+			effects.Branch{When: effects.Condition{Kind: effects.FailsBy, N: 5}, Then: []effects.Part{stun}},
 			"If a creature fails the save by 5 or more, on a failed Constitution saving throw, a creature has the Stunned condition.",
 		},
 		{
 			"branch",
 			effects.Values{"when": {Text: "creature_is"}, "creature_type": {Text: "undead"}},
-			effects.Groups{{Name: "then", Parts: []effects.Component{effects.Dispel{}}}},
-			effects.Branch{When: effects.Condition{Kind: effects.CreatureIs, Type: "undead"}, Then: []effects.Component{effects.Dispel{}}},
+			effects.Groups{{Name: "then", Parts: []effects.Part{effects.Dispel{}}}},
+			effects.Branch{When: effects.Condition{Kind: effects.CreatureIs, Type: "undead"}, Then: []effects.Part{effects.Dispel{}}},
 			"If the creature is an undead, every spell on the target ends.",
 		},
 		{
@@ -197,8 +197,8 @@ func TestKindsDecodeAuthoredValues(t *testing.T) {
 		{
 			"choice",
 			nil,
-			effects.Groups{{Name: "Enlarge", Parts: []effects.Component{effects.TempHP{Amount: 1}}}, {Name: "Reduce", Parts: []effects.Component{effects.Dispel{}, effects.Immobile{}}}},
-			effects.Choice{Modes: []effects.Mode{{Name: "Enlarge", Components: []effects.Component{effects.TempHP{Amount: 1}}}, {Name: "Reduce", Components: []effects.Component{effects.Dispel{}, effects.Immobile{}}}}},
+			effects.Groups{{Name: "Enlarge", Parts: []effects.Part{effects.TempHP{Amount: 1}}}, {Name: "Reduce", Parts: []effects.Part{effects.Dispel{}, effects.Immobile{}}}},
+			effects.Choice{Modes: []effects.Group{{Name: "Enlarge", Parts: []effects.Part{effects.TempHP{Amount: 1}}}, {Name: "Reduce", Parts: []effects.Part{effects.Dispel{}, effects.Immobile{}}}}},
 			"Choose one: Enlarge: The target gains 1 Temporary Hit Points. Or Reduce: Every spell on the target ends. The target's Speed is 0.",
 		},
 		{
@@ -275,7 +275,7 @@ func TestKindsDecodeAuthoredValues(t *testing.T) {
 // A kind refuses values its rules cannot hold, naming the field.
 func TestKindsRefuseValuesTheyCannotHold(t *testing.T) {
 	t.Parallel()
-	then := effects.Groups{{Name: "then", Parts: []effects.Component{effects.Dispel{}}}}
+	then := effects.Groups{{Name: "then", Parts: []effects.Part{effects.Dispel{}}}}
 	for _, c := range []struct {
 		kind, field string
 		values      effects.Values
@@ -333,10 +333,10 @@ func TestKindsRefuseValuesTheyCannotHold(t *testing.T) {
 		{"area", "range_ft", effects.Values{"shape": {Text: "cube"}, "size_ft": {Number: 10}, "range_ft": {Number: 5281}}, nil},
 		{"area_save", "ability", effects.Values{"ability": {Text: "luck"}}, nil},
 		{"choice", "modes", nil, nil},
-		{"choice", "modes", nil, effects.Groups{{Name: "", Parts: []effects.Component{effects.Dispel{}}}}},
-		{"choice", "modes", nil, effects.Groups{{Name: strings.Repeat("é", 81), Parts: []effects.Component{effects.Dispel{}}}}},
-		{"choice", "modes", nil, effects.Groups{{Name: "Hot", Parts: []effects.Component{effects.Dispel{}}}, {Name: "Hot", Parts: []effects.Component{effects.Immobile{}}}}},
-		{"choice", "modes", nil, effects.Groups{{Name: "Hot", Parts: []effects.Component{effects.Dispel{}}}, {Name: "Cold", Parts: nil}}},
+		{"choice", "modes", nil, effects.Groups{{Name: "", Parts: []effects.Part{effects.Dispel{}}}}},
+		{"choice", "modes", nil, effects.Groups{{Name: strings.Repeat("é", 81), Parts: []effects.Part{effects.Dispel{}}}}},
+		{"choice", "modes", nil, effects.Groups{{Name: "Hot", Parts: []effects.Part{effects.Dispel{}}}, {Name: "Hot", Parts: []effects.Part{effects.Immobile{}}}}},
+		{"choice", "modes", nil, effects.Groups{{Name: "Hot", Parts: []effects.Part{effects.Dispel{}}}, {Name: "Cold", Parts: nil}}},
 		{"create_surface", "surface", effects.Values{"surface": {Text: "Lava"}, "rounds": {Number: 1}}, nil},
 		{"create_surface", "surface", effects.Values{"surface": {Text: ""}, "rounds": {Number: 1}}, nil},
 		{"create_surface", "surface", effects.Values{"surface": {Text: "a" + strings.Repeat("b", 40)}, "rounds": {Number: 1}}, nil},
@@ -420,7 +420,7 @@ func TestKindsRefuseValuesTheyCannotHold(t *testing.T) {
 	if _, err := kind(t, "branch").Decode(edge, then); err != nil {
 		t.Errorf("a creature type runs to 40 letters = %v", err)
 	}
-	one := effects.Groups{{Name: strings.Repeat("é", 80), Parts: []effects.Component{effects.Dispel{}}}}
+	one := effects.Groups{{Name: strings.Repeat("é", 80), Parts: []effects.Part{effects.Dispel{}}}}
 	if _, err := kind(t, "choice").Decode(nil, one); err != nil {
 		t.Errorf("one mode of up to 80 letters is a choice = %v", err)
 	}
@@ -475,10 +475,10 @@ func TestAreaAndStructuralPartsActThroughTheirCapabilities(t *testing.T) {
 		}
 	}
 
-	hot := []effects.Component{effects.ExtraDamage{Dice: "1d6"}}
-	var choice effects.Part = effects.Choice{Modes: []effects.Mode{{Name: "Hot", Components: hot}, {Name: "Cold", Components: []effects.Component{effects.Immobile{}}}}}
+	hot := []effects.Part{effects.ExtraDamage{Dice: "1d6"}}
+	var choice effects.Part = effects.Choice{Modes: []effects.Group{{Name: "Hot", Parts: hot}, {Name: "Cold", Parts: []effects.Part{effects.Immobile{}}}}}
 	ch := choice.(effects.Chooser)
-	if !reflect.DeepEqual(ch.Groups(), []effects.Group{{Name: "Hot", Parts: hot}, {Name: "Cold", Parts: []effects.Component{effects.Immobile{}}}}) {
+	if !reflect.DeepEqual(ch.Groups(), []effects.Group{{Name: "Hot", Parts: hot}, {Name: "Cold", Parts: []effects.Part{effects.Immobile{}}}}) {
 		t.Fatalf("a choice's modes are its groups = %+v", ch.Groups())
 	}
 	if !reflect.DeepEqual(ch.Chosen("Hot"), hot) || ch.Chosen("Warm") != nil {
@@ -540,12 +540,12 @@ func TestPartsActThroughTheirCapabilities(t *testing.T) {
 	}
 
 	blind := effects.SaveCondition{Ability: "constitution", Slug: "blinded"}
-	var branch effects.Part = effects.Branch{When: effects.Condition{Kind: effects.FailsBy, N: 1}, Then: []effects.Component{blind}}
+	var branch effects.Part = effects.Branch{When: effects.Condition{Kind: effects.FailsBy, N: 1}, Then: []effects.Part{blind}}
 	h := branch.(effects.Holder)
-	if !reflect.DeepEqual(h.Groups(), []effects.Group{{Name: "then", Parts: []effects.Component{blind}}}) {
+	if !reflect.DeepEqual(h.Groups(), []effects.Group{{Name: "then", Parts: []effects.Part{blind}}}) {
 		t.Fatalf("groups = %+v", h.Groups())
 	}
-	if got := h.Landed(effects.Situation{Saved: false, Margin: 1}); !reflect.DeepEqual(got, []effects.Component{blind}) {
+	if got := h.Landed(effects.Situation{Saved: false, Margin: 1}); !reflect.DeepEqual(got, []effects.Part{blind}) {
 		t.Fatalf("a failed save lands the branch = %+v", got)
 	}
 	if got := h.Landed(effects.Situation{Saved: true}); got != nil {

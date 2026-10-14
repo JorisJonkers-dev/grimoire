@@ -3,7 +3,7 @@ package effects
 // Dispel ends every spell on the bearer when the Effect lands (Dispel Magic).
 type Dispel struct{}
 
-func (Dispel) isComponent() {}
+func (Dispel) isPart() {}
 
 // Kind is dispel.
 func (Dispel) Kind() string { return "dispel" }

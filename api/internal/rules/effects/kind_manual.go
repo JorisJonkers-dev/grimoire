@@ -6,7 +6,7 @@ type Manual struct {
 	Instruction string
 }
 
-func (Manual) isComponent() {}
+func (Manual) isPart() {}
 
 // Kind is manual.
 func (Manual) Kind() string { return "manual" }

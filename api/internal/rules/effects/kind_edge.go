@@ -21,7 +21,7 @@ type Edge struct {
 	SourceOnly bool
 }
 
-func (Edge) isComponent() {}
+func (Edge) isPart() {}
 
 // Kind is edge.
 func (Edge) Kind() string { return "edge" }

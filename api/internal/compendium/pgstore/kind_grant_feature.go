@@ -17,7 +17,7 @@ func (grantFeatureRows) insert(ctx context.Context, q *queries.Queries, at slot,
 	return q.InsertEffectGrant(ctx, queries.InsertEffectGrantParams{EffectID: at.effect, Ordinal: at.ordinal, Name: g.Name})
 }
 
-func (grantFeatureRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Component) error {
+func (grantFeatureRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Part) error {
 	rows, err := q.ListEffectGrants(ctx)
 	if err != nil {
 		return err

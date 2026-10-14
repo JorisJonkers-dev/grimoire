@@ -7,13 +7,13 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/effects"
 )
 
-// immobileRows stores nothing beyond the component row: the kind is the whole Part.
+// immobileRows stores nothing beyond the Part row: the kind is the whole Part.
 type immobileRows struct{}
 
 func (immobileRows) kind() string { return effects.Immobile{}.Kind() }
 
 func (immobileRows) insert(context.Context, *queries.Queries, slot, effects.Part) error { return nil }
 
-func (immobileRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Component) error {
+func (immobileRows) read(ctx context.Context, q *queries.Queries, into map[slot]effects.Part) error {
 	return bare(ctx, q, into, effects.Immobile{})
 }

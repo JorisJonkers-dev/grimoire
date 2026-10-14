@@ -9,7 +9,7 @@ type ForcedMove struct {
 	Toward bool
 }
 
-func (ForcedMove) isComponent() {}
+func (ForcedMove) isPart() {}
 
 // Kind is forced_move.
 func (ForcedMove) Kind() string { return "forced_move" }
