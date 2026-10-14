@@ -90,7 +90,7 @@ func TestAreaSpells(t *testing.T) {
 	t.Parallel()
 	fb, ok := srd().AreaOf("fireball")
 	if !ok || fb.Name != "Fireball" || fb.Area.Shape != hex.SphereArea || fb.Area.SizeFt != 20 || fb.Area.RangeFt != 150 || fb.Save != "dexterity" ||
-		fb.Damage.Dice != "8d6" || fb.Damage.Type != "fire" || !fb.Damage.Half || fb.Condition != "" || fb.Surface.Kind != surface.None || fb.Instructions != nil {
+		fb.Damage.Dice != "8d6" || fb.Damage.Type != "fire" || !reflect.DeepEqual(fb.Lands(effects.Outcome{Saved: true, Damage: 8}), []effects.Act{effects.Hurt{Amount: 4, Type: "fire"}}) || fb.Condition != "" || fb.Surface.Kind != surface.None || fb.Instructions != nil {
 		t.Fatalf("fireball = %+v", fb)
 	}
 	g, _ := srd().AreaOf("grease")

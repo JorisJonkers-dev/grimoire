@@ -13,10 +13,6 @@ DELETE FROM compendium.effect_components WHERE effect_id = @effect_id;
 -- name: InsertEffectComponent :exec
 INSERT INTO compendium.effect_components (effect_id, ordinal, kind, parent) VALUES (@effect_id, @ordinal, @kind, sqlc.narg(parent));
 
--- name: InsertEffectBonusDie :exec
-INSERT INTO compendium.effect_bonus_dice (effect_id, ordinal, dice, on_attacks, on_saves)
-VALUES (@effect_id, @ordinal, @dice, @on_attacks, @on_saves);
-
 -- name: InsertEffectEdge :exec
 INSERT INTO compendium.effect_edges (effect_id, ordinal, against, advantage, reach, source_only)
 VALUES (@effect_id, @ordinal, @against, @advantage, @reach, @source_only);
@@ -34,10 +30,6 @@ INSERT INTO compendium.effect_manual (effect_id, ordinal, instruction) VALUES (@
 INSERT INTO compendium.effect_areas (effect_id, ordinal, shape, size_ft, range_ft)
 VALUES (@effect_id, @ordinal, @shape, @size_ft, @range_ft);
 
--- name: InsertEffectSaveDamage :exec
-INSERT INTO compendium.effect_save_damage (effect_id, ordinal, ability, dice, damage_type, half)
-VALUES (@effect_id, @ordinal, @ability, @dice, @damage_type, @half);
-
 -- name: InsertEffectSaveCondition :exec
 INSERT INTO compendium.effect_save_conditions (effect_id, ordinal, ability, condition_slug)
 VALUES (@effect_id, @ordinal, @ability, @condition_slug);
@@ -50,9 +42,6 @@ SELECT id, slug, name, concentration, owner_kind, duration_kind, duration_amount
 
 -- name: ListEffectComponents :many
 SELECT effect_id, ordinal, kind, parent FROM compendium.effect_components ORDER BY effect_id, ordinal;
-
--- name: ListEffectBonusDice :many
-SELECT effect_id, ordinal, dice, on_attacks, on_saves FROM compendium.effect_bonus_dice;
 
 -- name: ListEffectEdges :many
 SELECT effect_id, ordinal, against, advantage, reach, source_only FROM compendium.effect_edges;
@@ -68,9 +57,6 @@ SELECT effect_id, ordinal, instruction FROM compendium.effect_manual;
 
 -- name: ListEffectAreas :many
 SELECT effect_id, ordinal, shape, size_ft, range_ft FROM compendium.effect_areas;
-
--- name: ListEffectSaveDamage :many
-SELECT effect_id, ordinal, ability, dice, damage_type, half FROM compendium.effect_save_damage;
 
 -- name: ListEffectSaveConditions :many
 SELECT effect_id, ordinal, ability, condition_slug FROM compendium.effect_save_conditions;
@@ -150,12 +136,6 @@ INSERT INTO compendium.effect_modes (effect_id, ordinal, name) VALUES (@effect_i
 
 -- name: ListEffectModes :many
 SELECT effect_id, ordinal, name FROM compendium.effect_modes;
-
--- name: InsertEffectBranch :exec
-INSERT INTO compendium.effect_branches (effect_id, ordinal, condition, n, creature_type) VALUES (@effect_id, @ordinal, @condition, @n, @creature_type);
-
--- name: ListEffectBranches :many
-SELECT effect_id, ordinal, condition, n, creature_type FROM compendium.effect_branches;
 
 -- name: ClearEffectScaling :exec
 DELETE FROM compendium.effect_scalings WHERE effect_id = @effect_id;

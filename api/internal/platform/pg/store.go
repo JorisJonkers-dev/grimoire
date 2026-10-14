@@ -72,7 +72,7 @@ func migrateDB(ctx context.Context, sqlDB *sql.DB, fsys fs.FS) error {
 	if err != nil {
 		return fmt.Errorf("pg: migrations dir: %w", err)
 	}
-	provider, err := goose.NewProvider(goose.DialectPostgres, sqlDB, sub)
+	provider, err := goose.NewProvider(goose.DialectPostgres, sqlDB, sub, goose.WithAllowOutofOrder(true))
 	if err != nil {
 		return fmt.Errorf("pg: migration provider: %w", err)
 	}

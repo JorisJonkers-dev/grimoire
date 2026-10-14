@@ -16,15 +16,6 @@ import (
 //sumtype:decl
 type Component interface{ isComponent() }
 
-// Roll is a kind of d20 roll a bonus die can join.
-type Roll int
-
-// Rolls.
-const (
-	AttackRolls Roll = iota
-	SavingThrows
-)
-
 // Range limits an advantage source by how far the attacker is from the bearer.
 type Range int
 
@@ -34,12 +25,6 @@ const (
 	WithinFive
 	BeyondFive
 )
-
-// BonusDie adds a die to the bearer's rolls of some kinds (Bless).
-type BonusDie struct {
-	On   []Roll
-	Dice string
-}
 
 // Edge gives advantage or disadvantage: on the bearer's own attacks, or on attacks against the bearer.
 // A SourceOnly edge against the bearer counts only for the Effect's source (Vex).
@@ -70,14 +55,6 @@ type Area struct {
 	Shape   hex.Shape
 	SizeFt  int
 	RangeFt int
-}
-
-// SaveDamage hurts every creature in the area; a successful save halves it with Half, or avoids it.
-type SaveDamage struct {
-	Ability string
-	Dice    string
-	Type    string
-	Half    bool
 }
 
 // SaveCondition puts a condition on every creature in the area that fails the save.
@@ -201,7 +178,6 @@ type Exhausting struct {
 	MaxLevel        int
 }
 
-func (BonusDie) isComponent()       {}
 func (Incapacitated) isComponent()  {}
 func (Immobile) isComponent()       {}
 func (SaveEdge) isComponent()       {}
@@ -224,7 +200,6 @@ func (ExtraDamage) isComponent()    {}
 func (MoveCost) isComponent()       {}
 func (Manual) isComponent()         {}
 func (Area) isComponent()           {}
-func (SaveDamage) isComponent()     {}
 func (SaveCondition) isComponent()  {}
 func (CreateSurface) isComponent()  {}
 
@@ -319,10 +294,9 @@ func (p *AttackProfile) attacking(d Definition, a Active) {
 	levels := a.levels()
 	for _, c := range d.Parts(a.Mode) {
 		switch c := c.(type) {
-		case BonusDie:
-			if slices.Contains(c.On, AttackRolls) {
-				p.AttackDice = append(p.AttackDice, c.Dice)
-				p.Notes = append(p.Notes, d.Name+": +"+c.Dice+" to hit")
+		case Part:
+			if f, ok := c.(AttackFolder); ok {
+				f.FoldAttacking(p, d.Name)
 			}
 		case Edge:
 			if !c.Against {
@@ -331,7 +305,7 @@ func (p *AttackProfile) attacking(d Definition, a Active) {
 		case Exhausting:
 			p.Penalty += c.D20PerLevel * levels
 			p.Notes = append(p.Notes, d.Name+" "+strconv.Itoa(levels)+": -"+strconv.Itoa(c.D20PerLevel*levels)+" to hit")
-		case ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, CritWithin, SpeedPenalty, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange, Choice, Branch, Summon, Form, Reveal, AreaSave, Light:
+		case ExtraDamage, MoveCost, Manual, Area, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, CritWithin, SpeedPenalty, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange, Choice, Summon, Form, Reveal, AreaSave, Light:
 		}
 	}
 }
@@ -354,7 +328,7 @@ func (p *AttackProfile) attacked(d Definition, a Active, bySource, withinFive bo
 				p.Crit = true
 				p.Notes = append(p.Notes, d.Name+": a hit from this close is a Critical Hit")
 			}
-		case BonusDie, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, Exhausting, SpeedPenalty, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange, Choice, Branch, Summon, Form, Reveal, AreaSave, Light:
+		case Part, MoveCost, Manual, Area, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, Exhausting, SpeedPenalty, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange, Choice, Summon, Form, Reveal, AreaSave, Light:
 		}
 	}
 }
@@ -378,17 +352,9 @@ func (p *AttackProfile) add(name string, e Edge) {
 	p.Disadvantages = append(p.Disadvantages, name+": disadvantage")
 }
 
-// SaveDice are the dice a creature's effects add to its saving throws.
+// SaveDice are the dice a creature's effects add to its saving throws, whatever the ability.
 func (cat Catalog) SaveDice(bearer []Active) []string {
-	var out []string
-	for _, a := range bearer {
-		for _, c := range cat[a.Slug].Parts(a.Mode) {
-			if b, ok := c.(BonusDie); ok && slices.Contains(b.On, SavingThrows) {
-				out = append(out, b.Dice)
-			}
-		}
-	}
-	return out
+	return cat.ForSave(bearer, "").Dice
 }
 
 // MoveMultiplier is what each foot of movement costs a creature: the steepest of its effects.
@@ -436,30 +402,39 @@ type SaveProfile struct {
 
 // ForSave folds the bearer's effects into one saving throw of an ability.
 func (cat Catalog) ForSave(bearer []Active, ability string) SaveProfile {
-	p := SaveProfile{Fails: false, Advantages: nil, Disadvantages: nil, Dice: cat.SaveDice(bearer), Penalty: 0}
+	p := SaveProfile{Fails: false, Advantages: nil, Disadvantages: nil, Dice: nil, Penalty: 0}
 	for _, a := range bearer {
 		d := cat[a.Slug]
 		for _, c := range d.Parts(a.Mode) {
-			switch c := c.(type) {
-			case SaveEdge:
-				if c.Ability != ability {
-					continue
-				}
-				switch c.Mode {
-				case SaveFails:
-					p.Fails = true
-				case SaveAdvantage:
-					p.Advantages = append(p.Advantages, d.Name+": advantage")
-				case SaveDisadvantage:
-					p.Disadvantages = append(p.Disadvantages, d.Name+": disadvantage")
-				}
-			case Exhausting:
-				p.Penalty += c.D20PerLevel * a.levels()
-			case BonusDie, Edge, ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, CritWithin, SpeedPenalty, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange, Choice, Branch, Summon, Form, Reveal, AreaSave, Light:
-			}
+			p.fold(d.Name, a, c, ability)
 		}
 	}
 	return p
+}
+
+// fold applies one component of an Effect on the bearer to a saving throw of an ability.
+func (p *SaveProfile) fold(name string, a Active, c Component, ability string) {
+	switch c := c.(type) {
+	case Part:
+		if f, ok := c.(SaveFolder); ok {
+			f.FoldSave(p, name, ability)
+		}
+	case SaveEdge:
+		if c.Ability != ability {
+			return
+		}
+		switch c.Mode {
+		case SaveFails:
+			p.Fails = true
+		case SaveAdvantage:
+			p.Advantages = append(p.Advantages, name+": advantage")
+		case SaveDisadvantage:
+			p.Disadvantages = append(p.Disadvantages, name+": disadvantage")
+		}
+	case Exhausting:
+		p.Penalty += c.D20PerLevel * a.levels()
+	case Edge, ExtraDamage, MoveCost, Manual, Area, SaveCondition, CreateSurface, Incapacitated, Immobile, CritWithin, SpeedPenalty, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange, Choice, Summon, Form, Reveal, AreaSave, Light:
+	}
 }
 
 // SpeedPenaltyFt is how many feet the bearer's effects take off its speed: exhaustion by level, plus
@@ -473,7 +448,7 @@ func (cat Catalog) SpeedPenaltyFt(bearer []Active) int {
 				ft += c.SpeedFtPerLevel * a.levels()
 			case SpeedPenalty:
 				worst = max(worst, c.Ft)
-			case BonusDie, Edge, ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, CritWithin, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange, Choice, Branch, Summon, Form, Reveal, AreaSave, Light:
+			case Part, Edge, ExtraDamage, MoveCost, Manual, Area, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, CritWithin, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange, Choice, Summon, Form, Reveal, AreaSave, Light:
 			}
 		}
 	}
@@ -540,8 +515,8 @@ func (cat Catalog) LandingOf(slug, mode string) Landing {
 			out.Form = &c
 		case ResourceChange:
 			out.Resources = append(out.Resources, c)
-		case BonusDie, Edge, ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge,
-			CritWithin, Exhausting, SpeedPenalty, Reacts, Teleport, ForcedMove, Counter, Choice, Branch, Summon, AreaSave, Light:
+		case Part, Edge, ExtraDamage, MoveCost, Manual, Area, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge,
+			CritWithin, Exhausting, SpeedPenalty, Reacts, Teleport, ForcedMove, Counter, Choice, Summon, AreaSave, Light:
 		}
 	}
 	return out
@@ -622,14 +597,38 @@ type AreaSpell struct {
 	Name         string
 	Area         Area
 	Save         string
-	Damage       SaveDamage
+	Damage       RollDamage
 	Condition    string
 	Surface      CreateSurface
 	Push         ForcedMove
 	Reveals      []string
 	Instructions []string
 	// Light is the light the spell sheds where it lands, zero for none.
-	Light Light
+	Light   Light
+	landers []Lander
+}
+
+// ask takes what a landing Part asks for into the area's plan, and keeps the Part to land later.
+func (a *AreaSpell) ask(l Lander) {
+	for _, act := range l.Asks() {
+		switch act := act.(type) {
+		case RollSave:
+			a.Save = act.Ability
+		case RollDamage:
+			a.Damage = act
+		case Hurt:
+		}
+	}
+	a.landers = append(a.landers, l)
+}
+
+// Lands is what the area's Parts do to one creature once its rolls are in.
+func (a AreaSpell) Lands(o Outcome) []Act {
+	var out []Act
+	for _, l := range a.landers {
+		out = append(out, l.Lands(o)...)
+	}
+	return out
 }
 
 // AreaOf finds a modelled area Effect.
@@ -642,8 +641,10 @@ func (cat Catalog) AreaOf(slug string) (AreaSpell, bool) {
 		switch c := c.(type) {
 		case Area:
 			out.Area, found = c, true
-		case SaveDamage:
-			out.Damage, out.Save = c, c.Ability
+		case Part:
+			if l, ok := c.(Lander); ok {
+				out.ask(l)
+			}
 		case SaveCondition:
 			out.Condition, out.Save = c.Slug, c.Ability
 		case CreateSurface:
@@ -658,7 +659,7 @@ func (cat Catalog) AreaOf(slug string) (AreaSpell, bool) {
 			out.Save = c.Ability
 		case Light:
 			out.Light = c
-		case BonusDie, Edge, ExtraDamage, MoveCost, Incapacitated, Immobile, SaveEdge, CritWithin, Exhausting, SpeedPenalty, Reacts, TempHP, Teleport, Dispel, Counter, GrantFeature, ResourceChange, Choice, Branch, Summon, Form:
+		case Edge, ExtraDamage, MoveCost, Incapacitated, Immobile, SaveEdge, CritWithin, Exhausting, SpeedPenalty, Reacts, TempHP, Teleport, Dispel, Counter, GrantFeature, ResourceChange, Choice, Summon, Form:
 		}
 	}
 	return out, known && found

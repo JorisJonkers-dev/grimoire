@@ -62,53 +62,6 @@ func (q *Queries) InsertEffectArea(ctx context.Context, arg InsertEffectAreaPara
 	return err
 }
 
-const insertEffectBonusDie = `-- name: InsertEffectBonusDie :exec
-INSERT INTO compendium.effect_bonus_dice (effect_id, ordinal, dice, on_attacks, on_saves)
-VALUES ($1, $2, $3, $4, $5)
-`
-
-type InsertEffectBonusDieParams struct {
-	EffectID  int64
-	Ordinal   int32
-	Dice      string
-	OnAttacks bool
-	OnSaves   bool
-}
-
-func (q *Queries) InsertEffectBonusDie(ctx context.Context, arg InsertEffectBonusDieParams) error {
-	_, err := q.db.Exec(ctx, insertEffectBonusDie,
-		arg.EffectID,
-		arg.Ordinal,
-		arg.Dice,
-		arg.OnAttacks,
-		arg.OnSaves,
-	)
-	return err
-}
-
-const insertEffectBranch = `-- name: InsertEffectBranch :exec
-INSERT INTO compendium.effect_branches (effect_id, ordinal, condition, n, creature_type) VALUES ($1, $2, $3, $4, $5)
-`
-
-type InsertEffectBranchParams struct {
-	EffectID     int64
-	Ordinal      int32
-	Condition    string
-	N            int32
-	CreatureType string
-}
-
-func (q *Queries) InsertEffectBranch(ctx context.Context, arg InsertEffectBranchParams) error {
-	_, err := q.db.Exec(ctx, insertEffectBranch,
-		arg.EffectID,
-		arg.Ordinal,
-		arg.Condition,
-		arg.N,
-		arg.CreatureType,
-	)
-	return err
-}
-
 const insertEffectComponent = `-- name: InsertEffectComponent :exec
 INSERT INTO compendium.effect_components (effect_id, ordinal, kind, parent) VALUES ($1, $2, $3, $4)
 `
@@ -406,32 +359,6 @@ func (q *Queries) InsertEffectSaveCondition(ctx context.Context, arg InsertEffec
 	return err
 }
 
-const insertEffectSaveDamage = `-- name: InsertEffectSaveDamage :exec
-INSERT INTO compendium.effect_save_damage (effect_id, ordinal, ability, dice, damage_type, half)
-VALUES ($1, $2, $3, $4, $5, $6)
-`
-
-type InsertEffectSaveDamageParams struct {
-	EffectID   int64
-	Ordinal    int32
-	Ability    string
-	Dice       string
-	DamageType string
-	Half       bool
-}
-
-func (q *Queries) InsertEffectSaveDamage(ctx context.Context, arg InsertEffectSaveDamageParams) error {
-	_, err := q.db.Exec(ctx, insertEffectSaveDamage,
-		arg.EffectID,
-		arg.Ordinal,
-		arg.Ability,
-		arg.Dice,
-		arg.DamageType,
-		arg.Half,
-	)
-	return err
-}
-
 const insertEffectSaveEdge = `-- name: InsertEffectSaveEdge :exec
 INSERT INTO compendium.effect_save_edges (effect_id, ordinal, ability, mode) VALUES ($1, $2, $3, $4)
 `
@@ -628,82 +555,6 @@ func (q *Queries) ListEffectAreas(ctx context.Context) ([]ListEffectAreasRow, er
 			&i.Shape,
 			&i.SizeFt,
 			&i.RangeFt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listEffectBonusDice = `-- name: ListEffectBonusDice :many
-SELECT effect_id, ordinal, dice, on_attacks, on_saves FROM compendium.effect_bonus_dice
-`
-
-type ListEffectBonusDiceRow struct {
-	EffectID  int64
-	Ordinal   int32
-	Dice      string
-	OnAttacks bool
-	OnSaves   bool
-}
-
-func (q *Queries) ListEffectBonusDice(ctx context.Context) ([]ListEffectBonusDiceRow, error) {
-	rows, err := q.db.Query(ctx, listEffectBonusDice)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []ListEffectBonusDiceRow{}
-	for rows.Next() {
-		var i ListEffectBonusDiceRow
-		if err := rows.Scan(
-			&i.EffectID,
-			&i.Ordinal,
-			&i.Dice,
-			&i.OnAttacks,
-			&i.OnSaves,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listEffectBranches = `-- name: ListEffectBranches :many
-SELECT effect_id, ordinal, condition, n, creature_type FROM compendium.effect_branches
-`
-
-type ListEffectBranchesRow struct {
-	EffectID     int64
-	Ordinal      int32
-	Condition    string
-	N            int32
-	CreatureType string
-}
-
-func (q *Queries) ListEffectBranches(ctx context.Context) ([]ListEffectBranchesRow, error) {
-	rows, err := q.db.Query(ctx, listEffectBranches)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []ListEffectBranchesRow{}
-	for rows.Next() {
-		var i ListEffectBranchesRow
-		if err := rows.Scan(
-			&i.EffectID,
-			&i.Ordinal,
-			&i.Condition,
-			&i.N,
-			&i.CreatureType,
 		); err != nil {
 			return nil, err
 		}
@@ -1275,46 +1126,6 @@ func (q *Queries) ListEffectSaveConditions(ctx context.Context) ([]ListEffectSav
 			&i.Ordinal,
 			&i.Ability,
 			&i.ConditionSlug,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listEffectSaveDamage = `-- name: ListEffectSaveDamage :many
-SELECT effect_id, ordinal, ability, dice, damage_type, half FROM compendium.effect_save_damage
-`
-
-type ListEffectSaveDamageRow struct {
-	EffectID   int64
-	Ordinal    int32
-	Ability    string
-	Dice       string
-	DamageType string
-	Half       bool
-}
-
-func (q *Queries) ListEffectSaveDamage(ctx context.Context) ([]ListEffectSaveDamageRow, error) {
-	rows, err := q.db.Query(ctx, listEffectSaveDamage)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []ListEffectSaveDamageRow{}
-	for rows.Next() {
-		var i ListEffectSaveDamageRow
-		if err := rows.Scan(
-			&i.EffectID,
-			&i.Ordinal,
-			&i.Ability,
-			&i.Dice,
-			&i.DamageType,
-			&i.Half,
 		); err != nil {
 			return nil, err
 		}

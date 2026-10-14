@@ -810,6 +810,10 @@ type CompendiumEffectGrant struct {
 	Name     string
 }
 
+type CompendiumEffectKind struct {
+	Slug string
+}
+
 type CompendiumEffectManual struct {
 	EffectID    int64
 	Ordinal     int32
