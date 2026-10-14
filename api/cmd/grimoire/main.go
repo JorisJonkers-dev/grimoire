@@ -20,6 +20,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/db"
 	campaignapp "github.com/JorisJonkers-dev/grimoire/api/internal/campaign/app"
 	campaignpg "github.com/JorisJonkers-dev/grimoire/api/internal/campaign/pgstore"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium/corrections"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium/crosscheck"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium/open5e"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium/pgstore"
@@ -76,6 +77,8 @@ func run(args []string, logger *slog.Logger) error {
 		return writeSnapshot(ctx, args[1:])
 	case "crosscheck":
 		return crossCheck(ctx, args[1:])
+	case "upstream-reports":
+		return upstreamReports()
 	}
 	cfg, err := config.Load(os.Getenv)
 	if err != nil {
@@ -89,20 +92,44 @@ func run(args []string, logger *slog.Logger) error {
 	case "serve":
 		return serve(ctx, cfg, logger)
 	default:
-		return fmt.Errorf("unknown command %q (want serve, migrate, import, snapshot or crosscheck)", cmd)
+		return fmt.Errorf("unknown command %q (want serve, migrate, import, snapshot, crosscheck or upstream-reports)", cmd)
 	}
 }
 
-// writeSnapshot refreshes the pinned compendium snapshot from Open5e.
+// correctionsDir holds one correction file per corrected entry; commands that read it run from api/.
+const correctionsDir = "db/seeds/corrections"
+
+// writeSnapshot refreshes the pinned compendium snapshot from Open5e, applies the correction files and
+// reports what changed against the snapshot this binary embeds.
 func writeSnapshot(ctx context.Context, args []string) error {
 	out := "db/seeds/" + snapshot.File
 	if len(args) > 0 {
 		out = args[0]
 	}
-	client := open5e.Client{BaseURL: "https://api.open5e.com", HTTP: &http.Client{Timeout: 90 * time.Second}, Backoff: 5 * time.Second}
-	snap, err := client.Fetch(ctx)
+	fixes, err := loadCorrections()
 	if err != nil {
 		return err
+	}
+	previous, _, err := snapshot.Load(seeds())
+	if err != nil {
+		return err
+	}
+	client := open5e.Client{BaseURL: "https://api.open5e.com", HTTP: &http.Client{Timeout: 90 * time.Second}, Backoff: 5 * time.Second}
+	fetched, err := client.Fetch(ctx)
+	if err != nil {
+		return err
+	}
+	snap, warnings, err := corrections.Apply(fetched, fixes)
+	if err != nil {
+		return err
+	}
+	changes, err := snapshot.Compare(previous, snap)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("%sApplied %d correction files.\n", changes.Text(), len(fixes))
+	for _, w := range warnings {
+		fmt.Printf("warning: %s/%s: %s\n", correctionsDir, w.File, w.Message)
 	}
 	raw, err := json.Marshal(snap)
 	if err != nil {
@@ -117,6 +144,24 @@ func writeSnapshot(ctx context.Context, args []string) error {
 		return err
 	}
 	return os.WriteFile(out, buf.Bytes(), 0o600) //nolint:gosec // developer command writing where the developer points it
+}
+
+// upstreamReports prints the drafted upstream reports nobody filed yet; the maintainer files them by hand.
+func upstreamReports() error {
+	fixes, err := loadCorrections()
+	if err != nil {
+		return err
+	}
+	_, err = fmt.Print(corrections.Unfiled(fixes))
+	return err
+}
+
+// loadCorrections refuses to run outside api/, where a missing directory would read as no corrections.
+func loadCorrections() ([]corrections.Correction, error) {
+	if _, err := os.Stat("db/seeds"); err != nil {
+		return nil, fmt.Errorf("run from api/, where the correction files are: %w", err)
+	}
+	return corrections.Load(os.DirFS(correctionsDir))
 }
 
 func crossCheck(ctx context.Context, args []string) error {

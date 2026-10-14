@@ -163,6 +163,16 @@ tasks:
       - pnpm --filter @grimoire/web exec playwright install chromium
       - pnpm --filter @grimoire/web e2e
 
+  snapshot:
+    desc: Refresh the compendium snapshot from Open5e, apply the correction files and report what changed (path after --, else the seed)
+    dir: api
+    cmd: go run ./cmd/grimoire snapshot {{.CLI_ARGS}}
+
+  upstream:reports:
+    desc: List the correction files whose upstream report is not filed yet, with the drafted text
+    dir: api
+    cmd: go run ./cmd/grimoire upstream-reports
+
   secrets:
     desc: Scan the working tree for secrets
     cmd: gitleaks dir --no-banner --redact .

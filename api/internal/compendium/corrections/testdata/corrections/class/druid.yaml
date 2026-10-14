@@ -1,0 +1,11 @@
+entry: druid
+document: srd-2024
+source:
+  document: SRD 5.2.1
+  page: 66
+fields:
+  - field: features[slug=natures-ward].description
+    value: Fixture feature text.
+upstream:
+  title: "Druid (srd-2024): Nature's Ward text"
+  body: Fixture.

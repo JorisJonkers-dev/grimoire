@@ -1,0 +1,12 @@
+entry: black-pudding
+document: srd-2024
+source:
+  document: SRD 5.2.1
+  page: 255
+fields:
+  - field: actions[name=Parry].name
+    value: Split
+upstream:
+  title: "Black Pudding (srd-2024): reaction named Parry"
+  body: Fixture.
+  filed: https://example.org/issues/1

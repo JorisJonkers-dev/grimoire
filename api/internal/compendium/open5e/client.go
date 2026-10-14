@@ -54,33 +54,41 @@ type ref struct {
 }
 
 type apiSpell struct {
-	Key               string   `json:"key"`
-	Document          ref      `json:"document"`
-	Name              string   `json:"name"`
-	Desc              string   `json:"desc"`
-	Level             int      `json:"level"`
-	HigherLevel       string   `json:"higher_level"`
-	School            ref      `json:"school"`
-	Classes           []ref    `json:"classes"`
-	RangeText         string   `json:"range_text"`
-	Range             *float64 `json:"range"`
-	RangeUnit         string   `json:"range_unit"`
-	Ritual            bool     `json:"ritual"`
-	CastingTime       string   `json:"casting_time"`
-	Verbal            bool     `json:"verbal"`
-	Somatic           bool     `json:"somatic"`
-	Material          bool     `json:"material"`
-	MaterialSpecified string   `json:"material_specified"`
-	SavingThrow       string   `json:"saving_throw_ability"`
-	AttackRoll        bool     `json:"attack_roll"`
-	DamageRoll        string   `json:"damage_roll"`
-	DamageTypes       []string `json:"damage_types"`
-	Duration          string   `json:"duration"`
-	Concentration     bool     `json:"concentration"`
-	CastingOptions    []struct {
-		Type       string  `json:"type"`
-		DamageRoll *string `json:"damage_roll"`
-	} `json:"casting_options"`
+	Key               string             `json:"key"`
+	Document          ref                `json:"document"`
+	Name              string             `json:"name"`
+	Desc              string             `json:"desc"`
+	Level             int                `json:"level"`
+	HigherLevel       string             `json:"higher_level"`
+	School            ref                `json:"school"`
+	Classes           []ref              `json:"classes"`
+	RangeText         string             `json:"range_text"`
+	Range             *float64           `json:"range"`
+	RangeUnit         string             `json:"range_unit"`
+	Ritual            bool               `json:"ritual"`
+	CastingTime       string             `json:"casting_time"`
+	Verbal            bool               `json:"verbal"`
+	Somatic           bool               `json:"somatic"`
+	Material          bool               `json:"material"`
+	MaterialSpecified string             `json:"material_specified"`
+	SavingThrow       string             `json:"saving_throw_ability"`
+	AttackRoll        bool               `json:"attack_roll"`
+	DamageRoll        string             `json:"damage_roll"`
+	DamageTypes       []string           `json:"damage_types"`
+	Duration          string             `json:"duration"`
+	Concentration     bool               `json:"concentration"`
+	CastingOptions    []apiCastingOption `json:"casting_options"`
+}
+
+type apiCastingOption struct {
+	Type          string  `json:"type"`
+	DamageRoll    *string `json:"damage_roll"`
+	TargetCount   *int    `json:"target_count"`
+	Duration      *string `json:"duration"`
+	ShapeSize     *int    `json:"shape_size"`
+	Concentration *bool   `json:"concentration"`
+	Range         *string `json:"range"`
+	Desc          *string `json:"desc"`
 }
 
 type apiCondition struct {
@@ -195,7 +203,7 @@ func mapSpell(s apiSpell) snapshot.Spell {
 		MaterialText: strings.TrimSpace(s.MaterialSpecified), Ritual: s.Ritual, Concentration: s.Concentration,
 		Duration: s.Duration, Description: strings.TrimSpace(s.Desc), HigherLevel: strings.TrimSpace(s.HigherLevel),
 		SaveAbility: s.SavingThrow, AttackRoll: s.AttackRoll, DamageRoll: s.DamageRoll,
-		Classes: []string{}, DamageTypes: []string{}, Scaling: []snapshot.Scaling{},
+		Classes: []string{}, DamageTypes: []string{}, Scaling: []snapshot.Scaling{}, CastingOptions: castingOptions(s.CastingOptions),
 	}
 	if s.Range != nil && s.RangeUnit == "feet" {
 		feet := int(*s.Range)
@@ -212,6 +220,28 @@ func mapSpell(s apiSpell) snapshot.Spell {
 		}
 	}
 	return sp
+}
+
+func castingOptions(in []apiCastingOption) []snapshot.CastingOption {
+	var out []snapshot.CastingOption
+	for _, o := range in {
+		kind, level, ok := scalingKind(o.Type)
+		opt := snapshot.CastingOption{
+			Kind: kind, Level: level, DamageRoll: text(o.DamageRoll), TargetCount: o.TargetCount, Duration: text(o.Duration),
+			ShapeSize: o.ShapeSize, Concentration: o.Concentration, Range: text(o.Range), Description: text(o.Desc),
+		}
+		if ok && opt != (snapshot.CastingOption{Kind: kind, Level: level}) {
+			out = append(out, opt)
+		}
+	}
+	return out
+}
+
+func text(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return strings.TrimSpace(*s)
 }
 
 func scalingKind(t string) (string, int, bool) {

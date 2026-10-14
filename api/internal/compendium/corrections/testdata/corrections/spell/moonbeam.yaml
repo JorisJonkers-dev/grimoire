@@ -1,0 +1,13 @@
+entry: moonbeam
+document: srd-2024
+source:
+  document: SRD 5.2.1
+  page: 150
+fields:
+  - field: description
+    value: |
+      Fixture: the whole description, as the SRD prints it.
+upstream:
+  title: "Moonbeam (srd-2024): description cut short"
+  body: |
+    Fixture: the srd-2024 Moonbeam description stops mid-sentence.
