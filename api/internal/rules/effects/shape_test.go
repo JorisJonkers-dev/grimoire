@@ -333,3 +333,112 @@ func TestRulesText(t *testing.T) {
 		t.Errorf("an empty Effect reads %v", got)
 	}
 }
+
+// Where each area and structural kind is read: an area reads only the Effect's own Parts, the later
+// of two settings wins and reveals and instructions add up; a chosen mode counts for landing and for
+// the DM's instructions, and holds choices and branches of its own; Parts beneath a branch count only
+// once it lands, and a Manual Part anywhere makes the Effect partial.
+func TestWhereEachStructuralKindIsRead(t *testing.T) {
+	t.Parallel()
+	inMode := []effects.Component{
+		effects.Area{Shape: hex.LineArea, SizeFt: 60},
+		effects.AreaSave{Ability: "charisma"},
+		effects.SaveCondition{Ability: "wisdom", Slug: "charmed"},
+		effects.CreateSurface{Kind: surface.Grease, Rounds: 2},
+		effects.ForcedMove{Ft: 20, Toward: true},
+		effects.Light{BrightFt: 40, DimFt: 40},
+		effects.Reveal{Qualities: []string{"secret"}},
+		effects.Manual{Instruction: "Sing."},
+		effects.Form{Monster: "bear", TempHP: 0},
+		effects.Summon{Monster: "bat", Count: 1},
+		effects.Choice{Modes: []effects.Mode{{Name: "Grim", Components: []effects.Component{effects.Manual{Instruction: "Deeper."}}}}},
+		effects.Branch{When: effects.Condition{Kind: effects.FirstEachTurn}, Then: []effects.Component{effects.SaveCondition{Ability: "dexterity", Slug: "prone"}}},
+	}
+	beneath := []effects.Component{effects.Reveal{Qualities: []string{"hidden"}}, effects.Manual{Instruction: "Later."}, effects.Form{Monster: "owl"}, effects.Summon{Monster: "rat", Count: 2}}
+	cat := effects.Catalog{"storm": {Name: "Storm", Components: []effects.Component{
+		effects.Area{Shape: hex.SphereArea, SizeFt: 10, RangeFt: 60},
+		effects.AreaSave{Ability: "strength"},
+		effects.SaveCondition{Ability: "constitution", Slug: "stunned"},
+		effects.CreateSurface{Kind: surface.Grease, Rounds: 1},
+		effects.ForcedMove{Ft: 5},
+		effects.Light{BrightFt: 10, DimFt: 10},
+		effects.Reveal{Qualities: []string{"invisible"}},
+		effects.Manual{Instruction: "Thunder."},
+		effects.Area{Shape: hex.CubeArea, SizeFt: 20, RangeFt: 90},
+		effects.AreaSave{Ability: "dexterity"},
+		effects.CreateSurface{Kind: surface.Grease, Rounds: 3},
+		effects.ForcedMove{Ft: 15},
+		effects.Light{BrightFt: 20, DimFt: 30},
+		effects.Reveal{Qualities: []string{"hidden", "disguised"}},
+		effects.Manual{Instruction: "Rain."},
+		effects.Form{Monster: "wolf", TempHP: 3},
+		effects.Form{Monster: "hawk", TempHP: 1},
+		effects.Summon{Monster: "owl", Count: 1, Shares: true},
+		effects.Summon{Monster: "cat", Count: 1},
+		effects.Choice{Modes: []effects.Mode{{Name: "Grim", Components: inMode}, {Name: "Calm", Components: nil}}},
+		effects.Choice{Modes: []effects.Mode{{Name: "Loud", Components: []effects.Component{effects.Dispel{}}}}},
+		effects.Branch{When: effects.Condition{Kind: effects.FailsBy, N: 1}, Then: beneath},
+	}}}
+
+	a, ok := cat.AreaOf("storm")
+	want := effects.AreaSpell{
+		Name: "Storm", Area: effects.Area{Shape: hex.CubeArea, SizeFt: 20, RangeFt: 90}, Save: "dexterity", Condition: "stunned",
+		Surface: effects.CreateSurface{Kind: surface.Grease, Rounds: 3}, Push: effects.ForcedMove{Ft: 15},
+		Reveals: []string{"invisible", "hidden", "disguised"}, Instructions: []string{"Thunder.", "Rain."}, Light: effects.Light{BrightFt: 20, DimFt: 30},
+	}
+	if !ok || a.Name != want.Name || a.Area != want.Area || a.Save != want.Save || a.Condition != want.Condition || a.Surface != want.Surface ||
+		a.Push != want.Push || !reflect.DeepEqual(a.Reveals, want.Reveals) || !reflect.DeepEqual(a.Instructions, want.Instructions) || a.Light != want.Light || a.Damage != (effects.RollDamage{}) {
+		t.Errorf("the area reads its own Parts, the later winning = %+v", a)
+	}
+	if a.Lands(effects.Outcome{Saved: false, Damage: 9}) != nil {
+		t.Errorf("none of them hurts = %+v", a.Lands(effects.Outcome{Damage: 9}))
+	}
+	order := effects.Catalog{"order": {Components: []effects.Component{effects.SaveCondition{Ability: "wisdom", Slug: "frightened"}, effects.AreaSave{Ability: "strength"}, effects.Area{Shape: hex.SphereArea, SizeFt: 5}}}}
+	if o, _ := order.AreaOf("order"); o.Save != "strength" || o.Condition != "frightened" {
+		t.Errorf("a later save sets the ability, and the condition stays = %+v", o)
+	}
+	if _, ok := (effects.Catalog{"bare": {Components: []effects.Component{effects.AreaSave{Ability: "wisdom"}, effects.Light{BrightFt: 5}}}}).AreaOf("bare"); ok {
+		t.Error("an Effect without an area is no area spell")
+	}
+
+	if got := cat["storm"].Modes(); !reflect.DeepEqual(got, []string{"Grim", "Calm", "Loud"}) {
+		t.Errorf("modes of every choice, in order = %v", got)
+	}
+	grim := cat["storm"].Parts("Grim")
+	if len(grim) != 30 || !reflect.DeepEqual(grim[19:], append(inMode[:10:10], effects.Manual{Instruction: "Deeper."})) {
+		t.Errorf("the chosen mode, with its own choice in the same mode, and no branch = %+v", grim[19:])
+	}
+	if got := cat["storm"].Parts("Calm"); len(got) != 19 {
+		t.Errorf("an empty mode adds nothing = %d", len(got))
+	}
+	land := cat.LandingOf("storm", "Grim")
+	if !reflect.DeepEqual(land.Reveals, []string{"invisible", "hidden", "disguised", "secret"}) || land.Form == nil || *land.Form != (effects.Form{Monster: "bear"}) {
+		t.Errorf("a chosen mode lands its reveal and the last form = %+v", land)
+	}
+	if l := cat.LandingOf("storm", ""); l.Form == nil || *l.Form != (effects.Form{Monster: "hawk", TempHP: 1}) || l.TempHP != 0 {
+		t.Errorf("the Effect's own last form = %+v", l)
+	}
+	if got := cat.Instructions("storm", "Storm", "Grim"); !reflect.DeepEqual(got, []string{"Thunder.", "Rain.", "Sing.", "Deeper."}) {
+		t.Errorf("instructions of the Effect and its chosen mode, not its branch = %v", got)
+	}
+	if s, ok := cat.SummonOf("storm"); !ok || s != (effects.Summon{Monster: "owl", Count: 1, Shares: true}) {
+		t.Errorf("the first summon of the Effect's own Parts = %+v", s)
+	}
+	if _, ok := (effects.Catalog{"deep": {Components: []effects.Component{effects.Choice{Modes: []effects.Mode{{Name: "A", Components: []effects.Component{effects.Summon{Monster: "rat"}}}}}, effects.Branch{Then: beneath}}}}).SummonOf("deep"); ok {
+		t.Error("a summon in a mode or a branch is not the Effect's own")
+	}
+	lands := cat["storm"].Branches("Grim", effects.Situation{Saved: false, Margin: 2, First: true})
+	if !reflect.DeepEqual(lands, append([]effects.Component{effects.SaveCondition{Ability: "dexterity", Slug: "prone"}}, beneath...)) {
+		t.Errorf("what lands, in the order the Parts come = %+v", lands)
+	}
+	if got := cat["storm"].Branches("Calm", effects.Situation{Saved: true}); got != nil {
+		t.Errorf("a save keeps the branch off = %+v", got)
+	}
+	automated := effects.Definition{Components: []effects.Component{effects.Choice{Modes: []effects.Mode{{Name: "A", Components: []effects.Component{effects.Reveal{}, effects.Form{}}}}}, effects.Branch{Then: []effects.Component{effects.Summon{}}}}}
+	if !automated.Automated() || cat["storm"].Automated() {
+		t.Error("only a Manual Part, wherever it sits, makes an Effect partial")
+	}
+	if (effects.Definition{Components: []effects.Component{effects.Choice{Modes: []effects.Mode{{Name: "A", Components: []effects.Component{effects.Choice{Modes: []effects.Mode{{Name: "B", Components: []effects.Component{effects.Manual{}}}}}}}}}}}).Automated() {
+		t.Error("a Manual Part in a mode within a mode")
+	}
+}
