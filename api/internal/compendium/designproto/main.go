@@ -40,6 +40,13 @@ type design struct {
 	Legendary  map[string]any `yaml:"legendary,omitempty" json:"legendary,omitempty"`
 	AppliesTo  []applies      `yaml:"applies_to,omitempty" json:"appliesTo,omitempty"`
 	Effects    []effect       `yaml:"effects" json:"effects"`
+	SetAside   []setAside     `yaml:"set_aside,omitempty" json:"setAside,omitempty"`
+}
+
+// setAside is a fact of the SRD text the file deliberately does not model, with the reason.
+type setAside struct {
+	Fact   string `yaml:"fact" json:"fact"`
+	Reason string `yaml:"reason" json:"reason"`
 }
 
 type applies struct {
@@ -93,6 +100,7 @@ type srd struct{ Title, Text string }
 type page struct {
 	Path, YAML, JSON string
 	Problems         []string
+	Missing, Matched []string
 	Facts            []string
 	SRD              []srd
 }
@@ -326,6 +334,42 @@ func main() {
 		}
 	}
 
+	for i := range pages {
+		x, ok := files[strings.TrimSuffix(pages[i].Path, ".yaml")]
+		if !ok || strings.HasPrefix(pages[i].Path, "traits/") {
+			continue
+		}
+		var text strings.Builder
+		for _, t := range pages[i].SRD {
+			text.WriteString(t.Text + "\n")
+		}
+		have := tokens(x, files)
+		aside := map[string]bool{}
+		for _, a := range x.SetAside {
+			aside[a.Fact] = true
+			if a.Reason == "" {
+				pages[i].Problems = append(pages[i].Problems, "set aside "+a.Fact+" without a reason")
+			}
+		}
+		for _, f := range facts(text.String()) {
+			switch {
+			case have[f]:
+				pages[i].Matched = append(pages[i].Matched, f)
+			case aside[f]:
+				pages[i].Matched = append(pages[i].Matched, f+" (set aside)")
+			default:
+				pages[i].Missing = append(pages[i].Missing, f)
+			}
+		}
+		if len(pages[i].Missing) > 0 && x.Automation == "full" {
+			pages[i].Problems = append(pages[i].Problems, "the SRD text says "+strings.Join(pages[i].Missing, ", ")+"; the file models none of it")
+		}
+	}
+	if len(os.Args) > 1 && os.Args[1] == "spells" {
+		volume(s)
+		return
+	}
+
 	sort.Slice(pages, func(i, j int) bool { return pages[i].Path < pages[j].Path })
 	problems := 0
 	for _, p := range pages {
@@ -335,6 +379,7 @@ func main() {
 			problems += len(p.Problems)
 		}
 		fmt.Printf("%-40s %s %s\n", p.Path, strings.Join(p.Facts, ", "), status)
+		fmt.Printf("%-40s   matched: %s\n", "", strings.Join(p.Matched, ", "))
 	}
 	fmt.Printf("%d files, %d problems\n", len(pages), problems)
 	out, err := os.Create("../docs/prototypes/design-files.html")
@@ -388,7 +433,141 @@ body.json .yaml,body:not(.json) .json{display:none}
 <span style="flex:1"></span>{{range .}}<a href="#{{.Path}}">{{.Path}}</a>{{end}}</nav>
 {{range .}}<section id="{{.Path}}"><div class="head"><h2>{{.Path}}</h2>
 {{if .Problems}}<span class="bad">{{len .Problems}} problem(s)</span>{{else}}<span class="ok">checks pass</span>{{end}}</div>
-{{range .Facts}}<p class="dim">{{.}}</p>{{end}}{{range .Problems}}<p class="bad">{{.}}</p>{{end}}
+{{range .Facts}}<p class="dim">{{.}}</p>{{end}}{{if .Matched}}<p class="dim">Text facts modelled: {{range .Matched}}<span class="ok">{{.}}</span> · {{end}}</p>{{end}}{{range .Problems}}<p class="bad">{{.}}</p>{{end}}
 <div class="cols"><div><h3>Design file</h3><pre class="yaml">{{.YAML}}</pre><pre class="json">{{.JSON}}</pre></div>
 <div><h3>Seed text</h3>{{range .SRD}}{{if .Text}}<p><strong>{{.Title}}.</strong> {{.Text}}</p>{{end}}{{end}}</div></div></section>{{end}}
 </main></body></html>`
+
+var (
+	diceRe     = regexp.MustCompile(`\b(\d+d\d+)\b`)
+	distanceRe = regexp.MustCompile(`\b(\d+)[- ](?:foot|feet)\b`)
+	timeRe     = regexp.MustCompile(`\b(\d+) (minute|hour|round|day)s?\b`)
+	dcRe       = regexp.MustCompile(`\bDC (\d+)\b`)
+	wordRe     = regexp.MustCompile(`(?i)\b(strength|dexterity|constitution|intelligence|wisdom|charisma|` +
+		`blinded|charmed|deafened|exhaustion|frightened|grappled|incapacitated|invisible|paralyzed|petrified|poisoned|prone|restrained|stunned|unconscious|` +
+		`acid|bludgeoning|cold|fire|force|lightning|necrotic|piercing|poison|psychic|radiant|slashing|thunder|` +
+		`advantage|disadvantage|half|halved|resistance|immunity|vulnerability|once per turn|temporary hit points)\b`)
+)
+
+// facts are the rules facts a mechanical reader finds in SRD text: dice, distances, times, DCs, and
+// the words for abilities, conditions, damage types and roll rules.
+func facts(text string) []string {
+	seen := map[string]bool{}
+	var out []string
+	add := func(f string) {
+		if !seen[f] {
+			seen[f] = true
+			out = append(out, f)
+		}
+	}
+	for _, m := range diceRe.FindAllStringSubmatch(text, -1) {
+		add(m[1])
+	}
+	for _, m := range distanceRe.FindAllStringSubmatch(text, -1) {
+		add(m[1] + " ft")
+	}
+	for _, m := range timeRe.FindAllStringSubmatch(text, -1) {
+		add(m[1] + " " + m[2])
+	}
+	for _, m := range dcRe.FindAllStringSubmatch(text, -1) {
+		add("DC " + m[1])
+	}
+	for _, m := range wordRe.FindAllString(text, -1) {
+		w := strings.ToLower(m)
+		if w == "halved" {
+			w = "half"
+		}
+		add(w)
+	}
+	return out
+}
+
+// tokens are the facts a Design file states, written the way facts are, including the files it uses.
+func tokens(x design, files map[string]design) map[string]bool {
+	have := map[string]bool{}
+	var visit func(key string, v any)
+	visit = func(key string, v any) {
+		switch v := v.(type) {
+		case map[string]any:
+			for k, inner := range v {
+				visit(k, inner)
+			}
+		case []any:
+			for _, inner := range v {
+				visit(key, inner)
+			}
+		case []map[string]any:
+			for _, inner := range v {
+				visit(key, inner)
+			}
+		case bool:
+			if v {
+				have[key] = true
+			}
+		case int:
+			n := strconv.Itoa(v)
+			have[n+" ft"] = strings.HasSuffix(key, "_ft") || have[n+" ft"]
+			have["DC "+n] = key == "dc" || key == "save_dc" || have["DC "+n]
+			for _, unit := range []string{"minute", "hour", "round", "day"} {
+				if key == unit+"s" {
+					have[n+" "+unit] = true
+				}
+			}
+		case string:
+			low := strings.ToLower(v)
+			for _, f := range facts(v) {
+				have[f] = true
+			}
+			have[low] = true
+		}
+	}
+	for _, e := range x.Effects {
+		if e.Use != "" {
+			for k, v := range tokens(files[e.Use], files) {
+				have[k] = have[k] || v
+			}
+		}
+		visit("activation", e.Activation)
+		for _, p := range e.Parts {
+			visit("part", p)
+		}
+		for _, p := range e.OnHit {
+			visit("part", p)
+		}
+		for _, sc := range e.Scaling {
+			visit("scaling", sc)
+		}
+		if e.Attack != "" {
+			have["attack"] = true
+		}
+	}
+	return have
+}
+
+// volume prints how many facts the reader finds in every SRD 5.2 spell, to judge the burden.
+func volume(s seed) {
+	counts := map[int]int{}
+	total, most, mostName := 0, 0, ""
+	n := 0
+	for _, sp := range s.Spells {
+		if sp.Document != doc {
+			continue
+		}
+		f := facts(sp.Description + "\n" + sp.HigherLevel)
+		counts[len(f)/5*5]++
+		total += len(f)
+		n++
+		if len(f) > most {
+			most, mostName = len(f), sp.Slug
+		}
+	}
+	fmt.Printf("%d spells, %d facts, %.1f per spell, most %d (%s)\n", n, total, float64(total)/float64(n), most, mostName)
+	var keys []int
+	for k := range counts {
+		keys = append(keys, k)
+	}
+	sort.Ints(keys)
+	for _, k := range keys {
+		fmt.Printf("  %2d-%2d facts: %d spells\n", k, k+4, counts[k])
+	}
+}

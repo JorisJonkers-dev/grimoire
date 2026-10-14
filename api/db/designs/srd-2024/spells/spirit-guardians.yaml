@@ -1,0 +1,26 @@
+# As seeded today (migrations 00069, 00071): passes as full, yet omits the halved Speed, the
+# Necrotic option, the designated creatures and the once-per-turn limit.
+entry: spells/spirit-guardians
+name: Spirit Guardians
+automation: full
+pattern: lasting-area-saves
+effects:
+  - activation:
+      cost: action
+      components: [verbal, somatic, material]
+      targeting: {pick: self}
+      duration: {minutes: 10}
+      concentration: true
+    parts:
+      - kind: area
+        shape: emanation
+        size_ft: 15
+      - kind: save_damage
+        ability: wisdom
+        dice: 3d8
+        damage_type: radiant
+        half: true
+    scaling:
+      - per: slot_level
+        above: 3
+        grows: {part: save_damage, field: dice, by: 1d8}

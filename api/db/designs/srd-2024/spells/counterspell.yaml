@@ -1,0 +1,14 @@
+# As seeded today (migration 00069): passes as full, yet omits the Constitution save.
+entry: spells/counterspell
+name: Counterspell
+automation: full
+pattern: counter
+effects:
+  - activation:
+      cost: reaction
+      components: [somatic]
+      targeting: {pick: creatures, count: 1, range_ft: 60}
+      duration: instant
+    parts:
+      - kind: counter
+        range_ft: 60

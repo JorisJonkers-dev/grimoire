@@ -16,10 +16,10 @@ body.json .yaml,body:not(.json) .json{display:none}
 <h1>Design files, read back against the SRD text</h1>
 <p class="dim" style="max-width:920px">The question: what does one Design file look like for a spell, a Feature, a monster and an item, and where does it live? Each file below is shown as written, next to the seed text it automates, with what a reader checked: that the file's path names a real entry, that every action and trait of a stat block is accounted for, that an item file reaches real seed items, that a Note states its reason, and that a full entry holds no Manual Effect. Fields inside a Part are illustrative.</p>
 <nav><span class="dim">Show files as</span><button id="y" class="on" onclick="document.body.classList.remove('json');y.classList.add('on');j.classList.remove('on')">YAML</button><button id="j" onclick="document.body.classList.add('json');j.classList.add('on');y.classList.remove('on')">JSON</button>
-<span style="flex:1"></span><a href="#feats%2falert.yaml">feats/alert.yaml</a><a href="#features%2fbarbarian%2frage.yaml">features/barbarian/rage.yaml</a><a href="#features%2frogue%2fsneak-attack.yaml">features/rogue/sneak-attack.yaml</a><a href="#items%2fflame-tongue.yaml">items/flame-tongue.yaml</a><a href="#items%2fpotion-of-healing.yaml">items/potion-of-healing.yaml</a><a href="#items%2fring-of-protection.yaml">items/ring-of-protection.yaml</a><a href="#items%2fweapon-plus.yaml">items/weapon-plus.yaml</a><a href="#monsters%2fadult-red-dragon.yaml">monsters/adult-red-dragon.yaml</a><a href="#monsters%2fwolf.yaml">monsters/wolf.yaml</a><a href="#species%2fdwarf%2fdarkvision.yaml">species/dwarf/darkvision.yaml</a><a href="#spells%2fbless.yaml">spells/bless.yaml</a><a href="#spells%2fcommune.yaml">spells/commune.yaml</a><a href="#spells%2fcure-wounds.yaml">spells/cure-wounds.yaml</a><a href="#spells%2ffireball.yaml">spells/fireball.yaml</a><a href="#spells%2fhold-person.yaml">spells/hold-person.yaml</a><a href="#spells%2fprestidigitation.yaml">spells/prestidigitation.yaml</a><a href="#traits%2flegendary-resistance.yaml">traits/legendary-resistance.yaml</a><a href="#traits%2fpack-tactics.yaml">traits/pack-tactics.yaml</a></nav>
+<span style="flex:1"></span><a href="#feats%2falert.yaml">feats/alert.yaml</a><a href="#features%2fbarbarian%2frage.yaml">features/barbarian/rage.yaml</a><a href="#features%2frogue%2fsneak-attack.yaml">features/rogue/sneak-attack.yaml</a><a href="#items%2fflame-tongue.yaml">items/flame-tongue.yaml</a><a href="#items%2fpotion-of-healing.yaml">items/potion-of-healing.yaml</a><a href="#items%2fring-of-protection.yaml">items/ring-of-protection.yaml</a><a href="#items%2fweapon-plus.yaml">items/weapon-plus.yaml</a><a href="#monsters%2fadult-red-dragon.yaml">monsters/adult-red-dragon.yaml</a><a href="#monsters%2fwolf.yaml">monsters/wolf.yaml</a><a href="#species%2fdwarf%2fdarkvision.yaml">species/dwarf/darkvision.yaml</a><a href="#spells%2fbless.yaml">spells/bless.yaml</a><a href="#spells%2fcommune.yaml">spells/commune.yaml</a><a href="#spells%2fcounterspell.yaml">spells/counterspell.yaml</a><a href="#spells%2fcure-wounds.yaml">spells/cure-wounds.yaml</a><a href="#spells%2ffireball.yaml">spells/fireball.yaml</a><a href="#spells%2fhold-person.yaml">spells/hold-person.yaml</a><a href="#spells%2fprestidigitation.yaml">spells/prestidigitation.yaml</a><a href="#spells%2fspirit-guardians.yaml">spells/spirit-guardians.yaml</a><a href="#traits%2flegendary-resistance.yaml">traits/legendary-resistance.yaml</a><a href="#traits%2fpack-tactics.yaml">traits/pack-tactics.yaml</a></nav>
 <section id="feats/alert.yaml"><div class="head"><h2>feats/alert.yaml</h2>
 <span class="ok">checks pass</span></div>
-
+<p class="dim">Text facts modelled: <span class="ok">incapacitated</span> · </p>
 <div class="cols"><div><h3>Design file</h3><pre class="yaml">entry: feats/alert
 name: Alert
 automation: full
@@ -88,8 +88,8 @@ effects:
 <div><h3>Seed text</h3><p><strong>Alert.</strong> When you roll Initiative, you can add your Proficiency Bonus to the roll.
 
 Immediately after you roll Initiative, you can swap your Initiative with the Initiative of one willing ally in the same combat. You can&#39;t make this swap if you or the ally has the Incapacitated condition.</p></div></div></section><section id="features/barbarian/rage.yaml"><div class="head"><h2>features/barbarian/rage.yaml</h2>
-<span class="ok">checks pass</span></div>
-
+<span class="bad">1 problem(s)</span></div>
+<p class="dim">Text facts modelled: <span class="ok">resistance</span> · <span class="ok">bludgeoning</span> · <span class="ok">piercing</span> · <span class="ok">slashing</span> · <span class="ok">strength</span> · <span class="ok">advantage</span> · <span class="ok">incapacitated</span> · </p><p class="bad">the SRD text says 10 minute, force; the file models none of it</p>
 <div class="cols"><div><h3>Design file</h3><pre class="yaml">entry: features/barbarian/rage
 name: Rage
 automation: full
@@ -201,8 +201,8 @@ While active, your Rage follows the rules below. *Damage Resistance.* You have R
 - Take a Bonus Action to extend your Rage.
 
 Each time the Rage is extended, it lasts until the end of your next turn. You can maintain a Rage for up to 10 minutes.</p></div></div></section><section id="features/rogue/sneak-attack.yaml"><div class="head"><h2>features/rogue/sneak-attack.yaml</h2>
-<span class="ok">checks pass</span></div>
-
+<span class="bad">1 problem(s)</span></div>
+<p class="dim">Text facts modelled: <span class="ok">5 ft</span> · <span class="ok">once per turn</span> · <span class="ok">advantage</span> · <span class="ok">incapacitated</span> · <span class="ok">disadvantage</span> · </p><p class="bad">the SRD text says 1d6; the file models none of it</p>
 <div class="cols"><div><h3>Design file</h3><pre class="yaml">entry: features/rogue/sneak-attack
 name: Sneak Attack
 automation: full
@@ -272,7 +272,7 @@ You don&#39;t need Advantage on the attack roll if at least one of your allies i
 
 The extra damage increases as you gain Rogue levels, as shown in the Sneak Attack column of the Rogue Features table.</p></div></div></section><section id="items/flame-tongue.yaml"><div class="head"><h2>items/flame-tongue.yaml</h2>
 <span class="ok">checks pass</span></div>
-<p class="dim">applies to 29 seed items</p><p class="dim">first: flame-tongue-battleaxe, last: flame-tongue-whip</p>
+<p class="dim">applies to 29 seed items</p><p class="dim">first: flame-tongue-battleaxe, last: flame-tongue-whip</p><p class="dim">Text facts modelled: <span class="ok">2d6</span> · <span class="ok">40 ft</span> · <span class="ok">fire</span> · </p>
 <div class="cols"><div><h3>Design file</h3><pre class="yaml">entry: items/flame-tongue
 name: Flame Tongue
 automation: full
@@ -352,7 +352,7 @@ effects:
 }</pre></div>
 <div><h3>Seed text</h3><p><strong>Flame Tongue Battleaxe.</strong> While holding this magic weapon, you can take a Bonus Action and use a command word to cause flames to engulf the damage-dealing part of the weapon. These flames shed Bright Light in a 40 foot radius and Dim Light for an additional 40 feet. While the weapon is ablaze, it deals an extra 2d6 Fire damage on a hit. The flames last until you take a Bonus Action to issue the command again or until you drop, stow, or sheathe the weapon.</p></div></div></section><section id="items/potion-of-healing.yaml"><div class="head"><h2>items/potion-of-healing.yaml</h2>
 <span class="ok">checks pass</span></div>
-<p class="dim">applies to 1 seed items</p><p class="dim">first: potion-of-healing, last: potion-of-healing</p>
+<p class="dim">applies to 1 seed items</p><p class="dim">first: potion-of-healing, last: potion-of-healing</p><p class="dim">Text facts modelled: <span class="ok">2d4</span> · <span class="ok">5 ft</span> · </p>
 <div class="cols"><div><h3>Design file</h3><pre class="yaml">entry: items/potion-of-healing
 name: Potion of Healing
 automation: full
@@ -511,8 +511,8 @@ effects:
   ]
 }</pre></div>
 <div><h3>Seed text</h3><p><strong>Battleaxe (&#43;1).</strong> You have a bonus to attack rolls and damage rolls made with this magic weapon. The bonus is determined by the weapon&#39;s rarity.</p></div></div></section><section id="monsters/adult-red-dragon.yaml"><div class="head"><h2>monsters/adult-red-dragon.yaml</h2>
-<span class="ok">checks pass</span></div>
-
+<span class="bad">1 problem(s)</span></div>
+<p class="dim">Text facts modelled: <span class="ok">17d6</span> · <span class="ok">60 ft</span> · <span class="ok">DC 21</span> · <span class="ok">DC 20</span> · <span class="ok">dexterity</span> · <span class="ok">fire</span> · <span class="ok">half</span> · <span class="ok">charisma</span> · </p><p class="bad">the SRD text says 1d10, 2d4, slashing; the file models none of it</p>
 <div class="cols"><div><h3>Design file</h3><pre class="yaml">entry: monsters/adult-red-dragon
 name: Adult Red Dragon
 automation: full
@@ -723,8 +723,8 @@ effects:
 
 - **At Will:** Command, Detect Magic, Scorching Ray
 - **1/Day Each:** Fireball</p><p><strong>Legendary Resistance (3/Day, or 4/Day in Lair) (trait).</strong> If the dragon fails a saving throw, it can choose to succeed instead.</p></div></div></section><section id="monsters/wolf.yaml"><div class="head"><h2>monsters/wolf.yaml</h2>
-<span class="ok">checks pass</span></div>
-
+<span class="bad">1 problem(s)</span></div>
+<p class="dim">Text facts modelled: <span class="ok">5 ft</span> · <span class="ok">prone</span> · <span class="ok">advantage</span> · <span class="ok">incapacitated</span> · </p><p class="bad">the SRD text says 1d6, piercing; the file models none of it</p>
 <div class="cols"><div><h3>Design file</h3><pre class="yaml">entry: monsters/wolf
 name: Wolf
 automation: full
@@ -770,7 +770,7 @@ effects:
 }</pre></div>
 <div><h3>Seed text</h3><p><strong>Bite (action).</strong> Melee Attack Roll: &#43;4, reach 5 ft. 5 (1d6 &#43; 2) Piercing damage. If the target is a Medium or smaller creature, it has the Prone condition.</p><p><strong>Pack Tactics (trait).</strong> The wolf has Advantage on attack rolls against a creature if at least one of the wolf&#39;s allies is within 5 feet of the creature and the ally doesn&#39;t have the Incapacitated condition.</p></div></div></section><section id="species/dwarf/darkvision.yaml"><div class="head"><h2>species/dwarf/darkvision.yaml</h2>
 <span class="ok">checks pass</span></div>
-
+<p class="dim">Text facts modelled: <span class="ok">120 ft</span> · </p>
 <div class="cols"><div><h3>Design file</h3><pre class="yaml">entry: species/dwarf/darkvision
 name: Darkvision
 automation: full
@@ -803,7 +803,7 @@ effects:
 }</pre></div>
 <div><h3>Seed text</h3><p><strong>Darkvision.</strong> You have Darkvision with a range of 120 feet.</p></div></div></section><section id="spells/bless.yaml"><div class="head"><h2>spells/bless.yaml</h2>
 <span class="ok">checks pass</span></div>
-
+<p class="dim">Text facts modelled: <span class="ok">1d4</span> · </p>
 <div class="cols"><div><h3>Design file</h3><pre class="yaml">entry: spells/bless
 name: Bless
 automation: full
@@ -922,9 +922,54 @@ effects:
     }
   ]
 }</pre></div>
-<div><h3>Seed text</h3><p><strong>Commune.</strong> You contact a deity or a divine proxy and ask up to three questions that can be answered with yes or no. You must ask your questions before the spell ends. You receive a correct answer for each question. Divine beings aren&#39;t necessarily omniscient, so you might receive &#34;unclear&#34; as an answer if a question pertains to information that lies beyond the deity&#39;s knowledge. In a case where a one-word answer could be misleading or contrary to the deity&#39;s interests, the GM might offer a short phrase as an answer instead. If you cast the spell more than once before finishing a Long Rest, there is a cumulative 25 percent chance for each casting after the first that you get no answer.</p></div></div></section><section id="spells/cure-wounds.yaml"><div class="head"><h2>spells/cure-wounds.yaml</h2>
+<div><h3>Seed text</h3><p><strong>Commune.</strong> You contact a deity or a divine proxy and ask up to three questions that can be answered with yes or no. You must ask your questions before the spell ends. You receive a correct answer for each question. Divine beings aren&#39;t necessarily omniscient, so you might receive &#34;unclear&#34; as an answer if a question pertains to information that lies beyond the deity&#39;s knowledge. In a case where a one-word answer could be misleading or contrary to the deity&#39;s interests, the GM might offer a short phrase as an answer instead. If you cast the spell more than once before finishing a Long Rest, there is a cumulative 25 percent chance for each casting after the first that you get no answer.</p></div></div></section><section id="spells/counterspell.yaml"><div class="head"><h2>spells/counterspell.yaml</h2>
+<span class="bad">1 problem(s)</span></div>
+<p class="bad">the SRD text says constitution; the file models none of it</p>
+<div class="cols"><div><h3>Design file</h3><pre class="yaml"># As seeded today (migration 00069): passes as full, yet omits the Constitution save.
+entry: spells/counterspell
+name: Counterspell
+automation: full
+pattern: counter
+effects:
+  - activation:
+      cost: reaction
+      components: [somatic]
+      targeting: {pick: creatures, count: 1, range_ft: 60}
+      duration: instant
+    parts:
+      - kind: counter
+        range_ft: 60
+</pre><pre class="json">{
+  &#34;entry&#34;: &#34;spells/counterspell&#34;,
+  &#34;name&#34;: &#34;Counterspell&#34;,
+  &#34;automation&#34;: &#34;full&#34;,
+  &#34;pattern&#34;: &#34;counter&#34;,
+  &#34;effects&#34;: [
+    {
+      &#34;activation&#34;: {
+        &#34;components&#34;: [
+          &#34;somatic&#34;
+        ],
+        &#34;cost&#34;: &#34;reaction&#34;,
+        &#34;duration&#34;: &#34;instant&#34;,
+        &#34;targeting&#34;: {
+          &#34;count&#34;: 1,
+          &#34;pick&#34;: &#34;creatures&#34;,
+          &#34;range_ft&#34;: 60
+        }
+      },
+      &#34;parts&#34;: [
+        {
+          &#34;kind&#34;: &#34;counter&#34;,
+          &#34;range_ft&#34;: 60
+        }
+      ]
+    }
+  ]
+}</pre></div>
+<div><h3>Seed text</h3><p><strong>Counterspell.</strong> You attempt to interrupt a creature in the process of casting a spell. The creature makes a Constitution saving throw. On a failed save, the spell dissipates with no effect, and the action, Bonus Action, or Reaction used to cast it is wasted. If that spell was cast with a spell slot, the slot isn&#39;t expended.</p></div></div></section><section id="spells/cure-wounds.yaml"><div class="head"><h2>spells/cure-wounds.yaml</h2>
 <span class="ok">checks pass</span></div>
-
+<p class="dim">Text facts modelled: <span class="ok">2d8</span> · </p>
 <div class="cols"><div><h3>Design file</h3><pre class="yaml">entry: spells/cure-wounds
 name: Cure Wounds
 automation: full
@@ -986,7 +1031,7 @@ effects:
 }</pre></div>
 <div><h3>Seed text</h3><p><strong>Cure Wounds.</strong> A creature you touch regains a number of Hit Points equal to 2d8 plus your spellcasting ability modifier.</p><p><strong>Using a higher-level spell slot.</strong> The healing increases by 2d8 for each spell slot level above 1.</p></div></div></section><section id="spells/fireball.yaml"><div class="head"><h2>spells/fireball.yaml</h2>
 <span class="ok">checks pass</span></div>
-
+<p class="dim">Text facts modelled: <span class="ok">8d6</span> · <span class="ok">1d6</span> · <span class="ok">20 ft</span> · <span class="ok">dexterity</span> · <span class="ok">fire</span> · <span class="ok">half</span> · </p>
 <div class="cols"><div><h3>Design file</h3><pre class="yaml">entry: spells/fireball
 name: Fireball
 automation: full
@@ -1060,7 +1105,7 @@ effects:
 }</pre></div>
 <div><h3>Seed text</h3><p><strong>Fireball.</strong> A bright streak flashes from you to a point you choose within range and then blossoms with a low roar into a fiery explosion. Each creature in a 20-foot-radius Sphere centered on that point makes a Dexterity saving throw, taking 8d6 Fire damage on a failed save or half as much damage on a successful one. Flammable objects in the area that aren&#39;t being worn or carried start burning.</p><p><strong>Using a higher-level spell slot.</strong> The damage increases by 1d6 for each spell slot level above 3.</p></div></div></section><section id="spells/hold-person.yaml"><div class="head"><h2>spells/hold-person.yaml</h2>
 <span class="ok">checks pass</span></div>
-
+<p class="dim">Text facts modelled: <span class="ok">wisdom</span> · <span class="ok">paralyzed</span> · </p>
 <div class="cols"><div><h3>Design file</h3><pre class="yaml">entry: spells/hold-person
 name: Hold Person
 automation: full
@@ -1142,7 +1187,7 @@ effects:
 }</pre></div>
 <div><h3>Seed text</h3><p><strong>Hold Person.</strong> Choose a Humanoid that you can see within range. The target must succeed on a Wisdom saving throw or have the Paralyzed condition for the duration. At the end of each of its turns, the target repeats the save, ending the spell on itself on a success.</p><p><strong>Using a higher-level spell slot.</strong> You can target one additional Humanoid for each spell slot level above 2.</p></div></div></section><section id="spells/prestidigitation.yaml"><div class="head"><h2>spells/prestidigitation.yaml</h2>
 <span class="ok">checks pass</span></div>
-
+<p class="dim">Text facts modelled: <span class="ok">1 hour</span> · </p>
 <div class="cols"><div><h3>Design file</h3><pre class="yaml">entry: spells/prestidigitation
 name: Prestidigitation
 automation: full
@@ -1204,7 +1249,86 @@ effects:
 
 **_Magic Mark._** You make a color, a small mark, or a symbol appear on an object or a surface for 1 hour.
 
-**_Minor Creation._** You create a nonmagical trinket or an illusory image that can fit in your hand. It lasts until the end of your next turn. A trinket can deal no damage and has no monetary worth.</p></div></div></section><section id="traits/legendary-resistance.yaml"><div class="head"><h2>traits/legendary-resistance.yaml</h2>
+**_Minor Creation._** You create a nonmagical trinket or an illusory image that can fit in your hand. It lasts until the end of your next turn. A trinket can deal no damage and has no monetary worth.</p></div></div></section><section id="spells/spirit-guardians.yaml"><div class="head"><h2>spells/spirit-guardians.yaml</h2>
+<span class="bad">1 problem(s)</span></div>
+<p class="dim">Text facts modelled: <span class="ok">3d8</span> · <span class="ok">1d8</span> · <span class="ok">15 ft</span> · <span class="ok">half</span> · <span class="ok">wisdom</span> · <span class="ok">radiant</span> · </p><p class="bad">the SRD text says necrotic, once per turn; the file models none of it</p>
+<div class="cols"><div><h3>Design file</h3><pre class="yaml"># As seeded today (migrations 00069, 00071): passes as full, yet omits the halved Speed, the
+# Necrotic option, the designated creatures and the once-per-turn limit.
+entry: spells/spirit-guardians
+name: Spirit Guardians
+automation: full
+pattern: lasting-area-saves
+effects:
+  - activation:
+      cost: action
+      components: [verbal, somatic, material]
+      targeting: {pick: self}
+      duration: {minutes: 10}
+      concentration: true
+    parts:
+      - kind: area
+        shape: emanation
+        size_ft: 15
+      - kind: save_damage
+        ability: wisdom
+        dice: 3d8
+        damage_type: radiant
+        half: true
+    scaling:
+      - per: slot_level
+        above: 3
+        grows: {part: save_damage, field: dice, by: 1d8}
+</pre><pre class="json">{
+  &#34;entry&#34;: &#34;spells/spirit-guardians&#34;,
+  &#34;name&#34;: &#34;Spirit Guardians&#34;,
+  &#34;automation&#34;: &#34;full&#34;,
+  &#34;pattern&#34;: &#34;lasting-area-saves&#34;,
+  &#34;effects&#34;: [
+    {
+      &#34;activation&#34;: {
+        &#34;components&#34;: [
+          &#34;verbal&#34;,
+          &#34;somatic&#34;,
+          &#34;material&#34;
+        ],
+        &#34;concentration&#34;: true,
+        &#34;cost&#34;: &#34;action&#34;,
+        &#34;duration&#34;: {
+          &#34;minutes&#34;: 10
+        },
+        &#34;targeting&#34;: {
+          &#34;pick&#34;: &#34;self&#34;
+        }
+      },
+      &#34;parts&#34;: [
+        {
+          &#34;kind&#34;: &#34;area&#34;,
+          &#34;shape&#34;: &#34;emanation&#34;,
+          &#34;size_ft&#34;: 15
+        },
+        {
+          &#34;ability&#34;: &#34;wisdom&#34;,
+          &#34;damage_type&#34;: &#34;radiant&#34;,
+          &#34;dice&#34;: &#34;3d8&#34;,
+          &#34;half&#34;: true,
+          &#34;kind&#34;: &#34;save_damage&#34;
+        }
+      ],
+      &#34;scaling&#34;: [
+        {
+          &#34;above&#34;: 3,
+          &#34;grows&#34;: {
+            &#34;by&#34;: &#34;1d8&#34;,
+            &#34;field&#34;: &#34;dice&#34;,
+            &#34;part&#34;: &#34;save_damage&#34;
+          },
+          &#34;per&#34;: &#34;slot_level&#34;
+        }
+      ]
+    }
+  ]
+}</pre></div>
+<div><h3>Seed text</h3><p><strong>Spirit Guardians.</strong> Protective spirits flit around you in a 15-foot Emanation for the duration. If you are good or neutral, their spectral form appears angelic or fey (your choice). If you are evil, they appear fiendish. When you cast this spell, you can designate creatures to be unaffected by it. Any other creature&#39;s Speed is halved in the Emanation, and whenever the Emanation enters a creature&#39;s space and whenever a creature enters the Emanation or ends its turn there, the creature must make a Wisdom saving throw. On a failed save, the creature takes 3d8 Radiant damage (if you are good or neutral) or 3d8 Necrotic damage (if you are evil). On a successful save, the creature takes half as much damage. A creature makes this save only once per turn.</p><p><strong>Using a higher-level spell slot.</strong> The damage increases by 1d8 for each spell slot level above 3.</p></div></div></section><section id="traits/legendary-resistance.yaml"><div class="head"><h2>traits/legendary-resistance.yaml</h2>
 <span class="ok">checks pass</span></div>
 <p class="dim">32 stat blocks carry this trait</p>
 <div class="cols"><div><h3>Design file</h3><pre class="yaml">entry: traits/legendary-resistance
