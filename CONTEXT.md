@@ -97,8 +97,12 @@ Something a class, subclass, species, background, feat or item gives a character
 _Avoid_: Ability, perk, trait (except for species traits in rules text)
 
 **Resource**:
-A named pool a Feature spends and refills, with a maximum by level and a recharge (short rest, long rest, dawn, rolling initiative, or a roll), such as Focus Points, Rage or Sorcery Points.
-_Avoid_: Points, charges (reserved for items), mana
+A named pool of limited uses that an Activation spends and that refills on a schedule (short rest, long rest, dawn, dusk, after some hours, rolling initiative, or a roll), such as Focus Points, Rage, Sorcery Points or a spell slot. Every limited use is a Resource, held by a Character, a Combatant or an Item Instance; a limit per turn or per round is a limit on the Activation, not a Resource.
+_Avoid_: Points, uses (as the model term), mana
+
+**Add-on**:
+A Feature that changes another Activation while it happens, such as a Metamagic option; it is offered in that Activation's step and spends its own cost.
+_Avoid_: Modifier (a Part kind), enhancement, upgrade
 
 **Weapon Mastery**:
 A weapon's mastery property (Cleave, Graze, Nick, Push, Sap, Slow, Topple, Vex) that a character can use once they have mastered that kind of weapon.
@@ -182,6 +186,10 @@ _Avoid_: Encounter (for the running instance), battle
 Any creature taking part in a Combat, whether Character, NPC or monster.
 _Avoid_: Actor, unit, token
 
+**Recharge**:
+A limit on a creature's action: once used, it comes back only when a d6 rolled at the start of the creature's turn meets its number. Only the DM sees the roll.
+_Avoid_: Cooldown
+
 **Checkpoint**:
 A named point in a live Session's Action Log the DM can rewind to.
 _Avoid_: Save, snapshot
@@ -211,11 +219,23 @@ The on-screen form of a Roll Request, filled in from physical dice or auto-rolle
 _Avoid_: Dice dialog, roll popup
 
 **Effect**:
-Anything that changes what a creature can do or what happens to it, described as typed components: damage, healing, save, condition, modifier, light, reveal, sense, movement, surface, summon, trigger. Each component says when it fires (on cast, on entering, at the start or end of a turn) and whom it touches within its Targeting.
+Anything that changes what a creature can do or what happens to it, described as typed Parts: damage, healing, save, condition, modifier, light, reveal, sense, movement, surface, summon, trigger, Note. Each Part says when it fires (on cast, on entering, at the start or end of a turn) and whom it touches within its Targeting.
 _Avoid_: Buff, debuff, status (as model terms)
 
+**Part**:
+One typed piece of an Effect, of a kind the rules know: damage, a save, a condition, a modifier, a Note. An Effect is an ordered list of Parts, and a Part may hold Parts of its own under named groups such as what happens on a failed save.
+_Avoid_: Component (as the model term), row, step
+
+**Activation**:
+The step that puts an Effect into play: it offers only legal targets within the Effect's Targeting, pays the cost, rolls the initial save or attack, applies Scaling, and sets the duration. Casting a spell, using a Feature, using an item and a creature taking an action are all Activations; applying an Effect by hand is a DM tool, not an Activation.
+_Avoid_: Use (collides with uses as a count), trigger (a Part kind), invoke
+
+**Note**:
+A Part that is text shown to the table: an outcome that changes nothing the rules track, or one that lies in a domain the rules deliberately do not track, such as languages or breathing. It needs no ruling, never makes play wait, and always states its reason.
+_Avoid_: Flavour text, narration, described outcome
+
 **Targeting**:
-What an Effect can reach: self, one or several creatures, or an area (sphere, cone, line, cube, cylinder, emanation, wall, ring) at a range, filtered by side (anyone, allies only, enemies only, creatures of the caster's choice, objects) and by creature type, with or without needing sight.
+What an Effect can reach: self, one or several creatures, objects or points, or an area (sphere, cone, line, cube, cylinder, emanation, wall, ring) at a range, filtered by side (anyone, allies only, enemies only, creatures of the caster's choice, objects) and by creature type, with or without needing the caster's own sight. It states the number of targets, which Scaling may grow, and any distance limit between targets; where an Effect needs a willing target, a creature on the caster's side counts as willing.
 _Avoid_: Range type, AoE (as the model term)
 
 **Visibility Quality**:
@@ -231,11 +251,11 @@ A Visibility Quality where a creature or object shows a false identity; truesigh
 _Avoid_: Hidden identity, shapechanged (as the model term)
 
 **Reveal**:
-An Effect component that strips chosen Visibility Qualities inside its area, such as outlining invisible creatures or ending Hidden.
+A Part that strips chosen Visibility Qualities inside its area, such as outlining invisible creatures or ending Hidden.
 _Avoid_: Detect, expose, dispel (as the model term)
 
 **Scaling**:
-How an Effect grows with the spell slot it is cast with or the caster's level: more dice, targets, duration or area.
+How an Effect grows with the level it is activated at (spell slot, character level, class level, a class table) or with the Charges spent on it: any scalable value (dice, targets, duration, area, range, a number) grows by a rule or follows a table, and a value may be a formula of the level.
 _Avoid_: Upcasting (the act, not the data), higher-level text
 
 **Material Component**:
@@ -243,7 +263,7 @@ A specific item a spell needs, with its cost and whether casting consumes it.
 _Avoid_: Reagent, ingredient
 
 **Manual Effect**:
-The part of an Effect the rules cannot compute yet, resolved by the DM from a prompt.
+The Part of an Effect where someone must decide an outcome or change tracked state by hand, resolved by the DM from a prompt.
 _Avoid_: Unsupported effect, custom effect
 
 **Action Log**:
@@ -437,8 +457,12 @@ A one-step Item Property on a skill: advantage, +1d4, a flat bonus, proficiency 
 _Avoid_: Skill buff, skill cantrip
 
 **Charges**:
-Uses an item holds, spent by its granted spells and actions and regained on a schedule (dawn, a long rest, a short rest, or a rolled number at dawn).
+The Resource an Item Instance holds, spent by its granted spells and actions and regained on a schedule; when the last one is spent, a depletion rule may destroy the item or leave it nonmagical.
 _Avoid_: Uses (as the model term), ammo
+
+**Variant**:
+The one choice an Item Instance carries from the moment it is made, such as a dragon's colour, a damage type or the spell on a scroll.
+_Avoid_: Subtype, flavour
 
 **Price Check**:
 Grimoire comparing a homebrew item's properties with its rarity and the Price Guide, and saying whether the rarity and value fit.
@@ -457,8 +481,16 @@ The read-only Compendium anyone can browse without signing in: SRD entries plus 
 _Avoid_: Guest mode, open wiki, suggestions (reserved for Suggested Action)
 
 **Automation Level**:
-How much of an entry's behaviour the rules compute: full, partial, or manual.
+How much of an entry's behaviour the rules compute through its Activation: full, partial, or manual. An approved Manual Exception is counted apart from an unfinished entry.
 _Avoid_: Support level, coverage
+
+**Design File**:
+The file that states how the rules automate one SRD entry: its Effects, their Activations, Parts and Scaling. It is authoritative for mechanics; the Compendium keeps the rules text.
+_Avoid_: Effect script, rules data, seed
+
+**Manual Exception**:
+An entry approved to keep a Manual Effect because its outcome is decided at the table by nature: knowledge only the DM holds, content authored on the spot, or how a creature pursues a free-form instruction or bargain.
+_Avoid_: Unsupported, not automated
 
 **Revision**:
 A recorded version of a piece of prep data, with its author, that the DM can compare and restore.
