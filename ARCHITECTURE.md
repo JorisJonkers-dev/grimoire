@@ -552,60 +552,96 @@ asks for them together ("1d20 + 1d4"). Rerolls (Lucky, Halfling) create a follow
 ### 9.3 Typed effects — how full automation works
 
 Everything that does something — spells, class features, feats, items, monster actions, conditions,
-surfaces, optional rules — is described as **data**: one `effect_definition` with typed component
-rows. The Go side is a sealed union:
+surfaces, optional rules — is described as **data**: one `effect_definition` and an ordered list of
+**Parts**, each of a **kind** the rules know ([ADR-0014](docs/adr/0014-one-definition-per-effect-kind.md)).
+On the Go side a Part is a sealed union, checked by `gochecksumtype`:
 
 ```go
-type Component interface{ isComponent() }
-type Damage struct{ Dice DiceSpec; Type DamageType; OnSave SaveOutcome /* half|none */ }
-type Heal struct{ Dice DiceSpec; Temp bool }                 // Temp = temporary hit points
-type SaveGate struct{ Ability Ability; DC DCSource }        // spell DC, fixed, or formula
-type AttackGate struct{ Kind AttackKind; Bonus BonusSource }
-type ApplyCondition struct{ Condition ConditionRef; Duration Duration; EndsOnSave bool }
-type Modifier struct{ Target ModTarget; Value ModValue; Scope Scope }   // to_hit, ac, speed, adv, resist, ...
-type Light struct{ BrightFt, DimFt Feet; Colour Colour; Sunlight bool }
-type Reveal struct{ Strips []VisibilityQuality }            // Hidden, Invisible, Disguised, ...
-type Sense struct{ Kind SenseKind; RangeFt Feet }
-type Movement struct{ Kind MoveKind; DistanceFt Feet }      // push, pull, teleport, drag
-type CreateSurface struct{ Kind SurfaceKind; Duration Duration }
-type Summon struct{ Creature CreatureRef; Count CountSpec; Acts SummonTurn }
-type Transform struct{ Form FormRef }                       // Wild Shape, Polymorph
-type CreateObject struct{ Object ObjectRef }                // walls, barriers
-type Dispel struct{ Level LevelSpec }
-type Counter struct{ Level LevelSpec }
-type GrantFeature struct{ Feature FeatureRef }
-type ResourceChange struct{ Resource ResourceRef; Delta ModValue }
-type Choice struct{ Options [][]Component }                 // the caster picks a mode
-type Branch struct{ If Condition; Then, Else []Component }  // "fails by 5+", "HP <= 50", type filter
-type Trigger struct{ On TriggerKind; Then []Component }     // reactions, "start of turn", "on hit"
-type Scaling struct{ Per ScalingAxis; Add []Component }      // slot, character level, class level, table column
-type Manual struct{ Instruction string }                     // the fallback (§9.4)
+type Part interface {
+    isPart()
+    Kind() string // the kind's slug: "save_damage", "branch", "manual", ...
+    Text() string // the Part's rules sentence
+}
+type Definition struct {
+    Slug, Name    string
+    Owner         OwnerKind
+    Concentration bool
+    Duration      Duration
+    Scaling       *Scaling
+    Parts         []Part
+}
 ```
+
+**One kind, one place.** Every kind lives in `rules/effects/kind_<slug>.go`: its type, `Kind()`,
+`Text()`, its definition as data (`Describe()`: the fields an author fills in, their bounds and
+options, and the named groups of Parts it holds) with `Decode(values, groups)` and its checks, and the
+capabilities it has in play. `effects.Kinds()` lists every kind in slug order, one line each; the
+linter bans package globals, so kinds cannot register themselves.
+
+| shape | kinds |
+|---|---|
+| passive | `bonus_die`, `edge`, `extra_damage`, `crit_within`, `save_edge`, `move_cost`, `speed_penalty`, `immobile`, `incapacitated`, `exhausting`, `reacts`, `counter` |
+| lands on its bearer | `temp_hp`, `dispel`, `grant_feature`, `resource_change`, `teleport`, `form`, `summon` |
+| shapes an area | `area`, `area_save`, `save_damage`, `save_condition`, `create_surface`, `forced_move`, `light`, `reveal` |
+| holds Parts beneath it | `branch` (its group `then`), `choice` (one group per mode, named by the author) |
+| resolved by the DM | `manual` (a Manual Effect, §9.4) |
+
+**Play reaches a Part only through capabilities it chooses to implement.** Nothing switches over
+kinds.
+
+- *Folds* change the profile a resolver reads: `AttackFolder` (attacks made), `AttackedFolder`
+  (attacks suffered), `SaveFolder`, `MoveFolder` into a `MoveProfile`, `ActionFolder` into an
+  `ActionProfile` (incapacitated, reactions, counters); `Stacker` makes the Effect stack in levels.
+  `ForAttack`, `ForSave`, `ForMove` and `ForActions` fold a creature's active Effects; no service
+  special-cases an item or a spell by name.
+- *Landings* say what happens in **acts**, a small sealed set the runtime applies (`RollSave`,
+  `RollDamage`, `Hurt`, `Afflict`, `Template`, `LaySurface`, `Push`, `ShedLight`, `StripQualities`,
+  `AskDM`, `GainTempHP`, `EndSpells`, `Grant`, `ChangeUses`, `TeleportCaster`, `TakeForm`,
+  `SummonCreatures`). An `Asker` puts what an area needs into its plan once (`AreaOf`); a `Lander`
+  then says what happens to each creature once the rolls are in; a `BearerLander` acts on the
+  creature the Effect lands on (`LandingOf`, and the Parts a branch adds).
+- *Groups*: a `Grouper` holds Parts beneath it in named groups. A `Holder` brings them into play as
+  the Effect lands (`Landed(situation)`: "fails by 5 or more", "HP at most 50", creature type); a
+  `Chooser` offers them as modes, of which whoever applies the Effect picks one (`Chosen(mode)`).
+
+A new capability (a fold, an act) is a one-off change to the shared vocabulary in
+`rules/effects/part.go`; a new kind is not.
+
+**Storage.** One `compendium.effect_components` row per Part (the table keeps its earlier name, so an
+older binary can still read it), in order (`ordinal`), naming its kind;
+a Part beneath another names its `parent` and the `group_name` it sits in. The kind's typed row lives
+in the kind's own table, keyed by `(effect_id, ordinal, kind)`. `compendium.effect_kinds` is the
+lookup table of kinds a row may name; each kind's migration creates its table and adds its row, so
+two kinds added in parallel touch nothing in common. No JSON column anywhere. In
+`compendium/pgstore`, each kind has an adapter `kind_<slug>.go` with its own query file
+`db/queries/effect_kind_<slug>.sql`, listed once in `kindRows()`; a kind that is the whole of its Part
+(`dispel`, `immobile`, `incapacitated`, `choice`) has no table and reads its rows through `bare`.
+`TestEveryKindHasItsStoreAndItsRow` fails when `effects.Kinds()` and `kindRows()` disagree or a kind
+has no row in the lookup table.
+
+**Adding a kind** is the recipe in §18.1: four new files (rules, store, queries, migration) and one
+sorted line in each of the two lists.
 
 Every Effect also carries **Targeting** (self, creatures, sphere, cone, line, cube, cylinder,
 emanation, wall, ring; size, range, origin; side filter; creature-type filter; sight required) and a
 **Duration** (instant, rounds, minutes, hours, until dispelled, until a rest, permanent, end of next
-turn, with repeat saves). These names match the glossary's Effect, Targeting and Visibility Quality
-entries; Item Properties, Features, conditions, surfaces, traps, Rule Variants and Roll Table results
-are all owners of Effects.
+turn, until cured, with repeat saves), and may carry **Scaling** (slot, character level, class level,
+a class table's column). These names match the glossary's Effect, Part, Targeting and Visibility
+Quality entries; Item Properties, Features, conditions, surfaces, traps, Rule Variants and Roll Table
+results are all owners of Effects.
 
-The **EffectEngine** folds a Combatant's active effects into an immutable `EffectProfile` (to-hit,
-damage bonuses by type, AC delta, speed delta, advantage/disadvantage sources with reasons, save
-modifiers, resistances, granted/forbidden actions, senses). `AttackResolver`, `SaveResolver`,
-`MovementCalculator` and `VisionCalculator` consume profiles only; no service special-cases an item
-or a spell by name.
-
-Import maps Open5e fields to components where the data allows (damage dice, save ability, area,
-condition names). What cannot be mapped automatically gets `automation_level = partial|manual`; the
-coverage report (§2.1) lists them, and completing them is ordinary work (a migration of component
-rows + tests), usually done through MCP by an agent and reviewed via Revisions.
+Import maps Open5e fields to Parts where the data allows (damage dice, save ability, area, condition
+names). What cannot be mapped automatically gets `automation_level = partial|manual`; the coverage
+report (§2.1) lists them, and completing them is ordinary work (a migration of Part rows + tests),
+usually done through MCP by an agent and reviewed via Revisions. Kinds the census still needs (healing,
+senses, triggers, objects and walls, Notes) are added by the same recipe.
 
 ### 9.4 Manual fallback
 
-A `Manual` component resolves as a **DM prompt** in the live flow: the engine does everything it can
-(rolls, saves, damage it understands) and then shows the DM the instruction plus quick actions
-(apply condition, adjust HP, place surface). Players see "resolving…" until the DM confirms. The
-Action Log records it like any other action. Nothing silently skips.
+A `manual` Part (a Manual Effect) resolves as a **DM prompt** in the live flow: the engine does
+everything it can (rolls, saves, damage it understands) and then shows the DM the instruction plus
+quick actions (apply condition, adjust HP, place surface). Players see "resolving…" until the DM
+confirms. The Action Log records it like any other action. Nothing silently skips.
 
 ### 9.5 Combat services
 
@@ -648,7 +684,7 @@ rendering decisions.
 `SurfaceKind` is a sealed enum (fire, grease, water, ice, web, acid, poison, darkness, difficult
 rubble). A **SurfaceInteractions** table (data + tests) defines combinations: grease + fire → fire;
 water + lightning → electrified water; water + cold → ice; fire + web → burn away. Entering or
-starting a turn in a surface fires its effect components. Surfaces expire by duration and are
+starting a turn in a surface fires its Effect's Parts. Surfaces expire by duration and are
 logged.
 
 ### 9.9 Rules on the client
@@ -669,8 +705,8 @@ tests.
 ### 9.11 Optional & homebrew rules
 
 The Grimoire §26 catalogue carries over as `RuleSettings` injected into resolvers. Each toggle maps
-to effect components or a resolver branch, with tests on both states. Adding a rule = seed row +
-settings flag + component/branch + tests (+ mutation on the math).
+to Effect Parts or a resolver branch, with tests on both states. Adding a rule = seed row +
+settings flag + Part/branch + tests (+ mutation on the math).
 
 ---
 
@@ -1061,20 +1097,20 @@ estate's one-job rule targets private-repo billing and does not apply here.
 ### 18.1 Recipes
 
 **Add a compendium entity:** goose migration → sqlc queries → domain type + port → repository →
-import mapping (Open5e + 5e-bits cross-check) → effect components if it does anything → use case →
+import mapping (Open5e + 5e-bits cross-check) → Effect Parts if it does anything → use case →
 OpenAPI paths → `task gen` → handler → tests (unit, adapter, contract) → attribution.
 
 **Add an Effect kind** ([ADR-0014](docs/adr/0014-one-definition-per-effect-kind.md)):
 `rules/effects/kind_<slug>.go` with the type, `Kind()`, `Text()`, its definition (`Describe`, `Decode`
 with its checks) and the capabilities it has in play (the folds `AttackFolder`, `AttackedFolder`,
-`SaveFolder`, `MoveFolder`, `ActionFolder`; `Stacker`; the landings `Lander` and `BearerLander`;
-`Holder`) → one sorted line in `rules/effects/kinds.go` → `compendium/pgstore/kind_<slug>.go` and one
-sorted line in `compendium/pgstore/kinds.go` → `db/queries/effect_kind_<slug>.sql` →
+`SaveFolder`, `MoveFolder`, `ActionFolder`; `Stacker`; the landings `Asker`, `Lander` and
+`BearerLander`; the groups `Holder` and `Chooser`) → one sorted line in `rules/effects/kinds.go` →
+`compendium/pgstore/kind_<slug>.go` (with `nest` when it holds Parts) and one sorted line in
+`compendium/pgstore/kinds.go` → `db/queries/effect_kind_<slug>.sql` →
 `db/migrations/<yyyymmddhhmmss>_effect_kind_<slug>.sql` creating its table and its row in
 `compendium.effect_kinds` (a kind that is the whole of its Part, like `dispel`, has no table or query
 file: its store reads its rows through `bare`) → decode, text, capability and round-trip tests →
-gremlins clean. Kinds not yet moved there are variants of the sealed union, and changing one still
-edits the switches that name it.
+gremlins clean. No switch names a kind, so nothing else changes.
 
 **Add a live command:** OpenAPI component (`Command` variant + resulting `Update` variants) →
 `task gen` → domain command + validation via rules → runtime handler (one transaction + typed
