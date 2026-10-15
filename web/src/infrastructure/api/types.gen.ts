@@ -3298,7 +3298,7 @@ export type PartNarrow = {
 };
 
 /**
- * One value an author fills in for a Part. Min and max bound a number; max also bounds the length of a text.
+ * One value an author fills in for a Part. Min and max bound a number; max also bounds the length of a text. A scalable field grows with the level its Effect is activated at, and a formula field may follow a formula of that level.
  */
 export type PartField = {
     name: string;
@@ -3308,6 +3308,8 @@ export type PartField = {
     required: boolean;
     min: number;
     max: number;
+    scalable: boolean;
+    formula: boolean;
 };
 
 /**

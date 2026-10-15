@@ -80,6 +80,7 @@
     {
       "fields": [
         {
+          "formula": false,
           "label": "Shape",
           "max": 0,
           "min": 0,
@@ -95,24 +96,29 @@
             "wall"
           ],
           "required": true,
+          "scalable": false,
           "type": "choice"
         },
         {
+          "formula": false,
           "label": "Size in feet",
           "max": 500,
           "min": 5,
           "name": "size_ft",
           "options": [],
           "required": true,
+          "scalable": true,
           "type": "number"
         },
         {
+          "formula": false,
           "label": "Range in feet",
           "max": 5280,
           "min": 0,
           "name": "range_ft",
           "options": [],
           "required": false,
+          "scalable": true,
           "type": "number"
         }
       ],
@@ -130,6 +136,7 @@
     {
       "fields": [
         {
+          "formula": false,
           "label": "Saving throw",
           "max": 0,
           "min": 0,
@@ -143,6 +150,7 @@
             "charisma"
           ],
           "required": true,
+          "scalable": false,
           "type": "choice"
         }
       ],
@@ -160,15 +168,18 @@
     {
       "fields": [
         {
+          "formula": false,
           "label": "Die",
           "max": 0,
           "min": 0,
           "name": "dice",
           "options": [],
           "required": true,
+          "scalable": false,
           "type": "dice"
         },
         {
+          "formula": false,
           "label": "Added to",
           "max": 0,
           "min": 0,
@@ -178,6 +189,7 @@
             "saving_throws"
           ],
           "required": true,
+          "scalable": false,
           "type": "choices"
         }
       ],
@@ -195,6 +207,7 @@
     {
       "fields": [
         {
+          "formula": false,
           "label": "When",
           "max": 0,
           "min": 0,
@@ -206,24 +219,29 @@
             "creature_is"
           ],
           "required": true,
+          "scalable": false,
           "type": "choice"
         },
         {
+          "formula": false,
           "label": "By or at most",
           "max": 1000,
           "min": 0,
           "name": "n",
           "options": [],
           "required": false,
+          "scalable": true,
           "type": "number"
         },
         {
+          "formula": false,
           "label": "Creature type",
           "max": 0,
           "min": 0,
           "name": "creature_type",
           "options": [],
           "required": false,
+          "scalable": false,
           "type": "text"
         }
       ],
@@ -274,12 +292,14 @@
     {
       "fields": [
         {
+          "formula": false,
           "label": "Range in feet",
           "max": 5280,
           "min": 5,
           "name": "range_ft",
           "options": [],
           "required": true,
+          "scalable": false,
           "type": "number"
         }
       ],
@@ -297,21 +317,25 @@
     {
       "fields": [
         {
+          "formula": false,
           "label": "Surface",
           "max": 40,
           "min": 0,
           "name": "surface",
           "options": [],
           "required": true,
+          "scalable": false,
           "type": "text"
         },
         {
+          "formula": false,
           "label": "Rounds",
           "max": 1000,
           "min": 1,
           "name": "rounds",
           "options": [],
           "required": true,
+          "scalable": false,
           "type": "number"
         }
       ],
@@ -334,12 +358,14 @@
     {
       "fields": [
         {
+          "formula": false,
           "label": "Within feet",
           "max": 120,
           "min": 0,
           "name": "feet",
           "options": [],
           "required": true,
+          "scalable": false,
           "type": "number"
         }
       ],
@@ -375,24 +401,29 @@
     {
       "fields": [
         {
+          "formula": false,
           "label": "On attacks against the bearer",
           "max": 0,
           "min": 0,
           "name": "against",
           "options": [],
           "required": false,
+          "scalable": false,
           "type": "flag"
         },
         {
+          "formula": false,
           "label": "Advantage",
           "max": 0,
           "min": 0,
           "name": "advantage",
           "options": [],
           "required": false,
+          "scalable": false,
           "type": "flag"
         },
         {
+          "formula": false,
           "label": "From",
           "max": 0,
           "min": 0,
@@ -403,15 +434,18 @@
             "beyond_five"
           ],
           "required": true,
+          "scalable": false,
           "type": "choice"
         },
         {
+          "formula": false,
           "label": "Only for the Effect's source",
           "max": 0,
           "min": 0,
           "name": "source_only",
           "options": [],
           "required": false,
+          "scalable": false,
           "type": "flag"
         }
       ],
@@ -456,39 +490,47 @@
     {
       "fields": [
         {
+          "formula": false,
           "label": "D20 penalty per level",
           "max": 10,
           "min": 0,
           "name": "d20_per_level",
           "options": [],
           "required": false,
+          "scalable": false,
           "type": "number"
         },
         {
+          "formula": false,
           "label": "Speed penalty per level",
           "max": 30,
           "min": 0,
           "name": "speed_ft_per_level",
           "options": [],
           "required": false,
+          "scalable": false,
           "type": "number"
         },
         {
+          "formula": false,
           "label": "Dies at level",
           "max": 10,
           "min": 0,
           "name": "death_at",
           "options": [],
           "required": false,
+          "scalable": false,
           "type": "number"
         },
         {
+          "formula": false,
           "label": "Highest level",
           "max": 10,
           "min": 0,
           "name": "max_level",
           "options": [],
           "required": false,
+          "scalable": false,
           "type": "number"
         }
       ],
@@ -506,12 +548,14 @@
     {
       "fields": [
         {
+          "formula": false,
           "label": "Damage",
           "max": 0,
           "min": 0,
           "name": "dice",
           "options": [],
           "required": true,
+          "scalable": true,
           "type": "dice"
         }
       ],
@@ -529,21 +573,25 @@
     {
       "fields": [
         {
+          "formula": false,
           "label": "Feet",
           "max": 120,
           "min": 5,
           "name": "ft",
           "options": [],
           "required": true,
+          "scalable": false,
           "type": "number"
         },
         {
+          "formula": false,
           "label": "Pull toward the caster",
           "max": 0,
           "min": 0,
           "name": "toward",
           "options": [],
           "required": false,
+          "scalable": false,
           "type": "flag"
         }
       ],
@@ -561,21 +609,25 @@
     {
       "fields": [
         {
+          "formula": false,
           "label": "Creature, or empty for the caster's choice",
           "max": 80,
           "min": 0,
           "name": "monster",
           "options": [],
           "required": false,
+          "scalable": false,
           "type": "text"
         },
         {
+          "formula": false,
           "label": "Temporary Hit Points, or 0 for the creature's maximum",
           "max": 999,
           "min": 0,
           "name": "temp_hp",
           "options": [],
           "required": false,
+          "scalable": false,
           "type": "number"
         }
       ],
@@ -593,12 +645,14 @@
     {
       "fields": [
         {
+          "formula": false,
           "label": "Feature",
           "max": 120,
           "min": 0,
           "name": "name",
           "options": [],
           "required": true,
+          "scalable": false,
           "type": "text"
         }
       ],
@@ -642,21 +696,25 @@
     {
       "fields": [
         {
+          "formula": false,
           "label": "Bright light in feet",
           "max": 120,
           "min": 5,
           "name": "bright_ft",
           "options": [],
           "required": true,
+          "scalable": false,
           "type": "number"
         },
         {
+          "formula": false,
           "label": "Dim light beyond, in feet",
           "max": 120,
           "min": 0,
           "name": "dim_ft",
           "options": [],
           "required": false,
+          "scalable": false,
           "type": "number"
         }
       ],
@@ -679,12 +737,14 @@
     {
       "fields": [
         {
+          "formula": false,
           "label": "Instruction",
           "max": 500,
           "min": 0,
           "name": "instruction",
           "options": [],
           "required": true,
+          "scalable": false,
           "type": "text"
         }
       ],
@@ -707,12 +767,14 @@
     {
       "fields": [
         {
+          "formula": false,
           "label": "Feet per foot",
           "max": 4,
           "min": 1,
           "name": "multiplier",
           "options": [],
           "required": true,
+          "scalable": false,
           "type": "number"
         }
       ],
@@ -730,6 +792,7 @@
     {
       "fields": [
         {
+          "formula": false,
           "label": "When the bearer is",
           "max": 0,
           "min": 0,
@@ -738,15 +801,18 @@
             "damaged"
           ],
           "required": true,
+          "scalable": false,
           "type": "choice"
         },
         {
+          "formula": false,
           "label": "What it does",
           "max": 500,
           "min": 0,
           "name": "instruction",
           "options": [],
           "required": true,
+          "scalable": false,
           "type": "text"
         }
       ],
@@ -764,21 +830,25 @@
     {
       "fields": [
         {
+          "formula": false,
           "label": "Resource",
           "max": 80,
           "min": 0,
           "name": "resource",
           "options": [],
           "required": true,
+          "scalable": false,
           "type": "text"
         },
         {
+          "formula": false,
           "label": "Uses given back, or taken when below 0",
           "max": 20,
           "min": -20,
           "name": "delta",
           "options": [],
           "required": true,
+          "scalable": false,
           "type": "number"
         }
       ],
@@ -796,6 +866,7 @@
     {
       "fields": [
         {
+          "formula": false,
           "label": "Visibility Qualities",
           "max": 0,
           "min": 0,
@@ -811,6 +882,7 @@
             "secret"
           ],
           "required": true,
+          "scalable": false,
           "type": "choices"
         }
       ],
@@ -828,6 +900,7 @@
     {
       "fields": [
         {
+          "formula": false,
           "label": "Saving throw",
           "max": 0,
           "min": 0,
@@ -841,15 +914,18 @@
             "charisma"
           ],
           "required": true,
+          "scalable": false,
           "type": "choice"
         },
         {
+          "formula": false,
           "label": "Condition",
           "max": 80,
           "min": 0,
           "name": "condition",
           "options": [],
           "required": true,
+          "scalable": false,
           "type": "text"
         }
       ],
@@ -867,6 +943,7 @@
     {
       "fields": [
         {
+          "formula": false,
           "label": "Saving throw",
           "max": 0,
           "min": 0,
@@ -880,18 +957,22 @@
             "charisma"
           ],
           "required": true,
+          "scalable": false,
           "type": "choice"
         },
         {
+          "formula": false,
           "label": "Damage",
           "max": 0,
           "min": 0,
           "name": "dice",
           "options": [],
           "required": true,
+          "scalable": true,
           "type": "dice"
         },
         {
+          "formula": false,
           "label": "Damage type",
           "max": 0,
           "min": 0,
@@ -912,15 +993,18 @@
             "thunder"
           ],
           "required": true,
+          "scalable": false,
           "type": "choice"
         },
         {
+          "formula": false,
           "label": "Half damage on a successful save",
           "max": 0,
           "min": 0,
           "name": "half",
           "options": [],
           "required": false,
+          "scalable": false,
           "type": "flag"
         }
       ],
@@ -948,6 +1032,7 @@
     {
       "fields": [
         {
+          "formula": false,
           "label": "Saving throw",
           "max": 0,
           "min": 0,
@@ -961,9 +1046,11 @@
             "charisma"
           ],
           "required": true,
+          "scalable": false,
           "type": "choice"
         },
         {
+          "formula": false,
           "label": "Edge",
           "max": 0,
           "min": 0,
@@ -974,6 +1061,7 @@
             "fail"
           ],
           "required": true,
+          "scalable": false,
           "type": "choice"
         }
       ],
@@ -994,12 +1082,14 @@
     {
       "fields": [
         {
+          "formula": false,
           "label": "Feet",
           "max": 120,
           "min": 0,
           "name": "ft",
           "options": [],
           "required": true,
+          "scalable": false,
           "type": "number"
         }
       ],
@@ -1022,39 +1112,47 @@
     {
       "fields": [
         {
+          "formula": false,
           "label": "Creature",
           "max": 80,
           "min": 0,
           "name": "monster",
           "options": [],
           "required": true,
+          "scalable": false,
           "type": "text"
         },
         {
+          "formula": false,
           "label": "How many",
           "max": 20,
           "min": 1,
           "name": "count",
           "options": [],
           "required": true,
+          "scalable": true,
           "type": "number"
         },
         {
+          "formula": false,
           "label": "Acts on the caster's turn",
           "max": 0,
           "min": 0,
           "name": "shares",
           "options": [],
           "required": false,
+          "scalable": false,
           "type": "flag"
         },
         {
+          "formula": false,
           "label": "Dodges unless commanded",
           "max": 0,
           "min": 0,
           "name": "needs_command",
           "options": [],
           "required": false,
+          "scalable": false,
           "type": "flag"
         }
       ],
@@ -1072,12 +1170,14 @@
     {
       "fields": [
         {
+          "formula": false,
           "label": "Range in feet",
           "max": 5280,
           "min": 5,
           "name": "range_ft",
           "options": [],
           "required": true,
+          "scalable": false,
           "type": "number"
         }
       ],
@@ -1095,12 +1195,14 @@
     {
       "fields": [
         {
+          "formula": true,
           "label": "Hit points",
           "max": 500,
           "min": 1,
           "name": "amount",
           "options": [],
           "required": true,
+          "scalable": true,
           "type": "number"
         }
       ],

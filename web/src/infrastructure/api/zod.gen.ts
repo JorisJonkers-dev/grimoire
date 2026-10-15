@@ -2115,7 +2115,7 @@ export const zPartHolds = z.object({
 });
 
 /**
- * One value an author fills in for a Part. Min and max bound a number; max also bounds the length of a text.
+ * One value an author fills in for a Part. Min and max bound a number; max also bounds the length of a text. A scalable field grows with the level its Effect is activated at, and a formula field may follow a formula of that level.
  */
 export const zPartField = z.object({
     name: z.string().max(40),
@@ -2131,7 +2131,9 @@ export const zPartField = z.object({
     options: z.array(z.string().max(80)).max(100),
     required: z.boolean(),
     min: z.int().gte(-100000).lte(100000),
-    max: z.int().gte(-100000).lte(100000)
+    max: z.int().gte(-100000).lte(100000),
+    scalable: z.boolean(),
+    formula: z.boolean()
 });
 
 /**

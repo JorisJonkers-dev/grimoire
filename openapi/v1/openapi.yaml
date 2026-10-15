@@ -13043,9 +13043,9 @@ components:
           items: { type: string, maxLength: 80 }
     PartField:
       type: object
-      description: "One value an author fills in for a Part. Min and max bound a number; max also bounds the length of a text."
+      description: "One value an author fills in for a Part. Min and max bound a number; max also bounds the length of a text. A scalable field grows with the level its Effect is activated at, and a formula field may follow a formula of that level."
       additionalProperties: false
-      required: [name, label, type, options, required, min, max]
+      required: [name, label, type, options, required, min, max, scalable, formula]
       properties:
         name: { type: string, maxLength: 40 }
         label: { type: string, maxLength: 80 }
@@ -13057,6 +13057,8 @@ components:
         required: { type: boolean }
         min: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
         max: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        scalable: { type: boolean }
+        formula: { type: boolean }
     SpellPreviewInput:
       type: object
       description: A design to preview, with the spell's name.

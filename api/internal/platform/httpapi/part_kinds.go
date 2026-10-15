@@ -2,6 +2,7 @@ package httpapi
 
 import (
 	"context"
+	"slices"
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/oas"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/effects"
@@ -12,23 +13,30 @@ func (h *Handler) ListPartKinds(context.Context) (oas.ListPartKindsRes, error) {
 	kinds := effects.Kinds()
 	out := make([]oas.PartKind, 0, len(kinds))
 	for _, k := range kinds {
-		out = append(out, partKindOut(k.Describe(), effects.HintsOf(k)))
+		out = append(out, partKindOut(k.Describe(), effects.HintsOf(k), effects.ScalesOf(k)))
 	}
 	return &oas.ListPartKindsOKHeaders{Response: out}, nil
 }
 
-func partKindOut(d effects.Description, h effects.Hints) oas.PartKind {
+func partKindOut(d effects.Description, h effects.Hints, scales []effects.Scalable) oas.PartKind {
 	out := oas.PartKind{
 		Slug: d.Slug, Label: d.Label, Summary: d.Summary, Fields: make([]oas.PartField, 0, len(d.Fields)),
 		Groups: append([]string{}, d.Groups...), OpenGroups: d.OpenGroups, Hints: hintsOut(h),
 	}
 	for _, f := range d.Fields {
-		out.Fields = append(out.Fields, oas.PartField{
-			Name: f.Name, Label: f.Label, Type: oas.PartFieldType(f.Type), Options: append([]string{}, f.Options...),
-			Required: f.Required, Min: int32(f.Min), Max: int32(f.Max), //nolint:gosec // a field's bounds are small
-		})
+		out.Fields = append(out.Fields, partFieldOut(f, scales))
 	}
 	return out
+}
+
+// partFieldOut is a field as served, with whether it scales and may follow a formula.
+func partFieldOut(f effects.Field, scales []effects.Scalable) oas.PartField {
+	i := slices.IndexFunc(scales, func(s effects.Scalable) bool { return s.Field == f.Name })
+	return oas.PartField{
+		Name: f.Name, Label: f.Label, Type: oas.PartFieldType(f.Type), Options: append([]string{}, f.Options...),
+		Required: f.Required, Min: int32(f.Min), Max: int32(f.Max), //nolint:gosec // a field's bounds are small
+		Scalable: i >= 0, Formula: i >= 0 && scales[i].Formula,
+	}
 }
 
 func hintsOut(h effects.Hints) oas.PartHints {

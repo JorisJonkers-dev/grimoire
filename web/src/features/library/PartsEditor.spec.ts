@@ -163,7 +163,7 @@ describe('the Part form drawn from the served definitions', () => {
   it('offers no value for a choice an author may leave out', async () => {
     const mood: PartKind = {
       slug: 'mood', label: 'Mood', summary: 'A mood.', groups: [], openGroups: false, hints: { order: [], sections: [], help: [] },
-      fields: [{ name: 'tone', label: 'Tone', type: 'choice', options: ['calm', 'wild'], required: false, min: 0, max: 0 }],
+      fields: [{ name: 'tone', label: 'Tone', type: 'choice', options: ['calm', 'wild'], required: false, min: 0, max: 0, scalable: false, formula: false }],
     }
     const { model, get, add } = editor({ kinds: ['mood'], beneath: [], fills: [], narrows: [] }, [], [mood])
     await add('parts', 'mood')

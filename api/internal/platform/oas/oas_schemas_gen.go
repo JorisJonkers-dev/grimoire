@@ -40256,7 +40256,8 @@ func (s *Part) SetGroups(val []PartGroup) {
 }
 
 // One value an author fills in for a Part. Min and max bound a number; max also bounds the length of a
-// text.
+// text. A scalable field grows with the level its Effect is activated at, and a formula field may
+// follow a formula of that level.
 // Ref: #/components/schemas/PartField
 type PartField struct {
 	Name     string        `json:"name"`
@@ -40266,6 +40267,8 @@ type PartField struct {
 	Required bool          `json:"required"`
 	Min      int32         `json:"min"`
 	Max      int32         `json:"max"`
+	Scalable bool          `json:"scalable"`
+	Formula  bool          `json:"formula"`
 }
 
 // GetName returns the value of Name.
@@ -40303,6 +40306,16 @@ func (s *PartField) GetMax() int32 {
 	return s.Max
 }
 
+// GetScalable returns the value of Scalable.
+func (s *PartField) GetScalable() bool {
+	return s.Scalable
+}
+
+// GetFormula returns the value of Formula.
+func (s *PartField) GetFormula() bool {
+	return s.Formula
+}
+
 // SetName sets the value of Name.
 func (s *PartField) SetName(val string) {
 	s.Name = val
@@ -40336,6 +40349,16 @@ func (s *PartField) SetMin(val int32) {
 // SetMax sets the value of Max.
 func (s *PartField) SetMax(val int32) {
 	s.Max = val
+}
+
+// SetScalable sets the value of Scalable.
+func (s *PartField) SetScalable(val bool) {
+	s.Scalable = val
+}
+
+// SetFormula sets the value of Formula.
+func (s *PartField) SetFormula(val bool) {
+	s.Formula = val
 }
 
 type PartFieldType string
