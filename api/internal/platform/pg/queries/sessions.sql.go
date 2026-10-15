@@ -731,8 +731,8 @@ func (q *Queries) GetSession(ctx context.Context, arg GetSessionParams) (PlaySes
 }
 
 const insertCast = `-- name: InsertCast :exec
-INSERT INTO play.area_casts (id, session_id, caster_token_id, spell, dc, damage_roll_id)
-VALUES ($1, $2, $3, $4, $5, $6)
+INSERT INTO play.area_casts (id, session_id, caster_token_id, spell, dc, damage_roll_id, slot_level)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
 `
 
 type InsertCastParams struct {
@@ -742,6 +742,7 @@ type InsertCastParams struct {
 	Spell         string
 	Dc            int32
 	DamageRollID  pgtype.UUID
+	SlotLevel     pgtype.Int4
 }
 
 func (q *Queries) InsertCast(ctx context.Context, arg InsertCastParams) error {
@@ -752,6 +753,7 @@ func (q *Queries) InsertCast(ctx context.Context, arg InsertCastParams) error {
 		arg.Spell,
 		arg.Dc,
 		arg.DamageRollID,
+		arg.SlotLevel,
 	)
 	return err
 }
@@ -2302,7 +2304,7 @@ func (q *Queries) SessionByID(ctx context.Context, id uuid.UUID) (PlaySession, e
 }
 
 const sessionCast = `-- name: SessionCast :one
-SELECT id, caster_token_id, spell, dc, damage_roll_id FROM play.area_casts WHERE session_id = $1
+SELECT id, caster_token_id, spell, dc, damage_roll_id, slot_level FROM play.area_casts WHERE session_id = $1
 `
 
 type SessionCastRow struct {
@@ -2311,6 +2313,7 @@ type SessionCastRow struct {
 	Spell         string
 	Dc            int32
 	DamageRollID  pgtype.UUID
+	SlotLevel     pgtype.Int4
 }
 
 func (q *Queries) SessionCast(ctx context.Context, sessionID uuid.UUID) (SessionCastRow, error) {
@@ -2322,6 +2325,7 @@ func (q *Queries) SessionCast(ctx context.Context, sessionID uuid.UUID) (Session
 		&i.Spell,
 		&i.Dc,
 		&i.DamageRollID,
+		&i.SlotLevel,
 	)
 	return i, err
 }

@@ -23,22 +23,6 @@ SELECT effect_id, ordinal, kind, parent, group_name FROM compendium.effect_compo
 -- name: ListEffectPartsOfKind :many
 SELECT effect_id, ordinal FROM compendium.effect_components WHERE kind = @kind;
 
--- name: ClearEffectScaling :exec
-DELETE FROM compendium.effect_scalings WHERE effect_id = @effect_id;
-
--- name: InsertEffectScaling :exec
-INSERT INTO compendium.effect_scalings (effect_id, axis, class_slug, column_name, base_level, dice)
-VALUES (@effect_id, @axis, @class_slug, @column_name, @base_level, @dice);
-
--- name: InsertEffectScalingStep :exec
-INSERT INTO compendium.effect_scaling_steps (effect_id, at_level, dice) VALUES (@effect_id, @at_level, @dice);
-
--- name: ListEffectScalings :many
-SELECT effect_id, axis, class_slug, column_name, base_level, dice FROM compendium.effect_scalings;
-
--- name: ListEffectScalingSteps :many
-SELECT effect_id, at_level, dice FROM compendium.effect_scaling_steps ORDER BY effect_id, at_level;
-
 -- name: ListSurfaceDefinitions :many
 SELECT slug, name, cost, obscures, hazard_dice, hazard_type, every_step, effect_slug FROM compendium.surface_definitions ORDER BY slug;
 
