@@ -4,6 +4,7 @@ import type { Part, SpellBuild, SpellDesign } from '@/infrastructure/api/types.g
 import { expectAccessible } from '@/test/axe'
 import { mountApp, unmountAll } from '@/test/mountApp'
 import { jsonResponse } from '@/test/mountWithQuery'
+import served from '../../../../fixtures/part-kinds.json'
 
 const SPELL = '0190c7a8-0000-7000-8000-0000000000e9'
 // charmedIf charms a creature of one type that fails the spell's save.
@@ -22,8 +23,9 @@ const start: SpellDesign = {
 const entry = { id: SPELL, kind: 'spell' as const, name: 'Marsh Lantern', fields: [], revision: 1, createdAt: at, updatedAt: at }
 const build = (design: SpellDesign, extra: Partial<SpellBuild> = {}): SpellBuild => ({
   entry,
-  design, effect: 'hb-0190c7a80000', text: ['Casting Time: 1 action.'], hexes: [{ q: 0, r: 0 }, { q: 1, r: 0 }], ...extra,
+  design, effect: 'hb-0190c7a80000', text: ['Casting Time: 1 action.'], hexes: [{ q: 0, r: 0 }, { q: 1, r: 0 }], holds: served.holds.spell, ...extra,
 })
+const kinds = { '/api/v1/builders/part-kinds': () => served.kinds }
 
 afterEach(() => {
   unmountAll()
@@ -31,9 +33,10 @@ afterEach(() => {
 })
 
 describe('effect builder', () => {
-  it('builds the Marsh Lantern from rows, previews it and saves it', async () => {
+  it('builds the Marsh Lantern from the served kinds, previews it and saves it', async () => {
     const sent: { method: string; body: unknown }[] = []
     const { wrapper } = await mountApp(`/library/${SPELL}/spell`, {
+      ...kinds,
       '/api/v1/builders/spells/preview': async (_u, req) => {
         const body = (await req.clone().json()) as { design: SpellDesign }
         sent.push({ method: 'PREVIEW', body })
@@ -73,35 +76,40 @@ describe('effect builder', () => {
     await set('material', false)
     await set('material', true)
     await set('material-text', 'a lantern of bog glass')
-    for (const type of ['damage', 'condition', 'light', 'reveal', 'surface', 'manual']) {
-      await set('add-type', type)
-      await wrapper.get('[data-testid="add-part"]').trigger('click')
+    const add = async (list: string, kind: string) => {
+      await set(`${list}-kind`, kind)
+      await wrapper.get(`[data-testid="${list}-add"]`).trigger('click')
     }
-    await set('when-0', 'start_of_turn')
-    await set('dice-0', '1d6')
-    await set('damage-type-0', 'radiant')
-    await set('condition-1', 'charmed')
-    await wrapper.get('[data-testid="only-1-undead"]').trigger('change')
-    await wrapper.get('[data-testid="only-1-fey"]').trigger('change')
-    await wrapper.get('[data-testid="only-1-fey"]').trigger('change')
-    await wrapper.get('[data-testid="only-1-fey"]').trigger('change')
-    await set('bright-2', 20)
-    await set('dim-2', 20)
-    await wrapper.get('[data-testid="quality-3-hidden"]').trigger('change')
-    await wrapper.get('[data-testid="quality-3-hidden"]').trigger('change')
-    await set('surface-4', 'fog')
-    await set('rounds-4', 3)
-    await set('text-5', 'Ring the bell.')
-    await wrapper.get('[data-testid="remove-5"]').trigger('click')
-    await wrapper.get('[data-testid="remove-4"]').trigger('click')
-    await wrapper.get('[data-testid="down-2"]').trigger('click')
-    await wrapper.get('[data-testid="up-3"]').trigger('click')
-    await wrapper.get('[data-testid="up-0"]').trigger('click')
-    await wrapper.get('[data-testid="part-0"]').trigger('dragstart')
-    await wrapper.get('[data-testid="part-3"]').trigger('drop')
-    await wrapper.get('[data-testid="part-3"]').trigger('dragstart')
-    await wrapper.get('[data-testid="part-0"]').trigger('drop')
-    expect(wrapper.findAll('[data-testid="parts"] .kind').map((k) => k.text())).toEqual(['damage', 'condition', 'light', 'reveal'])
+    await set('turn-damage', true)
+    await set('turn-dice', '1d6')
+    await set('turn-type', 'radiant')
+    for (const [i, creature] of ['undead', 'fey'].entries()) {
+      await add('parts', 'branch')
+      await set(`parts-${String(i)}-when`, 'creature_is')
+      await set(`parts-${String(i)}-creature_type`, creature)
+      await add(`parts-${String(i)}-then`, 'branch')
+      await set(`parts-${String(i)}-then-0-n`, 1)
+      await add(`parts-${String(i)}-then-0-then`, 'save_condition')
+      await set(`parts-${String(i)}-then-0-then-0-condition`, 'charmed')
+    }
+    for (const kind of ['light', 'reveal', 'create_surface', 'manual']) await add('parts', kind)
+    await set('parts-2-bright_ft', 20)
+    await set('parts-2-dim_ft', 20)
+    await set('parts-3-qualities-invisible', true)
+    await set('parts-4-surface', 'fog')
+    await set('parts-4-rounds', 3)
+    await set('parts-5-instruction', 'Ring the bell.')
+    await wrapper.get('[data-testid="parts-5-remove"]').trigger('click')
+    await wrapper.get('[data-testid="parts-4-remove"]').trigger('click')
+    await wrapper.get('[data-testid="parts-2-down"]').trigger('click')
+    await wrapper.get('[data-testid="parts-3-up"]').trigger('click')
+    await wrapper.get('[data-testid="parts-0-up"]').trigger('click')
+    await wrapper.get('[data-testid="parts-0"]').trigger('dragstart')
+    await wrapper.get('[data-testid="parts-3"]').trigger('drop')
+    await wrapper.get('[data-testid="parts-3"]').trigger('dragstart')
+    await wrapper.get('[data-testid="parts-0"]').trigger('drop')
+    expect(wrapper.findAll('[data-testid="parts"] > li > .head > .kind').map((k) => k.text())).toEqual(['Branch', 'Branch', 'Light', 'Reveal'])
+    await expectAccessible(wrapper.element as Element)
     await wrapper.get('[data-testid="preview"]').trigger('click')
     await flushPromises()
     expect(wrapper.findAll('[data-testid="area-hex"]')).toHaveLength(18)
@@ -123,7 +131,7 @@ describe('effect builder', () => {
     })
   })
 
-  it('reads Parts back into rows, keeps what no row shows, and writes them back as they were', async () => {
+  it('reads every stored Part back into the form, the ones it would not offer too, and writes them back as they were', async () => {
     const summon: Part = { kind: 'summon', values: { monster: { text: 'wolf' }, count: { number: 2 } }, groups: [] }
     const odd: Part = { kind: 'branch', values: { when: { text: 'hp_at_most' }, n: { number: 10 } }, groups: [{ name: 'then', parts: [{ kind: 'manual', values: { instruction: { text: 'Flee.' } }, groups: [] }] }] }
     const stored: SpellDesign = {
@@ -139,6 +147,7 @@ describe('effect builder', () => {
     }
     const sent: SpellDesign[] = []
     const { wrapper } = await mountApp(`/library/${SPELL}/spell`, {
+      ...kinds,
       [`/api/v1/builders/spells/${SPELL}`]: async (_u, req) => {
         if (req.method === 'PUT') {
           sent.push((await req.clone().json()) as SpellDesign)
@@ -147,11 +156,16 @@ describe('effect builder', () => {
         return build(structuredClone(stored))
       },
     })
-    expect(wrapper.findAll('[data-testid="parts"] .kind').map((k) => k.text())).toEqual(['damage', 'condition', 'condition', 'surface', 'manual', 'summon', 'branch', 'damage'])
-    expect(wrapper.get('[data-testid="kept-5"]').text()).toContain('cannot change it yet')
-    expect((wrapper.get('[data-testid="only-2-fey"]').element as HTMLInputElement).checked).toBe(true)
-    expect((wrapper.get('[data-testid="when-7"] option[value="start_of_turn"]').element as HTMLOptionElement).disabled).toBe(false)
-    expect((wrapper.get('[data-testid="when-0"] option[value="start_of_turn"]').element as HTMLOptionElement).disabled).toBe(true)
+    expect(wrapper.findAll('[data-testid="parts"] > li > .head > .kind').map((k) => k.text())).toEqual([
+      'Save for damage', 'Branch', 'Branch', 'Branch', 'Surface', 'Manual Effect', 'Summon', 'Branch',
+    ])
+    const value = (id: string) => (wrapper.get(`[data-testid="${id}"]`).element as HTMLInputElement).value
+    expect(value('parts-3-creature_type')).toBe('fey')
+    expect(value('parts-3-then-0-then-0-condition')).toBe('charmed')
+    expect(value('parts-6-monster')).toBe('wolf')
+    expect(value('parts-7-then-0-instruction')).toBe('Flee.')
+    expect((wrapper.get('[data-testid="turn-damage"]').element as HTMLInputElement).checked).toBe(true)
+    expect(value('turn-dice')).toBe('1d4')
     await wrapper.get('[data-testid="builder-form"]').trigger('submit')
     await flushPromises()
     expect(sent[0]).toEqual(stored)
@@ -159,6 +173,7 @@ describe('effect builder', () => {
 
   it('shows a Shared Library copy without saving, reports a design that will not build, and refuses what is not a spell', async () => {
     const { wrapper } = await mountApp(`/library/${SPELL}/spell`, {
+      ...kinds,
       '/api/v1/builders/spells/preview': () => jsonResponse({ type: 'about:blank', title: 'Not allowed', status: 422, detail: 'a condition needs the save the targets make' }, 422),
       [`/api/v1/builders/spells/${SPELL}`]: () => build(start, { entry: { ...entry, shared: true } }),
     })

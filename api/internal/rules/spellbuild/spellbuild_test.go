@@ -80,8 +80,8 @@ func TestTheMarshLanternBuildsIntoAnEffect(t *testing.T) {
 		"Duration: Concentration, up to 1 minute.",
 		"Bright light fills 20 feet around where it lands, and dim light another 20 feet.",
 		"Every creature and object in the area loses Invisible, whatever anyone's senses.",
-		"If the creature is an undead, if a creature fails the save by 1 or more, on a failed Wisdom saving throw, a creature has the Charmed condition.",
-		"If the creature is a fey, if a creature fails the save by 1 or more, on a failed Wisdom saving throw, a creature has the Charmed condition.",
+		"If a creature is an undead and fails the save, it has the Charmed condition.",
+		"If a creature is a fey and fails the save, it has the Charmed condition.",
 		"A creature that starts its turn in the area takes 1d6 radiant damage.",
 	}
 	if !reflect.DeepEqual(b.Text, wantText) {
@@ -216,7 +216,7 @@ func TestDesignsAreChecked(t *testing.T) {
 		"condition":       {only(part("save_condition", effects.Values{"condition": text("sleepy")})), "choose a condition"},
 		"deep condition":  {only(first(first(part("save_condition", effects.Values{"condition": text("sleepy")})))), "choose a condition"},
 		"two lights":      {func(d *spellbuild.Design) { d.Parts = append(d.Parts, light) }, "one light"},
-		"surface":         {only(part("create_surface", effects.Values{"surface": text("lava"), "rounds": number(2)})), "choose a Surface"},
+		"surface":         {only(part("create_surface", effects.Values{"surface": text("lava"), "rounds": number(2)})), "choose a surface"},
 	} {
 		_, err := spellbuild.Build("hb-x", "X", with(c.change), surfaces)
 		if err == nil || !strings.Contains(err.Error(), c.want) {
@@ -281,5 +281,23 @@ func TestAHomebrewSpellRunsUnderASlugOfItsEntry(t *testing.T) {
 	t.Parallel()
 	if got := spellbuild.Slug("0190c7a8-0000-7000-8000-0000000000e1"); got != "hb-0190c7a80000" {
 		t.Fatalf("slug = %q", got)
+	}
+}
+
+// A spell serves what it holds from the lists it checks Parts against: the kinds at the top and beneath
+// a branch, the save it fills in, and the Surfaces and conditions a Part may name.
+func TestASpellServesWhatItHolds(t *testing.T) {
+	t.Parallel()
+	want := effects.Holds{
+		Kinds:   []string{"branch", "create_surface", "light", "manual", "reveal", "save_condition", "save_damage"},
+		Beneath: []string{"branch", "manual", "save_condition"},
+		Fills:   []string{"ability"},
+		Narrows: []effects.Narrow{
+			{Kind: "create_surface", Field: "surface", Options: surfaces},
+			{Kind: "save_condition", Field: "condition", Options: spellbuild.Conditions()},
+		},
+	}
+	if got := spellbuild.Holds(surfaces); !reflect.DeepEqual(got, want) {
+		t.Errorf("holds %+v, want %+v", got, want)
 	}
 }

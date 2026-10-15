@@ -14,12 +14,13 @@ import (
 )
 
 // SpellBuild is a homebrew spell in the Effect builder: its entry, its design, the Effect it builds
-// into with its rules text, and its area drawn as hexes.
+// into with its rules text, its area drawn as hexes, and what it takes as Parts.
 type SpellBuild struct {
 	Entry  domain.Entry
 	Design spellbuild.Design
 	Built  spellbuild.Built
 	Hexes  []hex.Coord
+	Holds  effects.Holds
 }
 
 // Surfaces lists the Surface kinds a homebrew spell may lay down.
@@ -33,17 +34,17 @@ func firstDesign() spellbuild.Design {
 	}
 }
 
-// build checks a design against the Surfaces there are and builds it.
-func (s *Service) build(ctx context.Context, id uuid.UUID, name string, d spellbuild.Design) (spellbuild.Built, error) {
+// build checks a design against the Surfaces there are and builds it, with what a spell takes as Parts.
+func (s *Service) build(ctx context.Context, id uuid.UUID, name string, d spellbuild.Design) (spellbuild.Built, effects.Holds, error) {
 	kinds, err := s.Surfaces(ctx)
 	if err != nil {
-		return spellbuild.Built{}, err
+		return spellbuild.Built{}, effects.Holds{}, err
 	}
 	b, err := spellbuild.Build(spellbuild.Slug(id.String()), name, d, kinds)
 	if err != nil {
-		return b, apperr.Refuse(err.Error())
+		return b, effects.Holds{}, apperr.Refuse(err.Error())
 	}
-	return b, nil
+	return b, spellbuild.Holds(kinds), nil
 }
 
 // Spell reads a homebrew spell in the builder: one of the caller's, or a Shared Library copy.
@@ -53,8 +54,8 @@ func (s *Service) Spell(ctx context.Context, c caller.Caller, id uuid.UUID) (Spe
 		return SpellBuild{}, err
 	}
 	d := designOf(e, firstDesign())
-	b, err := s.build(ctx, id, e.Name, d)
-	return SpellBuild{Entry: e, Design: d, Built: b, Hexes: spellbuild.Preview(d.Targeting)}, err
+	b, holds, err := s.build(ctx, id, e.Name, d)
+	return SpellBuild{Entry: e, Design: d, Built: b, Hexes: spellbuild.Preview(d.Targeting), Holds: holds}, err
 }
 
 // SaveSpell saves a design for one of the caller's spells as its next Revision.
@@ -63,7 +64,7 @@ func (s *Service) SaveSpell(ctx context.Context, c caller.Caller, id uuid.UUID, 
 	if err != nil {
 		return SpellBuild{}, err
 	}
-	if _, err := s.build(ctx, id, e.Name, d); err != nil {
+	if _, _, err := s.build(ctx, id, e.Name, d); err != nil {
 		return SpellBuild{}, err
 	}
 	if err := s.saveDesign(ctx, c, e, d); err != nil {
@@ -74,6 +75,6 @@ func (s *Service) SaveSpell(ctx context.Context, c caller.Caller, id uuid.UUID, 
 
 // PreviewSpell builds a design without saving it: its rules text and its area.
 func (s *Service) PreviewSpell(ctx context.Context, name string, d spellbuild.Design) (SpellBuild, error) {
-	b, err := s.build(ctx, uuid.Nil, name, d)
-	return SpellBuild{Design: d, Built: b, Hexes: spellbuild.Preview(d.Targeting)}, err
+	b, holds, err := s.build(ctx, uuid.Nil, name, d)
+	return SpellBuild{Design: d, Built: b, Hexes: spellbuild.Preview(d.Targeting), Holds: holds}, err
 }

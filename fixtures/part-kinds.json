@@ -1,0 +1,1119 @@
+{
+  "holds": {
+    "condition": {
+      "beneath": [],
+      "fills": [],
+      "kinds": [
+        "crit_within",
+        "edge",
+        "immobile",
+        "incapacitated",
+        "manual",
+        "save_edge",
+        "speed_penalty"
+      ],
+      "narrows": []
+    },
+    "spell": {
+      "beneath": [
+        "branch",
+        "manual",
+        "save_condition"
+      ],
+      "fills": [
+        "ability"
+      ],
+      "kinds": [
+        "branch",
+        "create_surface",
+        "light",
+        "manual",
+        "reveal",
+        "save_condition",
+        "save_damage"
+      ],
+      "narrows": [
+        {
+          "field": "surface",
+          "kind": "create_surface",
+          "options": [
+            "consecrated",
+            "darkness",
+            "electrified",
+            "fire",
+            "fog",
+            "grease",
+            "ice",
+            "lava",
+            "mud",
+            "plant-growth",
+            "spikes",
+            "stinking-cloud",
+            "water",
+            "web"
+          ]
+        },
+        {
+          "field": "condition",
+          "kind": "save_condition",
+          "options": [
+            "blinded",
+            "charmed",
+            "deafened",
+            "frightened",
+            "grappled",
+            "incapacitated",
+            "invisible",
+            "paralyzed",
+            "petrified",
+            "poisoned",
+            "prone",
+            "restrained",
+            "stunned",
+            "unconscious"
+          ]
+        }
+      ]
+    }
+  },
+  "kinds": [
+    {
+      "fields": [
+        {
+          "label": "Shape",
+          "max": 0,
+          "min": 0,
+          "name": "shape",
+          "options": [
+            "sphere",
+            "cylinder",
+            "emanation",
+            "ring",
+            "cone",
+            "cube",
+            "line",
+            "wall"
+          ],
+          "required": true,
+          "type": "choice"
+        },
+        {
+          "label": "Size in feet",
+          "max": 500,
+          "min": 5,
+          "name": "size_ft",
+          "options": [],
+          "required": true,
+          "type": "number"
+        },
+        {
+          "label": "Range in feet",
+          "max": 5280,
+          "min": 0,
+          "name": "range_ft",
+          "options": [],
+          "required": false,
+          "type": "number"
+        }
+      ],
+      "groups": [],
+      "hints": {
+        "help": [],
+        "order": [],
+        "sections": []
+      },
+      "label": "Area",
+      "openGroups": false,
+      "slug": "area",
+      "summary": "The template an Effect fills: its shape, its size and how far away it may be placed."
+    },
+    {
+      "fields": [
+        {
+          "label": "Saving throw",
+          "max": 0,
+          "min": 0,
+          "name": "ability",
+          "options": [
+            "strength",
+            "dexterity",
+            "constitution",
+            "intelligence",
+            "wisdom",
+            "charisma"
+          ],
+          "required": true,
+          "type": "choice"
+        }
+      ],
+      "groups": [],
+      "hints": {
+        "help": [],
+        "order": [],
+        "sections": []
+      },
+      "label": "Save in the area",
+      "openGroups": false,
+      "slug": "area_save",
+      "summary": "Each creature in the area makes a saving throw; what a failure brings sits in a branch."
+    },
+    {
+      "fields": [
+        {
+          "label": "Die",
+          "max": 0,
+          "min": 0,
+          "name": "dice",
+          "options": [],
+          "required": true,
+          "type": "dice"
+        },
+        {
+          "label": "Added to",
+          "max": 0,
+          "min": 0,
+          "name": "on",
+          "options": [
+            "attack_rolls",
+            "saving_throws"
+          ],
+          "required": true,
+          "type": "choices"
+        }
+      ],
+      "groups": [],
+      "hints": {
+        "help": [],
+        "order": [],
+        "sections": []
+      },
+      "label": "Bonus die",
+      "openGroups": false,
+      "slug": "bonus_die",
+      "summary": "Adds a die to some of the bearer's d20 rolls while the Effect lasts."
+    },
+    {
+      "fields": [
+        {
+          "label": "When",
+          "max": 0,
+          "min": 0,
+          "name": "when",
+          "options": [
+            "fails_by",
+            "hp_at_most",
+            "first_each_turn",
+            "creature_is"
+          ],
+          "required": true,
+          "type": "choice"
+        },
+        {
+          "label": "By or at most",
+          "max": 1000,
+          "min": 0,
+          "name": "n",
+          "options": [],
+          "required": false,
+          "type": "number"
+        },
+        {
+          "label": "Creature type",
+          "max": 0,
+          "min": 0,
+          "name": "creature_type",
+          "options": [],
+          "required": false,
+          "type": "text"
+        }
+      ],
+      "groups": [
+        "then"
+      ],
+      "hints": {
+        "help": [
+          {
+            "field": "n",
+            "text": "For fails by, how far the save fails; for HP at most, the Hit Points."
+          },
+          {
+            "field": "creature_type",
+            "text": "For creature is, such as fey."
+          }
+        ],
+        "order": [],
+        "sections": [
+          {
+            "fields": [
+              "when",
+              "n",
+              "creature_type"
+            ],
+            "label": "Test"
+          }
+        ]
+      },
+      "label": "Branch",
+      "openGroups": false,
+      "slug": "branch",
+      "summary": "Adds the Parts beneath it for a creature when its test holds as the Effect lands."
+    },
+    {
+      "fields": [],
+      "groups": [],
+      "hints": {
+        "help": [],
+        "order": [],
+        "sections": []
+      },
+      "label": "Choice of modes",
+      "openGroups": true,
+      "slug": "choice",
+      "summary": "Offers named modes; whoever applies the Effect picks one, and only its Parts count."
+    },
+    {
+      "fields": [
+        {
+          "label": "Range in feet",
+          "max": 5280,
+          "min": 5,
+          "name": "range_ft",
+          "options": [],
+          "required": true,
+          "type": "number"
+        }
+      ],
+      "groups": [],
+      "hints": {
+        "help": [],
+        "order": [],
+        "sections": []
+      },
+      "label": "Counter a spell",
+      "openGroups": false,
+      "slug": "counter",
+      "summary": "Lets the bearer use its reaction to make a spell cast nearby fail."
+    },
+    {
+      "fields": [
+        {
+          "label": "Surface",
+          "max": 40,
+          "min": 0,
+          "name": "surface",
+          "options": [],
+          "required": true,
+          "type": "text"
+        },
+        {
+          "label": "Rounds",
+          "max": 1000,
+          "min": 1,
+          "name": "rounds",
+          "options": [],
+          "required": true,
+          "type": "number"
+        }
+      ],
+      "groups": [],
+      "hints": {
+        "help": [
+          {
+            "field": "rounds",
+            "text": "How long the Surface lies."
+          }
+        ],
+        "order": [],
+        "sections": []
+      },
+      "label": "Surface",
+      "openGroups": false,
+      "slug": "create_surface",
+      "summary": "Covers the area in a Surface for some rounds."
+    },
+    {
+      "fields": [
+        {
+          "label": "Within feet",
+          "max": 120,
+          "min": 0,
+          "name": "feet",
+          "options": [],
+          "required": true,
+          "type": "number"
+        }
+      ],
+      "groups": [],
+      "hints": {
+        "help": [
+          {
+            "field": "feet",
+            "text": "A hit from this close is a Critical Hit."
+          }
+        ],
+        "order": [],
+        "sections": []
+      },
+      "label": "Critical Hits up close",
+      "openGroups": false,
+      "slug": "crit_within",
+      "summary": "Makes every hit on the bearer from close by a Critical Hit."
+    },
+    {
+      "fields": [],
+      "groups": [],
+      "hints": {
+        "help": [],
+        "order": [],
+        "sections": []
+      },
+      "label": "Dispel",
+      "openGroups": false,
+      "slug": "dispel",
+      "summary": "Ends every spell on the bearer as the Effect lands."
+    },
+    {
+      "fields": [
+        {
+          "label": "On attacks against the bearer",
+          "max": 0,
+          "min": 0,
+          "name": "against",
+          "options": [],
+          "required": false,
+          "type": "flag"
+        },
+        {
+          "label": "Advantage",
+          "max": 0,
+          "min": 0,
+          "name": "advantage",
+          "options": [],
+          "required": false,
+          "type": "flag"
+        },
+        {
+          "label": "From",
+          "max": 0,
+          "min": 0,
+          "name": "range",
+          "options": [
+            "any",
+            "within_five",
+            "beyond_five"
+          ],
+          "required": true,
+          "type": "choice"
+        },
+        {
+          "label": "Only for the Effect's source",
+          "max": 0,
+          "min": 0,
+          "name": "source_only",
+          "options": [],
+          "required": false,
+          "type": "flag"
+        }
+      ],
+      "groups": [],
+      "hints": {
+        "help": [
+          {
+            "field": "advantage",
+            "text": "Off: Disadvantage."
+          },
+          {
+            "field": "against",
+            "text": "Off: the bearer's own attacks."
+          },
+          {
+            "field": "source_only",
+            "text": "Only whoever applied the Effect, as with Vex."
+          }
+        ],
+        "order": [
+          "advantage",
+          "against",
+          "range",
+          "source_only"
+        ],
+        "sections": [
+          {
+            "fields": [
+              "against",
+              "range",
+              "source_only"
+            ],
+            "label": "Which attacks"
+          }
+        ]
+      },
+      "label": "Advantage or disadvantage",
+      "openGroups": false,
+      "slug": "edge",
+      "summary": "Gives the bearer's attacks, or attacks against the bearer, advantage or disadvantage."
+    },
+    {
+      "fields": [
+        {
+          "label": "D20 penalty per level",
+          "max": 10,
+          "min": 0,
+          "name": "d20_per_level",
+          "options": [],
+          "required": false,
+          "type": "number"
+        },
+        {
+          "label": "Speed penalty per level",
+          "max": 30,
+          "min": 0,
+          "name": "speed_ft_per_level",
+          "options": [],
+          "required": false,
+          "type": "number"
+        },
+        {
+          "label": "Dies at level",
+          "max": 10,
+          "min": 0,
+          "name": "death_at",
+          "options": [],
+          "required": false,
+          "type": "number"
+        },
+        {
+          "label": "Highest level",
+          "max": 10,
+          "min": 0,
+          "name": "max_level",
+          "options": [],
+          "required": false,
+          "type": "number"
+        }
+      ],
+      "groups": [],
+      "hints": {
+        "help": [],
+        "order": [],
+        "sections": []
+      },
+      "label": "Stacking levels",
+      "openGroups": false,
+      "slug": "exhausting",
+      "summary": "Stacks in levels, each taking from d20 tests and speed, and may kill at a level."
+    },
+    {
+      "fields": [
+        {
+          "label": "Damage",
+          "max": 0,
+          "min": 0,
+          "name": "dice",
+          "options": [],
+          "required": true,
+          "type": "dice"
+        }
+      ],
+      "groups": [],
+      "hints": {
+        "help": [],
+        "order": [],
+        "sections": []
+      },
+      "label": "Extra damage",
+      "openGroups": false,
+      "slug": "extra_damage",
+      "summary": "Adds dice to every hit the Effect's source lands on the bearer."
+    },
+    {
+      "fields": [
+        {
+          "label": "Feet",
+          "max": 120,
+          "min": 5,
+          "name": "ft",
+          "options": [],
+          "required": true,
+          "type": "number"
+        },
+        {
+          "label": "Pull toward the caster",
+          "max": 0,
+          "min": 0,
+          "name": "toward",
+          "options": [],
+          "required": false,
+          "type": "flag"
+        }
+      ],
+      "groups": [],
+      "hints": {
+        "help": [],
+        "order": [],
+        "sections": []
+      },
+      "label": "Push or pull",
+      "openGroups": false,
+      "slug": "forced_move",
+      "summary": "Moves each creature that fails straight away from the caster, or toward it."
+    },
+    {
+      "fields": [
+        {
+          "label": "Creature, or empty for the caster's choice",
+          "max": 80,
+          "min": 0,
+          "name": "monster",
+          "options": [],
+          "required": false,
+          "type": "text"
+        },
+        {
+          "label": "Temporary Hit Points, or 0 for the creature's maximum",
+          "max": 999,
+          "min": 0,
+          "name": "temp_hp",
+          "options": [],
+          "required": false,
+          "type": "number"
+        }
+      ],
+      "groups": [],
+      "hints": {
+        "help": [],
+        "order": [],
+        "sections": []
+      },
+      "label": "Take a form",
+      "openGroups": false,
+      "slug": "form",
+      "summary": "Overlays the bearer's statistics with a creature's until its hit points run out."
+    },
+    {
+      "fields": [
+        {
+          "label": "Feature",
+          "max": 120,
+          "min": 0,
+          "name": "name",
+          "options": [],
+          "required": true,
+          "type": "text"
+        }
+      ],
+      "groups": [],
+      "hints": {
+        "help": [],
+        "order": [],
+        "sections": []
+      },
+      "label": "Grant a feature",
+      "openGroups": false,
+      "slug": "grant_feature",
+      "summary": "Gives the bearer a feature while the Effect lasts."
+    },
+    {
+      "fields": [],
+      "groups": [],
+      "hints": {
+        "help": [],
+        "order": [],
+        "sections": []
+      },
+      "label": "Speed 0",
+      "openGroups": false,
+      "slug": "immobile",
+      "summary": "Holds the bearer's speed at zero."
+    },
+    {
+      "fields": [],
+      "groups": [],
+      "hints": {
+        "help": [],
+        "order": [],
+        "sections": []
+      },
+      "label": "Incapacitated",
+      "openGroups": false,
+      "slug": "incapacitated",
+      "summary": "Takes away the bearer's actions, bonus actions and reactions."
+    },
+    {
+      "fields": [
+        {
+          "label": "Bright light in feet",
+          "max": 120,
+          "min": 5,
+          "name": "bright_ft",
+          "options": [],
+          "required": true,
+          "type": "number"
+        },
+        {
+          "label": "Dim light beyond, in feet",
+          "max": 120,
+          "min": 0,
+          "name": "dim_ft",
+          "options": [],
+          "required": false,
+          "type": "number"
+        }
+      ],
+      "groups": [],
+      "hints": {
+        "help": [
+          {
+            "field": "dim_ft",
+            "text": "Beyond the bright light; 0 for none."
+          }
+        ],
+        "order": [],
+        "sections": []
+      },
+      "label": "Light",
+      "openGroups": false,
+      "slug": "light",
+      "summary": "Sheds bright and dim light from where the Effect lands."
+    },
+    {
+      "fields": [
+        {
+          "label": "Instruction",
+          "max": 500,
+          "min": 0,
+          "name": "instruction",
+          "options": [],
+          "required": true,
+          "type": "text"
+        }
+      ],
+      "groups": [],
+      "hints": {
+        "help": [
+          {
+            "field": "instruction",
+            "text": "What the DM decides when the Effect lands; play waits for it."
+          }
+        ],
+        "order": [],
+        "sections": []
+      },
+      "label": "Manual Effect",
+      "openGroups": false,
+      "slug": "manual",
+      "summary": "An outcome the DM decides by hand from a prompt; play waits on it."
+    },
+    {
+      "fields": [
+        {
+          "label": "Feet per foot",
+          "max": 4,
+          "min": 1,
+          "name": "multiplier",
+          "options": [],
+          "required": true,
+          "type": "number"
+        }
+      ],
+      "groups": [],
+      "hints": {
+        "help": [],
+        "order": [],
+        "sections": []
+      },
+      "label": "Movement cost",
+      "openGroups": false,
+      "slug": "move_cost",
+      "summary": "Makes each foot of the bearer's movement cost more."
+    },
+    {
+      "fields": [
+        {
+          "label": "When the bearer is",
+          "max": 0,
+          "min": 0,
+          "name": "trigger",
+          "options": [
+            "damaged"
+          ],
+          "required": true,
+          "type": "choice"
+        },
+        {
+          "label": "What it does",
+          "max": 500,
+          "min": 0,
+          "name": "instruction",
+          "options": [],
+          "required": true,
+          "type": "text"
+        }
+      ],
+      "groups": [],
+      "hints": {
+        "help": [],
+        "order": [],
+        "sections": []
+      },
+      "label": "Reaction",
+      "openGroups": false,
+      "slug": "reacts",
+      "summary": "Lets the bearer take a reaction, which the DM resolves, when something happens to it."
+    },
+    {
+      "fields": [
+        {
+          "label": "Resource",
+          "max": 80,
+          "min": 0,
+          "name": "resource",
+          "options": [],
+          "required": true,
+          "type": "text"
+        },
+        {
+          "label": "Uses given back, or taken when below 0",
+          "max": 20,
+          "min": -20,
+          "name": "delta",
+          "options": [],
+          "required": true,
+          "type": "number"
+        }
+      ],
+      "groups": [],
+      "hints": {
+        "help": [],
+        "order": [],
+        "sections": []
+      },
+      "label": "Resource uses",
+      "openGroups": false,
+      "slug": "resource_change",
+      "summary": "Gives back or takes uses of one of the bearer's Resources as the Effect lands."
+    },
+    {
+      "fields": [
+        {
+          "label": "Visibility Qualities",
+          "max": 0,
+          "min": 0,
+          "name": "qualities",
+          "options": [
+            "hidden",
+            "invisible",
+            "disguised",
+            "illusory",
+            "ethereal",
+            "darkness",
+            "heavy",
+            "secret"
+          ],
+          "required": true,
+          "type": "choices"
+        }
+      ],
+      "groups": [],
+      "hints": {
+        "help": [],
+        "order": [],
+        "sections": []
+      },
+      "label": "Reveal",
+      "openGroups": false,
+      "slug": "reveal",
+      "summary": "Strips Visibility Qualities from everything in the area, whatever anyone's senses."
+    },
+    {
+      "fields": [
+        {
+          "label": "Saving throw",
+          "max": 0,
+          "min": 0,
+          "name": "ability",
+          "options": [
+            "strength",
+            "dexterity",
+            "constitution",
+            "intelligence",
+            "wisdom",
+            "charisma"
+          ],
+          "required": true,
+          "type": "choice"
+        },
+        {
+          "label": "Condition",
+          "max": 80,
+          "min": 0,
+          "name": "condition",
+          "options": [],
+          "required": true,
+          "type": "text"
+        }
+      ],
+      "groups": [],
+      "hints": {
+        "help": [],
+        "order": [],
+        "sections": []
+      },
+      "label": "Save or take a condition",
+      "openGroups": false,
+      "slug": "save_condition",
+      "summary": "Each creature in the area makes a saving throw or takes the condition."
+    },
+    {
+      "fields": [
+        {
+          "label": "Saving throw",
+          "max": 0,
+          "min": 0,
+          "name": "ability",
+          "options": [
+            "strength",
+            "dexterity",
+            "constitution",
+            "intelligence",
+            "wisdom",
+            "charisma"
+          ],
+          "required": true,
+          "type": "choice"
+        },
+        {
+          "label": "Damage",
+          "max": 0,
+          "min": 0,
+          "name": "dice",
+          "options": [],
+          "required": true,
+          "type": "dice"
+        },
+        {
+          "label": "Damage type",
+          "max": 0,
+          "min": 0,
+          "name": "damage_type",
+          "options": [
+            "acid",
+            "bludgeoning",
+            "cold",
+            "fire",
+            "force",
+            "lightning",
+            "necrotic",
+            "piercing",
+            "poison",
+            "psychic",
+            "radiant",
+            "slashing",
+            "thunder"
+          ],
+          "required": true,
+          "type": "choice"
+        },
+        {
+          "label": "Half damage on a successful save",
+          "max": 0,
+          "min": 0,
+          "name": "half",
+          "options": [],
+          "required": false,
+          "type": "flag"
+        }
+      ],
+      "groups": [],
+      "hints": {
+        "help": [
+          {
+            "field": "dice",
+            "text": "Like 8d6."
+          }
+        ],
+        "order": [
+          "dice",
+          "damage_type",
+          "half",
+          "ability"
+        ],
+        "sections": []
+      },
+      "label": "Save for damage",
+      "openGroups": false,
+      "slug": "save_damage",
+      "summary": "Each creature in the area makes a saving throw or takes the damage."
+    },
+    {
+      "fields": [
+        {
+          "label": "Saving throw",
+          "max": 0,
+          "min": 0,
+          "name": "ability",
+          "options": [
+            "strength",
+            "dexterity",
+            "constitution",
+            "intelligence",
+            "wisdom",
+            "charisma"
+          ],
+          "required": true,
+          "type": "choice"
+        },
+        {
+          "label": "Edge",
+          "max": 0,
+          "min": 0,
+          "name": "mode",
+          "options": [
+            "advantage",
+            "disadvantage",
+            "fail"
+          ],
+          "required": true,
+          "type": "choice"
+        }
+      ],
+      "groups": [],
+      "hints": {
+        "help": [],
+        "order": [
+          "mode",
+          "ability"
+        ],
+        "sections": []
+      },
+      "label": "Saving throw edge",
+      "openGroups": false,
+      "slug": "save_edge",
+      "summary": "Gives the bearer's saving throws of one ability advantage, disadvantage or a sure failure."
+    },
+    {
+      "fields": [
+        {
+          "label": "Feet",
+          "max": 120,
+          "min": 0,
+          "name": "ft",
+          "options": [],
+          "required": true,
+          "type": "number"
+        }
+      ],
+      "groups": [],
+      "hints": {
+        "help": [
+          {
+            "field": "ft",
+            "text": "Several penalties do not add up; the largest counts."
+          }
+        ],
+        "order": [],
+        "sections": []
+      },
+      "label": "Speed penalty",
+      "openGroups": false,
+      "slug": "speed_penalty",
+      "summary": "Takes feet off the bearer's speed; several do not add up."
+    },
+    {
+      "fields": [
+        {
+          "label": "Creature",
+          "max": 80,
+          "min": 0,
+          "name": "monster",
+          "options": [],
+          "required": true,
+          "type": "text"
+        },
+        {
+          "label": "How many",
+          "max": 20,
+          "min": 1,
+          "name": "count",
+          "options": [],
+          "required": true,
+          "type": "number"
+        },
+        {
+          "label": "Acts on the caster's turn",
+          "max": 0,
+          "min": 0,
+          "name": "shares",
+          "options": [],
+          "required": false,
+          "type": "flag"
+        },
+        {
+          "label": "Dodges unless commanded",
+          "max": 0,
+          "min": 0,
+          "name": "needs_command",
+          "options": [],
+          "required": false,
+          "type": "flag"
+        }
+      ],
+      "groups": [],
+      "hints": {
+        "help": [],
+        "order": [],
+        "sections": []
+      },
+      "label": "Summon",
+      "openGroups": false,
+      "slug": "summon",
+      "summary": "Brings creatures in under the caster's control."
+    },
+    {
+      "fields": [
+        {
+          "label": "Range in feet",
+          "max": 5280,
+          "min": 5,
+          "name": "range_ft",
+          "options": [],
+          "required": true,
+          "type": "number"
+        }
+      ],
+      "groups": [],
+      "hints": {
+        "help": [],
+        "order": [],
+        "sections": []
+      },
+      "label": "Teleport",
+      "openGroups": false,
+      "slug": "teleport",
+      "summary": "Moves the caster to an unoccupied space it can see."
+    },
+    {
+      "fields": [
+        {
+          "label": "Hit points",
+          "max": 500,
+          "min": 1,
+          "name": "amount",
+          "options": [],
+          "required": true,
+          "type": "number"
+        }
+      ],
+      "groups": [],
+      "hints": {
+        "help": [],
+        "order": [],
+        "sections": []
+      },
+      "label": "Temporary Hit Points",
+      "openGroups": false,
+      "slug": "temp_hp",
+      "summary": "Gives the bearer temporary hit points as the Effect lands."
+    }
+  ]
+}

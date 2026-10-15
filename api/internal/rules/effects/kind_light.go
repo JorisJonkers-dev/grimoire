@@ -36,6 +36,10 @@ func (lightKind) Describe() Description {
 	}
 }
 
+func (lightKind) Hints() Hints {
+	return Hints{Order: nil, Sections: nil, Help: []Help{{Field: "dim_ft", Text: "Beyond the bright light; 0 for none."}}}
+}
+
 func (k lightKind) Decode(v Values, _ Groups) (Part, error) {
 	d := k.Describe()
 	bright, err := v.number(d.field("bright_ft"))

@@ -63,15 +63,30 @@ func (c Condition) Holds(s Situation) bool {
 // Text writes a Branch's condition as the start of a sentence.
 func (c Condition) Text() string {
 	switch c.Kind {
-	case FailsBy:
-		return "If a creature fails the save by " + strconv.Itoa(c.N) + " or more"
-	case HPAtMost:
-		return "If a creature has " + strconv.Itoa(c.N) + " Hit Points or fewer"
 	case FirstEachTurn:
 		return "The first time on a turn the effect touches a creature"
 	case CreatureIs:
+		return "If the creature is " + article(c.Type) + " " + c.Type
+	case FailsBy, HPAtMost:
 	}
-	return "If the creature is " + article(c.Type) + " " + c.Type
+	return "If a creature " + c.clause()
+}
+
+// clause is the condition as what a creature does or is, to join with others: "fails the save".
+func (c Condition) clause() string {
+	switch c.Kind {
+	case FailsBy:
+		if c.N == 1 {
+			return "fails the save"
+		}
+		return "fails the save by " + strconv.Itoa(c.N) + " or more"
+	case HPAtMost:
+		return "has " + strconv.Itoa(c.N) + " Hit Points or fewer"
+	case FirstEachTurn:
+		return "is touched by the effect for the first time on a turn"
+	case CreatureIs:
+	}
+	return "is " + article(c.Type) + " " + c.Type
 }
 
 func (Branch) isPart() {}
@@ -79,9 +94,44 @@ func (Branch) isPart() {}
 // Kind is branch.
 func (Branch) Kind() string { return "branch" }
 
-// Text is the condition, then the sentences of the Parts it adds.
+// Text is the condition, then the Parts it adds: branches nested alone join their tests, and Parts that
+// say what happens to the creature picked out read as one clause.
 func (b Branch) Text() string {
-	return b.When.Text() + ", " + lower(strings.Join(sentences(b.Then), " "))
+	lead, then := b.When.Text(), b.Then
+	clauses := []string{b.When.clause()}
+	for inner, ok := b.lone(); ok; inner, ok = inner.lone() {
+		clauses = append(clauses, inner.When.clause())
+		then = inner.Then
+	}
+	if len(clauses) > 1 {
+		lead = "If a creature " + strings.Join(clauses, " and ")
+	}
+	if done, ok := consequences(then); ok {
+		return lead + ", it " + strings.Join(done, " and ") + "."
+	}
+	return lead + ", " + lower(strings.Join(sentences(then), " "))
+}
+
+// lone is the branch beneath, when it is all this branch adds.
+func (b Branch) lone() (Branch, bool) {
+	if len(b.Then) != 1 {
+		return b, false
+	}
+	inner, ok := b.Then[0].(Branch)
+	return inner, ok
+}
+
+// consequences is what each Part does to the creature a branch picked out, when every one can say so.
+func consequences(ps []Part) ([]string, bool) {
+	out := make([]string, 0, len(ps))
+	for _, p := range ps {
+		c, ok := p.(Consequent)
+		if !ok {
+			return nil, false
+		}
+		out = append(out, c.Consequence())
+	}
+	return out, len(out) > 0
 }
 
 // Groups holds the Parts the branch adds under then.
@@ -113,6 +163,13 @@ func (branchKind) Describe() Description {
 		},
 		Groups: []string{"then"}, OpenGroups: false,
 	}
+}
+
+func (branchKind) Hints() Hints {
+	return Hints{Order: nil, Sections: []Section{{Label: "Test", Fields: []string{"when", "n", "creature_type"}}}, Help: []Help{
+		{Field: "n", Text: "For fails by, how far the save fails; for HP at most, the Hit Points."},
+		{Field: "creature_type", Text: "For creature is, such as fey."},
+	}}
 }
 
 func (branchKind) Decode(v Values, beneath Groups) (Part, error) {

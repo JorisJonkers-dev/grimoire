@@ -7642,13 +7642,15 @@ func (s *CompendiumGuidesHeaders) SetResponse(val CompendiumGuides) {
 
 func (*CompendiumGuidesHeaders) getCompendiumGuidesRes() {}
 
-// A homebrew condition in its builder, the slug it is known by, and how it reads back.
+// A homebrew condition in its builder, the slug it is known by, how it reads back, and what it takes
+// as Parts.
 // Ref: #/components/schemas/ConditionBuild
 type ConditionBuild struct {
 	Entry  OptLibraryEntry `json:"entry"`
 	Design ConditionDesign `json:"design"`
 	Slug   OptString       `json:"slug"`
 	Lines  []string        `json:"lines"`
+	Holds  PartHolds       `json:"holds"`
 }
 
 // GetEntry returns the value of Entry.
@@ -7671,6 +7673,11 @@ func (s *ConditionBuild) GetLines() []string {
 	return s.Lines
 }
 
+// GetHolds returns the value of Holds.
+func (s *ConditionBuild) GetHolds() PartHolds {
+	return s.Holds
+}
+
 // SetEntry sets the value of Entry.
 func (s *ConditionBuild) SetEntry(val OptLibraryEntry) {
 	s.Entry = val
@@ -7689,6 +7696,11 @@ func (s *ConditionBuild) SetSlug(val OptString) {
 // SetLines sets the value of Lines.
 func (s *ConditionBuild) SetLines(val []string) {
 	s.Lines = val
+}
+
+// SetHolds sets the value of Holds.
+func (s *ConditionBuild) SetHolds(val PartHolds) {
+	s.Holds = val
 }
 
 // ConditionBuildHeaders wraps ConditionBuild with response headers.
@@ -40422,6 +40434,124 @@ func (s *PartGroup) SetParts(val []Part) {
 	s.Parts = val
 }
 
+// A line of help for one field.
+// Ref: #/components/schemas/PartHelp
+type PartHelp struct {
+	Field string `json:"field"`
+	Text  string `json:"text"`
+}
+
+// GetField returns the value of Field.
+func (s *PartHelp) GetField() string {
+	return s.Field
+}
+
+// GetText returns the value of Text.
+func (s *PartHelp) GetText() string {
+	return s.Text
+}
+
+// SetField sets the value of Field.
+func (s *PartHelp) SetField(val string) {
+	s.Field = val
+}
+
+// SetText sets the value of Text.
+func (s *PartHelp) SetText(val string) {
+	s.Text = val
+}
+
+// How a builder form draws a kind beyond its fields: the order its fields show in (a field left out
+// follows, in definition order), sections of fields drawn together under a label, and a line of help
+// per field. A kind without hints has all three empty.
+// Ref: #/components/schemas/PartHints
+type PartHints struct {
+	Order    []string      `json:"order"`
+	Sections []PartSection `json:"sections"`
+	Help     []PartHelp    `json:"help"`
+}
+
+// GetOrder returns the value of Order.
+func (s *PartHints) GetOrder() []string {
+	return s.Order
+}
+
+// GetSections returns the value of Sections.
+func (s *PartHints) GetSections() []PartSection {
+	return s.Sections
+}
+
+// GetHelp returns the value of Help.
+func (s *PartHints) GetHelp() []PartHelp {
+	return s.Help
+}
+
+// SetOrder sets the value of Order.
+func (s *PartHints) SetOrder(val []string) {
+	s.Order = val
+}
+
+// SetSections sets the value of Sections.
+func (s *PartHints) SetSections(val []PartSection) {
+	s.Sections = val
+}
+
+// SetHelp sets the value of Help.
+func (s *PartHints) SetHelp(val []PartHelp) {
+	s.Help = val
+}
+
+// What a builder takes as Parts: the kinds at the top level and beneath a Part (such as a branch's
+// then), the fields it fills in itself when a Part leaves them out, and the text fields it takes only
+// from a list. A Part outside these is refused when the design is checked.
+// Ref: #/components/schemas/PartHolds
+type PartHolds struct {
+	Kinds   []string     `json:"kinds"`
+	Beneath []string     `json:"beneath"`
+	Fills   []string     `json:"fills"`
+	Narrows []PartNarrow `json:"narrows"`
+}
+
+// GetKinds returns the value of Kinds.
+func (s *PartHolds) GetKinds() []string {
+	return s.Kinds
+}
+
+// GetBeneath returns the value of Beneath.
+func (s *PartHolds) GetBeneath() []string {
+	return s.Beneath
+}
+
+// GetFills returns the value of Fills.
+func (s *PartHolds) GetFills() []string {
+	return s.Fills
+}
+
+// GetNarrows returns the value of Narrows.
+func (s *PartHolds) GetNarrows() []PartNarrow {
+	return s.Narrows
+}
+
+// SetKinds sets the value of Kinds.
+func (s *PartHolds) SetKinds(val []string) {
+	s.Kinds = val
+}
+
+// SetBeneath sets the value of Beneath.
+func (s *PartHolds) SetBeneath(val []string) {
+	s.Beneath = val
+}
+
+// SetFills sets the value of Fills.
+func (s *PartHolds) SetFills(val []string) {
+	s.Fills = val
+}
+
+// SetNarrows sets the value of Narrows.
+func (s *PartHolds) SetNarrows(val []PartNarrow) {
+	s.Narrows = val
+}
+
 // A kind of Part as its definition: what an author fills in, and the groups of Parts it holds beneath
 // it.
 // Ref: #/components/schemas/PartKind
@@ -40433,7 +40563,8 @@ type PartKind struct {
 	// The groups of Parts the kind holds beneath it, by name; most kinds hold none.
 	Groups []string `json:"groups"`
 	// The author names each group, as a choice names its modes; groups is then empty.
-	OpenGroups bool `json:"openGroups"`
+	OpenGroups bool      `json:"openGroups"`
+	Hints      PartHints `json:"hints"`
 }
 
 // GetSlug returns the value of Slug.
@@ -40466,6 +40597,11 @@ func (s *PartKind) GetOpenGroups() bool {
 	return s.OpenGroups
 }
 
+// GetHints returns the value of Hints.
+func (s *PartKind) GetHints() PartHints {
+	return s.Hints
+}
+
 // SetSlug sets the value of Slug.
 func (s *PartKind) SetSlug(val string) {
 	s.Slug = val
@@ -40494,6 +40630,76 @@ func (s *PartKind) SetGroups(val []string) {
 // SetOpenGroups sets the value of OpenGroups.
 func (s *PartKind) SetOpenGroups(val bool) {
 	s.OpenGroups = val
+}
+
+// SetHints sets the value of Hints.
+func (s *PartKind) SetHints(val PartHints) {
+	s.Hints = val
+}
+
+// A text field of one kind that a builder takes only from a list, such as the conditions play knows.
+// Ref: #/components/schemas/PartNarrow
+type PartNarrow struct {
+	Kind    string   `json:"kind"`
+	Field   string   `json:"field"`
+	Options []string `json:"options"`
+}
+
+// GetKind returns the value of Kind.
+func (s *PartNarrow) GetKind() string {
+	return s.Kind
+}
+
+// GetField returns the value of Field.
+func (s *PartNarrow) GetField() string {
+	return s.Field
+}
+
+// GetOptions returns the value of Options.
+func (s *PartNarrow) GetOptions() []string {
+	return s.Options
+}
+
+// SetKind sets the value of Kind.
+func (s *PartNarrow) SetKind(val string) {
+	s.Kind = val
+}
+
+// SetField sets the value of Field.
+func (s *PartNarrow) SetField(val string) {
+	s.Field = val
+}
+
+// SetOptions sets the value of Options.
+func (s *PartNarrow) SetOptions(val []string) {
+	s.Options = val
+}
+
+// Fields a builder form draws together under a label.
+// Ref: #/components/schemas/PartSection
+type PartSection struct {
+	Label  string   `json:"label"`
+	Fields []string `json:"fields"`
+}
+
+// GetLabel returns the value of Label.
+func (s *PartSection) GetLabel() string {
+	return s.Label
+}
+
+// GetFields returns the value of Fields.
+func (s *PartSection) GetFields() []string {
+	return s.Fields
+}
+
+// SetLabel sets the value of Label.
+func (s *PartSection) SetLabel(val string) {
+	s.Label = val
+}
+
+// SetFields sets the value of Fields.
+func (s *PartSection) SetFields(val []string) {
+	s.Fields = val
 }
 
 // One field's value, in the slot its field type reads: text for dice, text and a choice, number, flag,
@@ -48572,8 +48778,8 @@ func (s *Spell) SetMentions(val []ConditionRef) {
 	s.Mentions = val
 }
 
-// A homebrew spell in the Effect builder, the Effect slug it runs under in play, its rules text and
-// its area as hexes.
+// A homebrew spell in the Effect builder, the Effect slug it runs under in play, its rules text, its
+// area as hexes, and what it takes as Parts.
 // Ref: #/components/schemas/SpellBuild
 type SpellBuild struct {
 	Entry  OptLibraryEntry `json:"entry"`
@@ -48581,6 +48787,7 @@ type SpellBuild struct {
 	Effect string          `json:"effect"`
 	Text   []string        `json:"text"`
 	Hexes  []BuilderHex    `json:"hexes"`
+	Holds  PartHolds       `json:"holds"`
 }
 
 // GetEntry returns the value of Entry.
@@ -48608,6 +48815,11 @@ func (s *SpellBuild) GetHexes() []BuilderHex {
 	return s.Hexes
 }
 
+// GetHolds returns the value of Holds.
+func (s *SpellBuild) GetHolds() PartHolds {
+	return s.Holds
+}
+
 // SetEntry sets the value of Entry.
 func (s *SpellBuild) SetEntry(val OptLibraryEntry) {
 	s.Entry = val
@@ -48631,6 +48843,11 @@ func (s *SpellBuild) SetText(val []string) {
 // SetHexes sets the value of Hexes.
 func (s *SpellBuild) SetHexes(val []BuilderHex) {
 	s.Hexes = val
+}
+
+// SetHolds sets the value of Holds.
+func (s *SpellBuild) SetHolds(val PartHolds) {
+	s.Holds = val
 }
 
 // SpellBuildHeaders wraps SpellBuild with response headers.

@@ -5881,7 +5881,7 @@ paths:
       x-ogen-operation-group: Read
       x-mcp: { tool: list_part_kinds }
       summary: List the kinds of Part
-      description: "Every kind of Part an Effect may hold, as its definition: the fields an author fills in with their bounds and options, and the groups of Parts it holds beneath it. A builder draws its form from these, and a Part sent to a builder is checked against its kind's definition."
+      description: "Every kind of Part an Effect may hold, as its definition: the fields an author fills in with their bounds and options, the groups of Parts it holds beneath it, and hints for drawing its form. A builder draws its form from these, and a Part sent to a builder is checked against its kind's definition. Which kinds a builder takes is in that builder's own answer (holds)."
       tags: [Library]
       responses:
         "200":
@@ -12954,7 +12954,7 @@ components:
       type: object
       description: "A kind of Part as its definition: what an author fills in, and the groups of Parts it holds beneath it."
       additionalProperties: false
-      required: [slug, label, summary, fields, groups, openGroups]
+      required: [slug, label, summary, fields, groups, openGroups, hints]
       properties:
         slug: { type: string, maxLength: 40 }
         label: { type: string, maxLength: 80 }
@@ -12969,6 +12969,78 @@ components:
           maxItems: 20
           items: { type: string, maxLength: 80 }
         openGroups: { type: boolean, description: "The author names each group, as a choice names its modes; groups is then empty." }
+        hints: { $ref: "#/components/schemas/PartHints" }
+    PartHints:
+      type: object
+      description: "How a builder form draws a kind beyond its fields: the order its fields show in (a field left out follows, in definition order), sections of fields drawn together under a label, and a line of help per field. A kind without hints has all three empty."
+      additionalProperties: false
+      required: [order, sections, help]
+      properties:
+        order:
+          type: array
+          maxItems: 20
+          items: { type: string, maxLength: 40 }
+        sections:
+          type: array
+          maxItems: 20
+          items: { $ref: "#/components/schemas/PartSection" }
+        help:
+          type: array
+          maxItems: 20
+          items: { $ref: "#/components/schemas/PartHelp" }
+    PartSection:
+      type: object
+      description: Fields a builder form draws together under a label.
+      additionalProperties: false
+      required: [label, fields]
+      properties:
+        label: { type: string, maxLength: 80 }
+        fields:
+          type: array
+          maxItems: 20
+          items: { type: string, maxLength: 40 }
+    PartHelp:
+      type: object
+      description: A line of help for one field.
+      additionalProperties: false
+      required: [field, text]
+      properties:
+        field: { type: string, maxLength: 40 }
+        text: { type: string, maxLength: 400 }
+    PartHolds:
+      type: object
+      description: "What a builder takes as Parts: the kinds at the top level and beneath a Part (such as a branch's then), the fields it fills in itself when a Part leaves them out, and the text fields it takes only from a list. A Part outside these is refused when the design is checked."
+      additionalProperties: false
+      required: [kinds, beneath, fills, narrows]
+      properties:
+        kinds:
+          type: array
+          maxItems: 100
+          items: { type: string, maxLength: 40 }
+        beneath:
+          type: array
+          maxItems: 100
+          items: { type: string, maxLength: 40 }
+        fills:
+          type: array
+          maxItems: 20
+          items: { type: string, maxLength: 40 }
+        narrows:
+          type: array
+          maxItems: 20
+          items: { $ref: "#/components/schemas/PartNarrow" }
+    PartNarrow:
+      type: object
+      description: A text field of one kind that a builder takes only from a list, such as the conditions play knows.
+      additionalProperties: false
+      required: [kind, field, options]
+      properties:
+        kind: { type: string, maxLength: 40 }
+        field: { type: string, maxLength: 40 }
+        options:
+          type: array
+          maxItems: 500
+          items: { type: string, maxLength: 80 }
     PartField:
       type: object
       description: "One value an author fills in for a Part. Min and max bound a number; max also bounds the length of a text."
@@ -13003,9 +13075,9 @@ components:
         r: { type: integer, format: int32, minimum: -1000, maximum: 1000 }
     SpellBuild:
       type: object
-      description: A homebrew spell in the Effect builder, the Effect slug it runs under in play, its rules text and its area as hexes.
+      description: A homebrew spell in the Effect builder, the Effect slug it runs under in play, its rules text, its area as hexes, and what it takes as Parts.
       additionalProperties: false
-      required: [design, effect, text, hexes]
+      required: [design, effect, text, hexes, holds]
       properties:
         entry: { $ref: "#/components/schemas/LibraryEntry" }
         design: { $ref: "#/components/schemas/SpellDesign" }
@@ -13018,6 +13090,7 @@ components:
           type: array
           maxItems: 20000
           items: { $ref: "#/components/schemas/BuilderHex" }
+        holds: { $ref: "#/components/schemas/PartHolds" }
     ClassDesign:
       type: object
       description: A homebrew class as the class builder makes it, from its Hit Die, training, level table, features, subclass and feat levels, and spellcasting.
@@ -13370,9 +13443,9 @@ components:
         design: { $ref: "#/components/schemas/ConditionDesign" }
     ConditionBuild:
       type: object
-      description: A homebrew condition in its builder, the slug it is known by, and how it reads back.
+      description: A homebrew condition in its builder, the slug it is known by, how it reads back, and what it takes as Parts.
       additionalProperties: false
-      required: [design, lines]
+      required: [design, lines, holds]
       properties:
         entry: { $ref: "#/components/schemas/LibraryEntry" }
         design: { $ref: "#/components/schemas/ConditionDesign" }
@@ -13381,6 +13454,7 @@ components:
           type: array
           maxItems: 400
           items: { type: string, maxLength: 2400 }
+        holds: { $ref: "#/components/schemas/PartHolds" }
     ConditionDesign:
       type: object
       description: A homebrew condition as the condition builder makes it, from its icon, how it ends, how it stacks and what it does as Parts of kinds the rules know.

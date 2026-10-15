@@ -216,3 +216,15 @@ func TestConditionDesignsThatDoNotBuild(t *testing.T) {
 		t.Fatal("a manual part of 501 characters builds")
 	}
 }
+
+// A condition serves the kinds it holds, from the list it checks Parts against; none holds Parts beneath.
+func TestAConditionServesWhatItHolds(t *testing.T) {
+	t.Parallel()
+	want := effects.Holds{
+		Kinds:   []string{"crit_within", "edge", "immobile", "incapacitated", "manual", "save_edge", "speed_penalty"},
+		Beneath: []string{}, Fills: []string{}, Narrows: []effects.Narrow{},
+	}
+	if got := conditionbuild.Holds(); !reflect.DeepEqual(got, want) {
+		t.Errorf("holds %+v, want %+v", got, want)
+	}
+}

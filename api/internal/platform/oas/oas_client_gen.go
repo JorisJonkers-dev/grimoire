@@ -1792,8 +1792,9 @@ type ReadInvoker interface {
 	// ListPartKinds invokes listPartKinds operation.
 	//
 	// Every kind of Part an Effect may hold, as its definition: the fields an author fills in with their
-	// bounds and options, and the groups of Parts it holds beneath it. A builder draws its form from
-	// these, and a Part sent to a builder is checked against its kind's definition.
+	// bounds and options, the groups of Parts it holds beneath it, and hints for drawing its form. A
+	// builder draws its form from these, and a Part sent to a builder is checked against its kind's
+	// definition. Which kinds a builder takes is in that builder's own answer (holds).
 	//
 	// GET /api/v1/builders/part-kinds
 	ListPartKinds(ctx context.Context) (ListPartKindsRes, error)
@@ -24371,8 +24372,9 @@ func (c *Client) sendListNpcs(ctx context.Context, params ListNpcsParams) (res L
 // ListPartKinds invokes listPartKinds operation.
 //
 // Every kind of Part an Effect may hold, as its definition: the fields an author fills in with their
-// bounds and options, and the groups of Parts it holds beneath it. A builder draws its form from
-// these, and a Part sent to a builder is checked against its kind's definition.
+// bounds and options, the groups of Parts it holds beneath it, and hints for drawing its form. A
+// builder draws its form from these, and a Part sent to a builder is checked against its kind's
+// definition. Which kinds a builder takes is in that builder's own answer (holds).
 //
 // GET /api/v1/builders/part-kinds
 func (c *Client) ListPartKinds(ctx context.Context) (ListPartKindsRes, error) {

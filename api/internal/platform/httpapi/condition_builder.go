@@ -31,7 +31,7 @@ func conditionDesignIn(d *oas.ConditionDesign) conditionbuild.Design {
 
 func conditionBuildOut(b app.ConditionBuild) *oas.ConditionBuildHeaders {
 	raw, _ := json.Marshal(b.Design) //nolint:errchkjson // a design is plain data
-	out := oas.ConditionBuild{Lines: append([]string{}, b.Lines...)}
+	out := oas.ConditionBuild{Lines: append([]string{}, b.Lines...), Holds: holdsOut(conditionbuild.Holds())}
 	_ = out.Design.UnmarshalJSON(raw)
 	if b.Entry.ID != uuid.Nil {
 		out.Entry, out.Slug = oas.NewOptLibraryEntry(libraryEntryOut(b.Entry)), oas.NewOptString(b.Slug)

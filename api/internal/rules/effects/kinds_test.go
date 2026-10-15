@@ -111,7 +111,7 @@ func TestKindsDecodeAuthoredValues(t *testing.T) {
 			effects.Values{"when": {Text: "fails_by"}, "n": {Number: 5}},
 			effects.Groups{{Name: "then", Parts: []effects.Part{stun}}},
 			effects.Branch{When: effects.Condition{Kind: effects.FailsBy, N: 5}, Then: []effects.Part{stun}},
-			"If a creature fails the save by 5 or more, on a failed Constitution saving throw, a creature has the Stunned condition.",
+			"If a creature fails the save by 5 or more, it has the Stunned condition.",
 		},
 		{
 			"branch",

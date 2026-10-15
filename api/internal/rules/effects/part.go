@@ -172,6 +172,12 @@ type Outcome struct {
 	Damage int
 }
 
+// Consequent is a Part that can be written as what happens to a creature a branch has picked out: "has
+// the Charmed condition".
+type Consequent interface {
+	Consequence() string
+}
+
 // Grouper is a Part with Parts beneath it, in named groups.
 type Grouper interface {
 	Part

@@ -134,7 +134,7 @@ func (s *Service) checkDesign(ctx context.Context, x domain.Exported) string {
 		return ""
 	}
 	spell := func(d spellbuild.Design) error {
-		_, err := s.build(ctx, uuid.Nil, x.Name, d)
+		_, _, err := s.build(ctx, uuid.Nil, x.Name, d)
 		return err
 	}
 	checks := map[string]func([]byte) error{

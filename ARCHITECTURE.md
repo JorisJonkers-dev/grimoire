@@ -574,8 +574,9 @@ type Definition struct {
 
 **One kind, one place.** Every kind lives in `rules/effects/kind_<slug>.go`: its type, `Kind()`,
 `Text()`, its definition as data (`Describe()`: the fields an author fills in, their bounds and
-options, and the named groups of Parts it holds) with `Decode(values, groups)` and its checks, and the
-capabilities it has in play. `effects.Kinds()` lists every kind in slug order, one line each; the
+options, and the named groups of Parts it holds) with `Decode(values, groups)` and its checks, the
+capabilities it has in play, and, if its form needs them, `Hints()`: the order its fields show in,
+sections of fields drawn together, and a line of help per field. `effects.Kinds()` lists every kind in slug order, one line each; the
 linter bans package globals, so kinds cannot register themselves.
 
 | shape | kinds |
@@ -603,6 +604,8 @@ kinds.
 - *Groups*: a `Grouper` holds Parts beneath it in named groups. A `Holder` brings them into play as
   the Effect lands (`Landed(situation)`: "fails by 5 or more", "HP at most 50", creature type); a
   `Chooser` offers them as modes, of which whoever applies the Effect picks one (`Chosen(mode)`).
+  Beneath a branch, a `Consequent` Part reads as what happens to the creature picked out ("it has the
+  Charmed condition"), and branches nested alone join their tests into one sentence.
 
 A new capability (a fold, an act) is a one-off change to the shared vocabulary in
 `rules/effects/part.go`; a new kind is not.
@@ -625,10 +628,15 @@ slug, its values by field name, and the Parts beneath it in named groups (`Part`
 Part against its kind's definition, the Parts beneath it first, and makes it; a refusal names where
 the Part sits and the field, in the kind's own words. No handler checks a Part itself. `GET
 /api/v1/builders/part-kinds` (MCP `list_part_kinds`) serves every kind's `Describe()`: its fields with
-their bounds and options, its named groups, and whether the author names the groups, as a choice
-names its modes. Builders draw their forms from it. A builder narrows which kinds it holds (a spell
-holds what an area plays; a condition what folds into its bearer) and checks what spans Parts, such
-as a spell's save or one light, but it decodes every Part through `effects.Decode`. Designs saved
+their bounds and options, its named groups, whether the author names the groups, as a choice
+names its modes, and its hints. A builder narrows which kinds it holds (a spell holds what an area
+plays; a condition what folds into its bearer) and checks what spans Parts, such as a spell's save or
+one light, but it decodes every Part through `effects.Decode`. Each builder's answer carries what it
+holds (`PartHolds`: the kinds at the top and beneath a Part, the fields it fills itself, the text
+fields it takes only from a list), served from the same `Holds()` it checks a design against. The web
+draws every Part form from these two answers alone (`PartsEditor`), recursing into named and open
+groups; it names no kind. `fixtures/part-kinds.json` is what the server serves, pinned by a Go test
+and read by the form's tests. Designs saved
 before the generic Part stored their builder's own rows; the spell and condition builders still read
 those rows as the Parts they always built.
 
@@ -1117,14 +1125,17 @@ OpenAPI paths → `task gen` → handler → tests (unit, adapter, contract) →
 `rules/effects/kind_<slug>.go` with the type, `Kind()`, `Text()`, its definition (`Describe`, `Decode`
 with its checks) and the capabilities it has in play (the folds `AttackFolder`, `AttackedFolder`,
 `SaveFolder`, `MoveFolder`, `ActionFolder`; `Stacker`; the landings `Asker`, `Lander` and
-`BearerLander`; the groups `Holder` and `Chooser`) → one sorted line in `rules/effects/kinds.go` →
+`BearerLander`; the groups `Holder` and `Chooser`), and `Hints()` if its form needs them → one sorted
+line in `rules/effects/kinds.go` →
 `compendium/pgstore/kind_<slug>.go` (with `nest` when it holds Parts) and one sorted line in
 `compendium/pgstore/kinds.go` → `db/queries/effect_kind_<slug>.sql` →
 `db/migrations/<yyyymmddhhmmss>_effect_kind_<slug>.sql` creating its table and its row in
 `compendium.effect_kinds` (a kind that is the whole of its Part, like `dispel`, has no table or query
 file: its store reads its rows through `bare`) → decode, text, capability and round-trip tests →
-gremlins clean. No switch names a kind and the OpenAPI document names none, so nothing else changes:
-the API takes the new kind as a generic Part and serves its definition.
+gremlins clean → refresh `fixtures/part-kinds.json` (`go test ./internal/platform/httpapi -run
+TestBuildersServeWhatTheyHold -update`). No switch names a kind and the OpenAPI document names none,
+so nothing else changes: the API takes the new kind as a generic Part and serves its definition, and a
+builder offers it once its `Holds()` lists it.
 
 **Add a live command:** OpenAPI component (`Command` variant + resulting `Update` variants) →
 `task gen` → domain command + validation via rules → runtime handler (one transaction + typed

@@ -3696,7 +3696,7 @@ export const listPartKindsQueryKey = (options?: Options<ListPartKindsData>) => c
 /**
  * List the kinds of Part
  *
- * Every kind of Part an Effect may hold, as its definition: the fields an author fills in with their bounds and options, and the groups of Parts it holds beneath it. A builder draws its form from these, and a Part sent to a builder is checked against its kind's definition.
+ * Every kind of Part an Effect may hold, as its definition: the fields an author fills in with their bounds and options, the groups of Parts it holds beneath it, and hints for drawing its form. A builder draws its form from these, and a Part sent to a builder is checked against its kind's definition. Which kinds a builder takes is in that builder's own answer (holds).
  */
 export const listPartKindsOptions = (options?: Options<ListPartKindsData>) => queryOptions<ListPartKindsResponse, ListPartKindsError, ListPartKindsResponse, ReturnType<typeof listPartKindsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {

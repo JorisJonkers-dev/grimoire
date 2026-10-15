@@ -37,6 +37,10 @@ func (critWithinKind) Describe() Description {
 	}
 }
 
+func (critWithinKind) Hints() Hints {
+	return Hints{Order: nil, Sections: nil, Help: []Help{{Field: "feet", Text: "A hit from this close is a Critical Hit."}}}
+}
+
 func (k critWithinKind) Decode(v Values, _ Groups) (Part, error) {
 	n, err := v.number(k.Describe().field("feet"))
 	if err != nil {

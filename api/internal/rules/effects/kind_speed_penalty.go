@@ -34,6 +34,10 @@ func (speedPenaltyKind) Describe() Description {
 	}
 }
 
+func (speedPenaltyKind) Hints() Hints {
+	return Hints{Order: nil, Sections: nil, Help: []Help{{Field: "ft", Text: "Several penalties do not add up; the largest counts."}}}
+}
+
 func (k speedPenaltyKind) Decode(v Values, _ Groups) (Part, error) {
 	n, err := v.number(k.Describe().field("ft"))
 	if err != nil {

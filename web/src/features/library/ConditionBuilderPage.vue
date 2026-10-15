@@ -3,11 +3,11 @@ import BuilderCrumbs from './BuilderCrumbs.vue'
 import { useMutation, useQuery } from '@tanstack/vue-query'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { getConditionBuildOptions, previewConditionMutation, saveConditionBuildMutation } from '@/infrastructure/api/@tanstack/vue-query.gen'
+import { getConditionBuildOptions, listPartKindsOptions, previewConditionMutation, saveConditionBuildMutation } from '@/infrastructure/api/@tanstack/vue-query.gen'
 import type { ConditionBuild, ConditionDesign } from '@/infrastructure/api/types.gen'
 import { GButton, StatusIcon } from '@/shared/ui'
 import { abilities } from './classPresets'
-import { conditionDesign, conditionForm, type ConditionForm } from './partRows'
+import PartsEditor from './PartsEditor.vue'
 import { useBuilder } from './useBuilder'
 
 const route = useRoute()
@@ -16,10 +16,12 @@ const path = computed(() => ({ path: { entryId: entryId.value } }))
 const condition = useQuery(computed(() => ({ ...getConditionBuildOptions(path.value), retry: false })))
 const preview = useMutation(previewConditionMutation())
 const save = useMutation(saveConditionBuildMutation())
-const { design, shown, status, name, readOnly, problem, runPreview, runSave } = useBuilder<ConditionDesign, ConditionBuild, ConditionForm>({
+const { design, shown, status, name, readOnly, problem, runPreview, runSave } = useBuilder<ConditionDesign, ConditionBuild>({
   entryId, data: condition.data, key: computed(() => getConditionBuildOptions(path.value).queryKey), preview, save, fallback: 'Condition',
-  form: { read: conditionForm, write: conditionDesign },
 })
+const partKinds = useQuery(listPartKindsOptions())
+const kinds = computed(() => partKinds.data.value ?? [])
+const holds = computed(() => condition.data.value?.holds)
 
 // Only a condition that lasts until cured names a cure.
 function lasts() {
@@ -27,20 +29,6 @@ function lasts() {
 }
 
 const icons = ['drop', 'flame', 'snow', 'skull', 'spiral', 'eye', 'chain', 'star', 'moon', 'leaf', 'bolt', 'heart', 'shield', 'cloud']
-const parts = [
-  { value: 'attack_advantage', label: 'Its attacks have Advantage' },
-  { value: 'attack_disadvantage', label: 'Its attacks have Disadvantage' },
-  { value: 'attacked_advantage', label: 'Attacks against it have Advantage' },
-  { value: 'attacked_disadvantage', label: 'Attacks against it have Disadvantage' },
-  { value: 'save_advantage', label: 'Advantage on a save' },
-  { value: 'save_disadvantage', label: 'Disadvantage on a save' },
-  { value: 'save_fails', label: 'Fails a save' },
-  { value: 'incapacitated', label: 'Incapacitated' },
-  { value: 'immobile', label: 'Speed 0' },
-  { value: 'speed_penalty', label: 'Slower' },
-  { value: 'crit_within', label: 'Hits from nearby are Critical Hits' },
-  { value: 'manual', label: 'The DM resolves' },
-]
 </script>
 
 <template>
@@ -89,25 +77,17 @@ const parts = [
           </fieldset>
 
           <h2>What it does</h2>
-          <ol class="rows">
-            <li v-for="(p, i) in design.parts" :key="i" class="row-item">
-              <span v-if="p.type === 'kept'" class="kept" :data-testid="`condition-part-${String(i)}-kept`">{{ p.part?.kind }}: kept as written; this builder cannot change it yet.</span>
-              <label v-else class="g-field"><span>Part</span>
-                <select v-model="p.type" :data-testid="`condition-part-${String(i)}-type`"><option v-for="t in parts" :key="t.value" :value="t.value">{{ t.label }}</option></select>
-              </label>
-              <label v-if="p.type.startsWith('save_')" class="g-field"><span>Ability</span>
-                <select v-model="p.ability" :data-testid="`condition-part-${String(i)}-ability`"><option v-for="a in abilities" :key="a" :value="a">{{ a }}</option></select>
-              </label>
-              <label v-if="p.type === 'speed_penalty' || p.type === 'crit_within'" class="g-field small"><span>Feet</span>
-                <input v-model.number="p.feet" type="number" min="5" max="60" step="5" :data-testid="`condition-part-${String(i)}-feet`" />
-              </label>
-              <label v-if="p.type === 'manual'" class="g-field wide"><span>What the DM does</span>
-                <input v-model="p.text" maxlength="500" :data-testid="`condition-part-${String(i)}-text`" />
-              </label>
-              <button type="button" class="drop" :aria-label="`Remove part ${String(i + 1)}`" :data-testid="`condition-part-${String(i)}-remove`" @click="design.parts.splice(i, 1)">×</button>
-            </li>
-          </ol>
-          <GButton data-testid="condition-add-part" @click="design.parts.push({ type: 'attacked_advantage' })">+ Part</GButton>
+          <PartsEditor
+            v-if="holds"
+            v-model="design.parts"
+            :kinds="kinds"
+            :holds="holds"
+            :allowed="holds.kinds"
+            label="What it does"
+            adds="Add a Part"
+            noun="part"
+            prefix="condition-parts"
+          />
 
           <div class="row">
             <GButton :disabled="preview.isPending.value" data-testid="condition-preview" @click="runPreview">Preview</GButton>
@@ -142,10 +122,6 @@ h2 {
 }
 .line {
   margin: 0;
-}
-.kept {
-  align-self: center;
-  color: var(--color-text-2);
 }
 .layout {
   display: grid;
@@ -186,41 +162,10 @@ legend {
   gap: 8px;
   min-height: 44px;
 }
-.rows {
-  display: flex;
-  flex-direction: column;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.row-item {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: end;
-  gap: 8px 12px;
-  padding: 10px 0;
-  border-top: 1px solid var(--color-rule);
-}
-.small {
-  max-width: 110px;
-}
-.wide {
-  flex-basis: 100%;
-}
 .row {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-}
-.drop {
-  min-width: 44px;
-  min-height: 44px;
-  margin-left: auto;
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--color-text);
-  cursor: pointer;
 }
 input,
 select,

@@ -2071,6 +2071,50 @@ export const zPartValue = z.object({
 });
 
 /**
+ * Fields a builder form draws together under a label.
+ */
+export const zPartSection = z.object({
+    label: z.string().max(80),
+    fields: z.array(z.string().max(40)).max(20)
+});
+
+/**
+ * A line of help for one field.
+ */
+export const zPartHelp = z.object({
+    field: z.string().max(40),
+    text: z.string().max(400)
+});
+
+/**
+ * How a builder form draws a kind beyond its fields: the order its fields show in (a field left out follows, in definition order), sections of fields drawn together under a label, and a line of help per field. A kind without hints has all three empty.
+ */
+export const zPartHints = z.object({
+    order: z.array(z.string().max(40)).max(20),
+    sections: z.array(zPartSection).max(20),
+    help: z.array(zPartHelp).max(20)
+});
+
+/**
+ * A text field of one kind that a builder takes only from a list, such as the conditions play knows.
+ */
+export const zPartNarrow = z.object({
+    kind: z.string().max(40),
+    field: z.string().max(40),
+    options: z.array(z.string().max(80)).max(500)
+});
+
+/**
+ * What a builder takes as Parts: the kinds at the top level and beneath a Part (such as a branch's then), the fields it fills in itself when a Part leaves them out, and the text fields it takes only from a list. A Part outside these is refused when the design is checked.
+ */
+export const zPartHolds = z.object({
+    kinds: z.array(z.string().max(40)).max(100),
+    beneath: z.array(z.string().max(40)).max(100),
+    fills: z.array(z.string().max(40)).max(20),
+    narrows: z.array(zPartNarrow).max(20)
+});
+
+/**
  * One value an author fills in for a Part. Min and max bound a number; max also bounds the length of a text.
  */
 export const zPartField = z.object({
@@ -2099,7 +2143,8 @@ export const zPartKind = z.object({
     summary: z.string().max(400),
     fields: z.array(zPartField).max(20),
     groups: z.array(z.string().max(80)).max(20),
-    openGroups: z.boolean()
+    openGroups: z.boolean(),
+    hints: zPartHints
 });
 
 /**
@@ -5843,14 +5888,15 @@ export const zSpellPreviewInput = z.object({
 });
 
 /**
- * A homebrew spell in the Effect builder, the Effect slug it runs under in play, its rules text and its area as hexes.
+ * A homebrew spell in the Effect builder, the Effect slug it runs under in play, its rules text, its area as hexes, and what it takes as Parts.
  */
 export const zSpellBuild = z.object({
     entry: zLibraryEntry.optional(),
     design: zSpellDesign,
     effect: z.string().max(40),
     text: z.array(z.string().max(1000)).max(200),
-    hexes: z.array(zBuilderHex).max(20000)
+    hexes: z.array(zBuilderHex).max(20000),
+    holds: zPartHolds
 });
 
 /**
@@ -5862,13 +5908,14 @@ export const zConditionPreviewInput = z.object({
 });
 
 /**
- * A homebrew condition in its builder, the slug it is known by, and how it reads back.
+ * A homebrew condition in its builder, the slug it is known by, how it reads back, and what it takes as Parts.
  */
 export const zConditionBuild = z.object({
     entry: zLibraryEntry.optional(),
     design: z.lazy((): any => zConditionDesign),
     slug: z.string().max(40).optional(),
-    lines: z.array(z.string().max(2400)).max(400)
+    lines: z.array(z.string().max(2400)).max(400),
+    holds: zPartHolds
 });
 
 /**

@@ -3250,6 +3250,51 @@ export type PartKind = {
      * The author names each group, as a choice names its modes; groups is then empty.
      */
     openGroups: boolean;
+    hints: PartHints;
+};
+
+/**
+ * How a builder form draws a kind beyond its fields: the order its fields show in (a field left out follows, in definition order), sections of fields drawn together under a label, and a line of help per field. A kind without hints has all three empty.
+ */
+export type PartHints = {
+    order: Array<string>;
+    sections: Array<PartSection>;
+    help: Array<PartHelp>;
+};
+
+/**
+ * Fields a builder form draws together under a label.
+ */
+export type PartSection = {
+    label: string;
+    fields: Array<string>;
+};
+
+/**
+ * A line of help for one field.
+ */
+export type PartHelp = {
+    field: string;
+    text: string;
+};
+
+/**
+ * What a builder takes as Parts: the kinds at the top level and beneath a Part (such as a branch's then), the fields it fills in itself when a Part leaves them out, and the text fields it takes only from a list. A Part outside these is refused when the design is checked.
+ */
+export type PartHolds = {
+    kinds: Array<string>;
+    beneath: Array<string>;
+    fills: Array<string>;
+    narrows: Array<PartNarrow>;
+};
+
+/**
+ * A text field of one kind that a builder takes only from a list, such as the conditions play knows.
+ */
+export type PartNarrow = {
+    kind: string;
+    field: string;
+    options: Array<string>;
 };
 
 /**
@@ -3282,7 +3327,7 @@ export type BuilderHex = {
 };
 
 /**
- * A homebrew spell in the Effect builder, the Effect slug it runs under in play, its rules text and its area as hexes.
+ * A homebrew spell in the Effect builder, the Effect slug it runs under in play, its rules text, its area as hexes, and what it takes as Parts.
  */
 export type SpellBuild = {
     entry?: LibraryEntry;
@@ -3290,6 +3335,7 @@ export type SpellBuild = {
     effect: string;
     text: Array<string>;
     hexes: Array<BuilderHex>;
+    holds: PartHolds;
 };
 
 /**
@@ -3556,13 +3602,14 @@ export type ConditionPreviewInput = {
 };
 
 /**
- * A homebrew condition in its builder, the slug it is known by, and how it reads back.
+ * A homebrew condition in its builder, the slug it is known by, how it reads back, and what it takes as Parts.
  */
 export type ConditionBuild = {
     entry?: LibraryEntry;
     design: ConditionDesign;
     slug?: string;
     lines: Array<string>;
+    holds: PartHolds;
 };
 
 /**
