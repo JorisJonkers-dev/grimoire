@@ -8,20 +8,28 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/effects"
 )
 
-// kinds are the kinds of Part a spell holds: what an area spell plays.
-func kinds() []string {
-	return []string{"branch", "create_surface", "light", "manual", "reveal", "save_condition", "save_damage"}
+// Holds is what a spell takes as Parts: what an area plays at the top, what lands on each creature
+// beneath a branch, the spell's save filled in, and Surfaces and conditions play knows.
+func Holds(surfaces []string) effects.Holds {
+	return effects.Holds{
+		Kinds:   []string{"branch", "create_surface", "light", "manual", "reveal", "save_condition", "save_damage"},
+		Beneath: []string{"branch", "manual", "save_condition"},
+		Fills:   []string{saveField()},
+		Narrows: []effects.Narrow{
+			{Kind: "create_surface", Field: "surface", Options: surfaces},
+			{Kind: "save_condition", Field: "condition", Options: Conditions()},
+		},
+	}
 }
 
-// beneathBranch are the kinds a branch in a spell holds: what lands on each creature.
-func beneathBranch() []string {
-	return []string{"branch", "manual", "save_condition"}
-}
+// saveField is the field a spell fills with its own save wherever a Part leaves it out.
+func saveField() string { return "ability" }
 
 // parts checks the spell's Parts and decodes each through its kind, with the spell's save filled in
 // wherever a Part rolls one.
 func (d Design) parts(surfaces []string) ([]effects.Part, error) {
-	if err := held(d.Parts, kinds(), "a spell holds"); err != nil {
+	h := Holds(surfaces)
+	if err := held(d.Parts, h); err != nil {
 		return nil, err
 	}
 	saved, err := d.saved(d.Parts)
@@ -31,7 +39,7 @@ func (d Design) parts(surfaces []string) ([]effects.Part, error) {
 	if err := d.once(); err != nil {
 		return nil, err
 	}
-	if err := walk(saved, func(a effects.Authored) error { return catalogued(a, surfaces) }); err != nil {
+	if err := walk(saved, func(a effects.Authored) error { return catalogued(a, h.Narrows) }); err != nil {
 		return nil, err
 	}
 	parts, err := effects.Decode(saved)
@@ -42,15 +50,25 @@ func (d Design) parts(surfaces []string) ([]effects.Part, error) {
 }
 
 // held refuses a Part of a kind a spell does not hold where it sits.
-func held(in []effects.Authored, allowed []string, where string) error {
+func held(in []effects.Authored, h effects.Holds) error {
+	if err := only(in, h.Kinds, "a spell holds"); err != nil {
+		return err
+	}
+	return walk(in, func(a effects.Authored) error {
+		for _, g := range a.Groups {
+			if err := only(g.Parts, h.Beneath, "beneath a branch, a spell holds"); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+// only refuses a Part of a kind not allowed.
+func only(in []effects.Authored, allowed []string, where string) error {
 	for _, a := range in {
 		if !slices.Contains(allowed, a.Kind) {
 			return DesignError(where + " Parts of the kinds " + strings.Join(allowed, ", "))
-		}
-		for _, g := range a.Groups {
-			if err := held(g.Parts, beneathBranch(), "beneath a branch, a spell holds"); err != nil {
-				return err
-			}
 		}
 	}
 	return nil
@@ -80,18 +98,18 @@ func (d Design) saved(in []effects.Authored) ([]effects.Authored, error) {
 // save is a Part's values with the spell's save as its ability, when its kind rolls one.
 func (d Design) save(a effects.Authored) (effects.Values, error) {
 	k, _ := effects.KindOf(a.Kind) // held has refused a kind the rules do not know
-	if !slices.ContainsFunc(k.Describe().Fields, func(f effects.Field) bool { return f.Name == "ability" }) {
+	if !slices.ContainsFunc(k.Describe().Fields, func(f effects.Field) bool { return f.Name == saveField() }) {
 		return a.Values, nil
 	}
 	if d.Save == "" {
 		return nil, DesignError("a Part that rolls a save needs the save the targets make")
 	}
-	if got := a.Values["ability"].Text; got != "" && got != d.Save {
+	if got := a.Values[saveField()].Text; got != "" && got != d.Save {
 		return nil, DesignError("each Part that rolls a save rolls the spell's save, " + d.Save)
 	}
 	out := effects.Values{}
 	maps.Copy(out, a.Values)
-	out["ability"] = effects.Value{Text: d.Save, Number: 0, Flag: false, Texts: nil}
+	out[saveField()] = effects.Value{Text: d.Save, Number: 0, Flag: false, Texts: nil}
 	return out, nil
 }
 
@@ -114,12 +132,11 @@ func (d Design) once() error {
 }
 
 // catalogued refuses a Surface or a condition play does not know.
-func catalogued(a effects.Authored, surfaces []string) error {
-	if s := a.Values["surface"].Text; a.Kind == "create_surface" && !slices.Contains(surfaces, s) {
-		return DesignError("choose a Surface: " + strings.Join(surfaces, ", "))
-	}
-	if c := a.Values["condition"].Text; a.Kind == "save_condition" && !slices.Contains(Conditions(), c) {
-		return DesignError("choose a condition: " + strings.Join(Conditions(), ", "))
+func catalogued(a effects.Authored, narrows []effects.Narrow) error {
+	for _, n := range narrows {
+		if v := a.Values[n.Field].Text; a.Kind == n.Kind && !slices.Contains(n.Options, v) {
+			return DesignError("choose a " + n.Field + ": " + strings.Join(n.Options, ", "))
+		}
 	}
 	return nil
 }

@@ -42,6 +42,10 @@ func (createSurfaceKind) Describe() Description {
 	}
 }
 
+func (createSurfaceKind) Hints() Hints {
+	return Hints{Order: nil, Sections: nil, Help: []Help{{Field: "rounds", Text: "How long the Surface lies."}}}
+}
+
 func (k createSurfaceKind) Decode(v Values, _ Groups) (Part, error) {
 	d := k.Describe()
 	if !surfaceSlug.MatchString(v["surface"].Text) {

@@ -36,6 +36,10 @@ func (manualKind) Describe() Description {
 	}
 }
 
+func (manualKind) Hints() Hints {
+	return Hints{Order: nil, Sections: nil, Help: []Help{{Field: "instruction", Text: "What the DM decides when the Effect lands; play waits for it."}}}
+}
+
 func (k manualKind) Decode(v Values, _ Groups) (Part, error) {
 	text, err := v.text(k.Describe().field("instruction"))
 	if err != nil {

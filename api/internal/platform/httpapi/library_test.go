@@ -650,7 +650,7 @@ func TestTheEffectBuilder(t *testing.T) {
 	preview := decode(t, rec)
 	text := strings.Join(toStrings(preview["text"].([]any)), "\n")
 	if rec.Code != http.StatusOK || len(preview["hexes"].([]any)) != 18 || !strings.Contains(text, "Casting Time: 1 action or Ritual.") ||
-		!strings.Contains(text, "If the creature is a fey, if a creature fails the save by 1 or more, on a failed Wisdom saving throw, a creature has the Charmed condition.") || !strings.Contains(text, "starts its turn in the area takes 1d6 radiant damage") {
+		!strings.Contains(text, "If a creature is a fey and fails the save, it has the Charmed condition.") || !strings.Contains(text, "starts its turn in the area takes 1d6 radiant damage") {
 		t.Fatalf("preview: %d %v", rec.Code, preview)
 	}
 	bad := strings.Replace(lanternDesign, `"save":"wisdom",`, "", 1)

@@ -61,9 +61,12 @@ func abilities() []string {
 	return []string{"strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"}
 }
 
-// kinds are the kinds of Part a condition holds: what folds into its bearer, and what the DM decides.
-func kinds() []string {
-	return []string{"crit_within", "edge", "immobile", "incapacitated", "manual", "save_edge", "speed_penalty"}
+// Holds is what a condition takes as Parts: what folds into its bearer, and what the DM decides.
+func Holds() effects.Holds {
+	return effects.Holds{
+		Kinds:   []string{"crit_within", "edge", "immobile", "incapacitated", "manual", "save_edge", "speed_penalty"},
+		Beneath: []string{}, Fills: []string{}, Narrows: []effects.Narrow{},
+	}
 }
 
 // Check validates a design.
@@ -113,9 +116,10 @@ func stacking(d Design) error {
 
 // parts checks the Parts against the kinds a condition holds and decodes each through its kind.
 func parts(in []effects.Authored) ([]effects.Part, error) {
+	kinds := Holds().Kinds
 	for _, a := range in {
-		if !slices.Contains(kinds(), a.Kind) {
-			return nil, DesignError("a condition holds Parts of the kinds " + strings.Join(kinds(), ", "))
+		if !slices.Contains(kinds, a.Kind) {
+			return nil, DesignError("a condition holds Parts of the kinds " + strings.Join(kinds, ", "))
 		}
 	}
 	out, err := effects.Decode(in)

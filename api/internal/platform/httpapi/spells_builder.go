@@ -37,7 +37,10 @@ func designOut(d spellbuild.Design) oas.SpellDesign {
 }
 
 func spellBuildOut(b app.SpellBuild) *oas.SpellBuildHeaders {
-	out := oas.SpellBuild{Design: designOut(b.Design), Effect: b.Built.Definition.Slug, Text: append([]string{}, b.Built.Text...), Hexes: []oas.BuilderHex{}}
+	out := oas.SpellBuild{
+		Design: designOut(b.Design), Effect: b.Built.Definition.Slug, Text: append([]string{}, b.Built.Text...), Hexes: []oas.BuilderHex{},
+		Holds: holdsOut(b.Holds),
+	}
 	if b.Entry.ID != uuid.Nil {
 		out.Entry = oas.NewOptLibraryEntry(libraryEntryOut(b.Entry))
 	}

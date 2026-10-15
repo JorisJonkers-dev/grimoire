@@ -16,6 +16,11 @@ func (s SaveCondition) Text() string {
 	return "On a failed " + title(s.Ability) + " saving throw, a creature has the " + title(s.Slug) + " condition."
 }
 
+// Consequence is the condition, on a creature a branch has picked out.
+func (s SaveCondition) Consequence() string {
+	return "has the " + title(s.Slug) + " condition"
+}
+
 // Asks for every creature's save, and the condition those who fail it take.
 func (s SaveCondition) Asks() []Act {
 	return []Act{RollSave{Ability: s.Ability}, Afflict{Condition: s.Slug}}

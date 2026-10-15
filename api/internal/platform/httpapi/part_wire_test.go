@@ -46,8 +46,8 @@ func TestHomebrewDesignsOnTheWire(t *testing.T) {
 	sameJSON(t, "the saved text", saved["text"], `["Casting Time: 1 action or Ritual.","Components: V, M (a lantern of bog glass worth 25+ gp, which the spell consumes).",
 		"Area: a 10-foot emanation from the caster.","Duration: Concentration, up to 1 minute.","Bright light fills 20 feet around where it lands, and dim light another 20 feet.",
 		"Every creature and object in the area loses Invisible, whatever anyone's senses.",
-		"If the creature is an undead, if a creature fails the save by 1 or more, on a failed Wisdom saving throw, a creature has the Charmed condition.",
-		"If the creature is a fey, if a creature fails the save by 1 or more, on a failed Wisdom saving throw, a creature has the Charmed condition.",
+		"If a creature is an undead and fails the save, it has the Charmed condition.",
+		"If a creature is a fey and fails the save, it has the Charmed condition.",
 		"A creature that starts its turn in the area takes 1d6 radiant damage."]`)
 	sameJSON(t, "the design read back", decode(t, call(h, http.MethodGet, "/api/v1/builders/spells/"+spell, "dm", ""))["design"], lantern)
 
@@ -64,7 +64,7 @@ func TestHomebrewDesignsOnTheWire(t *testing.T) {
 		{"kind":"manual","values":{"instruction":{"text":"Flammable objects ignite."}},"groups":[]}]}`)
 	sameJSON(t, "a stored design's text", stored["text"], `["Casting Time: 1 action.","Components: V.","Area: a 20-foot sphere at a point within 150 feet.","Duration: 3 rounds.",
 		"Each creature in the area makes a Dexterity saving throw, taking 8d6 fire damage on a failed save or half as much damage on a successful one.",
-		"If a creature fails the save by 1 or more, on a failed Dexterity saving throw, a creature has the Prone condition.","The area is covered in grease for 3 rounds.","Flammable objects ignite."]`)
+		"If a creature fails the save, it has the Prone condition.","The area is covered in grease for 3 rounds.","Flammable objects ignite."]`)
 
 	frost := decode(t, call(h, http.MethodPost, "/api/v1/library", "dm", `{"kind":"condition","name":"Frostbite","fields":[]}`))["id"].(string)
 	cond := decode(t, call(h, http.MethodPut, "/api/v1/builders/conditions/"+frost, "dm", frostbiteDesign))

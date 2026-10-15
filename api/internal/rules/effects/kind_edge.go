@@ -99,6 +99,18 @@ func (edgeKind) Describe() Description {
 	}
 }
 
+func (edgeKind) Hints() Hints {
+	return Hints{
+		Order:    []string{"advantage", "against", "range", "source_only"},
+		Sections: []Section{{Label: "Which attacks", Fields: []string{"against", "range", "source_only"}}},
+		Help: []Help{
+			{Field: "advantage", Text: "Off: Disadvantage."},
+			{Field: "against", Text: "Off: the bearer's own attacks."},
+			{Field: "source_only", Text: "Only whoever applied the Effect, as with Vex."},
+		},
+	}
+}
+
 func (k edgeKind) Decode(v Values, _ Groups) (Part, error) {
 	name, err := v.choice(k.Describe().field("range"))
 	if err != nil {

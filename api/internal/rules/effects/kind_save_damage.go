@@ -52,6 +52,10 @@ func (saveDamageKind) Describe() Description {
 	}
 }
 
+func (saveDamageKind) Hints() Hints {
+	return Hints{Order: []string{"dice", "damage_type", "half", "ability"}, Sections: nil, Help: []Help{{Field: "dice", Text: "Like 8d6."}}}
+}
+
 func (saveDamageKind) Decode(v Values, _ Groups) (Part, error) {
 	s := SaveDamage{Ability: v["ability"].Text, Dice: v["dice"].Text, Type: v["damage_type"].Text, Half: v["half"].Flag}
 	if err := oneOf("ability", s.Ability, abilities()); err != nil {

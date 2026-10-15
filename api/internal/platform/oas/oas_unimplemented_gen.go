@@ -1548,8 +1548,9 @@ func (UnimplementedHandler) ListNpcs(ctx context.Context, params ListNpcsParams)
 // ListPartKinds implements listPartKinds operation.
 //
 // Every kind of Part an Effect may hold, as its definition: the fields an author fills in with their
-// bounds and options, and the groups of Parts it holds beneath it. A builder draws its form from
-// these, and a Part sent to a builder is checked against its kind's definition.
+// bounds and options, the groups of Parts it holds beneath it, and hints for drawing its form. A
+// builder draws its form from these, and a Part sent to a builder is checked against its kind's
+// definition. Which kinds a builder takes is in that builder's own answer (holds).
 //
 // GET /api/v1/builders/part-kinds
 func (UnimplementedHandler) ListPartKinds(ctx context.Context) (r ListPartKindsRes, _ error) {

@@ -3420,7 +3420,7 @@ export const reviewSharedSubmission = <ThrowOnError extends boolean = false>(opt
 /**
  * List the kinds of Part
  *
- * Every kind of Part an Effect may hold, as its definition: the fields an author fills in with their bounds and options, and the groups of Parts it holds beneath it. A builder draws its form from these, and a Part sent to a builder is checked against its kind's definition.
+ * Every kind of Part an Effect may hold, as its definition: the fields an author fills in with their bounds and options, the groups of Parts it holds beneath it, and hints for drawing its form. A builder draws its form from these, and a Part sent to a builder is checked against its kind's definition. Which kinds a builder takes is in that builder's own answer (holds).
  */
 export const listPartKinds = <ThrowOnError extends boolean = false>(options?: Options<ListPartKindsData, ThrowOnError>): RequestResult<ListPartKindsResponses, ListPartKindsErrors, ThrowOnError> => (options?.client ?? client).get<ListPartKindsResponses, ListPartKindsErrors, ThrowOnError>({
     requestValidator: async (data) => await z.object({

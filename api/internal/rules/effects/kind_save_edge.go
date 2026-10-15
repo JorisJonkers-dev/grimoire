@@ -65,6 +65,10 @@ func (saveEdgeKind) Describe() Description {
 	}
 }
 
+func (saveEdgeKind) Hints() Hints {
+	return Hints{Order: []string{"mode", "ability"}, Sections: nil, Help: nil}
+}
+
 func (k saveEdgeKind) Decode(v Values, _ Groups) (Part, error) {
 	d := k.Describe()
 	ability, err := v.choice(d.field("ability"))

@@ -8,8 +8,8 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/effects"
 )
 
-// Every kind the rules know is served as its definition, in the rules' order, field for field; a kind
-// missing from what is served, or served differently from its definition, fails here.
+// Every kind the rules know is served as its definition and its hints, in the rules' order, field for
+// field; a kind missing from what is served, or served differently from its definition, fails here.
 func TestEveryKindOfPartIsServed(t *testing.T) {
 	t.Parallel()
 	h := libraryStack(t)
@@ -44,7 +44,26 @@ func TestEveryKindOfPartIsServed(t *testing.T) {
 		if groups == nil {
 			groups = []string{}
 		}
-		want := map[string]any{"slug": d.Slug, "label": d.Label, "summary": d.Summary, "fields": fields, "groups": groups, "openGroups": d.OpenGroups}
+		want := map[string]any{
+			"slug": d.Slug, "label": d.Label, "summary": d.Summary, "fields": fields, "groups": groups, "openGroups": d.OpenGroups,
+			"hints": hintsJSON(effects.HintsOf(k)),
+		}
 		sameJSON(t, d.Slug, served[i], mustJSON(t, want))
 	}
+}
+
+func hintsJSON(h effects.Hints) map[string]any {
+	sections := make([]map[string]any, 0, len(h.Sections))
+	for _, s := range h.Sections {
+		sections = append(sections, map[string]any{"label": s.Label, "fields": s.Fields})
+	}
+	help := make([]map[string]any, 0, len(h.Help))
+	for _, l := range h.Help {
+		help = append(help, map[string]any{"field": l.Field, "text": l.Text})
+	}
+	order := h.Order
+	if order == nil {
+		order = []string{}
+	}
+	return map[string]any{"order": order, "sections": sections, "help": help}
 }
