@@ -123,7 +123,7 @@ type withToken string
 func (w withToken) RoundTrip(r *http.Request) (*http.Response, error) {
 	r = r.Clone(r.Context())
 	r.Header.Set("Authorization", "Bearer "+string(w))
-	return http.DefaultTransport.RoundTrip(r)
+	return agentTransport.RoundTrip(r)
 }
 
 // MCP tools act as the token's Account, and a tool outside the token's scopes is refused.

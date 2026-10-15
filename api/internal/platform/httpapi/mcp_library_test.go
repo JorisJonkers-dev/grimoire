@@ -21,7 +21,7 @@ func (w scopedAs) RoundTrip(r *http.Request) (*http.Response, error) {
 	r = r.Clone(r.Context())
 	r.Header.Set("X-User-Id", w.subject)
 	r.Header.Set(httpx.ScopesHeader, w.scopes)
-	return http.DefaultTransport.RoundTrip(r)
+	return agentTransport.RoundTrip(r)
 }
 
 func tokenAgent(t *testing.T, url, subject, scopes string) agent {

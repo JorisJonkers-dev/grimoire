@@ -76,12 +76,16 @@ func mcpStack(t *testing.T) (http.Handler, *pgxpool.Pool) {
 	return h, store.Pool()
 }
 
+// agentTransport is a pool of its own: every httptest server closing closes http.DefaultTransport's
+// idle connections, which broke agents' requests in parallel tests.
+var agentTransport = http.DefaultTransport.(*http.Transport).Clone()
+
 type as string
 
 func (a as) RoundTrip(r *http.Request) (*http.Response, error) {
 	r = r.Clone(r.Context())
 	r.Header.Set("X-User-Id", string(a))
-	return http.DefaultTransport.RoundTrip(r)
+	return agentTransport.RoundTrip(r)
 }
 
 // agent is an MCP client signed in as one account.
