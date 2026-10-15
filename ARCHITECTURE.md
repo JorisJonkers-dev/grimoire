@@ -619,8 +619,21 @@ two kinds added in parallel touch nothing in common. No JSON column anywhere. In
 `TestEveryKindHasItsStoreAndItsRow` fails when `effects.Kinds()` and `kindRows()` disagree or a kind
 has no row in the lookup table.
 
+**On the wire.** The API carries every Part in one recursive shape, never one per kind: the kind's
+slug, its values by field name, and the Parts beneath it in named groups (`Part`, `PartValue`,
+`PartGroup` in the OpenAPI document; `effects.Authored` in Go). `effects.Decode` checks an authored
+Part against its kind's definition, the Parts beneath it first, and makes it; a refusal names where
+the Part sits and the field, in the kind's own words. No handler checks a Part itself. `GET
+/api/v1/builders/part-kinds` (MCP `list_part_kinds`) serves every kind's `Describe()`: its fields with
+their bounds and options, its named groups, and whether the author names the groups, as a choice
+names its modes. Builders draw their forms from it. A builder narrows which kinds it holds (a spell
+holds what an area plays; a condition what folds into its bearer) and checks what spans Parts, such
+as a spell's save or one light, but it decodes every Part through `effects.Decode`. Designs saved
+before the generic Part stored their builder's own rows; the spell and condition builders still read
+those rows as the Parts they always built.
+
 **Adding a kind** is the recipe in §18.1: four new files (rules, store, queries, migration) and one
-sorted line in each of the two lists.
+sorted line in each of the two lists. The API and the served definitions follow without a change.
 
 Every Effect also carries **Targeting** (self, creatures, sphere, cone, line, cube, cylinder,
 emanation, wall, ring; size, range, origin; side filter; creature-type filter; sight required) and a
@@ -1110,7 +1123,8 @@ with its checks) and the capabilities it has in play (the folds `AttackFolder`, 
 `db/migrations/<yyyymmddhhmmss>_effect_kind_<slug>.sql` creating its table and its row in
 `compendium.effect_kinds` (a kind that is the whole of its Part, like `dispel`, has no table or query
 file: its store reads its rows through `bare`) → decode, text, capability and round-trip tests →
-gremlins clean. No switch names a kind, so nothing else changes.
+gremlins clean. No switch names a kind and the OpenAPI document names none, so nothing else changes:
+the API takes the new kind as a generic Part and serves its definition.
 
 **Add a live command:** OpenAPI component (`Command` variant + resulting `Update` variants) →
 `task gen` → domain command + validation via rules → runtime handler (one transaction + typed
