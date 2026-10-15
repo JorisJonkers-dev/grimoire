@@ -1545,6 +1545,17 @@ func (UnimplementedHandler) ListNpcs(ctx context.Context, params ListNpcsParams)
 	return r, ht.ErrNotImplemented
 }
 
+// ListPartKinds implements listPartKinds operation.
+//
+// Every kind of Part an Effect may hold, as its definition: the fields an author fills in with their
+// bounds and options, and the groups of Parts it holds beneath it. A builder draws its form from
+// these, and a Part sent to a builder is checked against its kind's definition.
+//
+// GET /api/v1/builders/part-kinds
+func (UnimplementedHandler) ListPartKinds(ctx context.Context) (r ListPartKindsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // ListProposals implements listProposals operation.
 //
 // The Campaign's Proposals, newest first: every one for a DM, a Player's own otherwise.

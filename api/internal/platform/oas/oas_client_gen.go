@@ -1789,6 +1789,14 @@ type ReadInvoker interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/npcs
 	ListNpcs(ctx context.Context, params ListNpcsParams) (ListNpcsRes, error)
+	// ListPartKinds invokes listPartKinds operation.
+	//
+	// Every kind of Part an Effect may hold, as its definition: the fields an author fills in with their
+	// bounds and options, and the groups of Parts it holds beneath it. A builder draws its form from
+	// these, and a Part sent to a builder is checked against its kind's definition.
+	//
+	// GET /api/v1/builders/part-kinds
+	ListPartKinds(ctx context.Context) (ListPartKindsRes, error)
 	// ListProposals invokes listProposals operation.
 	//
 	// The Campaign's Proposals, newest first: every one for a DM, a Player's own otherwise.
@@ -24353,6 +24361,121 @@ func (c *Client) sendListNpcs(ctx context.Context, params ListNpcsParams) (res L
 
 	stage = "DecodeResponse"
 	result, err := decodeListNpcsResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// ListPartKinds invokes listPartKinds operation.
+//
+// Every kind of Part an Effect may hold, as its definition: the fields an author fills in with their
+// bounds and options, and the groups of Parts it holds beneath it. A builder draws its form from
+// these, and a Part sent to a builder is checked against its kind's definition.
+//
+// GET /api/v1/builders/part-kinds
+func (c *Client) ListPartKinds(ctx context.Context) (ListPartKindsRes, error) {
+	res, err := c.sendListPartKinds(ctx)
+	return res, err
+}
+
+func (c *Client) sendListPartKinds(ctx context.Context) (res ListPartKindsRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("listPartKinds"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.URLTemplateKey.String("/api/v1/builders/part-kinds"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, ListPartKindsOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/api/v1/builders/part-kinds"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, ListPartKindsOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeListPartKindsResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}

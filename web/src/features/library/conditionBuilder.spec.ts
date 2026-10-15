@@ -67,8 +67,10 @@ describe('condition builder', () => {
       icon: 'snow', color: '#7fa8dd', text: 'Cold seeps into the bones.', ends: 'rest', ability: 'constitution', stacks: true, maxLevel: 3,
       perLevel: { d20: 1, speedFt: 5, deathAt: 0 },
       parts: [
-        { type: 'attacked_advantage' }, { type: 'save_disadvantage', ability: 'dexterity' }, { type: 'speed_penalty', feet: 10 },
-        { type: 'manual', text: 'The DM decides what the cold does to gear.' },
+        { kind: 'edge', values: { against: { flag: true }, advantage: { flag: true }, range: { text: 'any' } }, groups: [] },
+        { kind: 'save_edge', values: { ability: { text: 'dexterity' }, mode: { text: 'disadvantage' } }, groups: [] },
+        { kind: 'speed_penalty', values: { ft: { number: 10 } }, groups: [] },
+        { kind: 'manual', values: { instruction: { text: 'The DM decides what the cold does to gear.' } }, groups: [] },
       ],
     })
   })

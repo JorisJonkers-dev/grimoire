@@ -1,11 +1,19 @@
 import { flushPromises } from '@vue/test-utils'
 import { afterEach, describe, expect, it } from 'vitest'
-import type { SpellBuild, SpellDesign } from '@/infrastructure/api/types.gen'
+import type { Part, SpellBuild, SpellDesign } from '@/infrastructure/api/types.gen'
 import { expectAccessible } from '@/test/axe'
 import { mountApp, unmountAll } from '@/test/mountApp'
 import { jsonResponse } from '@/test/mountWithQuery'
 
 const SPELL = '0190c7a8-0000-7000-8000-0000000000e9'
+// charmedIf charms a creature of one type that fails the spell's save.
+const charmedIf = (creature: string): Part => ({
+  kind: 'branch', values: { when: { text: 'creature_is' }, creature_type: { text: creature } },
+  groups: [{ name: 'then', parts: [{
+    kind: 'branch', values: { when: { text: 'fails_by' }, n: { number: 1 } },
+    groups: [{ name: 'then', parts: [{ kind: 'save_condition', values: { condition: { text: 'charmed' } }, groups: [] }] }],
+  }] }],
+})
 const at = '2026-10-01T20:00:00Z'
 const start: SpellDesign = {
   targeting: { shape: 'sphere', sizeFt: 20, rangeFt: 60 }, concentration: false, duration: { unit: 'instant' }, ritual: false,
@@ -105,13 +113,48 @@ describe('effect builder', () => {
     expect(saved).toEqual({
       targeting: { shape: 'emanation', sizeFt: 10, rangeFt: 0 }, save: 'wisdom', concentration: true, duration: { unit: 'minutes', amount: 1 }, ritual: true,
       castingTime: { kind: 'action', minutes: 10, trigger: 'when_hit' }, components: { verbal: true, somatic: false, material: { text: 'a lantern of bog glass' } },
+      turnDamage: { dice: '1d6', damageType: 'radiant' },
       parts: [
-        { type: 'damage', when: 'start_of_turn', dice: '1d6', damageType: 'radiant', half: true },
-        { type: 'condition', condition: 'charmed', onlyTypes: ['undead', 'fey'] },
-        { type: 'light', brightFt: 20, dimFt: 20 },
-        { type: 'reveal', qualities: ['invisible'] },
+        charmedIf('undead'),
+        charmedIf('fey'),
+        { kind: 'light', values: { bright_ft: { number: 20 }, dim_ft: { number: 20 } }, groups: [] },
+        { kind: 'reveal', values: { qualities: { texts: ['invisible'] } }, groups: [] },
       ],
     })
+  })
+
+  it('reads Parts back into rows, keeps what no row shows, and writes them back as they were', async () => {
+    const summon: Part = { kind: 'summon', values: { monster: { text: 'wolf' }, count: { number: 2 } }, groups: [] }
+    const odd: Part = { kind: 'branch', values: { when: { text: 'hp_at_most' }, n: { number: 10 } }, groups: [{ name: 'then', parts: [{ kind: 'manual', values: { instruction: { text: 'Flee.' } }, groups: [] }] }] }
+    const stored: SpellDesign = {
+      ...start, save: 'wisdom', turnDamage: { dice: '1d4', damageType: 'acid' },
+      parts: [
+        { kind: 'save_damage', values: { dice: { text: '8d6' }, damage_type: { text: 'fire' }, half: { flag: true } }, groups: [] },
+        { kind: 'branch', values: { when: { text: 'fails_by' }, n: { number: 1 } }, groups: [{ name: 'then', parts: [{ kind: 'save_condition', values: { condition: { text: 'prone' } }, groups: [] }] }] },
+        charmedIf('undead'), charmedIf('fey'),
+        { kind: 'create_surface', values: { surface: { text: 'fog' }, rounds: { number: 3 } }, groups: [] },
+        { kind: 'manual', values: { instruction: { text: 'Ring the bell.' } }, groups: [] },
+        summon, odd,
+      ],
+    }
+    const sent: SpellDesign[] = []
+    const { wrapper } = await mountApp(`/library/${SPELL}/spell`, {
+      [`/api/v1/builders/spells/${SPELL}`]: async (_u, req) => {
+        if (req.method === 'PUT') {
+          sent.push((await req.clone().json()) as SpellDesign)
+          return build(stored, { entry: { ...entry, revision: 2 } })
+        }
+        return build(structuredClone(stored))
+      },
+    })
+    expect(wrapper.findAll('[data-testid="parts"] .kind').map((k) => k.text())).toEqual(['damage', 'condition', 'condition', 'surface', 'manual', 'summon', 'branch', 'damage'])
+    expect(wrapper.get('[data-testid="kept-5"]').text()).toContain('cannot change it yet')
+    expect((wrapper.get('[data-testid="only-2-fey"]').element as HTMLInputElement).checked).toBe(true)
+    expect((wrapper.get('[data-testid="when-7"] option[value="start_of_turn"]').element as HTMLOptionElement).disabled).toBe(false)
+    expect((wrapper.get('[data-testid="when-0"] option[value="start_of_turn"]').element as HTMLOptionElement).disabled).toBe(true)
+    await wrapper.get('[data-testid="builder-form"]').trigger('submit')
+    await flushPromises()
+    expect(sent[0]).toEqual(stored)
   })
 
   it('shows a Shared Library copy without saving, reports a design that will not build, and refuses what is not a spell', async () => {

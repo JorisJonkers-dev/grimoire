@@ -2187,6 +2187,21 @@
     }
   },
   {
+    "name": "list_part_kinds",
+    "description": "List the kinds of Part. Every kind of Part an Effect may hold, as its definition: the fields an author fills in with their bounds and options, and the groups of Parts it holds beneath it. A builder draws its form from these, and a Part sent to a builder is checked against its kind's definition.",
+    "method": "GET",
+    "path": "/api/v1/builders/part-kinds",
+    "pathParams": [],
+    "queryParams": [],
+    "body": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {},
+      "required": [],
+      "type": "object"
+    }
+  },
+  {
     "name": "list_sessions",
     "description": "List sessions. The Campaign's Sessions, newest first. Members only.",
     "method": "GET",
@@ -3436,11 +3451,86 @@
     "body": true,
     "keeps": "library",
     "inputSchema": {
+      "$defs": {
+        "Part": {
+          "additionalProperties": false,
+          "description": "One Part of an Effect, of a kind the rules know: the kind's slug, its values by field name, and the Parts beneath it in named groups. The kind's definition (listPartKinds) says which fields and groups it takes; the server checks a Part against it. A kind that holds no Parts beneath it may leave groups out.",
+          "properties": {
+            "groups": {
+              "items": {
+                "additionalProperties": false,
+                "description": "One named group of Parts beneath a Part, such as what a branch adds or one mode of a choice.",
+                "properties": {
+                  "name": {
+                    "maxLength": 80,
+                    "type": "string"
+                  },
+                  "parts": {
+                    "items": {
+                      "$ref": "#/$defs/Part"
+                    },
+                    "maxItems": 30,
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "name",
+                  "parts"
+                ],
+                "type": "object"
+              },
+              "maxItems": 20,
+              "type": "array"
+            },
+            "kind": {
+              "maxLength": 40,
+              "type": "string"
+            },
+            "values": {
+              "additionalProperties": {
+                "additionalProperties": false,
+                "description": "One field's value, in the slot its field type reads: text for dice, text and a choice, number, flag, or texts for several choices.",
+                "properties": {
+                  "flag": {
+                    "type": "boolean"
+                  },
+                  "number": {
+                    "format": "int32",
+                    "maximum": 100000,
+                    "minimum": -100000,
+                    "type": "integer"
+                  },
+                  "text": {
+                    "maxLength": 1000,
+                    "type": "string"
+                  },
+                  "texts": {
+                    "items": {
+                      "maxLength": 80,
+                      "type": "string"
+                    },
+                    "maxItems": 20,
+                    "type": "array"
+                  }
+                },
+                "type": "object"
+              },
+              "maxProperties": 20,
+              "type": "object"
+            }
+          },
+          "required": [
+            "kind",
+            "values"
+          ],
+          "type": "object"
+        }
+      },
       "additionalProperties": false,
       "properties": {
         "body": {
           "additionalProperties": false,
-          "description": "A homebrew condition as the condition builder makes it, from its icon, how it ends, how it stacks and what it does.",
+          "description": "A homebrew condition as the condition builder makes it, from its icon, how it ends, how it stacks and what it does as Parts of kinds the rules know.",
           "properties": {
             "ability": {
               "maxLength": 40,
@@ -3472,28 +3562,74 @@
             "parts": {
               "items": {
                 "additionalProperties": false,
+                "description": "One Part of an Effect, of a kind the rules know: the kind's slug, its values by field name, and the Parts beneath it in named groups. The kind's definition (listPartKinds) says which fields and groups it takes; the server checks a Part against it. A kind that holds no Parts beneath it may leave groups out.",
                 "properties": {
-                  "ability": {
+                  "groups": {
+                    "items": {
+                      "additionalProperties": false,
+                      "description": "One named group of Parts beneath a Part, such as what a branch adds or one mode of a choice.",
+                      "properties": {
+                        "name": {
+                          "maxLength": 80,
+                          "type": "string"
+                        },
+                        "parts": {
+                          "items": {
+                            "$ref": "#/$defs/Part"
+                          },
+                          "maxItems": 30,
+                          "type": "array"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "parts"
+                      ],
+                      "type": "object"
+                    },
+                    "maxItems": 20,
+                    "type": "array"
+                  },
+                  "kind": {
                     "maxLength": 40,
                     "type": "string"
                   },
-                  "feet": {
-                    "format": "int32",
-                    "maximum": 100000,
-                    "minimum": -100000,
-                    "type": "integer"
-                  },
-                  "text": {
-                    "maxLength": 2000,
-                    "type": "string"
-                  },
-                  "type": {
-                    "maxLength": 40,
-                    "type": "string"
+                  "values": {
+                    "additionalProperties": {
+                      "additionalProperties": false,
+                      "description": "One field's value, in the slot its field type reads: text for dice, text and a choice, number, flag, or texts for several choices.",
+                      "properties": {
+                        "flag": {
+                          "type": "boolean"
+                        },
+                        "number": {
+                          "format": "int32",
+                          "maximum": 100000,
+                          "minimum": -100000,
+                          "type": "integer"
+                        },
+                        "text": {
+                          "maxLength": 1000,
+                          "type": "string"
+                        },
+                        "texts": {
+                          "items": {
+                            "maxLength": 80,
+                            "type": "string"
+                          },
+                          "maxItems": 20,
+                          "type": "array"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "maxProperties": 20,
+                    "type": "object"
                   }
                 },
                 "required": [
-                  "type"
+                  "kind",
+                  "values"
                 ],
                 "type": "object"
               },
@@ -4725,11 +4861,86 @@
     "body": true,
     "keeps": "library",
     "inputSchema": {
+      "$defs": {
+        "Part": {
+          "additionalProperties": false,
+          "description": "One Part of an Effect, of a kind the rules know: the kind's slug, its values by field name, and the Parts beneath it in named groups. The kind's definition (listPartKinds) says which fields and groups it takes; the server checks a Part against it. A kind that holds no Parts beneath it may leave groups out.",
+          "properties": {
+            "groups": {
+              "items": {
+                "additionalProperties": false,
+                "description": "One named group of Parts beneath a Part, such as what a branch adds or one mode of a choice.",
+                "properties": {
+                  "name": {
+                    "maxLength": 80,
+                    "type": "string"
+                  },
+                  "parts": {
+                    "items": {
+                      "$ref": "#/$defs/Part"
+                    },
+                    "maxItems": 30,
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "name",
+                  "parts"
+                ],
+                "type": "object"
+              },
+              "maxItems": 20,
+              "type": "array"
+            },
+            "kind": {
+              "maxLength": 40,
+              "type": "string"
+            },
+            "values": {
+              "additionalProperties": {
+                "additionalProperties": false,
+                "description": "One field's value, in the slot its field type reads: text for dice, text and a choice, number, flag, or texts for several choices.",
+                "properties": {
+                  "flag": {
+                    "type": "boolean"
+                  },
+                  "number": {
+                    "format": "int32",
+                    "maximum": 100000,
+                    "minimum": -100000,
+                    "type": "integer"
+                  },
+                  "text": {
+                    "maxLength": 1000,
+                    "type": "string"
+                  },
+                  "texts": {
+                    "items": {
+                      "maxLength": 80,
+                      "type": "string"
+                    },
+                    "maxItems": 20,
+                    "type": "array"
+                  }
+                },
+                "type": "object"
+              },
+              "maxProperties": 20,
+              "type": "object"
+            }
+          },
+          "required": [
+            "kind",
+            "values"
+          ],
+          "type": "object"
+        }
+      },
       "additionalProperties": false,
       "properties": {
         "body": {
           "additionalProperties": false,
-          "description": "A homebrew spell as the Effect builder makes it, from Targeting and typed parts listed as rows.",
+          "description": "A homebrew spell as the Effect builder makes it, from Targeting and the Parts it holds, each of a kind the rules know.",
           "properties": {
             "castingTime": {
               "additionalProperties": false,
@@ -4836,88 +5047,77 @@
               "type": "object"
             },
             "parts": {
+              "description": "The spell's Parts in order. A Part that rolls a save may leave its ability out: it rolls the spell's save.",
               "items": {
                 "additionalProperties": false,
-                "description": "One row of a spell design; which fields count depends on its type.",
+                "description": "One Part of an Effect, of a kind the rules know: the kind's slug, its values by field name, and the Parts beneath it in named groups. The kind's definition (listPartKinds) says which fields and groups it takes; the server checks a Part against it. A kind that holds no Parts beneath it may leave groups out.",
                 "properties": {
-                  "brightFt": {
-                    "format": "int32",
-                    "maximum": 1000,
-                    "minimum": 0,
-                    "type": "integer"
+                  "groups": {
+                    "items": {
+                      "additionalProperties": false,
+                      "description": "One named group of Parts beneath a Part, such as what a branch adds or one mode of a choice.",
+                      "properties": {
+                        "name": {
+                          "maxLength": 80,
+                          "type": "string"
+                        },
+                        "parts": {
+                          "items": {
+                            "$ref": "#/$defs/Part"
+                          },
+                          "maxItems": 30,
+                          "type": "array"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "parts"
+                      ],
+                      "type": "object"
+                    },
+                    "maxItems": 20,
+                    "type": "array"
                   },
-                  "condition": {
+                  "kind": {
                     "maxLength": 40,
                     "type": "string"
                   },
-                  "damageType": {
-                    "maxLength": 20,
-                    "type": "string"
-                  },
-                  "dice": {
-                    "maxLength": 20,
-                    "type": "string"
-                  },
-                  "dimFt": {
-                    "format": "int32",
-                    "maximum": 1000,
-                    "minimum": -1000,
-                    "type": "integer"
-                  },
-                  "half": {
-                    "type": "boolean"
-                  },
-                  "onlyTypes": {
-                    "items": {
-                      "maxLength": 20,
-                      "type": "string"
+                  "values": {
+                    "additionalProperties": {
+                      "additionalProperties": false,
+                      "description": "One field's value, in the slot its field type reads: text for dice, text and a choice, number, flag, or texts for several choices.",
+                      "properties": {
+                        "flag": {
+                          "type": "boolean"
+                        },
+                        "number": {
+                          "format": "int32",
+                          "maximum": 100000,
+                          "minimum": -100000,
+                          "type": "integer"
+                        },
+                        "text": {
+                          "maxLength": 1000,
+                          "type": "string"
+                        },
+                        "texts": {
+                          "items": {
+                            "maxLength": 80,
+                            "type": "string"
+                          },
+                          "maxItems": 20,
+                          "type": "array"
+                        }
+                      },
+                      "type": "object"
                     },
-                    "maxItems": 14,
-                    "type": "array"
-                  },
-                  "qualities": {
-                    "items": {
-                      "maxLength": 20,
-                      "type": "string"
-                    },
-                    "maxItems": 8,
-                    "type": "array"
-                  },
-                  "rounds": {
-                    "format": "int32",
-                    "maximum": 1000,
-                    "minimum": 0,
-                    "type": "integer"
-                  },
-                  "surface": {
-                    "maxLength": 40,
-                    "type": "string"
-                  },
-                  "text": {
-                    "maxLength": 1000,
-                    "type": "string"
-                  },
-                  "type": {
-                    "enum": [
-                      "damage",
-                      "condition",
-                      "light",
-                      "reveal",
-                      "surface",
-                      "manual"
-                    ],
-                    "type": "string"
-                  },
-                  "when": {
-                    "enum": [
-                      "on_cast",
-                      "start_of_turn"
-                    ],
-                    "type": "string"
+                    "maxProperties": 20,
+                    "type": "object"
                   }
                 },
                 "required": [
-                  "type"
+                  "kind",
+                  "values"
                 ],
                 "type": "object"
               },
@@ -4971,6 +5171,25 @@
                 "shape",
                 "sizeFt",
                 "rangeFt"
+              ],
+              "type": "object"
+            },
+            "turnDamage": {
+              "additionalProperties": false,
+              "description": "Damage each creature takes when it starts its turn in the area, through a Surface of the spell's own.",
+              "properties": {
+                "damageType": {
+                  "maxLength": 20,
+                  "type": "string"
+                },
+                "dice": {
+                  "maxLength": 20,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "dice",
+                "damageType"
               ],
               "type": "object"
             }

@@ -7744,7 +7744,7 @@ func (*ConditionBuildHeaders) previewConditionRes()   {}
 func (*ConditionBuildHeaders) saveConditionBuildRes() {}
 
 // A homebrew condition as the condition builder makes it, from its icon, how it ends, how it stacks
-// and what it does.
+// and what it does as Parts of kinds the rules know.
 // Ref: #/components/schemas/ConditionDesign
 type ConditionDesign struct {
 	Icon    string    `json:"icon"`
@@ -7753,11 +7753,11 @@ type ConditionDesign struct {
 	Ends    string    `json:"ends"`
 	Ability OptString `json:"ability"`
 	// What cures a condition that lasts until cured: a lingering injury.
-	Cure     OptString                  `json:"cure"`
-	Stacks   OptBool                    `json:"stacks"`
-	MaxLevel OptInt32                   `json:"maxLevel"`
-	PerLevel ConditionDesignPerLevel    `json:"perLevel"`
-	Parts    []ConditionDesignPartsItem `json:"parts"`
+	Cure     OptString               `json:"cure"`
+	Stacks   OptBool                 `json:"stacks"`
+	MaxLevel OptInt32                `json:"maxLevel"`
+	PerLevel ConditionDesignPerLevel `json:"perLevel"`
+	Parts    []Part                  `json:"parts"`
 }
 
 // GetIcon returns the value of Icon.
@@ -7806,7 +7806,7 @@ func (s *ConditionDesign) GetPerLevel() ConditionDesignPerLevel {
 }
 
 // GetParts returns the value of Parts.
-func (s *ConditionDesign) GetParts() []ConditionDesignPartsItem {
+func (s *ConditionDesign) GetParts() []Part {
 	return s.Parts
 }
 
@@ -7856,55 +7856,8 @@ func (s *ConditionDesign) SetPerLevel(val ConditionDesignPerLevel) {
 }
 
 // SetParts sets the value of Parts.
-func (s *ConditionDesign) SetParts(val []ConditionDesignPartsItem) {
+func (s *ConditionDesign) SetParts(val []Part) {
 	s.Parts = val
-}
-
-type ConditionDesignPartsItem struct {
-	Type    string    `json:"type"`
-	Ability OptString `json:"ability"`
-	Feet    OptInt32  `json:"feet"`
-	Text    OptString `json:"text"`
-}
-
-// GetType returns the value of Type.
-func (s *ConditionDesignPartsItem) GetType() string {
-	return s.Type
-}
-
-// GetAbility returns the value of Ability.
-func (s *ConditionDesignPartsItem) GetAbility() OptString {
-	return s.Ability
-}
-
-// GetFeet returns the value of Feet.
-func (s *ConditionDesignPartsItem) GetFeet() OptInt32 {
-	return s.Feet
-}
-
-// GetText returns the value of Text.
-func (s *ConditionDesignPartsItem) GetText() OptString {
-	return s.Text
-}
-
-// SetType sets the value of Type.
-func (s *ConditionDesignPartsItem) SetType(val string) {
-	s.Type = val
-}
-
-// SetAbility sets the value of Ability.
-func (s *ConditionDesignPartsItem) SetAbility(val OptString) {
-	s.Ability = val
-}
-
-// SetFeet sets the value of Feet.
-func (s *ConditionDesignPartsItem) SetFeet(val OptInt32) {
-	s.Feet = val
-}
-
-// SetText sets the value of Text.
-func (s *ConditionDesignPartsItem) SetText(val OptString) {
-	s.Text = val
 }
 
 type ConditionDesignPerLevel struct {
@@ -20586,6 +20539,56 @@ func (s *ListNpcsOKHeaders) SetResponse(val []Npc) {
 }
 
 func (*ListNpcsOKHeaders) listNpcsRes() {}
+
+// ListPartKindsOKHeaders wraps []PartKind with response headers.
+type ListPartKindsOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []PartKind
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ListPartKindsOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ListPartKindsOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ListPartKindsOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ListPartKindsOKHeaders) GetResponse() []PartKind {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ListPartKindsOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ListPartKindsOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ListPartKindsOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ListPartKindsOKHeaders) SetResponse(val []PartKind) {
+	s.Response = val
+}
+
+func (*ListPartKindsOKHeaders) listPartKindsRes() {}
 
 // ListProposalsOKHeaders wraps []Proposal with response headers.
 type ListProposalsOKHeaders struct {
@@ -39583,38 +39586,38 @@ func (o OptSpellDesignSave) Or(d SpellDesignSave) SpellDesignSave {
 	return d
 }
 
-// NewOptSpellPartWhen returns new OptSpellPartWhen with value set to v.
-func NewOptSpellPartWhen(v SpellPartWhen) OptSpellPartWhen {
-	return OptSpellPartWhen{
+// NewOptSpellDesignTurnDamage returns new OptSpellDesignTurnDamage with value set to v.
+func NewOptSpellDesignTurnDamage(v SpellDesignTurnDamage) OptSpellDesignTurnDamage {
+	return OptSpellDesignTurnDamage{
 		Value: v,
 		Set:   true,
 	}
 }
 
-// OptSpellPartWhen is optional SpellPartWhen.
-type OptSpellPartWhen struct {
-	Value SpellPartWhen
+// OptSpellDesignTurnDamage is optional SpellDesignTurnDamage.
+type OptSpellDesignTurnDamage struct {
+	Value SpellDesignTurnDamage
 	Set   bool
 }
 
-// IsSet returns true if OptSpellPartWhen was set.
-func (o OptSpellPartWhen) IsSet() bool { return o.Set }
+// IsSet returns true if OptSpellDesignTurnDamage was set.
+func (o OptSpellDesignTurnDamage) IsSet() bool { return o.Set }
 
 // Reset unsets value.
-func (o *OptSpellPartWhen) Reset() {
-	var v SpellPartWhen
+func (o *OptSpellDesignTurnDamage) Reset() {
+	var v SpellDesignTurnDamage
 	o.Value = v
 	o.Set = false
 }
 
 // SetTo sets value to v.
-func (o *OptSpellPartWhen) SetTo(v SpellPartWhen) {
+func (o *OptSpellDesignTurnDamage) SetTo(v SpellDesignTurnDamage) {
 	o.Set = true
 	o.Value = v
 }
 
 // Get returns value and boolean that denotes whether value was set.
-func (o OptSpellPartWhen) Get() (v SpellPartWhen, ok bool) {
+func (o OptSpellDesignTurnDamage) Get() (v SpellDesignTurnDamage, ok bool) {
 	if !o.Set {
 		return v, false
 	}
@@ -39622,7 +39625,7 @@ func (o OptSpellPartWhen) Get() (v SpellPartWhen, ok bool) {
 }
 
 // Or returns value if set, or given parameter if does not.
-func (o OptSpellPartWhen) Or(d SpellPartWhen) SpellPartWhen {
+func (o OptSpellDesignTurnDamage) Or(d SpellDesignTurnDamage) SpellDesignTurnDamage {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -40198,6 +40201,361 @@ func (s *OwnedCharacterListHeaders) SetResponse(val OwnedCharacterList) {
 }
 
 func (*OwnedCharacterListHeaders) listMyCharactersRes() {}
+
+// One Part of an Effect, of a kind the rules know: the kind's slug, its values by field name, and the
+// Parts beneath it in named groups. The kind's definition (listPartKinds) says which fields and groups
+// it takes; the server checks a Part against it. A kind that holds no Parts beneath it may leave
+// groups out.
+// Ref: #/components/schemas/Part
+type Part struct {
+	Kind   string      `json:"kind"`
+	Values PartValues  `json:"values"`
+	Groups []PartGroup `json:"groups"`
+}
+
+// GetKind returns the value of Kind.
+func (s *Part) GetKind() string {
+	return s.Kind
+}
+
+// GetValues returns the value of Values.
+func (s *Part) GetValues() PartValues {
+	return s.Values
+}
+
+// GetGroups returns the value of Groups.
+func (s *Part) GetGroups() []PartGroup {
+	return s.Groups
+}
+
+// SetKind sets the value of Kind.
+func (s *Part) SetKind(val string) {
+	s.Kind = val
+}
+
+// SetValues sets the value of Values.
+func (s *Part) SetValues(val PartValues) {
+	s.Values = val
+}
+
+// SetGroups sets the value of Groups.
+func (s *Part) SetGroups(val []PartGroup) {
+	s.Groups = val
+}
+
+// One value an author fills in for a Part. Min and max bound a number; max also bounds the length of a
+// text.
+// Ref: #/components/schemas/PartField
+type PartField struct {
+	Name     string        `json:"name"`
+	Label    string        `json:"label"`
+	Type     PartFieldType `json:"type"`
+	Options  []string      `json:"options"`
+	Required bool          `json:"required"`
+	Min      int32         `json:"min"`
+	Max      int32         `json:"max"`
+}
+
+// GetName returns the value of Name.
+func (s *PartField) GetName() string {
+	return s.Name
+}
+
+// GetLabel returns the value of Label.
+func (s *PartField) GetLabel() string {
+	return s.Label
+}
+
+// GetType returns the value of Type.
+func (s *PartField) GetType() PartFieldType {
+	return s.Type
+}
+
+// GetOptions returns the value of Options.
+func (s *PartField) GetOptions() []string {
+	return s.Options
+}
+
+// GetRequired returns the value of Required.
+func (s *PartField) GetRequired() bool {
+	return s.Required
+}
+
+// GetMin returns the value of Min.
+func (s *PartField) GetMin() int32 {
+	return s.Min
+}
+
+// GetMax returns the value of Max.
+func (s *PartField) GetMax() int32 {
+	return s.Max
+}
+
+// SetName sets the value of Name.
+func (s *PartField) SetName(val string) {
+	s.Name = val
+}
+
+// SetLabel sets the value of Label.
+func (s *PartField) SetLabel(val string) {
+	s.Label = val
+}
+
+// SetType sets the value of Type.
+func (s *PartField) SetType(val PartFieldType) {
+	s.Type = val
+}
+
+// SetOptions sets the value of Options.
+func (s *PartField) SetOptions(val []string) {
+	s.Options = val
+}
+
+// SetRequired sets the value of Required.
+func (s *PartField) SetRequired(val bool) {
+	s.Required = val
+}
+
+// SetMin sets the value of Min.
+func (s *PartField) SetMin(val int32) {
+	s.Min = val
+}
+
+// SetMax sets the value of Max.
+func (s *PartField) SetMax(val int32) {
+	s.Max = val
+}
+
+type PartFieldType string
+
+const (
+	PartFieldTypeDice    PartFieldType = "dice"
+	PartFieldTypeNumber  PartFieldType = "number"
+	PartFieldTypeFlag    PartFieldType = "flag"
+	PartFieldTypeText    PartFieldType = "text"
+	PartFieldTypeChoice  PartFieldType = "choice"
+	PartFieldTypeChoices PartFieldType = "choices"
+)
+
+// AllValues returns all PartFieldType values.
+func (PartFieldType) AllValues() []PartFieldType {
+	return []PartFieldType{
+		PartFieldTypeDice,
+		PartFieldTypeNumber,
+		PartFieldTypeFlag,
+		PartFieldTypeText,
+		PartFieldTypeChoice,
+		PartFieldTypeChoices,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s PartFieldType) MarshalText() ([]byte, error) {
+	switch s {
+	case PartFieldTypeDice:
+		return []byte(s), nil
+	case PartFieldTypeNumber:
+		return []byte(s), nil
+	case PartFieldTypeFlag:
+		return []byte(s), nil
+	case PartFieldTypeText:
+		return []byte(s), nil
+	case PartFieldTypeChoice:
+		return []byte(s), nil
+	case PartFieldTypeChoices:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *PartFieldType) UnmarshalText(data []byte) error {
+	switch PartFieldType(data) {
+	case PartFieldTypeDice:
+		*s = PartFieldTypeDice
+		return nil
+	case PartFieldTypeNumber:
+		*s = PartFieldTypeNumber
+		return nil
+	case PartFieldTypeFlag:
+		*s = PartFieldTypeFlag
+		return nil
+	case PartFieldTypeText:
+		*s = PartFieldTypeText
+		return nil
+	case PartFieldTypeChoice:
+		*s = PartFieldTypeChoice
+		return nil
+	case PartFieldTypeChoices:
+		*s = PartFieldTypeChoices
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// One named group of Parts beneath a Part, such as what a branch adds or one mode of a choice.
+// Ref: #/components/schemas/PartGroup
+type PartGroup struct {
+	Name  string `json:"name"`
+	Parts []Part `json:"parts"`
+}
+
+// GetName returns the value of Name.
+func (s *PartGroup) GetName() string {
+	return s.Name
+}
+
+// GetParts returns the value of Parts.
+func (s *PartGroup) GetParts() []Part {
+	return s.Parts
+}
+
+// SetName sets the value of Name.
+func (s *PartGroup) SetName(val string) {
+	s.Name = val
+}
+
+// SetParts sets the value of Parts.
+func (s *PartGroup) SetParts(val []Part) {
+	s.Parts = val
+}
+
+// A kind of Part as its definition: what an author fills in, and the groups of Parts it holds beneath
+// it.
+// Ref: #/components/schemas/PartKind
+type PartKind struct {
+	Slug    string      `json:"slug"`
+	Label   string      `json:"label"`
+	Summary string      `json:"summary"`
+	Fields  []PartField `json:"fields"`
+	// The groups of Parts the kind holds beneath it, by name; most kinds hold none.
+	Groups []string `json:"groups"`
+	// The author names each group, as a choice names its modes; groups is then empty.
+	OpenGroups bool `json:"openGroups"`
+}
+
+// GetSlug returns the value of Slug.
+func (s *PartKind) GetSlug() string {
+	return s.Slug
+}
+
+// GetLabel returns the value of Label.
+func (s *PartKind) GetLabel() string {
+	return s.Label
+}
+
+// GetSummary returns the value of Summary.
+func (s *PartKind) GetSummary() string {
+	return s.Summary
+}
+
+// GetFields returns the value of Fields.
+func (s *PartKind) GetFields() []PartField {
+	return s.Fields
+}
+
+// GetGroups returns the value of Groups.
+func (s *PartKind) GetGroups() []string {
+	return s.Groups
+}
+
+// GetOpenGroups returns the value of OpenGroups.
+func (s *PartKind) GetOpenGroups() bool {
+	return s.OpenGroups
+}
+
+// SetSlug sets the value of Slug.
+func (s *PartKind) SetSlug(val string) {
+	s.Slug = val
+}
+
+// SetLabel sets the value of Label.
+func (s *PartKind) SetLabel(val string) {
+	s.Label = val
+}
+
+// SetSummary sets the value of Summary.
+func (s *PartKind) SetSummary(val string) {
+	s.Summary = val
+}
+
+// SetFields sets the value of Fields.
+func (s *PartKind) SetFields(val []PartField) {
+	s.Fields = val
+}
+
+// SetGroups sets the value of Groups.
+func (s *PartKind) SetGroups(val []string) {
+	s.Groups = val
+}
+
+// SetOpenGroups sets the value of OpenGroups.
+func (s *PartKind) SetOpenGroups(val bool) {
+	s.OpenGroups = val
+}
+
+// One field's value, in the slot its field type reads: text for dice, text and a choice, number, flag,
+// or texts for several choices.
+// Ref: #/components/schemas/PartValue
+type PartValue struct {
+	Text   OptString `json:"text"`
+	Number OptInt32  `json:"number"`
+	Flag   OptBool   `json:"flag"`
+	Texts  []string  `json:"texts"`
+}
+
+// GetText returns the value of Text.
+func (s *PartValue) GetText() OptString {
+	return s.Text
+}
+
+// GetNumber returns the value of Number.
+func (s *PartValue) GetNumber() OptInt32 {
+	return s.Number
+}
+
+// GetFlag returns the value of Flag.
+func (s *PartValue) GetFlag() OptBool {
+	return s.Flag
+}
+
+// GetTexts returns the value of Texts.
+func (s *PartValue) GetTexts() []string {
+	return s.Texts
+}
+
+// SetText sets the value of Text.
+func (s *PartValue) SetText(val OptString) {
+	s.Text = val
+}
+
+// SetNumber sets the value of Number.
+func (s *PartValue) SetNumber(val OptInt32) {
+	s.Number = val
+}
+
+// SetFlag sets the value of Flag.
+func (s *PartValue) SetFlag(val OptBool) {
+	s.Flag = val
+}
+
+// SetTexts sets the value of Texts.
+func (s *PartValue) SetTexts(val []string) {
+	s.Texts = val
+}
+
+type PartValues map[string]PartValue
+
+func (s *PartValues) init() PartValues {
+	m := *s
+	if m == nil {
+		m = map[string]PartValue{}
+		*s = m
+	}
+	return m
+}
 
 // Another Character in the Campaign, to give items to.
 // Ref: #/components/schemas/PartyBearer
@@ -40825,6 +41183,7 @@ func (*ProblemStatusCodeWithHeaders) listMySubmissionsRes()             {}
 func (*ProblemStatusCodeWithHeaders) listNotificationsRes()             {}
 func (*ProblemStatusCodeWithHeaders) listNpcRevisionsRes()              {}
 func (*ProblemStatusCodeWithHeaders) listNpcsRes()                      {}
+func (*ProblemStatusCodeWithHeaders) listPartKindsRes()                 {}
 func (*ProblemStatusCodeWithHeaders) listProposalsRes()                 {}
 func (*ProblemStatusCodeWithHeaders) listReleaseNotesRes()              {}
 func (*ProblemStatusCodeWithHeaders) listRetrainChoicesRes()            {}
@@ -48342,7 +48701,8 @@ func (s *SpellChoice) SetSpell(val Slug) {
 	s.Spell = val
 }
 
-// A homebrew spell as the Effect builder makes it, from Targeting and typed parts listed as rows.
+// A homebrew spell as the Effect builder makes it, from Targeting and the Parts it holds, each of a
+// kind the rules know.
 // Ref: #/components/schemas/SpellDesign
 type SpellDesign struct {
 	Targeting     SpellDesignTargeting   `json:"targeting"`
@@ -48352,7 +48712,12 @@ type SpellDesign struct {
 	Ritual        bool                   `json:"ritual"`
 	CastingTime   SpellDesignCastingTime `json:"castingTime"`
 	Components    SpellDesignComponents  `json:"components"`
-	Parts         []SpellPart            `json:"parts"`
+	// Damage each creature takes when it starts its turn in the area, through a Surface of the spell's
+	// own.
+	TurnDamage OptSpellDesignTurnDamage `json:"turnDamage"`
+	// The spell's Parts in order. A Part that rolls a save may leave its ability out: it rolls the spell's
+	// save.
+	Parts []Part `json:"parts"`
 }
 
 // GetTargeting returns the value of Targeting.
@@ -48390,8 +48755,13 @@ func (s *SpellDesign) GetComponents() SpellDesignComponents {
 	return s.Components
 }
 
+// GetTurnDamage returns the value of TurnDamage.
+func (s *SpellDesign) GetTurnDamage() OptSpellDesignTurnDamage {
+	return s.TurnDamage
+}
+
 // GetParts returns the value of Parts.
-func (s *SpellDesign) GetParts() []SpellPart {
+func (s *SpellDesign) GetParts() []Part {
 	return s.Parts
 }
 
@@ -48430,8 +48800,13 @@ func (s *SpellDesign) SetComponents(val SpellDesignComponents) {
 	s.Components = val
 }
 
+// SetTurnDamage sets the value of TurnDamage.
+func (s *SpellDesign) SetTurnDamage(val OptSpellDesignTurnDamage) {
+	s.TurnDamage = val
+}
+
 // SetParts sets the value of Parts.
-func (s *SpellDesign) SetParts(val []SpellPart) {
+func (s *SpellDesign) SetParts(val []Part) {
 	s.Parts = val
 }
 
@@ -48946,6 +49321,33 @@ func (s *SpellDesignTargetingShape) UnmarshalText(data []byte) error {
 	}
 }
 
+// Damage each creature takes when it starts its turn in the area, through a Surface of the spell's
+// own.
+type SpellDesignTurnDamage struct {
+	Dice       string `json:"dice"`
+	DamageType string `json:"damageType"`
+}
+
+// GetDice returns the value of Dice.
+func (s *SpellDesignTurnDamage) GetDice() string {
+	return s.Dice
+}
+
+// GetDamageType returns the value of DamageType.
+func (s *SpellDesignTurnDamage) GetDamageType() string {
+	return s.DamageType
+}
+
+// SetDice sets the value of Dice.
+func (s *SpellDesignTurnDamage) SetDice(val string) {
+	s.Dice = val
+}
+
+// SetDamageType sets the value of DamageType.
+func (s *SpellDesignTurnDamage) SetDamageType(val string) {
+	s.DamageType = val
+}
+
 // SpellHeaders wraps Spell with response headers.
 type SpellHeaders struct {
 	ETag               OptString
@@ -49094,264 +49496,6 @@ func (s *SpellPageHeaders) SetResponse(val SpellPage) {
 }
 
 func (*SpellPageHeaders) listSpellsRes() {}
-
-// One row of a spell design; which fields count depends on its type.
-// Ref: #/components/schemas/SpellPart
-type SpellPart struct {
-	Type       SpellPartType    `json:"type"`
-	When       OptSpellPartWhen `json:"when"`
-	Dice       OptString        `json:"dice"`
-	DamageType OptString        `json:"damageType"`
-	Half       OptBool          `json:"half"`
-	Condition  OptString        `json:"condition"`
-	OnlyTypes  []string         `json:"onlyTypes"`
-	BrightFt   OptInt32         `json:"brightFt"`
-	DimFt      OptInt32         `json:"dimFt"`
-	Qualities  []string         `json:"qualities"`
-	Surface    OptString        `json:"surface"`
-	Rounds     OptInt32         `json:"rounds"`
-	Text       OptString        `json:"text"`
-}
-
-// GetType returns the value of Type.
-func (s *SpellPart) GetType() SpellPartType {
-	return s.Type
-}
-
-// GetWhen returns the value of When.
-func (s *SpellPart) GetWhen() OptSpellPartWhen {
-	return s.When
-}
-
-// GetDice returns the value of Dice.
-func (s *SpellPart) GetDice() OptString {
-	return s.Dice
-}
-
-// GetDamageType returns the value of DamageType.
-func (s *SpellPart) GetDamageType() OptString {
-	return s.DamageType
-}
-
-// GetHalf returns the value of Half.
-func (s *SpellPart) GetHalf() OptBool {
-	return s.Half
-}
-
-// GetCondition returns the value of Condition.
-func (s *SpellPart) GetCondition() OptString {
-	return s.Condition
-}
-
-// GetOnlyTypes returns the value of OnlyTypes.
-func (s *SpellPart) GetOnlyTypes() []string {
-	return s.OnlyTypes
-}
-
-// GetBrightFt returns the value of BrightFt.
-func (s *SpellPart) GetBrightFt() OptInt32 {
-	return s.BrightFt
-}
-
-// GetDimFt returns the value of DimFt.
-func (s *SpellPart) GetDimFt() OptInt32 {
-	return s.DimFt
-}
-
-// GetQualities returns the value of Qualities.
-func (s *SpellPart) GetQualities() []string {
-	return s.Qualities
-}
-
-// GetSurface returns the value of Surface.
-func (s *SpellPart) GetSurface() OptString {
-	return s.Surface
-}
-
-// GetRounds returns the value of Rounds.
-func (s *SpellPart) GetRounds() OptInt32 {
-	return s.Rounds
-}
-
-// GetText returns the value of Text.
-func (s *SpellPart) GetText() OptString {
-	return s.Text
-}
-
-// SetType sets the value of Type.
-func (s *SpellPart) SetType(val SpellPartType) {
-	s.Type = val
-}
-
-// SetWhen sets the value of When.
-func (s *SpellPart) SetWhen(val OptSpellPartWhen) {
-	s.When = val
-}
-
-// SetDice sets the value of Dice.
-func (s *SpellPart) SetDice(val OptString) {
-	s.Dice = val
-}
-
-// SetDamageType sets the value of DamageType.
-func (s *SpellPart) SetDamageType(val OptString) {
-	s.DamageType = val
-}
-
-// SetHalf sets the value of Half.
-func (s *SpellPart) SetHalf(val OptBool) {
-	s.Half = val
-}
-
-// SetCondition sets the value of Condition.
-func (s *SpellPart) SetCondition(val OptString) {
-	s.Condition = val
-}
-
-// SetOnlyTypes sets the value of OnlyTypes.
-func (s *SpellPart) SetOnlyTypes(val []string) {
-	s.OnlyTypes = val
-}
-
-// SetBrightFt sets the value of BrightFt.
-func (s *SpellPart) SetBrightFt(val OptInt32) {
-	s.BrightFt = val
-}
-
-// SetDimFt sets the value of DimFt.
-func (s *SpellPart) SetDimFt(val OptInt32) {
-	s.DimFt = val
-}
-
-// SetQualities sets the value of Qualities.
-func (s *SpellPart) SetQualities(val []string) {
-	s.Qualities = val
-}
-
-// SetSurface sets the value of Surface.
-func (s *SpellPart) SetSurface(val OptString) {
-	s.Surface = val
-}
-
-// SetRounds sets the value of Rounds.
-func (s *SpellPart) SetRounds(val OptInt32) {
-	s.Rounds = val
-}
-
-// SetText sets the value of Text.
-func (s *SpellPart) SetText(val OptString) {
-	s.Text = val
-}
-
-type SpellPartType string
-
-const (
-	SpellPartTypeDamage    SpellPartType = "damage"
-	SpellPartTypeCondition SpellPartType = "condition"
-	SpellPartTypeLight     SpellPartType = "light"
-	SpellPartTypeReveal    SpellPartType = "reveal"
-	SpellPartTypeSurface   SpellPartType = "surface"
-	SpellPartTypeManual    SpellPartType = "manual"
-)
-
-// AllValues returns all SpellPartType values.
-func (SpellPartType) AllValues() []SpellPartType {
-	return []SpellPartType{
-		SpellPartTypeDamage,
-		SpellPartTypeCondition,
-		SpellPartTypeLight,
-		SpellPartTypeReveal,
-		SpellPartTypeSurface,
-		SpellPartTypeManual,
-	}
-}
-
-// MarshalText implements encoding.TextMarshaler.
-func (s SpellPartType) MarshalText() ([]byte, error) {
-	switch s {
-	case SpellPartTypeDamage:
-		return []byte(s), nil
-	case SpellPartTypeCondition:
-		return []byte(s), nil
-	case SpellPartTypeLight:
-		return []byte(s), nil
-	case SpellPartTypeReveal:
-		return []byte(s), nil
-	case SpellPartTypeSurface:
-		return []byte(s), nil
-	case SpellPartTypeManual:
-		return []byte(s), nil
-	default:
-		return nil, errors.Errorf("invalid value: %q", s)
-	}
-}
-
-// UnmarshalText implements encoding.TextUnmarshaler.
-func (s *SpellPartType) UnmarshalText(data []byte) error {
-	switch SpellPartType(data) {
-	case SpellPartTypeDamage:
-		*s = SpellPartTypeDamage
-		return nil
-	case SpellPartTypeCondition:
-		*s = SpellPartTypeCondition
-		return nil
-	case SpellPartTypeLight:
-		*s = SpellPartTypeLight
-		return nil
-	case SpellPartTypeReveal:
-		*s = SpellPartTypeReveal
-		return nil
-	case SpellPartTypeSurface:
-		*s = SpellPartTypeSurface
-		return nil
-	case SpellPartTypeManual:
-		*s = SpellPartTypeManual
-		return nil
-	default:
-		return errors.Errorf("invalid value: %q", data)
-	}
-}
-
-type SpellPartWhen string
-
-const (
-	SpellPartWhenOnCast      SpellPartWhen = "on_cast"
-	SpellPartWhenStartOfTurn SpellPartWhen = "start_of_turn"
-)
-
-// AllValues returns all SpellPartWhen values.
-func (SpellPartWhen) AllValues() []SpellPartWhen {
-	return []SpellPartWhen{
-		SpellPartWhenOnCast,
-		SpellPartWhenStartOfTurn,
-	}
-}
-
-// MarshalText implements encoding.TextMarshaler.
-func (s SpellPartWhen) MarshalText() ([]byte, error) {
-	switch s {
-	case SpellPartWhenOnCast:
-		return []byte(s), nil
-	case SpellPartWhenStartOfTurn:
-		return []byte(s), nil
-	default:
-		return nil, errors.Errorf("invalid value: %q", s)
-	}
-}
-
-// UnmarshalText implements encoding.TextUnmarshaler.
-func (s *SpellPartWhen) UnmarshalText(data []byte) error {
-	switch SpellPartWhen(data) {
-	case SpellPartWhenOnCast:
-		*s = SpellPartWhenOnCast
-		return nil
-	case SpellPartWhenStartOfTurn:
-		*s = SpellPartWhenStartOfTurn
-		return nil
-	default:
-		return errors.Errorf("invalid value: %q", data)
-	}
-}
 
 // A cantrip (level 0) or spell on a class's list.
 // Ref: #/components/schemas/SpellPick

@@ -186,6 +186,7 @@ var operationRolesForwardAuth = map[string][]string{
 	ListNotificationsOperation:             []string{},
 	ListNpcRevisionsOperation:              []string{},
 	ListNpcsOperation:                      []string{},
+	ListPartKindsOperation:                 []string{},
 	ListProposalsOperation:                 []string{},
 	ListReleaseNotesOperation:              []string{},
 	ListRetrainChoicesOperation:            []string{},

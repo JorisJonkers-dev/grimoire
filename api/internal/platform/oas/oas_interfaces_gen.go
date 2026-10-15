@@ -653,6 +653,10 @@ type ListNpcsRes interface {
 	listNpcsRes()
 }
 
+type ListPartKindsRes interface {
+	listPartKindsRes()
+}
+
 type ListProposalsRes interface {
 	listProposalsRes()
 }

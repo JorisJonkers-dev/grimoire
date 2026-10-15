@@ -4,10 +4,11 @@ import { useMutation, useQuery } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { getSpellBuildOptions, previewSpellMutation, saveSpellBuildMutation } from '@/infrastructure/api/@tanstack/vue-query.gen'
-import type { SpellPart } from '@/infrastructure/api/types.gen'
+import type { SpellBuild, SpellDesign } from '@/infrastructure/api/types.gen'
 import { GButton } from '@/shared/ui'
 import { useBuilder } from './useBuilder'
 import AreaPreview from './AreaPreview.vue'
+import { spellDesign, spellForm, type SpellForm, type SpellRow, type SpellRowType } from './partRows'
 
 const route = useRoute()
 const entryId = computed(() => String(route.params.entryId))
@@ -15,8 +16,9 @@ const path = computed(() => ({ path: { entryId: entryId.value } }))
 const spell = useQuery(computed(() => ({ ...getSpellBuildOptions(path.value), retry: false })))
 const preview = useMutation(previewSpellMutation())
 const save = useMutation(saveSpellBuildMutation())
-const { design, shown, status, name, readOnly, problem, runPreview, runSave } = useBuilder({
+const { design, shown, status, name, readOnly, problem, runPreview, runSave } = useBuilder<SpellDesign, SpellBuild, SpellForm>({
   entryId, data: spell.data, key: computed(() => getSpellBuildOptions(path.value).queryKey), preview, save, fallback: 'Spell',
+  form: { read: spellForm, write: spellDesign },
 })
 // copy takes plain data out of a reactive value.
 const copy = <T,>(v: T): T => JSON.parse(JSON.stringify(v)) as T
@@ -32,9 +34,9 @@ const conditions = ['blinded', 'charmed', 'deafened', 'frightened', 'grappled', 
 const creatureTypes = ['aberration', 'beast', 'celestial', 'construct', 'dragon', 'elemental', 'fey', 'fiend', 'giant', 'humanoid', 'monstrosity', 'ooze', 'plant', 'undead']
 const qualities = ['hidden', 'invisible', 'disguised', 'illusory', 'ethereal']
 const words = (s: string) => s.replaceAll('_', ' ')
-const adding = ref<SpellPart['type']>('damage')
+const adding = ref<SpellRowType>('damage')
 // Where each new part starts.
-const fresh: Record<SpellPart['type'], SpellPart> = {
+const fresh: Record<SpellRowType, SpellRow> = {
   damage: { type: 'damage', when: 'on_cast', dice: '2d6', damageType: 'fire', half: true },
   condition: { type: 'condition', condition: 'frightened', onlyTypes: [] },
   light: { type: 'light', brightFt: 20, dimFt: 20 },
@@ -55,6 +57,10 @@ function movePart(from: number, to: number) {
   if (!parts || to < 0 || to >= parts.length || from === to) return
   const [p] = parts.splice(from, 1)
   if (p) parts.splice(to, 0, p)
+}
+// A spell takes damage at the start of a turn once.
+function turnTaken(i: number): boolean {
+  return design.value?.parts.some((p, j) => j !== i && p.type === 'damage' && p.when === 'start_of_turn') ?? false
 }
 function toggle(list: string[] | undefined, value: string): string[] {
   const now = list ?? []
@@ -138,9 +144,10 @@ function setMaterial(on: boolean) {
               @dragover.prevent
               @drop.prevent="movePart(dragged, i)"
             >
-              <span class="kind">{{ p.type }}</span>
-              <template v-if="p.type === 'damage'">
-                <label class="g-field"><span>When</span><select v-model="p.when" :data-testid="`when-${String(i)}`"><option value="on_cast">on cast</option><option value="start_of_turn">start of a turn in the area</option></select></label>
+              <span class="kind">{{ p.type === 'kept' ? p.part?.kind : p.type }}</span>
+              <span v-if="p.type === 'kept'" class="hint" :data-testid="`kept-${String(i)}`">Kept as written; this builder cannot change it yet.</span>
+              <template v-else-if="p.type === 'damage'">
+                <label class="g-field"><span>When</span><select v-model="p.when" :data-testid="`when-${String(i)}`"><option value="on_cast">on cast</option><option value="start_of_turn" :disabled="turnTaken(i)">start of a turn in the area</option></select></label>
                 <label class="g-field"><span>Dice</span><input v-model="p.dice" maxlength="8" :data-testid="`dice-${String(i)}`" /></label>
                 <label class="g-field"><span>Type</span><select v-model="p.damageType" :data-testid="`damage-type-${String(i)}`"><option v-for="d in damageTypes" :key="d" :value="d">{{ d }}</option></select></label>
                 <label v-if="p.when === 'on_cast'" class="check"><input v-model="p.half" type="checkbox" /><span>Half on a save</span></label>
@@ -170,7 +177,7 @@ function setMaterial(on: boolean) {
                 <label class="g-field"><span>Surface</span><input v-model="p.surface" maxlength="40" :data-testid="`surface-${String(i)}`" /></label>
                 <label class="g-field"><span>Rounds</span><input v-model.number="p.rounds" type="number" min="1" :data-testid="`rounds-${String(i)}`" /></label>
               </template>
-              <label v-else class="g-field wide"><span>What the DM does</span><input v-model="p.text" maxlength="500" :data-testid="`text-${String(i)}`" /></label>
+              <label v-else-if="p.type === 'manual'" class="g-field wide"><span>What the DM does</span><input v-model="p.text" maxlength="500" :data-testid="`text-${String(i)}`" /></label>
               <span class="row tools">
                 <button type="button" :aria-label="`Move part ${String(i + 1)} up`" :data-testid="`up-${String(i)}`" @click="movePart(i, i - 1)">↑</button>
                 <button type="button" :aria-label="`Move part ${String(i + 1)} down`" :data-testid="`down-${String(i)}`" @click="movePart(i, i + 1)">↓</button>
