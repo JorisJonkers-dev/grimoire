@@ -1,5 +1,5 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, type Page, test } from '@playwright/test'
+import { violations } from './axe'
 
 const KEY = 'grimoire.accessibility'
 const sizeOf = (page: Page, selector: string) => page.locator(selector).first().evaluate((el) => parseFloat(getComputedStyle(el).fontSize))
@@ -9,7 +9,7 @@ test('each accessibility setting changes the whole app, and is kept on the devic
   await page.goto('/')
   await page.getByTestId('accessibility-link').click()
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Accessibility')
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
 
   // Text size: headings, body text and controls all grow by the same step.
   const texts = ['h1', 'footer', '[data-testid="reset-accessibility"]', '[data-testid="header-search-input"]', 'legend']
@@ -40,7 +40,7 @@ test('each accessibility setting changes the whole app, and is kept on the devic
   await expect(page.locator('footer')).toHaveCSS('transition-duration', '0.001s')
   await expect(page.locator('footer')).toHaveCSS('animation-duration', '0.001s')
 
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
   // Kept on the device: a fresh load of another page starts as this one was left.
   await page.goto('/compendium/spells')
   await expect(page.locator('html')).toHaveAttribute('data-palette', 'blue-yellow')
@@ -58,7 +58,7 @@ for (const palette of ['red-green', 'blue-yellow'] as const) {
       await page.goto(path)
       await expect(page.locator('html')).toHaveAttribute('data-palette', palette)
       await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible()
-      expect((await new AxeBuilder({ page }).analyze()).violations, path).toEqual([])
+      expect(await violations(page), path).toEqual([])
       expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth), `${path} overflows`).toBeLessThanOrEqual(0)
     }
   })
@@ -130,7 +130,7 @@ test('a screen reader is told each turn and roll in live play, and the app\'s re
   await expect(calm.getByTestId('announcer').locator('p')).toHaveText(['Round 1. Your turn: Aria.'])
   // The DM hears who acts by name.
   await expect(page.getByTestId('announcer').locator('p').last()).toHaveText('Round 1. Aria acts.')
-  expect((await new AxeBuilder({ page: player }).analyze()).violations).toEqual([])
+  expect(await violations(player)).toEqual([])
 
   await player.getByTestId('turn-Aria').getByTestId('end-turn').click()
   await expect(heard.locator('p').last()).toHaveText('Round 1. Goblin acts.')

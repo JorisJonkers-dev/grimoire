@@ -1,5 +1,5 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
+import { violations } from './axe'
 
 test('the DM moves the Game Clock and every screen reads the new time', async ({ page, browser }, info) => {
   test.skip(info.project.name !== 'desktop', 'one multi-client run is enough')
@@ -39,6 +39,6 @@ test('the DM moves the Game Clock and every screen reads the new time', async ({
   await player.reload()
   await player.getByTestId('scope-world').check()
   await expect(player.getByTestId('game-clock')).toHaveText('Day 12, 21:30')
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
-  expect((await new AxeBuilder({ page: player }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
+  expect(await violations(player)).toEqual([])
 })

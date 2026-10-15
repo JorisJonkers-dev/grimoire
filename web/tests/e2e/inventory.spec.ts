@@ -1,6 +1,6 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
 import { buildFighter } from './wizard'
+import { violations } from './axe'
 
 test('a player drags gear between slots, the bag and the Party Stash', async ({ page }, info) => {
   await page.goto('/campaigns')
@@ -19,7 +19,7 @@ test('a player drags gear between slots, the bag and the Party Stash', async ({ 
   await expect(equipment.getByTestId('slot-main_hand')).toContainText('Longsword')
   await expect(page.getByTestId('carrying')).toContainText('64.0 / ')
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
 
   // A phone has no native drag and drop; its player uses the buttons on each item.
   const phone = info.project.name === 'phone'

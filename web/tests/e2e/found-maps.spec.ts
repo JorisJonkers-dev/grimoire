@@ -1,6 +1,6 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, type Page, test } from '@playwright/test'
 import { crypt } from './maps'
+import { violations } from './axe'
 
 /** The colour of one pixel of the world map's picture, as this screen is sent it. */
 async function pixel(page: Page, x: number, y: number): Promise<number[]> {
@@ -99,10 +99,10 @@ test('the world map is dark for a party without it and dimmed for one with it, a
   await expect(player.locator('[data-node]')).toHaveText(['Harbour', 'Old Keep', 'Far Tower'])
   await expect(player.locator('[data-node="Hideout"]')).toHaveCount(0)
   await expect.poll(() => pixel(player, far.x, far.y)).toEqual(land)
-  expect((await new AxeBuilder({ page: player }).analyze()).violations).toEqual([])
+  expect(await violations(player)).toEqual([])
 
   // The DM sees everything throughout.
   await expect(page.locator('[data-node]')).toHaveCount(4)
   await expect(page.locator('[data-secret="Hideout"]')).toHaveCount(1)
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
 })

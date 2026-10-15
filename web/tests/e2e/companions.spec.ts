@@ -1,5 +1,5 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
+import { violations } from './axe'
 
 test('a Companion joins the party, fights under a Player\'s hand, and is handed back to the DM', async ({ page, browser }, info) => {
   test.skip(info.project.name !== 'desktop', 'one multi-client run is enough')
@@ -30,7 +30,7 @@ test('a Companion joins the party, fights under a Player\'s hand, and is handed 
   await section.getByTestId('companion-save').click()
   await expect(section.getByTestId('companion-Fang')).toContainText('Run by Aria')
   await expect(section.getByTestId('companion-Fang')).toContainText('takes a share of the XP')
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
   await player.reload()
   await expect(player.getByTestId('companion-Fang')).toContainText('Run by you')
@@ -54,7 +54,7 @@ test('a Companion joins the party, fights under a Player\'s hand, and is handed 
   await page.locator('[data-hex="1,0"]').click()
   await page.getByTestId('token-hand').selectOption({ label: 'The DM' })
   await expect(page.getByTestId('token-hand')).toHaveValue('')
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
   await page.goto(new URL(page.url()).pathname.replace(/\/sessions\/.*$/, ''))
   await expect(page.getByTestId('companion-Fang')).toContainText('Run by the DM')
   await player.context().close()

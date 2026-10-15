@@ -1,5 +1,5 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
+import { violations } from './axe'
 
 test('the Dashboard shows a Session under way one click away, and the search finds only what is mine', async ({ page, browser }, info) => {
   // Every project runs this at the same moment as the same user: each needs a name of its own.
@@ -17,7 +17,7 @@ test('the Dashboard shows a Session under way one click away, and the search fin
   const live = page.getByTestId('live-session').filter({ hasText: name })
   await expect(live).toContainText('you are the DM')
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
   await live.getByRole('link', { name: `Join Session 1 of ${name}` }).click()
   await expect(page.getByTestId('connection')).toHaveText('Live')
 
@@ -40,7 +40,7 @@ test('the Dashboard shows a Session under way one click away, and the search fin
   const spell = page.getByTestId('search-group').filter({ hasText: 'Compendium' }).getByTestId('search-hit').filter({ hasText: 'Fireball' }).first()
   await expect(spell).toContainText('Level 3 evocation spell')
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
   await spell.getByRole('link').click()
   await expect(page.getByRole('heading', { level: 1, name: 'Fireball' })).toBeVisible()
 

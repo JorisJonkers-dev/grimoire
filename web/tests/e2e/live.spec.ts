@@ -1,5 +1,5 @@
-import AxeBuilder from '@axe-core/playwright'
 import { type Browser, expect, type Page, test } from '@playwright/test'
+import { violations } from './axe'
 
 async function joinAs(browser: Browser, subject: string, link: string, name: string): Promise<{ page: Page; frames: string[] }> {
   const context = await browser.newContext({ extraHTTPHeaders: { 'X-User-Id': subject } })
@@ -68,7 +68,7 @@ test('tokens move live on every screen and hidden ones never leave the DM', asyn
     expect(frames.length).toBeGreaterThan(0)
     expect(frames.join('\n')).not.toContain('Lurker')
   }
-  expect((await new AxeBuilder({ page: one.page }).analyze()).violations).toEqual([])
+  expect(await violations(one.page)).toEqual([])
 
   await page.locator('[data-hex="-1,0"]').click()
   await page.getByTestId('toggle-hidden').click()

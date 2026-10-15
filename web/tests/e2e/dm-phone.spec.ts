@@ -1,5 +1,5 @@
-import AxeBuilder from '@axe-core/playwright'
 import { devices, expect, type Page, test } from '@playwright/test'
+import { violations } from './axe'
 
 async function enter(page: Page, face: string) {
   const card = page.getByTestId('roll-card')
@@ -55,7 +55,7 @@ test('the DM runs creatures and the Table Display from a phone', async ({ page, 
   await page.getByTestId('page-actions').tap()
   await expect(page.getByTestId('control-Grik')).toHaveAttribute('aria-pressed', 'true')
   await expect(page.getByTestId('creature-Grik').getByTestId('creature-suggestion')).toContainText('against Scout')
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
   await page.getByTestId('creature-Grik').getByTestId('creature-use').tap()
   await expect(page.getByTestId('roll-card')).toContainText('attack against Scout')
   await enter(page, '1')
@@ -64,7 +64,7 @@ test('the DM runs creatures and the Table Display from a phone', async ({ page, 
   // Table: the camera, zoom, ping and blackout all reach the TV.
   await page.getByTestId('page-table').tap()
   await expect(page.getByTestId('table-remote')).toBeVisible()
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
   // Grik acts, so following the turn centres on its hex; showing the party centres on Scout's.
   const camera = tv.getByTestId('camera-world')
   await expect(camera).toBeVisible()

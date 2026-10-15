@@ -1,5 +1,5 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
+import { violations } from './axe'
 
 test('an author builds the Marsh Lantern in the Effect builder, previews its area and saves it', async ({ page }, info) => {
   const name = `Marsh Lantern ${info.project.name} ${String(Date.now())}`
@@ -38,7 +38,7 @@ test('an author builds the Marsh Lantern in the Effect builder, previews its are
   await expect(text).toContainText('has the Charmed condition, if it is Undead or Fey.')
   await expect(text).toContainText('starts its turn in the area takes 1d6 radiant damage')
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
 
   await page.getByTestId('save-spell').click()
   await expect(page.getByTestId('builder-status')).toHaveText('Saved as Revision 2.')

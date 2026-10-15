@@ -1,6 +1,6 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
 import { account } from './accounts'
+import { violations } from './axe'
 
 test('two people become Friends from the Friends page', async ({ browser, request }, info) => {
   test.skip(!['phone', 'desktop'].includes(info.project.name), 'the Friends page is checked on phone and desktop')
@@ -14,7 +14,7 @@ test('two people become Friends from the Friends page', async ({ browser, reques
   await asker.page.getByRole('button', { name: 'Send a request' }).click()
   await expect(asker.page.getByTestId('friend-request-sent')).toBeVisible()
   await expect(asker.page.getByTestId('friend-outgoing')).toContainText('Friendly')
-  expect((await new AxeBuilder({ page: asker.page }).analyze()).violations).toEqual([])
+  expect(await violations(asker.page)).toEqual([])
   expect(await asker.page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
 
   await friend.page.goto('/friends')

@@ -1,5 +1,5 @@
-import AxeBuilder from '@axe-core/playwright'
 import { devices, expect, type Locator, type Page, test } from '@playwright/test'
+import { violations } from './axe'
 
 async function enter(card: Locator, face: string) {
   await card.getByTestId('face-0').fill(face)
@@ -65,7 +65,7 @@ test('the TV shows the party\'s view: roster, caption, the last roll, the reveal
     expect(tv.getByTestId('table-turn')).toHaveText("Grik's turn"),
   ])
   await expect(tv.getByTestId('rolled-Lurker')).toHaveCount(0)
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
   await expect(tv.getByTestId('table-turn')).toHaveCount(0)
 
   // A hidden creature's turn passes without a word on the TV.

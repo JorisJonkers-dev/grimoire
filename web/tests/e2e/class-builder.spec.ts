@@ -1,5 +1,5 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
+import { violations } from './axe'
 
 test('an author builds the Lamplighter in the class builder with its own slot table and saves it', async ({ page }, info) => {
   const name = `Lamplighter ${info.project.name} ${String(Date.now())}`
@@ -26,7 +26,7 @@ test('an author builds the Lamplighter in the class builder with its own slot ta
   await expect(lines).toContainText('Level 1: Wickcraft · Cantrips 3 · Prepared 4 · Slots 1 · Wick Marks +1')
   await expect(lines).toContainText('Level 3: Subclass')
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
 
   await page.getByTestId('class-save').click()
   await expect(page.getByTestId('class-status')).toHaveText('Saved as Revision 2.')

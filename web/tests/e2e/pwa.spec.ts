@@ -1,5 +1,5 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
+import { violations } from './axe'
 
 test('installs as an app and reads the compendium offline', async ({ page, context }) => {
   await page.goto('/compendium/spells/fireball')
@@ -19,7 +19,7 @@ test('installs as an app and reads the compendium offline', async ({ page, conte
   await page.reload()
   await expect(page.getByRole('heading', { level: 1, name: 'Fireball' })).toBeVisible()
   await expect(page.getByTestId('offline')).toBeVisible()
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
 
   await context.setOffline(false)
   await expect(page.getByTestId('offline')).toHaveCount(0)

@@ -1,5 +1,5 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
+import { violations } from './axe'
 
 test('home shows the live service status from the API and database', async ({ page }) => {
   await page.goto('/')
@@ -8,8 +8,7 @@ test('home shows the live service status from the API and database', async ({ pa
   const status = page.getByTestId('status-ok')
   await expect(status).toContainText('Database')
   await expect(status).toContainText('up')
-  const results = await new AxeBuilder({ page }).analyze()
-  expect(results.violations).toEqual([])
+  expect(await violations(page)).toEqual([])
 })
 
 test('the component gallery is accessible on every device', async ({ page }) => {
@@ -19,8 +18,7 @@ test('the component gallery is accessible on every device', async ({ page }) => 
     const box = await button.boundingBox()
     expect(box?.height ?? 0).toBeGreaterThanOrEqual(44)
   }
-  const results = await new AxeBuilder({ page }).analyze()
-  expect(results.violations).toEqual([])
+  expect(await violations(page)).toEqual([])
 })
 
 test('movement and sight previews come from the server rules', async ({ page }) => {

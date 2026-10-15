@@ -1,6 +1,6 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
 import { crypt } from './maps'
+import { violations } from './axe'
 
 test('the party splits across two maps, each group on its own screen, and comes back together', async ({ page, browser }, info) => {
   test.skip(info.project.name !== 'desktop', 'one multi-client run is enough')
@@ -44,7 +44,7 @@ test('the party splits across two maps, each group on its own screen, and comes 
   await groups.getByTestId('group-name').fill('The tower')
   await groups.getByTestId('goes-Scout').check()
   await groups.getByTestId('group-map').selectOption({ label: 'Tower' })
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
   await groups.getByTestId('group-split').click()
   const tower = groups.getByRole('listitem').filter({ hasText: 'The tower' })
   await expect(tower).toContainText('Scout')

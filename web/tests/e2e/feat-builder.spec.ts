@@ -1,5 +1,5 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
+import { violations } from './axe'
 
 test('an author builds the Lampwright feat with a prerequisite and saves it', async ({ page }, info) => {
   const name = `Lampwright ${info.project.name} ${String(Date.now())}`
@@ -17,7 +17,7 @@ test('an author builds the Lampwright feat with a prerequisite and saves it', as
   await expect(lines).toContainText('General feat, repeatable')
   await expect(lines).toContainText('Prerequisites: Level 4+')
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
   await page.getByTestId('feat-save').click()
   await expect(page.getByTestId('feat-status')).toHaveText('Saved as Revision 2.')
 })
@@ -39,7 +39,7 @@ test('an author builds the Bogwarden background and saves it', async ({ page }, 
   await expect(lines).toContainText('Ability Scores: Strength, Wisdom, Constitution')
   await expect(lines).toContainText('Equipment. Choose A lantern and a pole; or 50 GP.')
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
   await page.getByTestId('background-save').click()
   await expect(page.getByTestId('background-status')).toHaveText('Saved as Revision 2.')
 })

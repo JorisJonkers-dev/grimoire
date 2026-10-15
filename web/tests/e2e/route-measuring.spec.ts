@@ -1,5 +1,5 @@
-import AxeBuilder from '@axe-core/playwright'
 import { devices, expect, test } from '@playwright/test'
+import { violations } from './axe'
 
 test('a player measures a route on the world map in hexes, miles and hours, zoomed in or not', async ({ page, browser }, info) => {
   test.skip(!['desktop', 'phone'].includes(info.project.name), 'a desk and a phone are the two ways to measure')
@@ -56,7 +56,7 @@ test('a player measures a route on the world map in hexes, miles and hours, zoom
   await expect(page.getByTestId('measure-result')).toHaveText('3 hexes · 36 miles · 2 days (12 h on the road) at a normal pace')
   await page.getByTestId('measure-pace').selectOption('fast')
   await expect(page.getByTestId('measure-result')).toHaveText('3 hexes · 36 miles · 2 days (9 h on the road) at a fast pace')
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
 
   if (phone) {
     // Two fingers spreading on the map zoom it, and the route can be carried on from there.

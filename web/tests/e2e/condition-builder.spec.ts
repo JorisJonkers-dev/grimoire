@@ -1,5 +1,5 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
+import { violations } from './axe'
 
 test('an author builds Frostbite in the condition builder, stacking to three levels, and saves it', async ({ page }, info) => {
   const name = `Frostbite ${info.project.name} ${String(Date.now())}`
@@ -21,7 +21,7 @@ test('an author builds Frostbite in the condition builder, stacking to three lev
   await expect(lines).toContainText('Each level reduces Speed by 5 feet; it rises to level 3 at most.')
   await expect(lines).toContainText('Attack rolls against the target have Advantage')
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
   await page.getByTestId('condition-save').click()
   await expect(page.getByTestId('condition-status')).toHaveText('Saved as Revision 2.')
 })

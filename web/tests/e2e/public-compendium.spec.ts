@@ -1,5 +1,5 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
+import { violations } from './axe'
 
 test('anyone reads the guides, opens an entry from one and copies a link to it', async ({ page, context }, info) => {
   await page.goto('/compendium/spells')
@@ -18,7 +18,7 @@ test('anyone reads the guides, opens an entry from one and copies a link to it',
   const rare = page.getByTestId('loot-rarity').filter({ hasText: /^Rare magic items/ })
   await expect(rare.locator('summary')).toContainText('from level 5')
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
 
   // From the guide to the entry, and a link to it to share.
   await rare.locator('summary').click()
@@ -37,7 +37,7 @@ test('anyone reads the guides, opens an entry from one and copies a link to it',
     await page.goto(copied)
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(title ?? '')
   }
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
 
   // The guides are there for a request with no session at all.
   const bare = await page.request.get('/api/v1/compendium/guides?ruleset=srd-2014')

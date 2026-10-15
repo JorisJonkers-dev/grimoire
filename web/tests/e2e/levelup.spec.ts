@@ -1,6 +1,6 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
 import { buildFighter } from './wizard'
+import { violations } from './axe'
 
 test('the DM grants a level and the player takes it through the level-up wizard', async ({ page, browser }, info) => {
   const stamp = `${info.project.name}-${String(Date.now())}`
@@ -32,12 +32,12 @@ test('the DM grants a level and the player takes it through the level-up wizard'
   await expect(page.getByTestId('level-class-wizard')).toBeDisabled()
   await expect(page.getByTestId('step-class')).toContainText('Needs Intelligence 13+ (Wizard)')
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
   await page.getByTestId('next').click()
   await page.getByTestId('hp-average').check()
   await page.getByTestId('next').click()
   await expect(page.getByTestId('step-review')).toContainText('Fighter 2')
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
   await page.getByTestId('take-level').click()
 
   await expect(sheet.getByTestId('sheet-classes')).toContainText('Level 2')

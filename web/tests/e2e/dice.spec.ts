@@ -1,5 +1,5 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
+import { violations } from './axe'
 
 test('a roll card mixes a typed die with server rolls and lands on the total', async ({ page }, info) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
@@ -23,7 +23,7 @@ test('a roll card mixes a typed die with server rolls and lands on the total', a
   await card.getByTestId('face-0').fill('12')
   await card.getByTestId('face-0').press('Enter')
   await expect(card.getByTestId('die-0')).toContainText('your die')
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
   await card.getByTestId('roll-rest').click()
   await expect(card.getByTestId('roll-total')).toContainText('Total')
   await expect(page.getByTestId('action-log')).toContainText('seed')

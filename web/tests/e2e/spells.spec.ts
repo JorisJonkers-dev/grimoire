@@ -1,5 +1,5 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
+import { violations } from './axe'
 
 const wizard = {
   name: 'Mira', species: 'human', class: 'wizard', background: 'sage', method: 'point-buy',
@@ -30,7 +30,7 @@ test('a wizard copies spells into the spellbook, prepares them and casts a ritua
   await expect(book).toContainText('Spellbook · 2 spells')
   await expect(book.getByTestId('copy-cost')).toHaveText('Free: 4 of 6 left for this level.')
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
 
   const prepare = page.getByTestId('prepare-wizard')
   await prepare.getByTestId('prep-magic-missile').check()
@@ -40,5 +40,5 @@ test('a wizard copies spells into the spellbook, prepares them and casts a ritua
 
   await page.getByTestId('ritual-find-familiar').click()
   await expect(page.getByTestId('spells-status')).toContainText('Cast Find Familiar as a ritual: 70 minutes. It is now Day 0, 01:10.')
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
 })

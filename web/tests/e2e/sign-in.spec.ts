@@ -1,5 +1,5 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
+import { violations } from './axe'
 
 test('an invitee sets up an Account, signs out and signs back in with a password', async ({ browser, request }, info) => {
   test.skip(!['phone', 'desktop'].includes(info.project.name), 'the sign-in page is checked on phone and desktop')
@@ -21,7 +21,7 @@ test('an invitee sets up an Account, signs out and signs back in with a password
   await page.getByTestId('account-menu-toggle').click()
   await page.getByTestId('sign-out').click()
   await expect(page.getByRole('heading', { level: 1, name: 'Sign in' })).toBeVisible()
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
   await page.getByTestId('sign-in-username').fill(username)
   await page.getByTestId('sign-in-password').fill('not the password')
@@ -63,7 +63,7 @@ test('the sign-in page centres its form beside the brand, with the external logi
   expect(external.y + external.height).toBeLessThan(username.y)
   await expect(page.getByTestId('sign-in-oidc')).toHaveText('Sign in with jorisjonkers.dev')
   await expect(page.getByTestId('sign-in-or')).toHaveText('or with your Username')
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
 
   // The external login sends the browser to the login it names.
   await page.route('**/api/v1/oidc/sign-ins', (route) => route.fulfill({ status: 201, json: { url: `${new URL(page.url()).origin}/about/attribution?external=1` } }))

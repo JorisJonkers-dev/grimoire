@@ -1,5 +1,5 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, type Page, test } from '@playwright/test'
+import { violations } from './axe'
 
 async function place(dm: Page, label: string, kind: 'party' | 'enemy', hex: string) {
   await dm.getByTestId('token-monster').fill('goblin-warrior')
@@ -43,7 +43,7 @@ test('the DM keeps a checkpoint and rewinds the Session to it on every screen', 
   // A rewind asks first, then takes back everything since on both screens.
   await kept.getByRole('button', { name: 'Rewind to Before the ambush' }).click()
   await expect(page.getByTestId('rewind-confirm')).toContainText('Everything done since is taken back')
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
   await page.getByTestId('rewind-yes').click()
   for (const screen of [page, player]) {
     await expect(screen.locator('[data-hex="1,0"]')).not.toHaveAttribute('aria-label', /Grik/)

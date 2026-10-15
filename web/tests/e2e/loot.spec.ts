@@ -1,6 +1,6 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
 import { buildFighter } from './wizard'
+import { violations } from './axe'
 
 test('loot drops into the session and the party carries it off by dragging or choosing', async ({ page, browser }, info) => {
   test.skip(info.project.name !== 'desktop', 'one multi-client run is enough')
@@ -28,7 +28,7 @@ test('loot drops into the session and the party carries it off by dragging or ch
   await page.getByTestId('loot-amount-0').fill('lots')
   await page.getByTestId('save-loot').click()
   await expect(page.getByTestId('loot-error')).toContainText('write amounts as')
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
   await page.getByTestId('to-campaign').click()
 
   const context = await browser.newContext({ extraHTTPHeaders: { 'X-User-Id': `e2e-hoard-${stamp}` } })
@@ -69,5 +69,5 @@ test('loot drops into the session and the party carries it off by dragging or ch
   await player.getByTestId('container-Loot: Purse').getByRole('listitem').dragTo(mira, { sourcePosition: { x: 8, y: 8 } })
   await expect(mira).toContainText('50 gp')
   await expect(player.getByTestId('container-Loot: Purse')).toHaveCount(0)
-  expect((await new AxeBuilder({ page: player }).analyze()).violations).toEqual([])
+  expect(await violations(player)).toEqual([])
 })

@@ -1,5 +1,5 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
+import { violations } from './axe'
 
 test('the DM steers the table display: camera, ping, title card and blackout', async ({ page, browser }, info) => {
   test.skip(info.project.name !== 'desktop', 'one multi-client run is enough')
@@ -33,7 +33,7 @@ test('the DM steers the table display: camera, ping, title card and blackout', a
   await page.getByTestId('show-scene').click()
   await expect(table.getByTestId('scene-title')).toContainText('Chapter One')
   await expect(table.getByTestId('scene-title')).toContainText('The road north')
-  expect((await new AxeBuilder({ page: table }).analyze()).violations).toEqual([])
+  expect(await violations(table)).toEqual([])
 
   await page.getByTestId('blackout-toggle').click()
   await expect(table.getByTestId('blackout')).toBeVisible()

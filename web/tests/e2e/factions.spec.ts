@@ -1,5 +1,5 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
+import { violations } from './axe'
 
 test('a DM adds a Faction from the catalogue and decides its Standing Changes; a Player sees tiers and shared reasons', async ({ page, browser }, info) => {
   test.skip(info.project.name !== 'desktop', 'one multi-client run is enough')
@@ -57,7 +57,7 @@ test('a DM adds a Faction from the catalogue and decides its Standing Changes; a
   await card.getByTestId('decide-dismiss').click()
   await expect(card.getByText('Dismissed: rose by 60. A rumour of their bravery.')).toBeVisible()
   await expect(card.getByTestId('tier')).toHaveText('Unfriendly')
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
 
   // The Player: the tier, which way each confirmed change went, the one shared reason, and no number.
   await player.reload()
@@ -68,5 +68,5 @@ test('a DM adds a Faction from the catalogue and decides its Standing Changes; a
   for (const secret of ['watchman', 'bribes', 'rumour', 'Score']) expect(text).not.toContain(secret)
   await expect(player.getByTestId('faction-add')).toHaveCount(0)
   await expect(player.getByTestId('suggest')).toHaveCount(0)
-  expect((await new AxeBuilder({ page: player }).analyze()).violations).toEqual([])
+  expect(await violations(player)).toEqual([])
 })

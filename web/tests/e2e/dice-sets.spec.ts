@@ -1,6 +1,6 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
 import { account } from './accounts'
+import { violations } from './axe'
 
 // A real picture, one pixel of it.
 const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64')
@@ -33,7 +33,7 @@ test('a Dice Set is designed, shared with a Friend who takes a copy, checked by 
   await editor.getByTestId('picture-x').fill('0.25')
   await editor.getByTestId('picture-scale').fill('0.5')
   await expect(editor.getByTestId('sheet-picture')).toHaveAttribute('style', /left: 25%; top: 50%; width: 50%/)
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
   await editor.getByTestId('set-save').click()
   await editor.getByTestId('set-done').click()
@@ -48,7 +48,7 @@ test('a Dice Set is designed, shared with a Friend who takes a copy, checked by 
   await expect(friend.page.getByTestId(`edit-${name}`)).toHaveCount(0)
   await friend.page.getByTestId(`copy-${name}`).click()
   await expect(friend.page.getByTestId('dice-sets-problem')).toHaveText('You already have a copy of that set.')
-  expect((await new AxeBuilder({ page: friend.page }).analyze()).violations).toEqual([])
+  expect(await violations(friend.page)).toEqual([])
 
   // Shared with everyone, its picture waits for an Admin.
   await page.getByTestId(`sharing-${name}`).selectOption('everyone')
