@@ -319,6 +319,11 @@ func (SummonCreatures) isAct() {}
 
 var dicePattern = regexp.MustCompile(`^[1-9][0-9]?d(4|6|8|10|12|20)$`)
 
+// Abilities are the six ability scores, in the order the rules list them.
+func Abilities() []string {
+	return abilities()
+}
+
 func abilities() []string {
 	return []string{"strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"}
 }

@@ -690,6 +690,10 @@ type CompendiumDamageType struct {
 	Name string
 }
 
+type CompendiumDesignEffect struct {
+	EffectID int64
+}
+
 type CompendiumDocument struct {
 	ID          int64
 	Key         string
@@ -1490,6 +1494,12 @@ type OpsCompendiumImport struct {
 	ID           int64
 	SnapshotHash string
 	ImportedAt   time.Time
+}
+
+type OpsDesignLoad struct {
+	ID         int64
+	DesignHash string
+	LoadedAt   time.Time
 }
 
 type OpsInstance struct {

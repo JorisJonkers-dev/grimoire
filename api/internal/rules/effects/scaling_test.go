@@ -354,3 +354,12 @@ func TestAScalingNamesAFieldThatIsDescribed(t *testing.T) {
 		}
 	}
 }
+
+// The six abilities, in the order the rules list them, are what a repeated save may name.
+func TestTheSixAbilities(t *testing.T) {
+	t.Parallel()
+	want := []string{"strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"}
+	if got := effects.Abilities(); !reflect.DeepEqual(got, want) {
+		t.Fatalf("abilities = %v", got)
+	}
+}

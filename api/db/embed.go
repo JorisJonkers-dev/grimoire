@@ -10,3 +10,8 @@ var Migrations embed.FS
 //
 //go:embed seeds/*.json.gz
 var Seeds embed.FS
+
+// Designs holds the SRD Design files, each entry's Effects in the engine's own Part kinds.
+//
+//go:embed all:designs
+var Designs embed.FS
