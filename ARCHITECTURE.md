@@ -567,7 +567,7 @@ type Definition struct {
     Owner         OwnerKind
     Concentration bool
     Duration      Duration
-    Scaling       *Scaling
+    Scaling       []Scaling
     Parts         []Part
 }
 ```
@@ -576,7 +576,8 @@ type Definition struct {
 `Text()`, its definition as data (`Describe()`: the fields an author fills in, their bounds and
 options, and the named groups of Parts it holds) with `Decode(values, groups)` and its checks, the
 capabilities it has in play, and, if its form needs them, `Hints()`: the order its fields show in,
-sections of fields drawn together, and a line of help per field. `effects.Kinds()` lists every kind in slug order, one line each; the
+sections of fields drawn together, and a line of help per field. A kind whose fields grow with the level
+marks them with `Scales()` (and whether each may follow a formula), and its Part grows them (`Grower`). `effects.Kinds()` lists every kind in slug order, one line each; the
 linter bans package globals, so kinds cannot register themselves.
 
 | shape | kinds |
@@ -646,8 +647,25 @@ sorted line in each of the two lists. The API and the served definitions follow 
 Every Effect also carries **Targeting** (self, creatures, sphere, cone, line, cube, cylinder,
 emanation, wall, ring; size, range, origin; side filter; creature-type filter; sight required) and a
 **Duration** (instant, rounds, minutes, hours, until dispelled, until a rest, permanent, end of next
-turn, until cured, with repeat saves), and may carry **Scaling** (slot, character level, class level,
-a class table's column). These names match the glossary's Effect, Part, Targeting and Visibility
+turn, until cured, with repeat saves), and may carry **Scaling** (#251).
+
+**Scaling.** An Effect holds any number of `Scaling` rules, each growing one scalable value: a field of
+one Part (counted depth first, as the Parts are stored) or of the Activation (`OnActivation`: the
+duration, its unit, and concentration). A rule grows its value along one axis (slot level, character
+level, class level, a class table's column, or Charges spent on one use) as a sealed `Rule`: `Linear`
+("+1d6 for each slot level above 3"), `Table` (the value from a level on: cantrip steps, Hex's
+duration, concentration switching off), `Formula` (whole numbers, `level`, `+ - *` and brackets, for a
+field its kind allows; it runs no code) or `Column` (the class table's value). `Definition.At(level)`
+applies every rule in order and returns the Effect as activated; play calls it before it aims, so the
+area and the number of targets are known when targets are picked (`Catalog.AreaAt`). An area cast keeps
+its slot (`play.area_casts.slot_level`) and resolves at it. `listPartKinds` serves each field's
+`scalable` and `formula`. Storage is `compendium.effect_scaling_rules` (one row per rule, its Part by
+ordinal or NULL for the Activation, typed per-columns for a linear rule) and
+`compendium.effect_scaling_rule_steps` (a table's steps, typed as the field they fill). The older
+`compendium.effect_scalings` (one dice-only Scaling per Effect) was copied in and is no longer read;
+it stays for binaries inside the rollback window.
+
+These names match the glossary's Effect, Part, Targeting and Visibility
 Quality entries; Item Properties, Features, conditions, surfaces, traps, Rule Variants and Roll Table
 results are all owners of Effects.
 
@@ -1125,7 +1143,8 @@ OpenAPI paths → `task gen` → handler → tests (unit, adapter, contract) →
 `rules/effects/kind_<slug>.go` with the type, `Kind()`, `Text()`, its definition (`Describe`, `Decode`
 with its checks) and the capabilities it has in play (the folds `AttackFolder`, `AttackedFolder`,
 `SaveFolder`, `MoveFolder`, `ActionFolder`; `Stacker`; the landings `Asker`, `Lander` and
-`BearerLander`; the groups `Holder` and `Chooser`), and `Hints()` if its form needs them → one sorted
+`BearerLander`; the groups `Holder` and `Chooser`), `Hints()` if its form needs them, and `Scales()` with `Grow` if
+any field grows with the level → one sorted
 line in `rules/effects/kinds.go` →
 `compendium/pgstore/kind_<slug>.go` (with `nest` when it holds Parts) and one sorted line in
 `compendium/pgstore/kinds.go` → `db/queries/effect_kind_<slug>.sql` →
