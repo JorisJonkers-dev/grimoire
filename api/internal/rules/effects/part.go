@@ -182,6 +182,8 @@ type Consequent interface {
 type Grouper interface {
 	Part
 	Groups() []Group
+	// Regroup is the Part holding other Parts in the same groups.
+	Regroup(gs []Group) Part
 }
 
 // Holder is a Part whose Parts beneath come into play as the Effect lands.

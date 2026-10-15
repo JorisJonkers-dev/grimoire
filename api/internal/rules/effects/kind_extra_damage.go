@@ -23,7 +23,19 @@ func (x ExtraDamage) FoldAttacked(p *AttackProfile, h Held, by Attacker) {
 	}
 }
 
+// Grow grows the dice.
+func (x ExtraDamage) Grow(field string, by func(Value) Value) Part {
+	if field == "dice" {
+		x.Dice = by(textValue(x.Dice)).Text
+	}
+	return x
+}
+
 type extraDamageKind struct{}
+
+func (extraDamageKind) Scales() []Scalable {
+	return []Scalable{{Field: "dice", Formula: false}}
+}
 
 func (extraDamageKind) Describe() Description {
 	return Description{

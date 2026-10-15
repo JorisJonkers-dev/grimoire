@@ -42,7 +42,22 @@ func shapes() []string {
 	}
 }
 
+// Grow grows the template's size or its range.
+func (a Area) Grow(field string, by func(Value) Value) Part {
+	switch field {
+	case "size_ft":
+		a.SizeFt = by(numberValue(a.SizeFt)).Number
+	case "range_ft":
+		a.RangeFt = by(numberValue(a.RangeFt)).Number
+	}
+	return a
+}
+
 type areaKind struct{}
+
+func (areaKind) Scales() []Scalable {
+	return []Scalable{{Field: "size_ft", Formula: false}, {Field: "range_ft", Formula: false}}
+}
 
 func (areaKind) Describe() Description {
 	return Description{

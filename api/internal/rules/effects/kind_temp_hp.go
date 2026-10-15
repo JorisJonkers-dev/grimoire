@@ -22,7 +22,19 @@ func (t TempHP) LandsOnBearer() []Act {
 	return []Act{GainTempHP(t)}
 }
 
+// Grow grows the hit points.
+func (t TempHP) Grow(field string, by func(Value) Value) Part {
+	if field == "amount" {
+		t.Amount = by(numberValue(t.Amount)).Number
+	}
+	return t
+}
+
 type tempHPKind struct{}
+
+func (tempHPKind) Scales() []Scalable {
+	return []Scalable{{Field: "amount", Formula: true}}
+}
 
 func (tempHPKind) Describe() Description {
 	return Description{

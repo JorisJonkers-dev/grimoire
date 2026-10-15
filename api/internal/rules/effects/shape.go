@@ -1,10 +1,5 @@
 package effects
 
-import (
-	"strconv"
-	"strings"
-)
-
 // PartsIn are the Parts that count for an Effect applied in a mode: its own, with each choice
 // replaced by the chosen mode's. PartsIn beneath a Holder count only once it lands.
 func (d Definition) PartsIn(mode string) []Part {
@@ -124,81 +119,4 @@ func (d Duration) EndsOnRest() bool {
 // bearer from one Session to the next.
 func (d Duration) Lingers() bool {
 	return d.Kind == UntilCured
-}
-
-// Axis is what an Effect scales with.
-type Axis string
-
-// Scaling axes.
-const (
-	SlotLevel      Axis = "slot_level"
-	CharacterLevel Axis = "character_level"
-	ClassLevel     Axis = "class_level"
-	TableColumn    Axis = "table_column"
-)
-
-// Step is the dice an Effect deals from a level on.
-type Step struct {
-	At   int
-	Dice string
-}
-
-// Scaling grows an Effect's dice: by Dice for each slot level above Base, to a Step's dice at a
-// character or class level, or to the value of a class table's column.
-type Scaling struct {
-	Axis   Axis
-	Class  string
-	Column string
-	Base   int
-	Dice   string
-	Steps  []Step
-}
-
-// Level is what a creature casts or acts at: the slot used, its character level, its level in each
-// class, and its class tables' values.
-type Level struct {
-	Slot      int
-	Character int
-	Classes   map[string]int
-	Columns   map[string]string
-}
-
-// Apply scales dice to a level.
-func (s Scaling) Apply(dice string, at Level) string {
-	switch s.Axis {
-	case SlotLevel:
-		for range at.Slot - s.Base {
-			dice = addDice(dice, s.Dice)
-		}
-	case CharacterLevel:
-		dice = stepped(dice, s.Steps, at.Character)
-	case ClassLevel:
-		dice = stepped(dice, s.Steps, at.Classes[s.Class])
-	case TableColumn:
-		if v := at.Columns[s.Column]; v != "" {
-			dice = v
-		}
-	}
-	return dice
-}
-
-func stepped(dice string, steps []Step, level int) string {
-	for _, st := range steps {
-		if level >= st.At {
-			dice = st.Dice
-		}
-	}
-	return dice
-}
-
-// addDice adds more dice to notation, folding dice of the same size: 8d6 and 1d6 make 9d6.
-func addDice(dice, more string) string {
-	n, faces, ok := strings.Cut(dice, "d")
-	m, moreFaces, okMore := strings.Cut(more, "d")
-	a, errA := strconv.Atoi(n)
-	b, errB := strconv.Atoi(m)
-	if !ok || !okMore || faces != moreFaces || errA != nil || errB != nil {
-		return dice + "+" + more
-	}
-	return strconv.Itoa(a+b) + "d" + faces
 }
