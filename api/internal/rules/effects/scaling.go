@@ -1,6 +1,7 @@
 package effects
 
 import (
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -284,56 +285,42 @@ func addDice(dice, more string) string {
 // Evaluate works out a formula of the level: whole numbers of up to four digits, level, +, -, * and
 // brackets; ok is false for anything else.
 func Evaluate(expr string, level int) (int, bool) {
-	toks, ok := tokens(expr)
-	if !ok {
+	toks := formulaToken.FindAllString(expr, -1)
+	if strings.Join(toks, "") != strings.Join(strings.Fields(expr), "") {
 		return 0, false
 	}
-	f := formula{toks: toks, at: 0, level: level}
+	f := formula{toks: toks, level: level}
 	v, ok := f.sum()
-	return v, ok && f.at == len(toks)
+	return v, ok && len(f.toks) == 0
 }
 
-func tokens(expr string) ([]string, bool) {
-	var out []string
-	for rest := strings.TrimSpace(expr); rest != ""; rest = strings.TrimSpace(rest) {
-		n := tokenLength(rest)
-		if n == 0 {
-			return nil, false
-		}
-		out, rest = append(out, rest[:n]), rest[n:]
-	}
-	return out, true
-}
+var formulaToken = regexp.MustCompile(`level|[0-9]+|[-+*()]`)
 
-func tokenLength(s string) int {
-	switch {
-	case strings.HasPrefix(s, "level"):
-		return len("level")
-	case strings.ContainsRune("+-*()", rune(s[0])):
-		return 1
-	}
-	return len(s) - len(strings.TrimLeft(s, "0123456789"))
-}
-
-// formula reads tokens by precedence: sums of products of factors.
+// formula reads tokens by precedence, sums of products of factors, taking each token once.
 type formula struct {
 	toks  []string
-	at    int
 	level int
 }
 
 func (f *formula) peek() string {
-	if f.at < len(f.toks) {
-		return f.toks[f.at]
+	if len(f.toks) == 0 {
+		return ""
 	}
-	return ""
+	return f.toks[0]
+}
+
+func (f *formula) take() string {
+	t := f.peek()
+	if len(f.toks) > 0 {
+		f.toks = f.toks[1:]
+	}
+	return t
 }
 
 func (f *formula) sum() (int, bool) {
 	v, ok := f.product()
 	for ok && (f.peek() == "+" || f.peek() == "-") {
-		minus := f.peek() == "-"
-		f.at++
+		minus := f.take() == "-"
 		var w int
 		w, ok = f.product()
 		if minus {
@@ -347,7 +334,7 @@ func (f *formula) sum() (int, bool) {
 func (f *formula) product() (int, bool) {
 	v, ok := f.factor()
 	for ok && f.peek() == "*" {
-		f.at++
+		f.take()
 		var w int
 		w, ok = f.factor()
 		v *= w
@@ -356,18 +343,13 @@ func (f *formula) product() (int, bool) {
 }
 
 func (f *formula) factor() (int, bool) {
-	t := f.peek()
-	f.at++
+	t := f.take()
 	switch t {
 	case "level":
 		return f.level, true
 	case "(":
 		v, ok := f.sum()
-		if !ok || f.peek() != ")" {
-			return 0, false
-		}
-		f.at++
-		return v, true
+		return v, ok && f.take() == ")"
 	}
 	n, err := strconv.Atoi(t)
 	return n, err == nil && len(t) <= 4
