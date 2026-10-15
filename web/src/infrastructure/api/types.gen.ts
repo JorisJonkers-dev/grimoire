@@ -3203,6 +3203,10 @@ export type SpellDesign = {
      * The spell's Parts in order. A Part that rolls a save may leave its ability out: it rolls the spell's save.
      */
     parts: Array<Part>;
+    /**
+     * How the spell's area or its Activation grows with the slot it is cast with; a Part's own Scaling sits on the Part. The fields it may grow are the build's activation.
+     */
+    scaling?: Array<PartScaling>;
 };
 
 /**
@@ -3214,6 +3218,33 @@ export type Part = {
         [key: string]: PartValue;
     };
     groups?: Array<PartGroup>;
+    /**
+     * How the Part's scalable fields grow with the level its Effect is activated at.
+     */
+    scaling?: Array<PartScaling>;
+};
+
+/**
+ * One Scaling rule over a scalable field: along an axis, by a linear rule (base and per), a table of steps, a formula of the level, or a class table's column. Class names the class for a class level or a class table.
+ */
+export type PartScaling = {
+    field: string;
+    axis: 'slot_level' | 'character_level' | 'class_level' | 'table_column' | 'charges';
+    class?: string;
+    rule: 'linear' | 'table' | 'formula' | 'column';
+    base?: number;
+    per?: PartValue;
+    steps?: Array<PartStep>;
+    formula?: string;
+    column?: string;
+};
+
+/**
+ * One step of a Scaling table, the value from a level on.
+ */
+export type PartStep = {
+    at: number;
+    value: PartValue;
 };
 
 /**
@@ -3334,6 +3365,10 @@ export type BuilderHex = {
 export type SpellBuild = {
     entry?: LibraryEntry;
     design: SpellDesign;
+    /**
+     * The fields the spell's own Scaling grows, its area's and its Activation's.
+     */
+    activation: Array<PartField>;
     effect: string;
     text: Array<string>;
     hexes: Array<BuilderHex>;

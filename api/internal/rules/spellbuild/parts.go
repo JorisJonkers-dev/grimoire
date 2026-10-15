@@ -90,7 +90,7 @@ func (d Design) saved(in []effects.Authored) ([]effects.Authored, error) {
 			}
 			groups = append(groups, effects.AuthoredGroup{Name: g.Name, Parts: parts})
 		}
-		out = append(out, effects.Authored{Kind: a.Kind, Values: values, Groups: groups})
+		out = append(out, effects.Authored{Kind: a.Kind, Values: values, Groups: groups, Scaling: a.Scaling})
 	}
 	return out, nil
 }

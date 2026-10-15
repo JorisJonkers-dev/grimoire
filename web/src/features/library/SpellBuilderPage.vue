@@ -9,6 +9,7 @@ import { GButton } from '@/shared/ui'
 import { useBuilder } from './useBuilder'
 import AreaPreview from './AreaPreview.vue'
 import PartsEditor from './PartsEditor.vue'
+import ScalingEditor from './ScalingEditor.vue'
 
 const route = useRoute()
 const entryId = computed(() => String(route.params.entryId))
@@ -22,6 +23,7 @@ const { design, shown, status, name, readOnly, problem, runPreview, runSave } = 
 const partKinds = useQuery(listPartKindsOptions())
 const kinds = computed(() => partKinds.data.value ?? [])
 const holds = computed(() => spell.data.value?.holds)
+const activation = computed(() => spell.data.value?.activation ?? [])
 
 const shapes = ['sphere', 'cylinder', 'emanation', 'ring', 'cone', 'cube', 'line', 'wall'] as const
 const abilities = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'] as const
@@ -113,8 +115,14 @@ function setMaterial(on: boolean) {
             </template>
           </fieldset>
 
+          <fieldset>
+            <legend>Scaling</legend>
+            <p class="hint">How the area and the casting grow with the slot it is cast with; a Part's own fields scale beneath it.</p>
+            <ScalingEditor v-model="design.scaling" :fields="activation" label="Spell scaling" prefix="scaling" />
+          </fieldset>
+
           <h2>Parts</h2>
-          <PartsEditor v-if="holds" v-model="design.parts" :kinds="kinds" :holds="holds" :allowed="holds.kinds" label="Parts" adds="Add a Part" noun="part" prefix="parts" />
+          <PartsEditor v-if="holds" v-model="design.parts" :kinds="kinds" :holds="holds" :allowed="holds.kinds" label="Parts" adds="Add a Part" noun="part" prefix="parts" scales />
           <div class="row">
             <GButton :disabled="preview.isPending.value" data-testid="preview" @click="runPreview">Preview</GButton>
             <GButton v-if="!readOnly" type="submit" variant="primary" :disabled="save.isPending.value" data-testid="save-spell">Save to the Library</GButton>

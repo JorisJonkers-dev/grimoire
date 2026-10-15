@@ -39,7 +39,7 @@ func designOut(d spellbuild.Design) oas.SpellDesign {
 func spellBuildOut(b app.SpellBuild) *oas.SpellBuildHeaders {
 	out := oas.SpellBuild{
 		Design: designOut(b.Design), Effect: b.Built.Definition.Slug, Text: append([]string{}, b.Built.Text...), Hexes: []oas.BuilderHex{},
-		Holds: holdsOut(b.Holds),
+		Holds: holdsOut(b.Holds), Activation: activationOut(),
 	}
 	if b.Entry.ID != uuid.Nil {
 		out.Entry = oas.NewOptLibraryEntry(libraryEntryOut(b.Entry))
@@ -89,4 +89,14 @@ func (h *Handler) PreviewSpell(ctx context.Context, req *oas.SpellPreviewInput) 
 		return bad, nil
 	}
 	return out, nil
+}
+
+// activationOut is the fields a spell's own Scaling grows, as served.
+func activationOut() []oas.PartField {
+	fields, scales := spellbuild.Activation()
+	out := make([]oas.PartField, 0, len(fields))
+	for _, f := range fields {
+		out = append(out, partFieldOut(f, scales))
+	}
+	return out
 }

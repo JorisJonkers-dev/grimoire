@@ -31,6 +31,7 @@ func TestBuildersServeWhatTheyHold(t *testing.T) {
 	spell := decode(t, call(h, http.MethodPost, "/api/v1/library", "dm", `{"kind":"spell","name":"Marsh Lantern","fields":[]}`))["id"].(string)
 	cond := decode(t, call(h, http.MethodPost, "/api/v1/library", "dm", `{"kind":"condition","name":"Frostbite","fields":[]}`))["id"].(string)
 	spellHolds, condHolds := holdsJSON(spellbuild.Holds(surfaces)), holdsJSON(conditionbuild.Holds())
+	activation := activationJSON()
 	for what, rec := range map[string]struct {
 		got  map[string]any
 		want map[string]any
@@ -43,13 +44,18 @@ func TestBuildersServeWhatTheyHold(t *testing.T) {
 		"condition preview": {decode(t, call(h, http.MethodPost, "/api/v1/builders/conditions/preview", "dm", `{"name":"X","design":`+frostbiteDesign+`}`)), condHolds},
 	} {
 		sameJSON(t, what, rec.got["holds"], mustJSON(t, rec.want))
+		if _, spelled := rec.got["activation"]; spelled || what[:5] == "spell" {
+			sameJSON(t, what+" activation", rec.got["activation"], mustJSON(t, activation))
+		}
 	}
 
 	var kinds any
 	if err := json.Unmarshal(call(h, http.MethodGet, "/api/v1/builders/part-kinds", "dm", "").Body.Bytes(), &kinds); err != nil {
 		t.Fatal(err)
 	}
-	served, err := json.MarshalIndent(map[string]any{"kinds": kinds, "holds": map[string]any{"spell": spellHolds, "condition": condHolds}}, "", "  ")
+	served, err := json.MarshalIndent(map[string]any{
+		"kinds": kinds, "holds": map[string]any{"spell": spellHolds, "condition": condHolds}, "activation": map[string]any{"spell": activation},
+	}, "", "  ")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -65,6 +71,27 @@ func TestBuildersServeWhatTheyHold(t *testing.T) {
 	if string(fixture) != string(served)+"\n" {
 		t.Error("fixtures/part-kinds.json is not what is served; run go test ./internal/platform/httpapi -run TestBuildersServeWhatTheyHold -update")
 	}
+}
+
+// activationJSON is what a spell's own Scaling grows, each field marked as the kinds' are.
+func activationJSON() []map[string]any {
+	fields, scales := spellbuild.Activation()
+	out := make([]map[string]any, 0, len(fields))
+	for _, f := range fields {
+		options := f.Options
+		if options == nil {
+			options = []string{}
+		}
+		formula := false
+		for _, s := range scales {
+			formula = formula || (s.Field == f.Name && s.Formula)
+		}
+		out = append(out, map[string]any{
+			"name": f.Name, "label": f.Label, "type": string(f.Type), "options": options, "required": f.Required, "min": f.Min, "max": f.Max,
+			"scalable": true, "formula": formula,
+		})
+	}
+	return out
 }
 
 func holdsJSON(h effects.Holds) map[string]any {

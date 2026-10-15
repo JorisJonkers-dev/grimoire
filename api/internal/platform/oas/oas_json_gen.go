@@ -63777,6 +63777,39 @@ func (s *OptOidcPending) UnmarshalJSON(data []byte) error {
 	return s.Decode(d)
 }
 
+// Encode encodes PartValue as json.
+func (o OptPartValue) Encode(e *jx.Encoder) {
+	if !o.Set {
+		return
+	}
+	o.Value.Encode(e)
+}
+
+// Decode decodes PartValue from json.
+func (o *OptPartValue) Decode(d *jx.Decoder) error {
+	if o == nil {
+		return errors.New("invalid: unable to decode OptPartValue to nil")
+	}
+	o.Set = true
+	if err := o.Value.Decode(d); err != nil {
+		return err
+	}
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s OptPartValue) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *OptPartValue) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
 // Encode encodes Proficiencies as json.
 func (o OptProficiencies) Encode(e *jx.Encoder) {
 	if !o.Set {
@@ -64860,12 +64893,23 @@ func (s *Part) encodeFields(e *jx.Encoder) {
 			e.ArrEnd()
 		}
 	}
+	{
+		if s.Scaling != nil {
+			e.FieldStart("scaling")
+			e.ArrStart()
+			for _, elem := range s.Scaling {
+				elem.Encode(e)
+			}
+			e.ArrEnd()
+		}
+	}
 }
 
-var jsonFieldsNameOfPart = [3]string{
+var jsonFieldsNameOfPart = [4]string{
 	0: "kind",
 	1: "values",
 	2: "groups",
+	3: "scaling",
 }
 
 // Decode decodes Part from json.
@@ -64915,6 +64959,23 @@ func (s *Part) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"groups\"")
+			}
+		case "scaling":
+			if err := func() error {
+				s.Scaling = make([]PartScaling, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem PartScaling
+					if err := elem.Decode(d); err != nil {
+						return err
+					}
+					s.Scaling = append(s.Scaling, elem)
+					return nil
+				}); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"scaling\"")
 			}
 		default:
 			return errors.Errorf("unexpected field %q", k)
@@ -66215,6 +66276,336 @@ func (s *PartNarrow) UnmarshalJSON(data []byte) error {
 }
 
 // Encode implements json.Marshaler.
+func (s *PartScaling) Encode(e *jx.Encoder) {
+	e.ObjStart()
+	s.encodeFields(e)
+	e.ObjEnd()
+}
+
+// encodeFields encodes fields.
+func (s *PartScaling) encodeFields(e *jx.Encoder) {
+	{
+		e.FieldStart("field")
+		e.Str(s.Field)
+	}
+	{
+		e.FieldStart("axis")
+		s.Axis.Encode(e)
+	}
+	{
+		if s.Class.Set {
+			e.FieldStart("class")
+			s.Class.Encode(e)
+		}
+	}
+	{
+		e.FieldStart("rule")
+		s.Rule.Encode(e)
+	}
+	{
+		if s.Base.Set {
+			e.FieldStart("base")
+			s.Base.Encode(e)
+		}
+	}
+	{
+		if s.Per.Set {
+			e.FieldStart("per")
+			s.Per.Encode(e)
+		}
+	}
+	{
+		if s.Steps != nil {
+			e.FieldStart("steps")
+			e.ArrStart()
+			for _, elem := range s.Steps {
+				elem.Encode(e)
+			}
+			e.ArrEnd()
+		}
+	}
+	{
+		if s.Formula.Set {
+			e.FieldStart("formula")
+			s.Formula.Encode(e)
+		}
+	}
+	{
+		if s.Column.Set {
+			e.FieldStart("column")
+			s.Column.Encode(e)
+		}
+	}
+}
+
+var jsonFieldsNameOfPartScaling = [9]string{
+	0: "field",
+	1: "axis",
+	2: "class",
+	3: "rule",
+	4: "base",
+	5: "per",
+	6: "steps",
+	7: "formula",
+	8: "column",
+}
+
+// Decode decodes PartScaling from json.
+func (s *PartScaling) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode PartScaling to nil")
+	}
+	var requiredBitSet [2]uint8
+
+	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
+		switch string(k) {
+		case "field":
+			requiredBitSet[0] |= 1 << 0
+			if err := func() error {
+				v, err := d.Str()
+				s.Field = string(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"field\"")
+			}
+		case "axis":
+			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				if err := s.Axis.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"axis\"")
+			}
+		case "class":
+			if err := func() error {
+				s.Class.Reset()
+				if err := s.Class.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"class\"")
+			}
+		case "rule":
+			requiredBitSet[0] |= 1 << 3
+			if err := func() error {
+				if err := s.Rule.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"rule\"")
+			}
+		case "base":
+			if err := func() error {
+				s.Base.Reset()
+				if err := s.Base.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"base\"")
+			}
+		case "per":
+			if err := func() error {
+				s.Per.Reset()
+				if err := s.Per.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"per\"")
+			}
+		case "steps":
+			if err := func() error {
+				s.Steps = make([]PartStep, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem PartStep
+					if err := elem.Decode(d); err != nil {
+						return err
+					}
+					s.Steps = append(s.Steps, elem)
+					return nil
+				}); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"steps\"")
+			}
+		case "formula":
+			if err := func() error {
+				s.Formula.Reset()
+				if err := s.Formula.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"formula\"")
+			}
+		case "column":
+			if err := func() error {
+				s.Column.Reset()
+				if err := s.Column.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"column\"")
+			}
+		default:
+			return errors.Errorf("unexpected field %q", k)
+		}
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "decode PartScaling")
+	}
+	// Validate required fields.
+	var failures []validate.FieldError
+	for i, mask := range [2]uint8{
+		0b00001011,
+		0b00000000,
+	} {
+		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
+			// Mask only required fields and check equality to mask using XOR.
+			//
+			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
+			// Bits of fields which would be set are actually bits of missed fields.
+			missed := bits.OnesCount8(result)
+			for bitN := 0; bitN < missed; bitN++ {
+				bitIdx := bits.TrailingZeros8(result)
+				fieldIdx := i*8 + bitIdx
+				var name string
+				if fieldIdx < len(jsonFieldsNameOfPartScaling) {
+					name = jsonFieldsNameOfPartScaling[fieldIdx]
+				} else {
+					name = strconv.Itoa(fieldIdx)
+				}
+				failures = append(failures, validate.FieldError{
+					Name:  name,
+					Error: validate.ErrFieldRequired,
+				})
+				// Reset bit.
+				result &^= 1 << bitIdx
+			}
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *PartScaling) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *PartScaling) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes PartScalingAxis as json.
+func (s PartScalingAxis) Encode(e *jx.Encoder) {
+	e.Str(string(s))
+}
+
+// Decode decodes PartScalingAxis from json.
+func (s *PartScalingAxis) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode PartScalingAxis to nil")
+	}
+	v, err := d.StrBytes()
+	if err != nil {
+		return err
+	}
+	// Try to use constant string.
+	switch PartScalingAxis(v) {
+	case PartScalingAxisSlotLevel:
+		*s = PartScalingAxisSlotLevel
+	case PartScalingAxisCharacterLevel:
+		*s = PartScalingAxisCharacterLevel
+	case PartScalingAxisClassLevel:
+		*s = PartScalingAxisClassLevel
+	case PartScalingAxisTableColumn:
+		*s = PartScalingAxisTableColumn
+	case PartScalingAxisCharges:
+		*s = PartScalingAxisCharges
+	default:
+		*s = PartScalingAxis(v)
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s PartScalingAxis) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *PartScalingAxis) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes PartScalingRule as json.
+func (s PartScalingRule) Encode(e *jx.Encoder) {
+	e.Str(string(s))
+}
+
+// Decode decodes PartScalingRule from json.
+func (s *PartScalingRule) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode PartScalingRule to nil")
+	}
+	v, err := d.StrBytes()
+	if err != nil {
+		return err
+	}
+	// Try to use constant string.
+	switch PartScalingRule(v) {
+	case PartScalingRuleLinear:
+		*s = PartScalingRuleLinear
+	case PartScalingRuleTable:
+		*s = PartScalingRuleTable
+	case PartScalingRuleFormula:
+		*s = PartScalingRuleFormula
+	case PartScalingRuleColumn:
+		*s = PartScalingRuleColumn
+	default:
+		*s = PartScalingRule(v)
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s PartScalingRule) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *PartScalingRule) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
 func (s *PartSection) Encode(e *jx.Encoder) {
 	e.ObjStart()
 	s.encodeFields(e)
@@ -66335,6 +66726,117 @@ func (s *PartSection) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *PartSection) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
+func (s *PartStep) Encode(e *jx.Encoder) {
+	e.ObjStart()
+	s.encodeFields(e)
+	e.ObjEnd()
+}
+
+// encodeFields encodes fields.
+func (s *PartStep) encodeFields(e *jx.Encoder) {
+	{
+		e.FieldStart("at")
+		e.Int32(s.At)
+	}
+	{
+		e.FieldStart("value")
+		s.Value.Encode(e)
+	}
+}
+
+var jsonFieldsNameOfPartStep = [2]string{
+	0: "at",
+	1: "value",
+}
+
+// Decode decodes PartStep from json.
+func (s *PartStep) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode PartStep to nil")
+	}
+	var requiredBitSet [1]uint8
+
+	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
+		switch string(k) {
+		case "at":
+			requiredBitSet[0] |= 1 << 0
+			if err := func() error {
+				v, err := d.Int32()
+				s.At = int32(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"at\"")
+			}
+		case "value":
+			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				if err := s.Value.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"value\"")
+			}
+		default:
+			return errors.Errorf("unexpected field %q", k)
+		}
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "decode PartStep")
+	}
+	// Validate required fields.
+	var failures []validate.FieldError
+	for i, mask := range [1]uint8{
+		0b00000011,
+	} {
+		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
+			// Mask only required fields and check equality to mask using XOR.
+			//
+			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
+			// Bits of fields which would be set are actually bits of missed fields.
+			missed := bits.OnesCount8(result)
+			for bitN := 0; bitN < missed; bitN++ {
+				bitIdx := bits.TrailingZeros8(result)
+				fieldIdx := i*8 + bitIdx
+				var name string
+				if fieldIdx < len(jsonFieldsNameOfPartStep) {
+					name = jsonFieldsNameOfPartStep[fieldIdx]
+				} else {
+					name = strconv.Itoa(fieldIdx)
+				}
+				failures = append(failures, validate.FieldError{
+					Name:  name,
+					Error: validate.ErrFieldRequired,
+				})
+				// Reset bit.
+				result &^= 1 << bitIdx
+			}
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *PartStep) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *PartStep) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -81034,6 +81536,14 @@ func (s *SpellBuild) encodeFields(e *jx.Encoder) {
 		s.Design.Encode(e)
 	}
 	{
+		e.FieldStart("activation")
+		e.ArrStart()
+		for _, elem := range s.Activation {
+			elem.Encode(e)
+		}
+		e.ArrEnd()
+	}
+	{
 		e.FieldStart("effect")
 		e.Str(s.Effect)
 	}
@@ -81059,13 +81569,14 @@ func (s *SpellBuild) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfSpellBuild = [6]string{
+var jsonFieldsNameOfSpellBuild = [7]string{
 	0: "entry",
 	1: "design",
-	2: "effect",
-	3: "text",
-	4: "hexes",
-	5: "holds",
+	2: "activation",
+	3: "effect",
+	4: "text",
+	5: "hexes",
+	6: "holds",
 }
 
 // Decode decodes SpellBuild from json.
@@ -81097,8 +81608,26 @@ func (s *SpellBuild) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"design\"")
 			}
-		case "effect":
+		case "activation":
 			requiredBitSet[0] |= 1 << 2
+			if err := func() error {
+				s.Activation = make([]PartField, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem PartField
+					if err := elem.Decode(d); err != nil {
+						return err
+					}
+					s.Activation = append(s.Activation, elem)
+					return nil
+				}); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"activation\"")
+			}
+		case "effect":
+			requiredBitSet[0] |= 1 << 3
 			if err := func() error {
 				v, err := d.Str()
 				s.Effect = string(v)
@@ -81110,7 +81639,7 @@ func (s *SpellBuild) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"effect\"")
 			}
 		case "text":
-			requiredBitSet[0] |= 1 << 3
+			requiredBitSet[0] |= 1 << 4
 			if err := func() error {
 				s.Text = make([]string, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
@@ -81130,7 +81659,7 @@ func (s *SpellBuild) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"text\"")
 			}
 		case "hexes":
-			requiredBitSet[0] |= 1 << 4
+			requiredBitSet[0] |= 1 << 5
 			if err := func() error {
 				s.Hexes = make([]BuilderHex, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
@@ -81148,7 +81677,7 @@ func (s *SpellBuild) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"hexes\"")
 			}
 		case "holds":
-			requiredBitSet[0] |= 1 << 5
+			requiredBitSet[0] |= 1 << 6
 			if err := func() error {
 				if err := s.Holds.Decode(d); err != nil {
 					return err
@@ -81167,7 +81696,7 @@ func (s *SpellBuild) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00111110,
+		0b01111110,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -81360,9 +81889,19 @@ func (s *SpellDesign) encodeFields(e *jx.Encoder) {
 		}
 		e.ArrEnd()
 	}
+	{
+		if s.Scaling != nil {
+			e.FieldStart("scaling")
+			e.ArrStart()
+			for _, elem := range s.Scaling {
+				elem.Encode(e)
+			}
+			e.ArrEnd()
+		}
+	}
 }
 
-var jsonFieldsNameOfSpellDesign = [9]string{
+var jsonFieldsNameOfSpellDesign = [10]string{
 	0: "targeting",
 	1: "save",
 	2: "concentration",
@@ -81372,6 +81911,7 @@ var jsonFieldsNameOfSpellDesign = [9]string{
 	6: "components",
 	7: "turnDamage",
 	8: "parts",
+	9: "scaling",
 }
 
 // Decode decodes SpellDesign from json.
@@ -81484,6 +82024,23 @@ func (s *SpellDesign) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"parts\"")
+			}
+		case "scaling":
+			if err := func() error {
+				s.Scaling = make([]PartScaling, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem PartScaling
+					if err := elem.Decode(d); err != nil {
+						return err
+					}
+					s.Scaling = append(s.Scaling, elem)
+					return nil
+				}); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"scaling\"")
 			}
 		default:
 			return errors.Errorf("unexpected field %q", k)

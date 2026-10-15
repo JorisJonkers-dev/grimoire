@@ -7,11 +7,13 @@ import (
 )
 
 // Authored is a Part as its author writes it, before its kind checks it: the kind's slug, its values by
-// field name, and the Parts beneath it in named groups. It is the one shape every Part takes on the wire.
+// field name, the Parts beneath it in named groups, and how its fields scale. It is the one shape every
+// Part takes on the wire.
 type Authored struct {
-	Kind   string          `json:"kind"`
-	Values Values          `json:"values"`
-	Groups []AuthoredGroup `json:"groups"`
+	Kind    string            `json:"kind"`
+	Values  Values            `json:"values"`
+	Groups  []AuthoredGroup   `json:"groups"`
+	Scaling []AuthoredScaling `json:"scaling,omitempty"`
 }
 
 // AuthoredGroup is one named group of authored Parts beneath a Part.

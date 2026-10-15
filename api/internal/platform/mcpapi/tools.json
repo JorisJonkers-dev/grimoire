@@ -3486,6 +3486,141 @@
               "maxLength": 40,
               "type": "string"
             },
+            "scaling": {
+              "description": "How the Part's scalable fields grow with the level its Effect is activated at.",
+              "items": {
+                "additionalProperties": false,
+                "description": "One Scaling rule over a scalable field: along an axis, by a linear rule (base and per), a table of steps, a formula of the level, or a class table's column. Class names the class for a class level or a class table.",
+                "properties": {
+                  "axis": {
+                    "enum": [
+                      "slot_level",
+                      "character_level",
+                      "class_level",
+                      "table_column",
+                      "charges"
+                    ],
+                    "type": "string"
+                  },
+                  "base": {
+                    "format": "int32",
+                    "maximum": 20,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "class": {
+                    "maxLength": 80,
+                    "type": "string"
+                  },
+                  "column": {
+                    "maxLength": 80,
+                    "type": "string"
+                  },
+                  "field": {
+                    "maxLength": 40,
+                    "type": "string"
+                  },
+                  "formula": {
+                    "maxLength": 60,
+                    "type": "string"
+                  },
+                  "per": {
+                    "additionalProperties": false,
+                    "description": "One field's value, in the slot its field type reads: text for dice, text and a choice, number, flag, or texts for several choices.",
+                    "properties": {
+                      "flag": {
+                        "type": "boolean"
+                      },
+                      "number": {
+                        "format": "int32",
+                        "maximum": 100000,
+                        "minimum": -100000,
+                        "type": "integer"
+                      },
+                      "text": {
+                        "maxLength": 1000,
+                        "type": "string"
+                      },
+                      "texts": {
+                        "items": {
+                          "maxLength": 80,
+                          "type": "string"
+                        },
+                        "maxItems": 20,
+                        "type": "array"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "rule": {
+                    "enum": [
+                      "linear",
+                      "table",
+                      "formula",
+                      "column"
+                    ],
+                    "type": "string"
+                  },
+                  "steps": {
+                    "items": {
+                      "additionalProperties": false,
+                      "description": "One step of a Scaling table, the value from a level on.",
+                      "properties": {
+                        "at": {
+                          "format": "int32",
+                          "maximum": 20,
+                          "minimum": 1,
+                          "type": "integer"
+                        },
+                        "value": {
+                          "additionalProperties": false,
+                          "description": "One field's value, in the slot its field type reads: text for dice, text and a choice, number, flag, or texts for several choices.",
+                          "properties": {
+                            "flag": {
+                              "type": "boolean"
+                            },
+                            "number": {
+                              "format": "int32",
+                              "maximum": 100000,
+                              "minimum": -100000,
+                              "type": "integer"
+                            },
+                            "text": {
+                              "maxLength": 1000,
+                              "type": "string"
+                            },
+                            "texts": {
+                              "items": {
+                                "maxLength": 80,
+                                "type": "string"
+                              },
+                              "maxItems": 20,
+                              "type": "array"
+                            }
+                          },
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "at",
+                        "value"
+                      ],
+                      "type": "object"
+                    },
+                    "maxItems": 20,
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "field",
+                  "axis",
+                  "rule"
+                ],
+                "type": "object"
+              },
+              "maxItems": 10,
+              "type": "array"
+            },
             "values": {
               "additionalProperties": {
                 "additionalProperties": false,
@@ -3593,6 +3728,141 @@
                   "kind": {
                     "maxLength": 40,
                     "type": "string"
+                  },
+                  "scaling": {
+                    "description": "How the Part's scalable fields grow with the level its Effect is activated at.",
+                    "items": {
+                      "additionalProperties": false,
+                      "description": "One Scaling rule over a scalable field: along an axis, by a linear rule (base and per), a table of steps, a formula of the level, or a class table's column. Class names the class for a class level or a class table.",
+                      "properties": {
+                        "axis": {
+                          "enum": [
+                            "slot_level",
+                            "character_level",
+                            "class_level",
+                            "table_column",
+                            "charges"
+                          ],
+                          "type": "string"
+                        },
+                        "base": {
+                          "format": "int32",
+                          "maximum": 20,
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "class": {
+                          "maxLength": 80,
+                          "type": "string"
+                        },
+                        "column": {
+                          "maxLength": 80,
+                          "type": "string"
+                        },
+                        "field": {
+                          "maxLength": 40,
+                          "type": "string"
+                        },
+                        "formula": {
+                          "maxLength": 60,
+                          "type": "string"
+                        },
+                        "per": {
+                          "additionalProperties": false,
+                          "description": "One field's value, in the slot its field type reads: text for dice, text and a choice, number, flag, or texts for several choices.",
+                          "properties": {
+                            "flag": {
+                              "type": "boolean"
+                            },
+                            "number": {
+                              "format": "int32",
+                              "maximum": 100000,
+                              "minimum": -100000,
+                              "type": "integer"
+                            },
+                            "text": {
+                              "maxLength": 1000,
+                              "type": "string"
+                            },
+                            "texts": {
+                              "items": {
+                                "maxLength": 80,
+                                "type": "string"
+                              },
+                              "maxItems": 20,
+                              "type": "array"
+                            }
+                          },
+                          "type": "object"
+                        },
+                        "rule": {
+                          "enum": [
+                            "linear",
+                            "table",
+                            "formula",
+                            "column"
+                          ],
+                          "type": "string"
+                        },
+                        "steps": {
+                          "items": {
+                            "additionalProperties": false,
+                            "description": "One step of a Scaling table, the value from a level on.",
+                            "properties": {
+                              "at": {
+                                "format": "int32",
+                                "maximum": 20,
+                                "minimum": 1,
+                                "type": "integer"
+                              },
+                              "value": {
+                                "additionalProperties": false,
+                                "description": "One field's value, in the slot its field type reads: text for dice, text and a choice, number, flag, or texts for several choices.",
+                                "properties": {
+                                  "flag": {
+                                    "type": "boolean"
+                                  },
+                                  "number": {
+                                    "format": "int32",
+                                    "maximum": 100000,
+                                    "minimum": -100000,
+                                    "type": "integer"
+                                  },
+                                  "text": {
+                                    "maxLength": 1000,
+                                    "type": "string"
+                                  },
+                                  "texts": {
+                                    "items": {
+                                      "maxLength": 80,
+                                      "type": "string"
+                                    },
+                                    "maxItems": 20,
+                                    "type": "array"
+                                  }
+                                },
+                                "type": "object"
+                              }
+                            },
+                            "required": [
+                              "at",
+                              "value"
+                            ],
+                            "type": "object"
+                          },
+                          "maxItems": 20,
+                          "type": "array"
+                        }
+                      },
+                      "required": [
+                        "field",
+                        "axis",
+                        "rule"
+                      ],
+                      "type": "object"
+                    },
+                    "maxItems": 10,
+                    "type": "array"
                   },
                   "values": {
                     "additionalProperties": {
@@ -4896,6 +5166,141 @@
               "maxLength": 40,
               "type": "string"
             },
+            "scaling": {
+              "description": "How the Part's scalable fields grow with the level its Effect is activated at.",
+              "items": {
+                "additionalProperties": false,
+                "description": "One Scaling rule over a scalable field: along an axis, by a linear rule (base and per), a table of steps, a formula of the level, or a class table's column. Class names the class for a class level or a class table.",
+                "properties": {
+                  "axis": {
+                    "enum": [
+                      "slot_level",
+                      "character_level",
+                      "class_level",
+                      "table_column",
+                      "charges"
+                    ],
+                    "type": "string"
+                  },
+                  "base": {
+                    "format": "int32",
+                    "maximum": 20,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "class": {
+                    "maxLength": 80,
+                    "type": "string"
+                  },
+                  "column": {
+                    "maxLength": 80,
+                    "type": "string"
+                  },
+                  "field": {
+                    "maxLength": 40,
+                    "type": "string"
+                  },
+                  "formula": {
+                    "maxLength": 60,
+                    "type": "string"
+                  },
+                  "per": {
+                    "additionalProperties": false,
+                    "description": "One field's value, in the slot its field type reads: text for dice, text and a choice, number, flag, or texts for several choices.",
+                    "properties": {
+                      "flag": {
+                        "type": "boolean"
+                      },
+                      "number": {
+                        "format": "int32",
+                        "maximum": 100000,
+                        "minimum": -100000,
+                        "type": "integer"
+                      },
+                      "text": {
+                        "maxLength": 1000,
+                        "type": "string"
+                      },
+                      "texts": {
+                        "items": {
+                          "maxLength": 80,
+                          "type": "string"
+                        },
+                        "maxItems": 20,
+                        "type": "array"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "rule": {
+                    "enum": [
+                      "linear",
+                      "table",
+                      "formula",
+                      "column"
+                    ],
+                    "type": "string"
+                  },
+                  "steps": {
+                    "items": {
+                      "additionalProperties": false,
+                      "description": "One step of a Scaling table, the value from a level on.",
+                      "properties": {
+                        "at": {
+                          "format": "int32",
+                          "maximum": 20,
+                          "minimum": 1,
+                          "type": "integer"
+                        },
+                        "value": {
+                          "additionalProperties": false,
+                          "description": "One field's value, in the slot its field type reads: text for dice, text and a choice, number, flag, or texts for several choices.",
+                          "properties": {
+                            "flag": {
+                              "type": "boolean"
+                            },
+                            "number": {
+                              "format": "int32",
+                              "maximum": 100000,
+                              "minimum": -100000,
+                              "type": "integer"
+                            },
+                            "text": {
+                              "maxLength": 1000,
+                              "type": "string"
+                            },
+                            "texts": {
+                              "items": {
+                                "maxLength": 80,
+                                "type": "string"
+                              },
+                              "maxItems": 20,
+                              "type": "array"
+                            }
+                          },
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "at",
+                        "value"
+                      ],
+                      "type": "object"
+                    },
+                    "maxItems": 20,
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "field",
+                  "axis",
+                  "rule"
+                ],
+                "type": "object"
+              },
+              "maxItems": 10,
+              "type": "array"
+            },
             "values": {
               "additionalProperties": {
                 "additionalProperties": false,
@@ -5082,6 +5487,141 @@
                     "maxLength": 40,
                     "type": "string"
                   },
+                  "scaling": {
+                    "description": "How the Part's scalable fields grow with the level its Effect is activated at.",
+                    "items": {
+                      "additionalProperties": false,
+                      "description": "One Scaling rule over a scalable field: along an axis, by a linear rule (base and per), a table of steps, a formula of the level, or a class table's column. Class names the class for a class level or a class table.",
+                      "properties": {
+                        "axis": {
+                          "enum": [
+                            "slot_level",
+                            "character_level",
+                            "class_level",
+                            "table_column",
+                            "charges"
+                          ],
+                          "type": "string"
+                        },
+                        "base": {
+                          "format": "int32",
+                          "maximum": 20,
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "class": {
+                          "maxLength": 80,
+                          "type": "string"
+                        },
+                        "column": {
+                          "maxLength": 80,
+                          "type": "string"
+                        },
+                        "field": {
+                          "maxLength": 40,
+                          "type": "string"
+                        },
+                        "formula": {
+                          "maxLength": 60,
+                          "type": "string"
+                        },
+                        "per": {
+                          "additionalProperties": false,
+                          "description": "One field's value, in the slot its field type reads: text for dice, text and a choice, number, flag, or texts for several choices.",
+                          "properties": {
+                            "flag": {
+                              "type": "boolean"
+                            },
+                            "number": {
+                              "format": "int32",
+                              "maximum": 100000,
+                              "minimum": -100000,
+                              "type": "integer"
+                            },
+                            "text": {
+                              "maxLength": 1000,
+                              "type": "string"
+                            },
+                            "texts": {
+                              "items": {
+                                "maxLength": 80,
+                                "type": "string"
+                              },
+                              "maxItems": 20,
+                              "type": "array"
+                            }
+                          },
+                          "type": "object"
+                        },
+                        "rule": {
+                          "enum": [
+                            "linear",
+                            "table",
+                            "formula",
+                            "column"
+                          ],
+                          "type": "string"
+                        },
+                        "steps": {
+                          "items": {
+                            "additionalProperties": false,
+                            "description": "One step of a Scaling table, the value from a level on.",
+                            "properties": {
+                              "at": {
+                                "format": "int32",
+                                "maximum": 20,
+                                "minimum": 1,
+                                "type": "integer"
+                              },
+                              "value": {
+                                "additionalProperties": false,
+                                "description": "One field's value, in the slot its field type reads: text for dice, text and a choice, number, flag, or texts for several choices.",
+                                "properties": {
+                                  "flag": {
+                                    "type": "boolean"
+                                  },
+                                  "number": {
+                                    "format": "int32",
+                                    "maximum": 100000,
+                                    "minimum": -100000,
+                                    "type": "integer"
+                                  },
+                                  "text": {
+                                    "maxLength": 1000,
+                                    "type": "string"
+                                  },
+                                  "texts": {
+                                    "items": {
+                                      "maxLength": 80,
+                                      "type": "string"
+                                    },
+                                    "maxItems": 20,
+                                    "type": "array"
+                                  }
+                                },
+                                "type": "object"
+                              }
+                            },
+                            "required": [
+                              "at",
+                              "value"
+                            ],
+                            "type": "object"
+                          },
+                          "maxItems": 20,
+                          "type": "array"
+                        }
+                      },
+                      "required": [
+                        "field",
+                        "axis",
+                        "rule"
+                      ],
+                      "type": "object"
+                    },
+                    "maxItems": 10,
+                    "type": "array"
+                  },
                   "values": {
                     "additionalProperties": {
                       "additionalProperties": false,
@@ -5137,6 +5677,141 @@
                 "charisma"
               ],
               "type": "string"
+            },
+            "scaling": {
+              "description": "How the spell's area or its Activation grows with the slot it is cast with; a Part's own Scaling sits on the Part. The fields it may grow are the build's activation.",
+              "items": {
+                "additionalProperties": false,
+                "description": "One Scaling rule over a scalable field: along an axis, by a linear rule (base and per), a table of steps, a formula of the level, or a class table's column. Class names the class for a class level or a class table.",
+                "properties": {
+                  "axis": {
+                    "enum": [
+                      "slot_level",
+                      "character_level",
+                      "class_level",
+                      "table_column",
+                      "charges"
+                    ],
+                    "type": "string"
+                  },
+                  "base": {
+                    "format": "int32",
+                    "maximum": 20,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "class": {
+                    "maxLength": 80,
+                    "type": "string"
+                  },
+                  "column": {
+                    "maxLength": 80,
+                    "type": "string"
+                  },
+                  "field": {
+                    "maxLength": 40,
+                    "type": "string"
+                  },
+                  "formula": {
+                    "maxLength": 60,
+                    "type": "string"
+                  },
+                  "per": {
+                    "additionalProperties": false,
+                    "description": "One field's value, in the slot its field type reads: text for dice, text and a choice, number, flag, or texts for several choices.",
+                    "properties": {
+                      "flag": {
+                        "type": "boolean"
+                      },
+                      "number": {
+                        "format": "int32",
+                        "maximum": 100000,
+                        "minimum": -100000,
+                        "type": "integer"
+                      },
+                      "text": {
+                        "maxLength": 1000,
+                        "type": "string"
+                      },
+                      "texts": {
+                        "items": {
+                          "maxLength": 80,
+                          "type": "string"
+                        },
+                        "maxItems": 20,
+                        "type": "array"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "rule": {
+                    "enum": [
+                      "linear",
+                      "table",
+                      "formula",
+                      "column"
+                    ],
+                    "type": "string"
+                  },
+                  "steps": {
+                    "items": {
+                      "additionalProperties": false,
+                      "description": "One step of a Scaling table, the value from a level on.",
+                      "properties": {
+                        "at": {
+                          "format": "int32",
+                          "maximum": 20,
+                          "minimum": 1,
+                          "type": "integer"
+                        },
+                        "value": {
+                          "additionalProperties": false,
+                          "description": "One field's value, in the slot its field type reads: text for dice, text and a choice, number, flag, or texts for several choices.",
+                          "properties": {
+                            "flag": {
+                              "type": "boolean"
+                            },
+                            "number": {
+                              "format": "int32",
+                              "maximum": 100000,
+                              "minimum": -100000,
+                              "type": "integer"
+                            },
+                            "text": {
+                              "maxLength": 1000,
+                              "type": "string"
+                            },
+                            "texts": {
+                              "items": {
+                                "maxLength": 80,
+                                "type": "string"
+                              },
+                              "maxItems": 20,
+                              "type": "array"
+                            }
+                          },
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "at",
+                        "value"
+                      ],
+                      "type": "object"
+                    },
+                    "maxItems": 20,
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "field",
+                  "axis",
+                  "rule"
+                ],
+                "type": "object"
+              },
+              "maxItems": 10,
+              "type": "array"
             },
             "targeting": {
               "additionalProperties": false,

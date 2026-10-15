@@ -1,6 +1,6 @@
 import { flushPromises } from '@vue/test-utils'
 import { afterEach, describe, expect, it } from 'vitest'
-import type { Part, SpellBuild, SpellDesign } from '@/infrastructure/api/types.gen'
+import type { Part, PartField, SpellBuild, SpellDesign } from '@/infrastructure/api/types.gen'
 import { expectAccessible } from '@/test/axe'
 import { mountApp, unmountAll } from '@/test/mountApp'
 import { jsonResponse } from '@/test/mountWithQuery'
@@ -23,7 +23,8 @@ const start: SpellDesign = {
 const entry = { id: SPELL, kind: 'spell' as const, name: 'Marsh Lantern', fields: [], revision: 1, createdAt: at, updatedAt: at }
 const build = (design: SpellDesign, extra: Partial<SpellBuild> = {}): SpellBuild => ({
   entry,
-  design, effect: 'hb-0190c7a80000', text: ['Casting Time: 1 action.'], hexes: [{ q: 0, r: 0 }, { q: 1, r: 0 }], holds: served.holds.spell, ...extra,
+  design, effect: 'hb-0190c7a80000', text: ['Casting Time: 1 action.'], hexes: [{ q: 0, r: 0 }, { q: 1, r: 0 }], holds: served.holds.spell,
+  activation: served.activation.spell as PartField[], ...extra,
 })
 const kinds = { '/api/v1/builders/part-kinds': () => served.kinds }
 
@@ -129,6 +130,36 @@ describe('effect builder', () => {
         { kind: 'reveal', values: { qualities: { texts: ['invisible'] } }, groups: [] },
       ],
     })
+  })
+
+  it('scales its area and its damage with the slot, and saves both rules', async () => {
+    let saved: SpellDesign | undefined
+    const { wrapper } = await mountApp(`/library/${SPELL}/spell`, {
+      ...kinds,
+      [`/api/v1/builders/spells/${SPELL}`]: async (_u, req) => {
+        if (req.method === 'PUT') {
+          saved = (await req.clone().json()) as SpellDesign
+          return build(saved, { entry: { ...entry, revision: 2 } })
+        }
+        return build(structuredClone({ ...start, save: 'dexterity' as const }))
+      },
+    })
+    const set = (id: string, value: string | number | boolean) => wrapper.get(`[data-testid="${id}"]`).setValue(value)
+    const click = (id: string) => wrapper.get(`[data-testid="${id}"]`).trigger('click')
+    await set('scaling-add-field', 'size_ft')
+    await click('scaling-add')
+    await set('scaling-0-base', 3)
+    await set('scaling-0-per', 5)
+    await set('parts-kind', 'save_damage')
+    await click('parts-add')
+    await set('parts-0-dice', '8d6')
+    await click('parts-0-scaling-add')
+    await set('parts-0-scaling-0-base', 3)
+    await expectAccessible(wrapper.element as Element)
+    await wrapper.get('[data-testid="builder-form"]').trigger('submit')
+    await flushPromises()
+    expect(saved?.scaling).toEqual([{ field: 'size_ft', axis: 'slot_level', rule: 'linear', base: 3, per: { number: 5 } }])
+    expect(saved?.parts[0]?.scaling).toEqual([{ field: 'dice', axis: 'slot_level', rule: 'linear', base: 3, per: { text: '1d6' } }])
   })
 
   it('reads every stored Part back into the form, the ones it would not offer too, and writes them back as they were', async () => {

@@ -111,3 +111,54 @@ func TestPartsAreCheckedByTheirKinds(t *testing.T) {
 		t.Fatalf("a condition's Part its kind refuses: %d %s", rec.Code, rec.Body.String())
 	}
 }
+
+// A spell's Scaling goes over the wire on its Parts and on the design, is read back as written, reads as
+// rules lines, and is refused field by field; a condition takes none.
+func TestScalingOnTheWire(t *testing.T) {
+	t.Parallel()
+	h := libraryStack(t)
+	spell := decode(t, call(h, http.MethodPost, "/api/v1/library", "dm", `{"kind":"spell","name":"Ball","fields":[]}`))["id"].(string)
+	design := func(own, onDamage string) string {
+		return `{"targeting":{"shape":"sphere","sizeFt":20,"rangeFt":150},"save":"dexterity","concentration":false,"duration":{"unit":"instant"},
+			"ritual":false,"castingTime":{"kind":"action"},"components":{"verbal":true,"somatic":false},
+			"parts":[{"kind":"save_damage","values":{"dice":{"text":"8d6"},"damage_type":{"text":"fire"}},"groups":[],"scaling":[` + onDamage + `]}],"scaling":[` + own + `]}`
+	}
+	good := design(`{"field":"size_ft","axis":"slot_level","rule":"linear","base":3,"per":{"number":5}}`,
+		`{"field":"dice","axis":"slot_level","rule":"linear","base":3,"per":{"text":"1d6"}}`)
+	saved := decode(t, call(h, http.MethodPut, "/api/v1/builders/spells/"+spell, "dm", good))
+	got := decode(t, call(h, http.MethodGet, "/api/v1/builders/spells/"+spell, "dm", ""))
+	sameJSON(t, "saved design", saved["design"], mustJSON(t, decodeString(t, good)))
+	sameJSON(t, "read design", got["design"], mustJSON(t, decodeString(t, good)))
+	text := got["text"].([]any)
+	if text[len(text)-2] != "Using a Higher-Level Spell Slot: the size in feet increases by 5 for each slot level above 3." ||
+		text[len(text)-1] != "Using a Higher-Level Spell Slot: the damage increases by 1d6 for each slot level above 3." {
+		t.Fatalf("text = %q", text)
+	}
+	for body, want := range map[string]string{
+		design(`{"field":"shape","axis":"slot_level","rule":"table","steps":[{"at":2,"value":{"text":"cone"}}]}`, ``): "scaling 1: field: choose a field that scales",
+		design(``, `{"field":"dice","axis":"slot_level","rule":"linear","base":3,"per":{"text":"lots"}}`):             "part 1: scaling 1: per: write the dice like 1d6",
+	} {
+		if rec := call(h, http.MethodPut, "/api/v1/builders/spells/"+spell, "dm", body); rec.Code != http.StatusUnprocessableEntity || !strings.Contains(rec.Body.String(), want) {
+			t.Errorf("%s: %d %s", want, rec.Code, rec.Body.String())
+		}
+	}
+	if rec := call(h, http.MethodPut, "/api/v1/builders/spells/"+spell, "dm", design(``, `{"field":"dice","axis":"moon","rule":"linear"}`)); rec.Code != http.StatusBadRequest {
+		t.Fatalf("an axis the contract does not name: %d", rec.Code)
+	}
+	cond := decode(t, call(h, http.MethodPost, "/api/v1/library", "dm", `{"kind":"condition","name":"Dazed","fields":[]}`))["id"].(string)
+	rec := call(h, http.MethodPut, "/api/v1/builders/conditions/"+cond, "dm", `{"icon":"snow","color":"#7fa8dd","text":"","ends":"rest",
+		"perLevel":{"d20":0,"speedFt":0,"deathAt":0},"parts":[{"kind":"speed_penalty","values":{"ft":{"number":10}},
+		"scaling":[{"field":"ft","axis":"slot_level","rule":"linear","base":1,"per":{"number":5}}]}]}`)
+	if rec.Code != http.StatusUnprocessableEntity || !strings.Contains(rec.Body.String(), "a condition does not scale") {
+		t.Fatalf("a condition with Scaling: %d %s", rec.Code, rec.Body.String())
+	}
+}
+
+func decodeString(t *testing.T, s string) any {
+	t.Helper()
+	var out any
+	if err := json.Unmarshal([]byte(s), &out); err != nil {
+		t.Fatal(err)
+	}
+	return out
+}
