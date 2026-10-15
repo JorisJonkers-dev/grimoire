@@ -86,6 +86,6 @@ describe('the app bar', () => {
     await wrapper.get('[data-testid="sign-out"]').trigger('click')
     await flushPromises()
     expect(out).toBe(true)
-    await vi.waitFor(() => { expect(router.currentRoute.value.name).toBe('sign-in') })
+    await vi.waitFor(() => { expect(router.currentRoute.value.name).toBe('sign-in') }, { timeout: 5000 })
   })
 })

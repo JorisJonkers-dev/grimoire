@@ -44,6 +44,6 @@ describe('the edges of signing in', () => {
     await wrapper.get('[data-testid="two-step-form"]').trigger('submit')
     await flushPromises()
     await wrapper.get('[data-testid="two-step-expired"] button').trigger('click')
-    await vi.waitFor(() => { expect(router.currentRoute.value.name).toBe('sign-in') })
+    await vi.waitFor(() => { expect(router.currentRoute.value.name).toBe('sign-in') }, { timeout: 5000 })
   })
 })

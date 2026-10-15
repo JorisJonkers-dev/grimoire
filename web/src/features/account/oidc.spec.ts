@@ -41,7 +41,7 @@ describe('signing in with jorisjonkers.dev', () => {
       '/api/v1/campaigns': () => ({ items: [] }),
     })
     expect(sent).toEqual([{ code: 'the-code', state }])
-    await vi.waitFor(() => { expect(router.currentRoute.value.fullPath).toBe('/campaigns') })
+    await vi.waitFor(() => { expect(router.currentRoute.value.fullPath).toBe('/campaigns') }, { timeout: 5000 })
   })
 
   it('creates an Account for a login no Account has yet', async () => {

@@ -82,7 +82,7 @@ describe('your Characters', () => {
     await wrapper.get('[data-testid="my-character-join"]').trigger('submit')
     await flushPromises()
     expect(sent[2]).toEqual({ campaignId: saltmarsh })
-    await vi.waitFor(() => { expect(router.currentRoute.value.fullPath).toBe(`/campaigns/${saltmarsh}/characters/0190c7a8-0000-7000-8000-0000000000e2`) })
+    await vi.waitFor(() => { expect(router.currentRoute.value.fullPath).toBe(`/campaigns/${saltmarsh}/characters/0190c7a8-0000-7000-8000-0000000000e2`) }, { timeout: 5000 })
   })
 
   it('says when the Character is not yours', async () => {

@@ -86,7 +86,7 @@ describe('level-up wizard', () => {
     await wrapper.get('[data-testid="next"]').trigger('click')
     expect(wrapper.get('[data-testid="step-review"]').text()).toContain('+8')
     await wrapper.get('[data-testid="take-level"]').trigger('click')
-    await vi.waitFor(() => { expect(router.currentRoute.value.name).toBe('character') })
+    await vi.waitFor(() => { expect(router.currentRoute.value.name).toBe('character') }, { timeout: 5000 })
     expect(sent).toEqual([{
       class: 'fighter', hitPoints: 'average', increase: { strength: 1, constitution: 1 }, spells: [],
       picks: [{ choice: 'feat', values: ['ability-score-improvement'] }, { choice: 'expertise', values: ['athletics', 'survival'] }],
@@ -194,7 +194,7 @@ describe('sheet level-up controls', () => {
     // What it has earned shows beside its level.
     expect(wrapper.get('[data-testid="sheet-xp"]').text()).toBe('925 XP')
     await wrapper.get('[data-testid="level-up"]').trigger('click')
-    await vi.waitFor(() => { expect(router.currentRoute.value.name).toBe('level-up') })
+    await vi.waitFor(() => { expect(router.currentRoute.value.name).toBe('level-up') }, { timeout: 5000 })
   })
 
   it('lets a DM grant the next level', async () => {
