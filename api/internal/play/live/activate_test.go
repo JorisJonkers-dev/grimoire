@@ -167,3 +167,92 @@ func TestActivationChecks(t *testing.T) {
 		t.Fatalf("an incapacitated caster = %+v", u.Reason)
 	}
 }
+
+// An Effect with an initial save waits on each target's save and counts for nothing meanwhile: it lands
+// on a failure, with the parts the DM resolves, and is gone on a success. The DC is the caster's spell
+// save DC unless the Effect fixes one.
+func TestAnInitialSaveDecidesWhetherTheEffectLands(t *testing.T) {
+	t.Parallel()
+	w, tb, ids := activationTable(t)
+	activate := func(slug string) *live.View {
+		t.Helper()
+		u := tb.playerSays(live.Command{Kind: live.CmdActivate, TokenID: ids["Aria"], Effect: slug, Targets: []string{ids["Goblin"]}})
+		if u.View == nil || len(u.View.Saves) != 1 {
+			t.Fatalf("%s = %+v", slug, u)
+		}
+		return u.View
+	}
+	settle := func(v *live.View, face int) *live.View {
+		t.Helper()
+		tb.fill(v.Saves[0].RollID, tb.w.dm, face)
+		next(t, tb.player)
+		return next(t, tb.dm).View
+	}
+	v := activate("slumber")
+	if effect(token(v, "Goblin"), "Slumber") != nil {
+		t.Fatalf("slumber before the save = %+v", token(v, "Goblin").Effects)
+	}
+	if roll := lastRoll(t, w, "Wisdom save against Slumber"); roll.Purpose != "Wisdom save against Slumber" {
+		t.Fatalf("roll = %q", roll.Purpose)
+	}
+	if dm := look(t, w, tb.dm); dm.Saves[0].DC != 14 {
+		t.Fatalf("against Aria's spell save DC = %+v", dm.Saves)
+	}
+	if v = settle(v, 1); effect(token(v, "Goblin"), "Slumber") == nil || len(v.Saves) != 0 {
+		t.Fatalf("slumber after a failed save = %+v %+v", token(v, "Goblin").Effects, v.Saves)
+	}
+	v = activate("snare")
+	if dm := look(t, w, tb.dm); dm.Saves[0].DC != 15 || len(v.Manual) != 0 {
+		t.Fatalf("snare = %+v %+v", dm.Saves, v.Manual)
+	}
+	if v = settle(v, 20); effect(token(v, "Goblin"), "Snare") != nil || len(v.Manual) != 0 {
+		t.Fatalf("snare after a passed save = %+v %+v", token(v, "Goblin").Effects, v.Manual)
+	}
+	if v = settle(activate("snare"), 1); effect(token(v, "Goblin"), "Snare") == nil || len(v.Manual) != 1 || v.Manual[0].Text != "Goblin: Roots grip it." {
+		t.Fatalf("snare after a failed save = %+v %+v", token(v, "Goblin").Effects, v.Manual)
+	}
+	ward := live.Command{Kind: live.CmdActivate, TokenID: ids["Goblin"], Effect: "ward", Targets: []string{ids["Goblin"]}}
+	v = activate("daze")
+	tb.dmSays(ward)
+	settle(v, 1)
+	tb.w.hub.Submit(tb.dm, ward)
+	if u := next(t, tb.dm); u.Reason != "Goblin can't act while Incapacitated." {
+		t.Fatalf("a dazed goblin = %+v", u.Reason)
+	}
+	tb.dmSays(live.Command{Kind: live.CmdApplyEffect, TargetID: ids["Goblin"], Effect: "paralyzed"})
+	u := tb.playerSays(live.Command{Kind: live.CmdActivate, TokenID: ids["Aria"], Effect: "snare", Targets: []string{ids["Goblin"]}})
+	if m := look(t, w, tb.dm).Manual; len(m) == 0 || len(u.View.Saves) != 0 || effectCount(token(u.View, "Goblin"), "Snare") != 2 || m[len(m)-1].Text != "Goblin: Roots grip it." {
+		t.Fatalf("a paralyzed goblin fails its Dexterity save unrolled = %+v %+v %+v", u.View.Saves, token(u.View, "Goblin").Effects, u.View.Manual)
+	}
+	tb.fight(ids, "Aria", "Goblin")
+	activate("slumber")
+	w.hub.Close(w.session.ID)
+	tb.dm, tb.player = join(t, w, w.dm, dmCaller, live.AudienceDM), join(t, w, w.player, playerCaller, live.AudienceParty)
+	if v := look(t, w, tb.dm); len(v.Saves) != 1 || effectCount(token(v, "Goblin"), "Slumber") != 1 {
+		t.Fatalf("after a restart the second slumber still waits = %+v %+v", v.Saves, token(v, "Goblin").Effects)
+	}
+	v = look(t, w, tb.dm)
+	aria, goblin := combatant(v, "Aria").ID, combatant(v, "Goblin").ID
+	tb.playerSays(live.Command{Kind: live.CmdEndTurn, CombatantID: aria})
+	tb.dmSays(live.Command{Kind: live.CmdEndTurn, CombatantID: goblin})
+	v = settle(look(t, w, tb.dm), 1)
+	fresh := 0
+	for _, e := range token(v, "Goblin").Effects {
+		if e.Name == "Slumber" && e.RoundsLeft == 10 {
+			fresh++
+		}
+	}
+	if fresh != 1 {
+		t.Fatalf("a waiting slumber does not count down = %+v", token(v, "Goblin").Effects)
+	}
+}
+
+func effectCount(t *live.TokenView, name string) int {
+	n := 0
+	for _, e := range t.Effects {
+		if e.Name == name {
+			n++
+		}
+	}
+	return n
+}

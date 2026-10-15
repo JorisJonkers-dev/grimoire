@@ -35,6 +35,14 @@ type activation struct {
 	Concentration bool      `yaml:"concentration"`
 	Duration      duration  `yaml:"duration"`
 	Targeting     targeting `yaml:"targeting"`
+	Save          save      `yaml:"save"`
+}
+
+// save is the saving throw each target makes as the Effect is activated; no dc is the caster's spell
+// save DC.
+type save struct {
+	Ability string `yaml:"ability"`
+	DC      int    `yaml:"dc"`
 }
 
 // targeting is what the Activation may pick; none states no Targeting.
@@ -189,6 +197,10 @@ func (e effect) definition(name, slugOf string, several bool) (effects.Definitio
 	}
 	if d.Targeting, err = e.Activation.Targeting.read(); err != nil {
 		return d, fmt.Errorf("targeting: %w", err)
+	}
+	d.Save = effects.InitialSave{Ability: e.Activation.Save.Ability, DC: e.Activation.Save.DC}
+	if err := d.Save.Check(); err != nil {
+		return d, fmt.Errorf("save: %w", err)
 	}
 	authored, err := partsOf(pointers(e.Parts))
 	if err != nil {

@@ -42,6 +42,9 @@ func saveEffect(ctx context.Context, q *queries.Queries, owner effects.Owner, d 
 	if err := saveTargeting(ctx, q, id, d.Targeting); err != nil {
 		return err
 	}
+	if err := saveInitialSave(ctx, q, id, d.Save); err != nil {
+		return err
+	}
 	return saveScaling(ctx, q, id, d)
 }
 
@@ -60,6 +63,27 @@ func saveTargeting(ctx context.Context, q *queries.Queries, id int64, t effects.
 		EffectID: id, Kind: string(t.Kind), TargetCount: int32(t.Count), RangeFt: int32(t.RangeFt), Side: string(t.Side),
 		CreatureTypes: types, Seen: t.Seen, Willing: t.Willing, SpreadFt: int32(t.SpreadFt),
 	})
+}
+
+// saveInitialSave writes the save each target makes as the Effect is activated, or clears it.
+func saveInitialSave(ctx context.Context, q *queries.Queries, id int64, s effects.InitialSave) error {
+	if s.Ability == "" {
+		return q.ClearEffectInitialSave(ctx, id)
+	}
+	return q.UpsertEffectInitialSave(ctx, queries.UpsertEffectInitialSaveParams{EffectID: id, Ability: s.Ability, Dc: int32(s.DC)}) //nolint:gosec // a DC is bounded by checks
+}
+
+// initialSaves reads every Effect's initial save, by Effect.
+func (s *Store) initialSaves(ctx context.Context) (map[int64]effects.InitialSave, error) {
+	rows, err := s.q.ListEffectInitialSaves(ctx)
+	if err != nil {
+		return nil, err
+	}
+	out := make(map[int64]effects.InitialSave, len(rows))
+	for _, r := range rows {
+		out[r.EffectID] = effects.InitialSave{Ability: r.Ability, DC: int(r.Dc)}
+	}
+	return out, nil
 }
 
 // targetings reads every Effect's Targeting, by Effect.
@@ -160,6 +184,10 @@ func (s *Store) Effects(ctx context.Context) (effects.Catalog, error) {
 	if err != nil {
 		return nil, fmt.Errorf("compendium: effects: %w", err)
 	}
+	saves, err := s.initialSaves(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("compendium: effects: %w", err)
+	}
 	byEffect := map[int64][]queries.CompendiumEffectPart{}
 	for _, o := range order {
 		byEffect[o.EffectID] = append(byEffect[o.EffectID], o)
@@ -170,6 +198,7 @@ func (s *Store) Effects(ctx context.Context) (effects.Catalog, error) {
 			Slug: d.Slug, Name: d.Name, Owner: effects.OwnerKind(d.OwnerKind), Concentration: d.Concentration,
 			Duration:  effects.Duration{Kind: effects.DurationKind(d.DurationKind.String), Amount: int(d.DurationAmount), RepeatSave: d.RepeatSave.String},
 			Targeting: targetings[d.ID],
+			Save:      saves[d.ID],
 			Scaling:   scalings[d.ID],
 			Parts:     tree(byEffect[d.ID], parts),
 		}

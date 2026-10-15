@@ -60,6 +60,7 @@ effects:
   - activation:
       concentration: false
       duration: {unit: rounds, amount: 1, repeat_save: strength}
+      save: {ability: dexterity, dc: 12}
     parts:
       - kind: edge
         against: true
@@ -159,6 +160,9 @@ func TestAConditionFileReadsAsItsEffect(t *testing.T) {
 	got := find(t, read(t, files(nil)), "prone")
 	if got.Owner != (effects.Owner{Kind: effects.OwnedByCondition, Slug: "prone"}) || got.Definition.Owner != effects.OwnedByCondition {
 		t.Fatalf("owner = %+v", got)
+	}
+	if got.Definition.Save != (effects.InitialSave{Ability: "dexterity", DC: 12}) {
+		t.Fatalf("save = %+v", got.Definition.Save)
 	}
 	if got.Definition.Duration != (effects.Duration{Kind: effects.Rounds, Amount: 1, RepeatSave: "strength"}) {
 		t.Fatalf("duration = %+v", got.Definition.Duration)
@@ -308,6 +312,7 @@ func TestFilesThatDoNotRead(t *testing.T) {
 		"spells/fireball.yaml: effect 1: scaling 1: field: choose a field that scales":      {fb: fireball + "    scaling:\n      - {field: dice, axis: slot_level, rule: linear, base: 1, per: 1}\n"},
 		"spells/fireball.yaml: effect 1: targeting: count: runs from 0 to 50":               {fb: strings.Replace(fireball, "{kind: area, range_ft: 150}", "{kind: creatures, count: 99}", 1)},
 		"spells/fireball.yaml: effect 1: targeting: kind: choose one of the options":        {fb: strings.Replace(fireball, "{kind: area, range_ft: 150}", "{range_ft: 150}", 1)},
+		"conditions/prone.yaml: effect 1: save: dc: runs from 1 to 30":                      {"srd-2024/conditions/prone.yaml": strings.Replace(prone, "dc: 12", "dc: 99", 1)},
 		"spellz/fireball.yaml: no kind of entry is kept in spellz":                          {"srd-2024/spellz/fireball.yaml": fireball},
 		"items/rope.yaml: items load once their link lands (#263)":                          {"srd-2024/items/rope.yaml": "entry: items/rope\n"},
 		"monsters/wolf.yaml: monsters load once their link lands (#264)":                    {"srd-2024/monsters/wolf.yaml": "entry: monsters/wolf\n"},

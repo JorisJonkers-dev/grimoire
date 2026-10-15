@@ -35,6 +35,8 @@ effects:
 
 `targeting` takes `kind` (`self`, `creatures`, `object`, `point` or `area`), `count`, `range_ft`
 (0 is touch), `side` (`allies` or `enemies`), `creature_types`, `seen`, `willing` and `spread_ft`.
+`save` takes the `ability` each target saves with as the Effect is activated and a fixed `dc`; with
+no `dc` it is the caster's spell save DC. The Effect lands only on targets that fail.
 
 A Part that holds others lists them under each group's name (`then`, `failure`, or a choice's modes).
 An entry with several Effects gives each a `label`; each loads as `<slug>-<label>`.

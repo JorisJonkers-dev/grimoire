@@ -11,6 +11,15 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const clearEffectInitialSave = `-- name: ClearEffectInitialSave :exec
+DELETE FROM compendium.effect_initial_saves WHERE effect_id = $1
+`
+
+func (q *Queries) ClearEffectInitialSave(ctx context.Context, effectID int64) error {
+	_, err := q.db.Exec(ctx, clearEffectInitialSave, effectID)
+	return err
+}
+
 const clearEffectParts = `-- name: ClearEffectParts :exec
 DELETE FROM compendium.effect_components WHERE effect_id = $1
 `
@@ -111,6 +120,30 @@ func (q *Queries) ListEffectDefinitions(ctx context.Context) ([]ListEffectDefini
 			&i.DurationAmount,
 			&i.RepeatSave,
 		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listEffectInitialSaves = `-- name: ListEffectInitialSaves :many
+SELECT effect_id, ability, dc FROM compendium.effect_initial_saves
+`
+
+func (q *Queries) ListEffectInitialSaves(ctx context.Context) ([]CompendiumEffectInitialSafe, error) {
+	rows, err := q.db.Query(ctx, listEffectInitialSaves)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CompendiumEffectInitialSafe{}
+	for rows.Next() {
+		var i CompendiumEffectInitialSafe
+		if err := rows.Scan(&i.EffectID, &i.Ability, &i.Dc); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -306,6 +339,22 @@ func (q *Queries) UpsertEffectDefinition(ctx context.Context, arg UpsertEffectDe
 	var id int64
 	err := row.Scan(&id)
 	return id, err
+}
+
+const upsertEffectInitialSave = `-- name: UpsertEffectInitialSave :exec
+INSERT INTO compendium.effect_initial_saves (effect_id, ability, dc) VALUES ($1, $2, $3)
+ON CONFLICT (effect_id) DO UPDATE SET ability = EXCLUDED.ability, dc = EXCLUDED.dc
+`
+
+type UpsertEffectInitialSaveParams struct {
+	EffectID int64
+	Ability  string
+	Dc       int32
+}
+
+func (q *Queries) UpsertEffectInitialSave(ctx context.Context, arg UpsertEffectInitialSaveParams) error {
+	_, err := q.db.Exec(ctx, upsertEffectInitialSave, arg.EffectID, arg.Ability, arg.Dc)
+	return err
 }
 
 const upsertEffectTargeting = `-- name: UpsertEffectTargeting :exec

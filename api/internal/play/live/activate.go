@@ -38,6 +38,7 @@ func (r *runtime) planActivate(m domain.Member, cmd Command) (Write, string) {
 		targets = []domain.Token{caster}
 	}
 	r.st.putOn(&w, def, caster, targets, cmd.EffectMode)
+	r.initialSaves(&w, m, def, caster)
 	return w, ""
 }
 
@@ -50,7 +51,11 @@ func (s *state) putOn(w *Write, def effects.Definition, caster domain.Token, tar
 			Level: 1, Mode: mode,
 		}
 		s.lasting(&e, def.Duration)
+		e.Pending = def.Save.Ability != ""
 		w.activated = append(w.activated, e)
+		if e.Pending {
+			continue
+		}
 		for _, text := range s.catalog.Instructions(def.Slug, def.Name, e.Mode) {
 			w.manuals = append(w.manuals, domain.ManualPrompt{ID: uuid.New(), Text: t.Label + ": " + text})
 		}
@@ -59,6 +64,31 @@ func (s *state) putOn(w *Write, def effects.Definition, caster domain.Token, tar
 		if def.Concentration && old.Concentration && old.Source != nil && *old.Source == caster.ID {
 			w.ended = append(w.ended, old.ID)
 		}
+	}
+}
+
+// initialSaves opens each target's initial save against the Effect, at its fixed DC or the caster's spell
+// save DC; a target whose Effects make the save fail is affected at once.
+func (r *runtime) initialSaves(w *Write, m domain.Member, def effects.Definition, caster domain.Token) {
+	dc := def.Save.DC
+	if dc == 0 {
+		dc = spellDC(caster)
+	}
+	for i, e := range w.activated {
+		if !e.Pending {
+			continue
+		}
+		t := r.st.tokens[e.Target]
+		roll, ok := r.saveRoll(m, t, def.Save.Ability, "save against "+def.Name+r.dcNote(dc))
+		if !ok {
+			w.activated[i].Pending = false
+			for _, text := range r.st.catalog.Instructions(def.Slug, def.Name, e.Mode) {
+				w.manuals = append(w.manuals, domain.ManualPrompt{ID: uuid.New(), Text: t.Label + ": " + text})
+			}
+			continue
+		}
+		w.Rolls = append(w.Rolls, roll)
+		w.newSaves = append(w.newSaves, domain.PendingSave{RollID: roll.ID, Effect: e.ID, DC: dc})
 	}
 }
 
