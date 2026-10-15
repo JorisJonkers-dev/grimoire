@@ -39,7 +39,47 @@ func saveEffect(ctx context.Context, q *queries.Queries, owner effects.Owner, d 
 	if err := saveParts(ctx, q, id, &next, pgtype.Int4{}, pgtype.Text{}, d.Parts); err != nil {
 		return err
 	}
+	if err := saveTargeting(ctx, q, id, d.Targeting); err != nil {
+		return err
+	}
 	return saveScaling(ctx, q, id, d)
+}
+
+// saveTargeting writes what the Effect's Activation may pick, or clears it when the Effect states none.
+//
+//nolint:gosec // counts and ranges are bounded by checks
+func saveTargeting(ctx context.Context, q *queries.Queries, id int64, t effects.Targeting) error {
+	if t.Kind == "" {
+		return q.ClearEffectTargeting(ctx, id)
+	}
+	types := t.Types
+	if types == nil {
+		types = []string{}
+	}
+	return q.UpsertEffectTargeting(ctx, queries.UpsertEffectTargetingParams{
+		EffectID: id, Kind: string(t.Kind), TargetCount: int32(t.Count), RangeFt: int32(t.RangeFt), Side: string(t.Side),
+		CreatureTypes: types, Seen: t.Seen, Willing: t.Willing, SpreadFt: int32(t.SpreadFt),
+	})
+}
+
+// targetings reads every Effect's Targeting, by Effect.
+func (s *Store) targetings(ctx context.Context) (map[int64]effects.Targeting, error) {
+	rows, err := s.q.ListEffectTargeting(ctx)
+	if err != nil {
+		return nil, err
+	}
+	out := make(map[int64]effects.Targeting, len(rows))
+	for _, r := range rows {
+		var types []string
+		if len(r.CreatureTypes) > 0 {
+			types = r.CreatureTypes
+		}
+		out[r.EffectID] = effects.Targeting{
+			Kind: effects.TargetKind(r.Kind), Count: int(r.TargetCount), RangeFt: int(r.RangeFt), Side: effects.Side(r.Side),
+			Types: types, Seen: r.Seen, Willing: r.Willing, SpreadFt: int(r.SpreadFt),
+		}
+	}
+	return out, nil
 }
 
 // saveParts writes Parts depth first, numbering every one in the Effect; the Parts beneath a
@@ -116,6 +156,10 @@ func (s *Store) Effects(ctx context.Context) (effects.Catalog, error) {
 	if err != nil {
 		return nil, fmt.Errorf("compendium: effects: %w", err)
 	}
+	targetings, err := s.targetings(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("compendium: effects: %w", err)
+	}
 	byEffect := map[int64][]queries.CompendiumEffectPart{}
 	for _, o := range order {
 		byEffect[o.EffectID] = append(byEffect[o.EffectID], o)
@@ -124,9 +168,10 @@ func (s *Store) Effects(ctx context.Context) (effects.Catalog, error) {
 	for _, d := range defs {
 		def := effects.Definition{
 			Slug: d.Slug, Name: d.Name, Owner: effects.OwnerKind(d.OwnerKind), Concentration: d.Concentration,
-			Duration: effects.Duration{Kind: effects.DurationKind(d.DurationKind.String), Amount: int(d.DurationAmount), RepeatSave: d.RepeatSave.String},
-			Scaling:  scalings[d.ID],
-			Parts:    tree(byEffect[d.ID], parts),
+			Duration:  effects.Duration{Kind: effects.DurationKind(d.DurationKind.String), Amount: int(d.DurationAmount), RepeatSave: d.RepeatSave.String},
+			Targeting: targetings[d.ID],
+			Scaling:   scalings[d.ID],
+			Parts:     tree(byEffect[d.ID], parts),
 		}
 		out[d.Slug] = def
 	}

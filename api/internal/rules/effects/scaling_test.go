@@ -219,8 +219,8 @@ func TestKindsMarkTheFieldsThatScale(t *testing.T) {
 	}
 }
 
-// The Activation's own values scale too: how long the Effect lasts, in what unit, and whether it needs
-// concentration.
+// The Activation's own values scale too: how long the Effect lasts, in what unit, whether it needs
+// concentration, and how many targets it takes.
 func TestTheActivationScales(t *testing.T) {
 	t.Parallel()
 	fields := effects.ActivationFields()
@@ -228,13 +228,13 @@ func TestTheActivationScales(t *testing.T) {
 	for _, f := range fields {
 		names = append(names, f.Name)
 	}
-	if !reflect.DeepEqual(names, []string{"duration", "duration_unit", "concentration"}) {
+	if !reflect.DeepEqual(names, []string{"duration", "duration_unit", "concentration", "targets"}) {
 		t.Fatalf("activation fields = %+v", fields)
 	}
 	if unit := fields[1]; unit.Type != effects.ChoiceField || !slices.Contains(unit.Options, "until_dispelled") || fields[0].Type != effects.NumberField || fields[2].Type != effects.FlagField {
 		t.Fatalf("activation fields = %+v", fields)
 	}
-	want := []effects.Scalable{{Field: "duration", Formula: true}, {Field: "duration_unit", Formula: false}, {Field: "concentration", Formula: false}}
+	want := []effects.Scalable{{Field: "duration", Formula: true}, {Field: "duration_unit", Formula: false}, {Field: "concentration", Formula: false}, {Field: "targets", Formula: true}}
 	if got := effects.ActivationScales(); !reflect.DeepEqual(got, want) {
 		t.Fatalf("activation scales = %+v", got)
 	}

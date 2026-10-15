@@ -644,16 +644,30 @@ those rows as the Parts they always built.
 **Adding a kind** is the recipe in §18.1: four new files (rules, store, queries, migration) and one
 sorted line in each of the two lists. The API and the served definitions follow without a change.
 
-Every Effect also carries **Targeting** (self, creatures, sphere, cone, line, cube, cylinder,
-emanation, wall, ring; size, range, origin; side filter; creature-type filter; sight required) and a
-**Duration** (instant, rounds, minutes, hours, until dispelled, until a rest, permanent, end of next
-turn, until cured, with repeat saves), and may carry **Scaling** (#251).
+Every Effect also carries **Targeting** and a **Duration** (instant, rounds, minutes, hours, until
+dispelled, until a rest, permanent, end of next turn, until cured, with repeat saves), and may carry
+**Scaling** (#251).
+
+**Targeting** (#250, #261) is what the Effect's Activation may pick: `self`, chosen `creatures`, an
+`object`, a `point`, or an `area` its `area` Part places. It states:
+- how many targets, which Scaling may grow as the Activation's `targets`;
+- the range, where 0 is touch;
+- the side (`allies`, `enemies` or either);
+- the creature types allowed;
+- whether each target must be seen with the activating creature's own Senses;
+- whether each target must be willing (a creature on the same side counts as willing);
+- how far each target may be from the first.
+
+`Targeting.Refusals` gives the reason each illegal pick is refused, and `Targeting.Text` prints the
+spell's range and targets line. It is stored in `compendium.effect_targeting`, one row per Effect. No
+row states no Targeting, as for an Effect that is only applied by hand.
 
 **Scaling.** An Effect holds any number of `Scaling` rules, each growing one scalable value: a field of
 one Part (counted depth first, as the Parts are stored) or of the Activation (`OnActivation`: the
-duration, its unit, and concentration). A rule grows its value along one axis (slot level, character
-level, class level, a class table's column, or Charges spent on one use) as a sealed `Rule`: `Linear`
-("+1d6 for each slot level above 3"), `Table` (the value from a level on: cantrip steps, Hex's
+duration, its unit, concentration, and the number of targets). A rule grows its value along one axis
+(slot level, character level, class level, a class table's column, or Charges spent on one use) as a
+sealed `Rule`: `Linear` ("+1d6 for each slot level above 3"), `Table` (the value from a level on:
+cantrip steps, Hex's
 duration, concentration switching off), `Formula` (whole numbers, `level`, `+ - *` and brackets, for a
 field its kind allows; it runs no code) or `Column` (the class table's value). `Definition.At(level)`
 applies every rule in order and returns the Effect as activated; play calls it before it aims, so the

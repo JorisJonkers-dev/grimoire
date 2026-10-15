@@ -112,18 +112,19 @@ type Grower interface {
 }
 
 // ActivationFields are the Activation's own values Scaling can grow: how long the Effect lasts, in what
-// unit, and whether it needs concentration.
+// unit, whether it needs concentration, and how many targets it takes.
 func ActivationFields() []Field {
 	return []Field{
 		{Name: "duration", Label: "Duration", Type: NumberField, Options: nil, Required: false, Min: 0, Max: 1000},
 		{Name: "duration_unit", Label: "Duration unit", Type: ChoiceField, Options: durationKinds(), Required: false, Min: 0, Max: 0},
 		{Name: "concentration", Label: "Concentration", Type: FlagField, Options: nil, Required: false, Min: 0, Max: 0},
+		{Name: "targets", Label: "Number of targets", Type: NumberField, Options: nil, Required: false, Min: 1, Max: 50},
 	}
 }
 
 // ActivationScales marks every Activation field as scalable; a duration may follow a formula.
 func ActivationScales() []Scalable {
-	return []Scalable{{Field: "duration", Formula: true}, {Field: "duration_unit", Formula: false}, {Field: "concentration", Formula: false}}
+	return []Scalable{{Field: "duration", Formula: true}, {Field: "duration_unit", Formula: false}, {Field: "concentration", Formula: false}, {Field: "targets", Formula: true}}
 }
 
 func durationKinds() []string {
@@ -197,6 +198,8 @@ func (d Definition) activated(s Scaling, l Level) Definition {
 		d.Duration.Kind = DurationKind(s.grow(textValue(string(d.Duration.Kind)), l).Text)
 	case "concentration":
 		d.Concentration = s.grow(Value{Text: "", Number: 0, Flag: d.Concentration, Texts: nil}, l).Flag
+	case "targets":
+		d.Targeting.Count = s.grow(numberValue(d.Targeting.Count), l).Number
 	}
 	return d
 }

@@ -149,6 +149,7 @@ type Querier interface {
 	ClearDesignEffects(ctx context.Context) error
 	ClearEffectParts(ctx context.Context, effectID int64) error
 	ClearEffectScalingRules(ctx context.Context, effectID int64) error
+	ClearEffectTargeting(ctx context.Context, effectID int64) error
 	ClearEffects(ctx context.Context, sessionID uuid.UUID) error
 	ClearElevation(ctx context.Context, arg ClearElevationParams) error
 	ClearExploration(ctx context.Context, sessionID uuid.UUID) error
@@ -528,6 +529,7 @@ type Querier interface {
 	ListEffectSpeedPenalties(ctx context.Context) ([]ListEffectSpeedPenaltiesRow, error)
 	ListEffectSummons(ctx context.Context) ([]ListEffectSummonsRow, error)
 	ListEffectSurfaces(ctx context.Context) ([]ListEffectSurfacesRow, error)
+	ListEffectTargeting(ctx context.Context) ([]CompendiumEffectTargeting, error)
 	ListEffectTeleports(ctx context.Context) ([]ListEffectTeleportsRow, error)
 	ListEffectTempHPs(ctx context.Context) ([]ListEffectTempHPsRow, error)
 	ListEntries(ctx context.Context, arg ListEntriesParams) ([]ListEntriesRow, error)
@@ -895,6 +897,7 @@ type Querier interface {
 	UpsertDamageType(ctx context.Context, arg UpsertDamageTypeParams) (int64, error)
 	UpsertDocument(ctx context.Context, arg UpsertDocumentParams) (int64, error)
 	UpsertEffectDefinition(ctx context.Context, arg UpsertEffectDefinitionParams) (int64, error)
+	UpsertEffectTargeting(ctx context.Context, arg UpsertEffectTargetingParams) error
 	UpsertFeat(ctx context.Context, arg UpsertFeatParams) (int64, error)
 	UpsertItem(ctx context.Context, arg UpsertItemParams) error
 	UpsertLootClaim(ctx context.Context, arg UpsertLootClaimParams) error

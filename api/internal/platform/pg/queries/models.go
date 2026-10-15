@@ -970,6 +970,18 @@ type CompendiumEffectSurface struct {
 	Rounds   int32
 }
 
+type CompendiumEffectTargeting struct {
+	EffectID      int64
+	Kind          string
+	TargetCount   int32
+	RangeFt       int32
+	Side          string
+	CreatureTypes []string
+	Seen          bool
+	Willing       bool
+	SpreadFt      int32
+}
+
 type CompendiumEffectTeleport struct {
 	EffectID int64
 	Ordinal  int32

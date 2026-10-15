@@ -5,10 +5,13 @@ import (
 	"strings"
 )
 
-// Text writes an Effect as rules text, one sentence per part, in the order the parts come: what it
-// does, how long it lasts, and how it scales.
+// Text writes an Effect as rules text: what it targets, one sentence per part in the order the parts
+// come, how long it lasts, and how it scales.
 func (d Definition) Text() []string {
 	out := sentences(d.Parts)
+	if line := d.Targeting.Text(); line != "" {
+		out = append([]string{line}, out...)
+	}
 	if line := d.Duration.Text(d.Concentration); line != "" {
 		out = append(out, line)
 	}

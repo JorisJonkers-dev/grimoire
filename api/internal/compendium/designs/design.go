@@ -2,6 +2,7 @@ package designs
 
 import (
 	"fmt"
+	"reflect"
 	"slices"
 	"strconv"
 	"strings"
@@ -31,8 +32,21 @@ type effect struct {
 }
 
 type activation struct {
-	Concentration bool     `yaml:"concentration"`
-	Duration      duration `yaml:"duration"`
+	Concentration bool      `yaml:"concentration"`
+	Duration      duration  `yaml:"duration"`
+	Targeting     targeting `yaml:"targeting"`
+}
+
+// targeting is what the Activation may pick; none states no Targeting.
+type targeting struct {
+	Kind     string   `yaml:"kind"`
+	Count    int      `yaml:"count"`
+	RangeFt  int      `yaml:"range_ft"`
+	Side     string   `yaml:"side"`
+	Types    []string `yaml:"creature_types"`
+	Seen     bool     `yaml:"seen"`
+	Willing  bool     `yaml:"willing"`
+	SpreadFt int      `yaml:"spread_ft"`
 }
 
 type duration struct {
@@ -173,6 +187,9 @@ func (e effect) definition(name, slugOf string, several bool) (effects.Definitio
 	if d.Duration, err = e.Activation.Duration.read(); err != nil {
 		return d, fmt.Errorf("duration: %w", err)
 	}
+	if d.Targeting, err = e.Activation.Targeting.read(); err != nil {
+		return d, fmt.Errorf("targeting: %w", err)
+	}
 	authored, err := partsOf(pointers(e.Parts))
 	if err != nil {
 		return d, err
@@ -190,6 +207,17 @@ func (e effect) definition(name, slugOf string, several bool) (effects.Definitio
 	parts, err := effects.DecodeScaling(authored, 0)
 	d.Scaling = append(d.Scaling, parts...)
 	return d, err
+}
+
+func (t targeting) read() (effects.Targeting, error) {
+	out := effects.Targeting{
+		Kind: effects.TargetKind(t.Kind), Count: t.Count, RangeFt: t.RangeFt, Side: effects.Side(t.Side), Types: t.Types,
+		Seen: t.Seen, Willing: t.Willing, SpreadFt: t.SpreadFt,
+	}
+	if reflect.ValueOf(t).IsZero() {
+		return out, nil
+	}
+	return out, out.Check()
 }
 
 func (u duration) read() (effects.Duration, error) {

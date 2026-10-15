@@ -38,6 +38,7 @@ pattern: save-area-damage
 effects:
   - activation:
       duration: {unit: instant}
+      targeting: {kind: area, range_ft: 150}
     parts:
       - kind: area
         shape: sphere
@@ -134,7 +135,8 @@ func TestASpellFileReadsAsItsEffect(t *testing.T) {
 		Owner: effects.Owner{Kind: effects.OwnedBySpell, Slug: "fireball"},
 		Definition: effects.Definition{
 			Slug: "fireball", Name: "Fireball", Owner: effects.OwnedBySpell, Concentration: false,
-			Duration: effects.Duration{Kind: effects.Instant, Amount: 0, RepeatSave: ""},
+			Duration:  effects.Duration{Kind: effects.Instant, Amount: 0, RepeatSave: ""},
+			Targeting: effects.Targeting{Kind: effects.TargetArea, RangeFt: 150},
 			Scaling: []effects.Scaling{{
 				Part: 1, Field: "dice", Axis: effects.SlotLevel, Class: "",
 				Rule: effects.Linear{Base: 3, Per: effects.Value{Text: "1d6", Number: 0, Flag: false, Texts: nil}},
@@ -304,6 +306,8 @@ func TestFilesThatDoNotRead(t *testing.T) {
 		},
 		"spells/fireball.txt: a Design file is YAML, named <entry>.yaml":                    {"srd-2024/spells/fireball.txt": "x"},
 		"spells/fireball.yaml: effect 1: scaling 1: field: choose a field that scales":      {fb: fireball + "    scaling:\n      - {field: dice, axis: slot_level, rule: linear, base: 1, per: 1}\n"},
+		"spells/fireball.yaml: effect 1: targeting: count: runs from 0 to 50":               {fb: strings.Replace(fireball, "{kind: area, range_ft: 150}", "{kind: creatures, count: 99}", 1)},
+		"spells/fireball.yaml: effect 1: targeting: kind: choose one of the options":        {fb: strings.Replace(fireball, "{kind: area, range_ft: 150}", "{range_ft: 150}", 1)},
 		"spellz/fireball.yaml: no kind of entry is kept in spellz":                          {"srd-2024/spellz/fireball.yaml": fireball},
 		"items/rope.yaml: items load once their link lands (#263)":                          {"srd-2024/items/rope.yaml": "entry: items/rope\n"},
 		"monsters/wolf.yaml: monsters load once their link lands (#264)":                    {"srd-2024/monsters/wolf.yaml": "entry: monsters/wolf\n"},
