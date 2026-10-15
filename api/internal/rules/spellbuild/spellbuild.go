@@ -141,7 +141,17 @@ func Build(slug, name string, d Design, surfaces []string) (Built, error) {
 // size and range, and the Activation's duration, its unit and concentration.
 func Activation() ([]effects.Field, []effects.Scalable) {
 	area := areaPlace()
-	return append(area.Fields, effects.ActivationFields()...), append(area.Scales, effects.ActivationScales()...)
+	own := activationPlace()
+	return append(area.Fields, own.Fields...), append(area.Scales, own.Scales...)
+}
+
+// activationPlace is the Activation's values a spell's Scaling grows; an area spell picks no targets, so
+// their number does not grow.
+func activationPlace() effects.Place {
+	p := effects.ActivationPlace()
+	p.Fields = slices.DeleteFunc(p.Fields, func(f effects.Field) bool { return f.Name == "targets" })
+	p.Scales = slices.DeleteFunc(p.Scales, func(s effects.Scalable) bool { return s.Field == "targets" })
+	return p
 }
 
 // areaPlace is the spell's area as a place Scaling grows: its scalable fields, on the Effect's first Part.
@@ -157,7 +167,7 @@ func areaPlace() effects.Place {
 // scaling decodes the spell's own Scaling, then each Part's, counting the Parts after the area and the
 // save it adds ahead of them.
 func (d Design) scaling() ([]effects.Scaling, error) {
-	own, err := effects.DecodePlaced(d.Scaling, []effects.Place{areaPlace(), effects.ActivationPlace()}, "the spell")
+	own, err := effects.DecodePlaced(d.Scaling, []effects.Place{areaPlace(), activationPlace()}, "the spell")
 	if err != nil {
 		return nil, DesignError(err.Error())
 	}
@@ -294,7 +304,8 @@ func (d Design) finish(slug, name string, parts []effects.Part, scaling []effect
 	}
 	def := effects.Definition{
 		Slug: slug, Name: name, Owner: effects.OwnedBySpell, Concentration: d.Concentration, Duration: duration, Scaling: scaling,
-		Parts: append(head, parts...),
+		Targeting: effects.Targeting{Kind: "", Count: 0, RangeFt: 0, Side: effects.AnySide, Types: nil, Seen: false, Willing: false, SpreadFt: 0},
+		Parts:     append(head, parts...),
 	}
 	for _, s := range scaling {
 		f, _ := def.Scaled(s)

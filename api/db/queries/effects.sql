@@ -40,3 +40,16 @@ DELETE FROM compendium.surface_reactions WHERE surface = @surface;
 
 -- name: InsertSurfaceReaction :exec
 INSERT INTO compendium.surface_reactions (surface, damage_type, becomes) VALUES (@surface, @damage_type, @becomes);
+
+-- name: UpsertEffectTargeting :exec
+INSERT INTO compendium.effect_targeting (effect_id, kind, target_count, range_ft, side, creature_types, seen, willing, spread_ft)
+VALUES (@effect_id, @kind, @target_count, @range_ft, @side, @creature_types::text[], @seen, @willing, @spread_ft)
+ON CONFLICT (effect_id) DO UPDATE SET
+    kind = EXCLUDED.kind, target_count = EXCLUDED.target_count, range_ft = EXCLUDED.range_ft, side = EXCLUDED.side,
+    creature_types = EXCLUDED.creature_types, seen = EXCLUDED.seen, willing = EXCLUDED.willing, spread_ft = EXCLUDED.spread_ft;
+
+-- name: ClearEffectTargeting :exec
+DELETE FROM compendium.effect_targeting WHERE effect_id = @effect_id;
+
+-- name: ListEffectTargeting :many
+SELECT effect_id, kind, target_count, range_ft, side, creature_types, seen, willing, spread_ft FROM compendium.effect_targeting;

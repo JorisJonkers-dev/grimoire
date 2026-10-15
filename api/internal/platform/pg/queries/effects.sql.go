@@ -20,6 +20,15 @@ func (q *Queries) ClearEffectParts(ctx context.Context, effectID int64) error {
 	return err
 }
 
+const clearEffectTargeting = `-- name: ClearEffectTargeting :exec
+DELETE FROM compendium.effect_targeting WHERE effect_id = $1
+`
+
+func (q *Queries) ClearEffectTargeting(ctx context.Context, effectID int64) error {
+	_, err := q.db.Exec(ctx, clearEffectTargeting, effectID)
+	return err
+}
+
 const clearSurfaceReactions = `-- name: ClearSurfaceReactions :exec
 DELETE FROM compendium.surface_reactions WHERE surface = $1
 `
@@ -171,6 +180,40 @@ func (q *Queries) ListEffectPartsOfKind(ctx context.Context, kind string) ([]Lis
 	return items, nil
 }
 
+const listEffectTargeting = `-- name: ListEffectTargeting :many
+SELECT effect_id, kind, target_count, range_ft, side, creature_types, seen, willing, spread_ft FROM compendium.effect_targeting
+`
+
+func (q *Queries) ListEffectTargeting(ctx context.Context) ([]CompendiumEffectTargeting, error) {
+	rows, err := q.db.Query(ctx, listEffectTargeting)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CompendiumEffectTargeting{}
+	for rows.Next() {
+		var i CompendiumEffectTargeting
+		if err := rows.Scan(
+			&i.EffectID,
+			&i.Kind,
+			&i.TargetCount,
+			&i.RangeFt,
+			&i.Side,
+			&i.CreatureTypes,
+			&i.Seen,
+			&i.Willing,
+			&i.SpreadFt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listSurfaceDefinitions = `-- name: ListSurfaceDefinitions :many
 SELECT slug, name, cost, obscures, hazard_dice, hazard_type, every_step, effect_slug FROM compendium.surface_definitions ORDER BY slug
 `
@@ -263,6 +306,41 @@ func (q *Queries) UpsertEffectDefinition(ctx context.Context, arg UpsertEffectDe
 	var id int64
 	err := row.Scan(&id)
 	return id, err
+}
+
+const upsertEffectTargeting = `-- name: UpsertEffectTargeting :exec
+INSERT INTO compendium.effect_targeting (effect_id, kind, target_count, range_ft, side, creature_types, seen, willing, spread_ft)
+VALUES ($1, $2, $3, $4, $5, $6::text[], $7, $8, $9)
+ON CONFLICT (effect_id) DO UPDATE SET
+    kind = EXCLUDED.kind, target_count = EXCLUDED.target_count, range_ft = EXCLUDED.range_ft, side = EXCLUDED.side,
+    creature_types = EXCLUDED.creature_types, seen = EXCLUDED.seen, willing = EXCLUDED.willing, spread_ft = EXCLUDED.spread_ft
+`
+
+type UpsertEffectTargetingParams struct {
+	EffectID      int64
+	Kind          string
+	TargetCount   int32
+	RangeFt       int32
+	Side          string
+	CreatureTypes []string
+	Seen          bool
+	Willing       bool
+	SpreadFt      int32
+}
+
+func (q *Queries) UpsertEffectTargeting(ctx context.Context, arg UpsertEffectTargetingParams) error {
+	_, err := q.db.Exec(ctx, upsertEffectTargeting,
+		arg.EffectID,
+		arg.Kind,
+		arg.TargetCount,
+		arg.RangeFt,
+		arg.Side,
+		arg.CreatureTypes,
+		arg.Seen,
+		arg.Willing,
+		arg.SpreadFt,
+	)
+	return err
 }
 
 const upsertSurfaceDefinition = `-- name: UpsertSurfaceDefinition :exec

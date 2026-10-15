@@ -28,6 +28,7 @@ type Definition struct {
 	Owner         OwnerKind
 	Concentration bool
 	Duration      Duration
+	Targeting     Targeting
 	Scaling       []Scaling
 	Parts         []Part
 }

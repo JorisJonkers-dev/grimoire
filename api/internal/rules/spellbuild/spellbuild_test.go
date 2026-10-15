@@ -360,6 +360,11 @@ func TestASpellScales(t *testing.T) {
 			t.Errorf("want %q, got %v", want, err)
 		}
 	}
+	targets := d
+	targets.Scaling = []effects.AuthoredScaling{{Field: "targets", Axis: "slot_level", Rule: "linear", Base: 1, Per: &effects.Value{Number: 1}}}
+	if _, err := spellbuild.Build("hb-bad", "Bad", targets, surfaces); err == nil || err.Error() != "scaling 1: field: choose a field that scales" {
+		t.Errorf("an area spell grew its number of targets: %v", err)
+	}
 	fields, scales := spellbuild.Activation()
 	names := []string{}
 	for _, f := range fields {
