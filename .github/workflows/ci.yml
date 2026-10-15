@@ -86,6 +86,9 @@ jobs:
           install_args: go task go:github.com/vladopajic/go-test-coverage/v2
       - name: Go tests and coverage
         run: task coverage
+        env:
+          # The runner is thrown away after the job, so the reaper has nothing to clean up.
+          TESTCONTAINERS_RYUK_DISABLED: "true"
 
   mutation:
     name: Mutation testing (shard ${{ matrix.shard }})
