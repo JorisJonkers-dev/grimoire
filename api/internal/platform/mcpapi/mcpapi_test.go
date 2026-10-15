@@ -174,22 +174,28 @@ func (e *edits) Edits(_ context.Context, _ campaign.CampaignID, f campaign.EditF
 	return e.list, e.err
 }
 
-type identity string
+// identity sends as a user through its own server's transport: another test's server closing
+// closes http.DefaultTransport's idle connections, which broke requests on a shared pool.
+type identity struct {
+	who  string
+	base http.RoundTripper
+}
 
 func (i identity) RoundTrip(r *http.Request) (*http.Response, error) {
 	r = r.Clone(r.Context())
-	if i != "" {
-		r.Header.Set("X-User-Id", string(i))
+	if i.who != "" {
+		r.Header.Set("X-User-Id", i.who)
 	}
-	return http.DefaultTransport.RoundTrip(r)
+	return i.base.RoundTrip(r)
 }
 
-func connect(t *testing.T, h http.Handler, who identity, name ...string) *mcp.ClientSession {
+func connect(t *testing.T, h http.Handler, who string, name ...string) *mcp.ClientSession {
 	t.Helper()
 	srv := httptest.NewServer(h)
 	t.Cleanup(srv.Close)
 	c := mcp.NewClient(&mcp.Implementation{Name: append(name, "test-agent")[0], Version: "1"}, nil)
-	s, err := c.Connect(context.Background(), &mcp.StreamableClientTransport{Endpoint: srv.URL, HTTPClient: &http.Client{Transport: who}}, nil)
+	client := &http.Client{Transport: identity{who: who, base: srv.Client().Transport}}
+	s, err := c.Connect(context.Background(), &mcp.StreamableClientTransport{Endpoint: srv.URL, HTTPClient: client}, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -318,7 +324,7 @@ func TestAToolCallWithoutArguments(t *testing.T) {
 		if session != "" {
 			req.Header.Set("Mcp-Session-Id", session)
 		}
-		res, err := http.DefaultClient.Do(req)
+		res, err := srv.Client().Do(req)
 		if err != nil {
 			t.Fatal(err)
 		}
