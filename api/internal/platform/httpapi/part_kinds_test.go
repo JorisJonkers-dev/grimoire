@@ -9,7 +9,8 @@ import (
 )
 
 // Every kind the rules know is served as its definition and its hints, in the rules' order, field for
-// field; a kind missing from what is served, or served differently from its definition, fails here.
+// field with whether it scales and may follow a formula; a kind missing from what is served, or served
+// differently from its definition, fails here.
 func TestEveryKindOfPartIsServed(t *testing.T) {
 	t.Parallel()
 	h := libraryStack(t)
@@ -31,13 +32,19 @@ func TestEveryKindOfPartIsServed(t *testing.T) {
 	for i, k := range kinds {
 		d := k.Describe()
 		fields := make([]map[string]any, 0, len(d.Fields))
+		scales := map[string]effects.Scalable{}
+		for _, s := range effects.ScalesOf(k) {
+			scales[s.Field] = s
+		}
 		for _, f := range d.Fields {
 			options := f.Options
 			if options == nil {
 				options = []string{}
 			}
+			s, scalable := scales[f.Name]
 			fields = append(fields, map[string]any{
 				"name": f.Name, "label": f.Label, "type": string(f.Type), "options": options, "required": f.Required, "min": f.Min, "max": f.Max,
+				"scalable": scalable, "formula": s.Formula,
 			})
 		}
 		groups := d.Groups

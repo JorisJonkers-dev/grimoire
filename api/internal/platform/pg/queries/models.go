@@ -910,6 +910,31 @@ type CompendiumEffectScaling struct {
 	Dice       string
 }
 
+type CompendiumEffectScalingRule struct {
+	EffectID   int64
+	Position   int32
+	Part       pgtype.Int4
+	Field      string
+	Axis       string
+	ClassSlug  string
+	Rule       string
+	BaseLevel  int32
+	PerDice    pgtype.Text
+	PerNumber  pgtype.Int4
+	Formula    pgtype.Text
+	ColumnName string
+}
+
+type CompendiumEffectScalingRuleStep struct {
+	EffectID    int64
+	Position    int32
+	AtLevel     int32
+	ValueDice   pgtype.Text
+	ValueNumber pgtype.Int4
+	ValueFlag   pgtype.Bool
+	ValueText   pgtype.Text
+}
+
 type CompendiumEffectScalingStep struct {
 	EffectID int64
 	AtLevel  int32
@@ -1564,6 +1589,7 @@ type PlayAreaCast struct {
 	Spell         string
 	Dc            int32
 	DamageRollID  pgtype.UUID
+	SlotLevel     pgtype.Int4
 }
 
 type PlayAreaHex struct {

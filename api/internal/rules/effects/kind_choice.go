@@ -30,6 +30,12 @@ func (c Choice) Groups() []Group {
 	return c.Modes
 }
 
+// Regroup is the choice offering the groups as its modes.
+func (c Choice) Regroup(gs []Group) Part {
+	c.Modes = gs
+	return c
+}
+
 // Chosen is the Parts of the mode picked.
 func (c Choice) Chosen(mode string) []Part {
 	var out []Part

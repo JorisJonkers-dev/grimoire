@@ -20,14 +20,15 @@ type Part interface {
 	Text() string
 }
 
-// Definition is an Effect: what it is called, what owns it, whether it needs concentration, and what it does.
+// Definition is an Effect: what it is called, what owns it, whether it needs concentration, what it does,
+// and how it grows with the level it is activated at.
 type Definition struct {
 	Slug          string
 	Name          string
 	Owner         OwnerKind
 	Concentration bool
 	Duration      Duration
-	Scaling       *Scaling
+	Scaling       []Scaling
 	Parts         []Part
 }
 
@@ -430,7 +431,13 @@ func (a AreaSpell) Lands(o Outcome) []Act {
 
 // AreaOf finds a modelled area Effect.
 func (cat Catalog) AreaOf(slug string) (AreaSpell, bool) {
+	return cat.AreaAt(slug, Level{Slot: 0, Character: 0, Classes: nil, Columns: nil, Charges: 0})
+}
+
+// AreaAt finds a modelled area Effect as it is activated at a level, its Scaling applied before it is aimed.
+func (cat Catalog) AreaAt(slug string, l Level) (AreaSpell, bool) {
 	d, known := cat[slug]
+	d = d.At(l)
 	var out AreaSpell
 	out.Name = d.Name
 	for _, c := range d.Parts {

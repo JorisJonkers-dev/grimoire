@@ -38,7 +38,19 @@ func (s Summon) LandsOnBearer() []Act {
 	return []Act{SummonCreatures(s)}
 }
 
+// Grow grows how many come.
+func (s Summon) Grow(field string, by func(Value) Value) Part {
+	if field == "count" {
+		s.Count = by(numberValue(s.Count)).Number
+	}
+	return s
+}
+
 type summonKind struct{}
+
+func (summonKind) Scales() []Scalable {
+	return []Scalable{{Field: "count", Formula: false}}
+}
 
 func (summonKind) Describe() Description {
 	return Description{

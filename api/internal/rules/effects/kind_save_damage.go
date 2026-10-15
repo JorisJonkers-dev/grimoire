@@ -37,7 +37,19 @@ func (s SaveDamage) Lands(o Outcome) []Act {
 	return []Act{Hurt{Amount: amount, Type: s.Type}}
 }
 
+// Grow grows the dice.
+func (s SaveDamage) Grow(field string, by func(Value) Value) Part {
+	if field == "dice" {
+		s.Dice = by(textValue(s.Dice)).Text
+	}
+	return s
+}
+
 type saveDamageKind struct{}
+
+func (saveDamageKind) Scales() []Scalable {
+	return []Scalable{{Field: "dice", Formula: false}}
+}
 
 func (saveDamageKind) Describe() Description {
 	return Description{

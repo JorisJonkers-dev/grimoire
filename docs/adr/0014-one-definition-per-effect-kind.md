@@ -22,8 +22,10 @@ in levels, with a cap and a level that kills. A kind that acts when its Effect l
 a small closed set the runtime applies: into an area's plan (`Asker`), on each creature in the area
 once the rolls are in (`Lander`), or on its bearer (`BearerLander`). A kind that holds Parts beneath
 it does so in named groups (`Grouper`): a branch brings its group into play as the Effect lands
-(`Holder`), and a choice offers its groups as modes (`Chooser`). Every kind is defined this way, so no
-switch names a kind.
+(`Holder`), and a choice offers its groups as modes (`Chooser`). A kind marks the fields that grow
+with the level its Effect is activated at (`Scaler`), and its Part grows them (`Grower`), so Scaling
+reaches any kind's field without naming the kind. Every kind is defined this way, so no switch names a
+kind.
 
 Migrations take timestamp versions (`yyyymmddhhmmss_name.sql`) from here on, and goose applies a
 lower version that arrives after a higher one. The numbered migrations already applied keep their

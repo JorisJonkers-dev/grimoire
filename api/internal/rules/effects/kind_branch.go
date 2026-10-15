@@ -139,6 +139,20 @@ func (b Branch) Groups() []Group {
 	return []Group{{Name: "then", Parts: b.Then}}
 }
 
+// Regroup is the branch adding the Parts of its group then.
+func (b Branch) Regroup(gs []Group) Part {
+	b.Then = Groups(gs).Of("then")
+	return b
+}
+
+// Grow grows the number its test reads.
+func (b Branch) Grow(field string, by func(Value) Value) Part {
+	if field == "n" {
+		b.When.N = by(numberValue(b.When.N)).Number
+	}
+	return b
+}
+
 // Landed is the branch's Parts when its condition holds for the creature, and none otherwise.
 func (b Branch) Landed(s Situation) []Part {
 	if b.When.Holds(s) {
@@ -170,6 +184,10 @@ func (branchKind) Hints() Hints {
 		{Field: "n", Text: "For fails by, how far the save fails; for HP at most, the Hit Points."},
 		{Field: "creature_type", Text: "For creature is, such as fey."},
 	}}
+}
+
+func (branchKind) Scales() []Scalable {
+	return []Scalable{{Field: "n", Formula: false}}
 }
 
 func (branchKind) Decode(v Values, beneath Groups) (Part, error) {

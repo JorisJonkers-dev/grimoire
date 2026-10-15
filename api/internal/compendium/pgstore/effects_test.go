@@ -141,7 +141,16 @@ func TestShapedEffectsRoundTrip(t *testing.T) {
 	d := effects.Definition{
 		Slug: "frost-choice", Name: "Frost Choice", Owner: effects.OwnedBySpell, Concentration: true,
 		Duration: effects.Duration{Kind: effects.Minutes, Amount: 1, RepeatSave: "wisdom"},
-		Scaling:  &effects.Scaling{Axis: effects.CharacterLevel, Class: "", Column: "", Base: 0, Dice: "", Steps: []effects.Step{{At: 5, Dice: "2d10"}, {At: 11, Dice: "3d10"}}},
+		Scaling: []effects.Scaling{
+			{Part: effects.OnActivation, Field: "concentration", Axis: effects.SlotLevel, Class: "", Rule: effects.Table{Steps: []effects.Step{{At: 4, Value: effects.Value{Flag: false}}, {At: 6, Value: effects.Value{Flag: true}}}}},
+			{Part: effects.OnActivation, Field: "duration", Axis: effects.SlotLevel, Class: "", Rule: effects.Formula{Expr: "10 * (level - 2)"}},
+			{Part: effects.OnActivation, Field: "duration_unit", Axis: effects.SlotLevel, Class: "", Rule: effects.Table{Steps: []effects.Step{{At: 5, Value: effects.Value{Text: "hours"}}}}},
+			{Part: 2, Field: "dice", Axis: effects.CharacterLevel, Class: "", Rule: effects.Table{Steps: []effects.Step{{At: 5, Value: effects.Value{Text: "2d10"}}, {At: 11, Value: effects.Value{Text: "3d10"}}}}},
+			{Part: 2, Field: "dice", Axis: effects.Charges, Class: "", Rule: effects.Linear{Base: 1, Per: effects.Value{Text: "1d6"}}},
+			{Part: 6, Field: "n", Axis: effects.SlotLevel, Class: "", Rule: effects.Table{Steps: nil}},
+			{Part: 9, Field: "amount", Axis: effects.ClassLevel, Class: "cleric", Rule: effects.Linear{Base: 2, Per: effects.Value{Number: 5}}},
+			{Part: 9, Field: "amount", Axis: effects.TableColumn, Class: "rogue", Rule: effects.Column{Name: "Sneak Attack"}},
+		},
 		Parts: []effects.Part{
 			effects.Manual{Instruction: "Frost forms."},
 			effects.Choice{Modes: []effects.Group{
@@ -164,7 +173,8 @@ func TestShapedEffectsRoundTrip(t *testing.T) {
 	if !reflect.DeepEqual(got[d.Slug], d) {
 		t.Fatalf("shaped effect:\n got %+v\nwant %+v", got[d.Slug], d)
 	}
-	if fb := got["fireball"]; !reflect.DeepEqual(fb.Scaling, &effects.Scaling{Axis: effects.SlotLevel, Base: 3, Dice: "1d6"}) || fb.Duration.Kind != effects.Instant {
+	slot := []effects.Scaling{{Part: 1, Field: "dice", Axis: effects.SlotLevel, Class: "", Rule: effects.Linear{Base: 3, Per: effects.Value{Text: "1d6"}}}}
+	if fb := got["fireball"]; !reflect.DeepEqual(fb.Scaling, slot) || fb.Duration.Kind != effects.Instant {
 		t.Fatalf("fireball scales by slot = %+v", fb)
 	}
 	if b := got["bless"]; b.Duration != (effects.Duration{Kind: effects.Minutes, Amount: 1}) {
@@ -185,14 +195,21 @@ func TestInvalidEffectsAreRefused(t *testing.T) {
 	ctx := context.Background()
 	s := pgstore.New(openPool(t))
 	owner := effects.Owner{Kind: effects.OwnedBySpell, Slug: "bad"}
+	damage := []effects.Part{effects.SaveDamage{Ability: "dexterity", Dice: "2d6", Type: "fire", Half: true}}
 	bad := []effects.Definition{
 		{Slug: "Bad Slug", Name: "x"},
 		{Slug: "bad-dice", Name: "x", Parts: []effects.Part{effects.ExtraDamage{Dice: "lots"}}},
 		{Slug: "bad-shape", Name: "x", Parts: []effects.Part{effects.Area{Shape: "pyramid", SizeFt: 10}}},
 		{Slug: "no-roll", Name: "x", Parts: []effects.Part{effects.BonusDie{Dice: "1d4"}}},
 		{Slug: "bad-duration", Name: "x", Duration: effects.Duration{Kind: "fortnight"}},
-		{Slug: "bad-scaling", Name: "x", Scaling: &effects.Scaling{Axis: effects.SlotLevel, Base: 1, Dice: "lots"}},
-		{Slug: "bad-step", Name: "x", Scaling: &effects.Scaling{Axis: effects.CharacterLevel, Steps: []effects.Step{{At: 30, Dice: "1d6"}}}},
+		{Slug: "bad-scaling", Name: "x", Parts: damage, Scaling: []effects.Scaling{{Part: 0, Field: "dice", Axis: effects.SlotLevel, Rule: effects.Linear{Base: 1, Per: effects.Value{Text: "lots"}}}}},
+		{Slug: "bad-step", Name: "x", Parts: damage, Scaling: []effects.Scaling{{Part: 0, Field: "dice", Axis: effects.CharacterLevel, Rule: effects.Table{Steps: []effects.Step{{At: 30, Value: effects.Value{Text: "1d6"}}}}}}},
+		{Slug: "bad-formula", Name: "x", Scaling: []effects.Scaling{{Part: effects.OnActivation, Field: "duration", Axis: effects.SlotLevel, Rule: effects.Formula{Expr: "level; drop"}}}},
+		{Slug: "bad-axis", Name: "x", Scaling: []effects.Scaling{{Part: effects.OnActivation, Field: "duration", Axis: "phase_of_moon", Rule: effects.Linear{Base: 1, Per: effects.Value{Number: 1}}}}},
+		{Slug: "bad-column", Name: "x", Parts: damage, Scaling: []effects.Scaling{{Part: 0, Field: "dice", Axis: effects.SlotLevel, Rule: effects.Column{Name: "Sneak Attack"}}}},
+		{Slug: "bad-field", Name: "x", Parts: damage, Scaling: []effects.Scaling{{Part: 0, Field: "colour", Axis: effects.SlotLevel, Rule: effects.Linear{Base: 1, Per: effects.Value{Text: "1d6"}}}}},
+		{Slug: "bad-formula-field", Name: "x", Parts: damage, Scaling: []effects.Scaling{{Part: 0, Field: "colour", Axis: effects.SlotLevel, Rule: effects.Formula{Expr: "level"}}}},
+		{Slug: "bad-part", Name: "x", Parts: damage, Scaling: []effects.Scaling{{Part: 4, Field: "dice", Axis: effects.SlotLevel, Rule: effects.Linear{Base: 1, Per: effects.Value{Text: "1d6"}}}}},
 		{Slug: "bad-branch", Name: "x", Parts: []effects.Part{effects.Branch{When: effects.Condition{Kind: "full_moon"}}}},
 		{Slug: "bad-reveal", Name: "x", Parts: []effects.Part{effects.Reveal{Qualities: []string{"shiny"}}}},
 		{Slug: "bad-mode", Name: "x", Parts: []effects.Part{effects.Choice{Modes: []effects.Group{{Name: ""}}}}},

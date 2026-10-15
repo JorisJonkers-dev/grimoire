@@ -23,17 +23,19 @@ const DefaultSpellDC = 13
 type areaPlan struct {
 	caster  domain.Token
 	slug    string
+	slot    int
 	spell   effects.AreaSpell
 	hexes   []hex.Coord
 	targets []domain.Token
 }
 
-// aimArea checks an area spell a member asks for: in combat, on the caster's turn with its action left,
-// its point within range, and every creature standing in its hexes, friend or foe.
-func (r *runtime) aimArea(m domain.Member, cmd Command) (areaPlan, string) {
+// aimArea checks an area spell a member asks for, its Scaling applied at the slot it is cast with: in
+// combat, on the caster's turn with its action left, its point within range, and every creature standing
+// in its hexes, friend or foe.
+func (r *runtime) aimArea(m domain.Member, cmd Command, slot int) (areaPlan, string) {
 	id, _ := uuid.Parse(cmd.TokenID)
 	caster, ok := r.st.tokens[domain.TokenID(id)]
-	spell, known := r.st.catalog.AreaOf(strings.ToLower(strings.TrimSpace(cmd.Effect)))
+	spell, known := r.st.catalog.AreaAt(strings.ToLower(strings.TrimSpace(cmd.Effect)), effects.Level{Slot: slot})
 	switch {
 	case !ok || caster.Stats == nil || (!m.DM && !r.st.shows(caster, r.st.vision())):
 		return areaPlan{}, "No such caster."
@@ -70,7 +72,7 @@ func (r *runtime) aimArea(m domain.Member, cmd Command) (areaPlan, string) {
 	case spell.Area.Shape == hex.WallArea:
 		aim = hex.Coord{Q: 2*point.Q - from.Q, R: 2*point.R - from.R}
 	}
-	p := areaPlan{caster: caster, slug: strings.ToLower(strings.TrimSpace(cmd.Effect)), spell: spell}
+	p := areaPlan{caster: caster, slug: strings.ToLower(strings.TrimSpace(cmd.Effect)), slot: slot, spell: spell}
 	p.hexes = slices.DeleteFunc(hex.Area(spell.Area.Shape, origin, aim, spell.Area.SizeFt), func(c hex.Coord) bool { return !r.st.onBoard(c) })
 	for _, t := range r.st.tokens {
 		if standing(t) && slices.Contains(p.hexes, hex.Coord{Q: t.Q, R: t.R}) {
@@ -81,19 +83,24 @@ func (r *runtime) aimArea(m domain.Member, cmd Command) (areaPlan, string) {
 	return p, ""
 }
 
-// upcast scales an area spell's damage to the slot it is cast with: no lower than the spell's own
-// level, no higher than 9.
-func (p *areaPlan) upcast(cat effects.Catalog, slot int) string {
-	def, _ := cat.Lookup(p.slug)
-	sc := def.Scaling
-	if slot == 0 || sc == nil || sc.Axis != effects.SlotLevel {
-		return ""
+// slotOf is the slot an area spell is cast with, or why it is refused: no lower than its slot Scaling
+// starts from and no higher than 9. A spell that does not scale by slot, or a slot left out, casts as written.
+func (s *state) slotOf(cmd Command) (int, string) {
+	def, _ := s.catalog.Lookup(strings.ToLower(strings.TrimSpace(cmd.Effect)))
+	lowest, scales := def.LowestSlot()
+	switch {
+	case cmd.Slot == 0 || !scales:
+		return 0, ""
+	case cmd.Slot < lowest || cmd.Slot > 9:
+		return 0, fmt.Sprintf("Cast %s with a slot of level %d to 9.", def.Name, lowest)
 	}
-	if slot < sc.Base || slot > 9 {
-		return fmt.Sprintf("Cast %s with a slot of level %d to 9.", p.spell.Name, sc.Base)
-	}
-	p.spell.Damage.Dice = sc.Apply(p.spell.Damage.Dice, effects.Level{Slot: slot})
-	return ""
+	return cmd.Slot, ""
+}
+
+// castAt is an area spell's Effect as it was cast, at its slot.
+func (s *state) castAt(slug string, slot int) effects.Definition {
+	def, _ := s.catalog.Lookup(slug)
+	return def.At(effects.Level{Slot: slot})
 }
 
 func spellDC(t domain.Token) int {
@@ -103,11 +110,12 @@ func spellDC(t domain.Token) int {
 	return DefaultSpellDC
 }
 
-// aimCast aims an area spell and scales it to the slot it is cast with.
+// aimCast aims an area spell at the slot it is cast with.
 func (r *runtime) aimCast(m domain.Member, cmd Command) (areaPlan, string) {
-	p, reason := r.aimArea(m, cmd)
+	slot, refused := r.st.slotOf(cmd)
+	p, reason := r.aimArea(m, cmd, slot)
 	if reason == "" {
-		reason = p.upcast(r.st.catalog, cmd.Slot)
+		reason = refused
 	}
 	return p, reason
 }
@@ -119,7 +127,7 @@ func (r *runtime) previewArea(req request) {
 		return
 	}
 	out := &AreaPreview{TokenID: req.cmd.TokenID, Effect: p.slug, Name: p.spell.Name, DC: spellDC(p.caster), Hexes: wireHexes(p.hexes), Targets: []AreaTarget{}}
-	if def, _ := r.st.catalog.Lookup(p.slug); def.Concentration {
+	if r.st.castAt(p.slug, p.slot).Concentration {
 		for _, e := range r.st.held(p.caster.ID) {
 			out.Ends = append(out.Ends, e.Name)
 		}
@@ -148,7 +156,7 @@ func (r *runtime) planCast(m domain.Member, cmd Command) (Write, string) {
 		return Write{}, reason
 	}
 	x, _ := r.st.combatantOf(p.caster.ID)
-	cast := &domain.AreaCast{ID: uuid.New(), Caster: p.caster.ID, Spell: p.slug, DC: spellDC(p.caster), Hexes: p.hexes}
+	cast := &domain.AreaCast{ID: uuid.New(), Caster: p.caster.ID, Spell: p.slug, DC: spellDC(p.caster), Slot: p.slot, Hexes: p.hexes}
 	w := Write{Kind: domain.ActionAreaCast, Token: p.caster, Combatant: x.ID, cast: cast}
 	if dmg := p.spell.Damage; dmg.Dice != "" {
 		roll := r.request(m, p.caster, p.spell.Name+" damage", dmg.Dice)
@@ -193,7 +201,7 @@ func (r *runtime) areaRolled() {
 	if !ok {
 		return
 	}
-	spell, _ := r.st.catalog.AreaOf(c.Spell)
+	spell, _ := r.st.catalog.AreaAt(c.Spell, effects.Level{Slot: c.Slot})
 	sys := caller.Caller{Subject: actor.Subject, Origin: caller.OriginSystem, Client: ""}
 	caster := r.st.tokens[c.Caster]
 	failed, hits := r.st.outcomes(&c, spell, totals)
@@ -208,7 +216,7 @@ func (r *runtime) areaRolled() {
 			r.commit(request{}, Write{Kind: domain.ActionTokenMoved, Token: *moved, forced: true}, actor, sys)
 		}
 	}
-	if w := r.st.sustained(r.st.tokens[caster.ID], c.Spell); w != nil {
+	if w := r.st.sustained(r.st.tokens[caster.ID], c.Spell, r.st.castAt(c.Spell, c.Slot)); w != nil {
 		r.commit(request{}, *w, actor, sys)
 	}
 	for _, e := range extra {
@@ -287,7 +295,7 @@ func (s *state) outcomes(c *domain.AreaCast, spell effects.AreaSpell, totals map
 // branched works out what an area spell's branches add for each target as the save came out and the
 // target's hit points stood before the damage: conditions to put on, and parts the DM resolves.
 func (s *state) branched(c *domain.AreaCast, totals map[domain.RollID]int) ([]domain.Effect, []domain.ManualPrompt) {
-	def, _ := s.catalog.Lookup(c.Spell)
+	def := s.castAt(c.Spell, c.Slot)
 	var fx []domain.Effect
 	var out []domain.ManualPrompt
 	for _, target := range c.Targets {

@@ -65013,9 +65013,17 @@ func (s *PartField) encodeFields(e *jx.Encoder) {
 		e.FieldStart("max")
 		e.Int32(s.Max)
 	}
+	{
+		e.FieldStart("scalable")
+		e.Bool(s.Scalable)
+	}
+	{
+		e.FieldStart("formula")
+		e.Bool(s.Formula)
+	}
 }
 
-var jsonFieldsNameOfPartField = [7]string{
+var jsonFieldsNameOfPartField = [9]string{
 	0: "name",
 	1: "label",
 	2: "type",
@@ -65023,6 +65031,8 @@ var jsonFieldsNameOfPartField = [7]string{
 	4: "required",
 	5: "min",
 	6: "max",
+	7: "scalable",
+	8: "formula",
 }
 
 // Decode decodes PartField from json.
@@ -65030,7 +65040,7 @@ func (s *PartField) Decode(d *jx.Decoder) error {
 	if s == nil {
 		return errors.New("invalid: unable to decode PartField to nil")
 	}
-	var requiredBitSet [1]uint8
+	var requiredBitSet [2]uint8
 
 	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
 		switch string(k) {
@@ -65124,6 +65134,30 @@ func (s *PartField) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"max\"")
 			}
+		case "scalable":
+			requiredBitSet[0] |= 1 << 7
+			if err := func() error {
+				v, err := d.Bool()
+				s.Scalable = bool(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"scalable\"")
+			}
+		case "formula":
+			requiredBitSet[1] |= 1 << 0
+			if err := func() error {
+				v, err := d.Bool()
+				s.Formula = bool(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"formula\"")
+			}
 		default:
 			return errors.Errorf("unexpected field %q", k)
 		}
@@ -65133,8 +65167,9 @@ func (s *PartField) Decode(d *jx.Decoder) error {
 	}
 	// Validate required fields.
 	var failures []validate.FieldError
-	for i, mask := range [1]uint8{
-		0b01111111,
+	for i, mask := range [2]uint8{
+		0b11111111,
+		0b00000001,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.

@@ -235,7 +235,7 @@ DELETE FROM play.surfaces WHERE session_id = $1;
 INSERT INTO play.surfaces (session_id, q, r, kind, rounds_left) VALUES (@session_id, @q, @r, @kind, sqlc.narg(rounds_left));
 
 -- name: SessionCast :one
-SELECT id, caster_token_id, spell, dc, damage_roll_id FROM play.area_casts WHERE session_id = $1;
+SELECT id, caster_token_id, spell, dc, damage_roll_id, slot_level FROM play.area_casts WHERE session_id = $1;
 
 -- name: CastHexes :many
 SELECT q, r FROM play.area_hexes WHERE cast_id = $1 ORDER BY q, r;
@@ -247,8 +247,8 @@ SELECT token_id, save_roll_id FROM play.area_targets WHERE cast_id = $1 ORDER BY
 DELETE FROM play.area_casts WHERE session_id = $1;
 
 -- name: InsertCast :exec
-INSERT INTO play.area_casts (id, session_id, caster_token_id, spell, dc, damage_roll_id)
-VALUES (@id, @session_id, @caster_token_id, @spell, @dc, sqlc.narg(damage_roll_id));
+INSERT INTO play.area_casts (id, session_id, caster_token_id, spell, dc, damage_roll_id, slot_level)
+VALUES (@id, @session_id, @caster_token_id, @spell, @dc, sqlc.narg(damage_roll_id), sqlc.narg(slot_level));
 
 -- name: InsertCastHex :exec
 INSERT INTO play.area_hexes (cast_id, q, r) VALUES (@cast_id, @q, @r);

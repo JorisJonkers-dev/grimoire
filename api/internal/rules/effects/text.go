@@ -15,8 +15,9 @@ func (d Definition) Text() []string {
 	if d.Duration.RepeatSave != "" {
 		out = append(out, "The target repeats the "+title(d.Duration.RepeatSave)+" saving throw at the end of each of its turns, ending the effect on a success.")
 	}
-	if d.Scaling != nil {
-		out = append(out, d.Scaling.Text())
+	for _, s := range d.Scaling {
+		f, _ := d.Scaled(s)
+		out = append(out, s.Text(f))
 	}
 	return out
 }
@@ -43,28 +44,6 @@ func (d Duration) Text(concentration bool) string {
 		return "Duration: Concentration, up to " + length + "."
 	}
 	return "Duration: " + length + "."
-}
-
-// Text writes a Scaling as a rules line.
-func (s Scaling) Text() string {
-	switch s.Axis {
-	case SlotLevel:
-		return "Using a Higher-Level Spell Slot: the damage increases by " + s.Dice + " for each slot level above " + strconv.Itoa(s.Base) + "."
-	case CharacterLevel:
-		return "Cantrip Upgrade: the damage becomes " + steps(s.Steps, "level") + "."
-	case ClassLevel:
-		return "The damage becomes " + steps(s.Steps, title(s.Class)+" level") + "."
-	case TableColumn:
-	}
-	return "The damage equals the " + s.Column + " column of the " + title(s.Class) + " table."
-}
-
-func steps(st []Step, at string) string {
-	out := make([]string, 0, len(st))
-	for _, s := range st {
-		out = append(out, s.Dice+" at "+at+" "+strconv.Itoa(s.At))
-	}
-	return strings.Join(out, ", ")
 }
 
 func plural(n int, unit string) string {

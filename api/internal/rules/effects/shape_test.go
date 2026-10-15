@@ -162,57 +162,12 @@ func TestDurations(t *testing.T) {
 	}
 }
 
-func TestScaling(t *testing.T) {
-	t.Parallel()
-	fireball := effects.Scaling{Axis: effects.SlotLevel, Base: 3, Dice: "1d6"}
-	for slot, want := range map[int]string{0: "8d6", 3: "8d6", 4: "9d6", 5: "10d6"} {
-		if got := fireball.Apply("8d6", effects.Level{Slot: slot}); got != want {
-			t.Errorf("fireball at slot %d = %s", slot, got)
-		}
-	}
-	if got := (effects.Scaling{Axis: effects.SlotLevel, Base: 1, Dice: "1d8"}).Apply("2d6", effects.Level{Slot: 2}); got != "2d6+1d8" {
-		t.Errorf("unlike dice = %s", got)
-	}
-	for _, bad := range []string{"x", "2d6", "ad6", "2d6+1"} {
-		if got := (effects.Scaling{Axis: effects.SlotLevel, Base: 1, Dice: bad}).Apply("bd6", effects.Level{Slot: 2}); got != "bd6+"+bad {
-			t.Errorf("odd dice %q = %s", bad, got)
-		}
-	}
-	cantrip := effects.Scaling{Axis: effects.CharacterLevel, Steps: []effects.Step{{At: 5, Dice: "2d10"}, {At: 11, Dice: "3d10"}, {At: 17, Dice: "4d10"}}}
-	for level, want := range map[int]string{1: "1d10", 4: "1d10", 5: "2d10", 10: "2d10", 11: "3d10", 17: "4d10", 20: "4d10"} {
-		if got := cantrip.Apply("1d10", effects.Level{Character: level}); got != want {
-			t.Errorf("cantrip at %d = %s", level, got)
-		}
-	}
-	aura := effects.Scaling{Axis: effects.ClassLevel, Class: "paladin", Steps: []effects.Step{{At: 18, Dice: "2d8"}}}
-	if aura.Apply("1d8", effects.Level{Character: 20, Classes: map[string]int{"paladin": 17}}) != "1d8" || aura.Apply("1d8", effects.Level{Classes: map[string]int{"paladin": 18}}) != "2d8" {
-		t.Error("class levels count only that class")
-	}
-	sneak := effects.Scaling{Axis: effects.TableColumn, Class: "rogue", Column: "Sneak Attack"}
-	if sneak.Apply("1d6", effects.Level{Columns: map[string]string{"Sneak Attack": "3d6"}}) != "3d6" || sneak.Apply("1d6", effects.Level{}) != "1d6" {
-		t.Error("a table column replaces the dice when it has a value")
-	}
-	if (effects.Scaling{Axis: "phase_of_moon", Dice: "1d6", Base: 0}).Apply("1d4", effects.Level{Slot: 9}) != "1d4" {
-		t.Error("an unknown axis scales nothing")
-	}
-	for s, want := range map[*effects.Scaling]string{
-		&fireball: "Using a Higher-Level Spell Slot: the damage increases by 1d6 for each slot level above 3.",
-		&cantrip:  "Cantrip Upgrade: the damage becomes 2d10 at level 5, 3d10 at level 11, 4d10 at level 17.",
-		&aura:     "The damage becomes 2d8 at Paladin level 18.",
-		&sneak:    "The damage equals the Sneak Attack column of the Rogue table.",
-	} {
-		if got := s.Text(); got != want {
-			t.Errorf("scaling reads %q", got)
-		}
-	}
-}
-
 // Rules text reads every Part, the duration, the repeat save and the scaling.
 func TestRulesText(t *testing.T) {
 	t.Parallel()
 	every := effects.Definition{
 		Concentration: true, Duration: effects.Duration{Kind: effects.Minutes, Amount: 1, RepeatSave: "wisdom"},
-		Scaling: &effects.Scaling{Axis: effects.SlotLevel, Base: 2, Dice: "1d8"},
+		Scaling: []effects.Scaling{{Part: 10, Field: "dice", Axis: effects.SlotLevel, Class: "", Rule: effects.Linear{Base: 2, Per: effects.Value{Text: "1d8"}}}},
 		Parts: []effects.Part{
 			effects.BonusDie{On: []effects.Roll{effects.AttackRolls, effects.SavingThrows}, Dice: "1d4"},
 			effects.Edge{Against: false, Advantage: true},

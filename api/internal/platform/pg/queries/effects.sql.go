@@ -20,15 +20,6 @@ func (q *Queries) ClearEffectParts(ctx context.Context, effectID int64) error {
 	return err
 }
 
-const clearEffectScaling = `-- name: ClearEffectScaling :exec
-DELETE FROM compendium.effect_scalings WHERE effect_id = $1
-`
-
-func (q *Queries) ClearEffectScaling(ctx context.Context, effectID int64) error {
-	_, err := q.db.Exec(ctx, clearEffectScaling, effectID)
-	return err
-}
-
 const clearSurfaceReactions = `-- name: ClearSurfaceReactions :exec
 DELETE FROM compendium.surface_reactions WHERE surface = $1
 `
@@ -59,47 +50,6 @@ func (q *Queries) InsertEffectPart(ctx context.Context, arg InsertEffectPartPara
 		arg.Parent,
 		arg.GroupName,
 	)
-	return err
-}
-
-const insertEffectScaling = `-- name: InsertEffectScaling :exec
-INSERT INTO compendium.effect_scalings (effect_id, axis, class_slug, column_name, base_level, dice)
-VALUES ($1, $2, $3, $4, $5, $6)
-`
-
-type InsertEffectScalingParams struct {
-	EffectID   int64
-	Axis       string
-	ClassSlug  string
-	ColumnName string
-	BaseLevel  int32
-	Dice       string
-}
-
-func (q *Queries) InsertEffectScaling(ctx context.Context, arg InsertEffectScalingParams) error {
-	_, err := q.db.Exec(ctx, insertEffectScaling,
-		arg.EffectID,
-		arg.Axis,
-		arg.ClassSlug,
-		arg.ColumnName,
-		arg.BaseLevel,
-		arg.Dice,
-	)
-	return err
-}
-
-const insertEffectScalingStep = `-- name: InsertEffectScalingStep :exec
-INSERT INTO compendium.effect_scaling_steps (effect_id, at_level, dice) VALUES ($1, $2, $3)
-`
-
-type InsertEffectScalingStepParams struct {
-	EffectID int64
-	AtLevel  int32
-	Dice     string
-}
-
-func (q *Queries) InsertEffectScalingStep(ctx context.Context, arg InsertEffectScalingStepParams) error {
-	_, err := q.db.Exec(ctx, insertEffectScalingStep, arg.EffectID, arg.AtLevel, arg.Dice)
 	return err
 }
 
@@ -211,61 +161,6 @@ func (q *Queries) ListEffectPartsOfKind(ctx context.Context, kind string) ([]Lis
 	for rows.Next() {
 		var i ListEffectPartsOfKindRow
 		if err := rows.Scan(&i.EffectID, &i.Ordinal); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listEffectScalingSteps = `-- name: ListEffectScalingSteps :many
-SELECT effect_id, at_level, dice FROM compendium.effect_scaling_steps ORDER BY effect_id, at_level
-`
-
-func (q *Queries) ListEffectScalingSteps(ctx context.Context) ([]CompendiumEffectScalingStep, error) {
-	rows, err := q.db.Query(ctx, listEffectScalingSteps)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []CompendiumEffectScalingStep{}
-	for rows.Next() {
-		var i CompendiumEffectScalingStep
-		if err := rows.Scan(&i.EffectID, &i.AtLevel, &i.Dice); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listEffectScalings = `-- name: ListEffectScalings :many
-SELECT effect_id, axis, class_slug, column_name, base_level, dice FROM compendium.effect_scalings
-`
-
-func (q *Queries) ListEffectScalings(ctx context.Context) ([]CompendiumEffectScaling, error) {
-	rows, err := q.db.Query(ctx, listEffectScalings)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []CompendiumEffectScaling{}
-	for rows.Next() {
-		var i CompendiumEffectScaling
-		if err := rows.Scan(
-			&i.EffectID,
-			&i.Axis,
-			&i.ClassSlug,
-			&i.ColumnName,
-			&i.BaseLevel,
-			&i.Dice,
-		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

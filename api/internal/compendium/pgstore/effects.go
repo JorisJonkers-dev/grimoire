@@ -39,24 +39,7 @@ func saveEffect(ctx context.Context, q *queries.Queries, owner effects.Owner, d 
 	if err := saveParts(ctx, q, id, &next, pgtype.Int4{}, pgtype.Text{}, d.Parts); err != nil {
 		return err
 	}
-	return saveScaling(ctx, q, id, d.Scaling)
-}
-
-//nolint:gosec // levels are bounded by checks
-func saveScaling(ctx context.Context, q *queries.Queries, id int64, sc *effects.Scaling) error {
-	if err := q.ClearEffectScaling(ctx, id); err != nil || sc == nil {
-		return err
-	}
-	p := queries.InsertEffectScalingParams{EffectID: id, Axis: string(sc.Axis), ClassSlug: sc.Class, ColumnName: sc.Column, BaseLevel: int32(sc.Base), Dice: sc.Dice}
-	if err := q.InsertEffectScaling(ctx, p); err != nil {
-		return err
-	}
-	for _, st := range sc.Steps {
-		if err := q.InsertEffectScalingStep(ctx, queries.InsertEffectScalingStepParams{EffectID: id, AtLevel: int32(st.At), Dice: st.Dice}); err != nil {
-			return err
-		}
-	}
-	return nil
+	return saveScaling(ctx, q, id, d)
 }
 
 // saveParts writes Parts depth first, numbering every one in the Effect; the Parts beneath a
@@ -196,27 +179,4 @@ func nested(kind string, p effects.Part, groups []effects.Group) effects.Part {
 		return h.nest(p, groups)
 	}
 	return p
-}
-
-// scalings reads every Effect's Scaling with its steps.
-func (s *Store) scalings(ctx context.Context) (map[int64]*effects.Scaling, error) {
-	rows, err := s.q.ListEffectScalings(ctx)
-	if err != nil {
-		return nil, err
-	}
-	steps, err := s.q.ListEffectScalingSteps(ctx)
-	if err != nil {
-		return nil, err
-	}
-	out := map[int64]*effects.Scaling{}
-	for _, r := range rows {
-		sc := &effects.Scaling{Axis: effects.Axis(r.Axis), Class: r.ClassSlug, Column: r.ColumnName, Base: int(r.BaseLevel), Dice: r.Dice}
-		for _, st := range steps {
-			if st.EffectID == r.EffectID {
-				sc.Steps = append(sc.Steps, effects.Step{At: int(st.AtLevel), Dice: st.Dice})
-			}
-		}
-		out[r.EffectID] = sc
-	}
-	return out, nil
 }

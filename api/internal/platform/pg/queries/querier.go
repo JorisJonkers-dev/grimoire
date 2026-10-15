@@ -147,7 +147,7 @@ type Querier interface {
 	ClearClassSpells(ctx context.Context, arg ClearClassSpellsParams) error
 	ClearContainerCoins(ctx context.Context, containerID uuid.UUID) error
 	ClearEffectParts(ctx context.Context, effectID int64) error
-	ClearEffectScaling(ctx context.Context, effectID int64) error
+	ClearEffectScalingRules(ctx context.Context, effectID int64) error
 	ClearEffects(ctx context.Context, sessionID uuid.UUID) error
 	ClearElevation(ctx context.Context, arg ClearElevationParams) error
 	ClearExploration(ctx context.Context, sessionID uuid.UUID) error
@@ -364,8 +364,8 @@ type Querier interface {
 	InsertEffectSaveCondition(ctx context.Context, arg InsertEffectSaveConditionParams) error
 	InsertEffectSaveDamage(ctx context.Context, arg InsertEffectSaveDamageParams) error
 	InsertEffectSaveEdge(ctx context.Context, arg InsertEffectSaveEdgeParams) error
-	InsertEffectScaling(ctx context.Context, arg InsertEffectScalingParams) error
-	InsertEffectScalingStep(ctx context.Context, arg InsertEffectScalingStepParams) error
+	InsertEffectScalingRule(ctx context.Context, arg InsertEffectScalingRuleParams) error
+	InsertEffectScalingRuleStep(ctx context.Context, arg InsertEffectScalingRuleStepParams) error
 	InsertEffectSpeedPenalty(ctx context.Context, arg InsertEffectSpeedPenaltyParams) error
 	InsertEffectSummon(ctx context.Context, arg InsertEffectSummonParams) error
 	InsertEffectSurface(ctx context.Context, arg InsertEffectSurfaceParams) error
@@ -520,8 +520,8 @@ type Querier interface {
 	ListEffectSaveConditions(ctx context.Context) ([]ListEffectSaveConditionsRow, error)
 	ListEffectSaveDamage(ctx context.Context) ([]ListEffectSaveDamageRow, error)
 	ListEffectSaveEdges(ctx context.Context) ([]ListEffectSaveEdgesRow, error)
-	ListEffectScalingSteps(ctx context.Context) ([]CompendiumEffectScalingStep, error)
-	ListEffectScalings(ctx context.Context) ([]CompendiumEffectScaling, error)
+	ListEffectScalingRuleSteps(ctx context.Context) ([]CompendiumEffectScalingRuleStep, error)
+	ListEffectScalingRules(ctx context.Context) ([]CompendiumEffectScalingRule, error)
 	ListEffectSpeedPenalties(ctx context.Context) ([]ListEffectSpeedPenaltiesRow, error)
 	ListEffectSummons(ctx context.Context) ([]ListEffectSummonsRow, error)
 	ListEffectSurfaces(ctx context.Context) ([]ListEffectSurfacesRow, error)
