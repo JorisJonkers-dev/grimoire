@@ -60,3 +60,38 @@ test('an author builds the Marsh Lantern in the Effect builder, previews its are
   await page.reload()
   await expect(page.getByTestId('rules-text')).toContainText('Bright light fills 20 feet')
 })
+
+test('an author scales a spell with the slot: its area and its damage', async ({ page }, info) => {
+  const name = `Ember Burst ${info.project.name} ${String(Date.now())}`
+  await page.goto('/library')
+  await page.getByTestId('library-kind').selectOption('spell')
+  await page.getByTestId('library-name').fill(name)
+  await page.getByTestId('library-add').click()
+  await page.getByTestId('open-builder').click()
+  await expect(page.getByTestId('builder-form')).toBeVisible()
+
+  await page.getByTestId('save').selectOption('dexterity')
+  await page.getByTestId('scaling-add-field').selectOption('size_ft')
+  await page.getByTestId('scaling-add').click()
+  await page.getByTestId('scaling-0-base').fill('3')
+  await page.getByTestId('scaling-0-per').fill('5')
+  await page.getByTestId('parts-kind').selectOption('save_damage')
+  await page.getByTestId('parts-add').click()
+  await page.getByTestId('parts-0-dice').fill('8d6')
+  await page.getByTestId('parts-0-damage_type').selectOption('fire')
+  await page.getByTestId('parts-0-scaling-add').click()
+  await page.getByTestId('parts-0-scaling-0-base').fill('3')
+
+  await page.getByTestId('preview').click()
+  const text = page.getByTestId('rules-text')
+  await expect(text).toContainText('Using a Higher-Level Spell Slot: the size in feet increases by 5 for each slot level above 3.')
+  await expect(text).toContainText('Using a Higher-Level Spell Slot: the damage increases by 1d6 for each slot level above 3.')
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+  expect(await violations(page)).toEqual([])
+
+  await page.getByTestId('save-spell').click()
+  await expect(page.getByTestId('builder-status')).toHaveText('Saved as Revision 2.')
+  await page.reload()
+  await expect(page.getByTestId('parts-0-scaling-0-base')).toHaveValue('3')
+  await expect(page.getByTestId('rules-text')).toContainText('the damage increases by 1d6 for each slot level above 3')
+})

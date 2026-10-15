@@ -187,6 +187,9 @@ func TestConditionDesignsThatDoNotBuild(t *testing.T) {
 		"part 3: ability: choose one of the options":    func(d *conditionbuild.Design) { d.Parts[2].Values = effects.Values{"mode": {Text: "fail"}} },
 		"part 10: ft: runs from 0 to 120":               func(d *conditionbuild.Design) { d.Parts[9].Values = effects.Values{"ft": {Number: 125}} },
 		"part 12: instruction: write up to 500 letters": func(d *conditionbuild.Design) { d.Parts[11].Values = nil },
+		"a condition does not scale": func(d *conditionbuild.Design) {
+			d.Parts[9].Scaling = []effects.AuthoredScaling{{Field: "ft", Axis: "slot_level", Rule: "linear", Base: 1, Per: &effects.Value{Number: 5}}}
+		},
 		"part 9: groups: Speed 0 holds no group named then": func(d *conditionbuild.Design) {
 			d.Parts[8].Groups = []effects.AuthoredGroup{{Name: "then", Parts: nil}}
 		},

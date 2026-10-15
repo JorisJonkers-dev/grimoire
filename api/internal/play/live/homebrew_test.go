@@ -137,3 +137,60 @@ func charmedIf(creature string) effects.Authored {
 		Groups: []effects.AuthoredGroup{{Name: "then", Parts: []effects.Authored{failed}}},
 	}
 }
+
+// A homebrew spell's Scaling, on its area and on its damage, applies at the slot it is cast with.
+func TestAHomebrewSpellScalesWithItsSlot(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	w := setup(t)
+	lib := &libraryapp.Service{
+		Repo: librarypg.New(w.pool), Members: pgstore.CampaignMembers{Store: campaignpg.New(w.pool)}, Now: time.Now,
+		Surfaces: pgstore.New(w.pool).SurfaceKinds,
+	}
+	entry, err := lib.Create(ctx, dmCaller, librarydomain.Draft{Kind: "spell", Name: "Ember Burst"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	damage := effects.Authored{
+		Kind: "save_damage", Values: effects.Values{"dice": {Text: "1d6"}, "damage_type": {Text: "fire"}, "half": {Flag: true}},
+		Scaling: []effects.AuthoredScaling{{Field: "dice", Axis: "slot_level", Rule: "linear", Base: 1, Per: &effects.Value{Text: "1d6"}}},
+	}
+	design := spellbuild.Design{
+		Targeting: spellbuild.Targeting{Shape: "sphere", SizeFt: 5, RangeFt: 60}, Save: "dexterity", Duration: spellbuild.Duration{Unit: "instant"},
+		CastingTime: spellbuild.CastingTime{Kind: "action"}, Components: spellbuild.Components{Verbal: true},
+		Scaling: []effects.AuthoredScaling{{Field: "size_ft", Axis: "slot_level", Rule: "linear", Base: 1, Per: &effects.Value{Number: 5}}},
+		Parts:   []effects.Authored{damage},
+	}
+	if _, err := lib.SaveSpell(ctx, dmCaller, entry.ID, design); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := lib.Link(ctx, dmCaller, w.session.CampaignID, entry.ID); err != nil {
+		t.Fatal(err)
+	}
+	w.hub.Stats = bestiary{owner: w.player.ID}
+	rolls := &app.Rolls{
+		Repo: pgstore.New(w.pool), Members: pgstore.CampaignMembers{Store: campaignpg.New(w.pool)}, Seed: func() uint64 { return 7 },
+		Source: func(seed uint64) dice.Source { return rng.New(seed) }, Now: time.Now, Resolved: w.hub.RollResolved,
+	}
+	tb := &table{t: t, w: w, rolls: rolls, dm: join(t, w, w.dm, dmCaller, live.AudienceDM), player: join(t, w, w.player, playerCaller, live.AudienceParty)}
+	tb.dmSays(live.Command{Kind: live.CmdPlace, CharacterID: uuid.NewString()})
+	tb.dmSays(live.Command{Kind: live.CmdPlace, MonsterSlug: "goblin", TokenKind: domain.TokenEnemy, Q: 3})
+	ids := map[string]string{}
+	for _, tv := range look(t, w, tb.dm).Tokens {
+		ids[tv.Label] = tv.ID
+	}
+	tb.fight(ids, "Aria", "Goblin")
+	cast := live.Command{Kind: live.CmdPreviewArea, TokenID: ids["Aria"], Effect: spellbuild.Slug(entry.ID.String()), Q: 1, Slot: 1}
+	if a := tb.playerSays(cast).Area; a == nil || len(a.Hexes) != 7 {
+		t.Fatalf("at slot 1 = %+v", a)
+	}
+	cast.Kind, cast.Slot = live.CmdCastArea, 3
+	u := tb.playerSays(cast)
+	if u.View == nil || u.View.Area == nil || len(u.View.Area.Hexes) != 37 || len(u.View.Area.Saves) != 2 {
+		t.Fatalf("at slot 3 = %+v", u)
+	}
+	roll, err := pgstore.New(w.pool).Roll(ctx, w.session.CampaignID, domain.RollID(uuid.MustParse(u.View.Area.DamageRollID)))
+	if err != nil || roll.Notation != "3d6" {
+		t.Fatalf("damage at slot 3 = %q %v", roll.Notation, err)
+	}
+}

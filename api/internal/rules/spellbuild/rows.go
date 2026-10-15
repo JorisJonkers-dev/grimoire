@@ -97,7 +97,7 @@ func conditionRow(r row) []effects.Authored {
 }
 
 func authored(kind string, v effects.Values, groups ...effects.AuthoredGroup) effects.Authored {
-	return effects.Authored{Kind: kind, Values: v, Groups: groups}
+	return effects.Authored{Kind: kind, Values: v, Groups: groups, Scaling: nil}
 }
 
 func text(s string) effects.Value { return effects.Value{Text: s, Number: 0, Flag: false, Texts: nil} }

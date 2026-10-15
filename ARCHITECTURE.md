@@ -659,8 +659,14 @@ field its kind allows; it runs no code) or `Column` (the class table's value). `
 applies every rule in order and returns the Effect as activated; play calls it before it aims, so the
 area and the number of targets are known when targets are picked (`Catalog.AreaAt`). An area cast keeps
 its slot (`play.area_casts.slot_level`) and resolves at it. `listPartKinds` serves each field's
-`scalable` and `formula`. Storage is `compendium.effect_scaling_rules` (one row per rule, its Part by
-ordinal or NULL for the Activation, typed per-columns for a linear rule) and
+`scalable` and `formula`. On the wire a Part carries its own `scaling` (`PartScaling`: field, axis,
+class, rule, and the rule's base and per, steps, formula or column), and a spell design carries the
+Scaling of its area and its Activation, whose fields the spell build serves as `activation`.
+`effects.DecodeScaling` checks a Part's rules against its kind (counting Parts from where the Effect's
+own begin, after the spell's area and save) and `DecodePlaced` the spell's own; a condition takes none.
+The builder draws its editor (`ScalingEditor`) from those served fields alone. Storage is
+`compendium.effect_scaling_rules` (one row per rule, its Part by ordinal or NULL for the Activation,
+typed per-columns for a linear rule) and
 `compendium.effect_scaling_rule_steps` (a table's steps, typed as the field they fill). The older
 `compendium.effect_scalings` (one dice-only Scaling per Effect) was copied in and is no longer read;
 it stays for binaries inside the rollback window.

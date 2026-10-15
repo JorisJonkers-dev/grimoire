@@ -30,6 +30,8 @@ type Design struct {
 	// TurnDamage hurts each creature that starts its turn in the area, through a Surface of the spell's own.
 	TurnDamage *TurnDamage        `json:"turnDamage,omitempty"`
 	Parts      []effects.Authored `json:"parts"`
+	// Scaling grows the spell's area or its Activation; a Part's own Scaling sits on the Part.
+	Scaling []effects.AuthoredScaling `json:"scaling,omitempty"`
 }
 
 // TurnDamage is damage a creature takes when it starts its turn in the spell's area.
@@ -128,7 +130,52 @@ func Build(slug, name string, d Design, surfaces []string) (Built, error) {
 	if err != nil {
 		return Built{}, err
 	}
-	return d.finish(slug, name, parts), nil
+	scaling, err := d.scaling()
+	if err != nil {
+		return Built{}, err
+	}
+	return d.finish(slug, name, parts, scaling), nil
+}
+
+// Activation is what a spell's own Scaling grows, with which of them may follow a formula: its area's
+// size and range, and the Activation's duration, its unit and concentration.
+func Activation() ([]effects.Field, []effects.Scalable) {
+	area := areaPlace()
+	return append(area.Fields, effects.ActivationFields()...), append(area.Scales, effects.ActivationScales()...)
+}
+
+// areaPlace is the spell's area as a place Scaling grows: its scalable fields, on the Effect's first Part.
+func areaPlace() effects.Place {
+	k, _ := effects.KindOf("area")
+	scales := effects.ScalesOf(k)
+	fields := slices.DeleteFunc(k.Describe().Fields, func(f effects.Field) bool {
+		return !slices.ContainsFunc(scales, func(s effects.Scalable) bool { return s.Field == f.Name })
+	})
+	return effects.Place{Part: 0, Fields: fields, Scales: scales}
+}
+
+// scaling decodes the spell's own Scaling, then each Part's, counting the Parts after the area and the
+// save it adds ahead of them.
+func (d Design) scaling() ([]effects.Scaling, error) {
+	own, err := effects.DecodePlaced(d.Scaling, []effects.Place{areaPlace(), effects.ActivationPlace()}, "the spell")
+	if err != nil {
+		return nil, DesignError(err.Error())
+	}
+	parts, err := effects.DecodeScaling(d.Parts, len(d.head()))
+	if err != nil {
+		return nil, DesignError(err.Error())
+	}
+	return append(own, parts...), nil
+}
+
+// head is what a spell puts ahead of its Parts: its area, and the save the targets make when no damage
+// names it.
+func (d Design) head() []effects.Part {
+	head := []effects.Part{effects.Area{Shape: hex.Shape(d.Targeting.Shape), SizeFt: d.Targeting.SizeFt, RangeFt: d.Targeting.RangeFt}}
+	if d.Save != "" && count(d.Parts, "save_damage") == 0 {
+		head = append(head, effects.AreaSave{Ability: d.Save})
+	}
+	return head
 }
 
 // check validates everything but the parts.
@@ -232,11 +279,8 @@ func (d Design) rounds() int {
 // finish puts the Effect together: the area first, the save the targets make when no damage names it,
 // then the Parts in order and the Surface its start-of-turn damage lies on; and the rules text with the
 // spell's metadata.
-func (d Design) finish(slug, name string, parts []effects.Part) Built {
-	head := []effects.Part{effects.Area{Shape: hex.Shape(d.Targeting.Shape), SizeFt: d.Targeting.SizeFt, RangeFt: d.Targeting.RangeFt}}
-	if d.Save != "" && count(d.Parts, "save_damage") == 0 {
-		head = append(head, effects.AreaSave{Ability: d.Save})
-	}
+func (d Design) finish(slug, name string, parts []effects.Part, scaling []effects.Scaling) Built {
+	head := d.head()
 	duration := effects.Duration{Kind: effects.DurationKind(d.Duration.Unit), Amount: d.Duration.Amount, RepeatSave: ""}
 	text := []string{castingText(d), componentsText(d.Components), areaText(d.Targeting), duration.Text(d.Concentration)}
 	for _, p := range parts {
@@ -249,8 +293,12 @@ func (d Design) finish(slug, name string, parts []effects.Part) Built {
 		text = append(text, "A creature that starts its turn in the area takes "+t.Dice+" "+t.DamageType+" damage.")
 	}
 	def := effects.Definition{
-		Slug: slug, Name: name, Owner: effects.OwnedBySpell, Concentration: d.Concentration, Duration: duration, Scaling: nil,
+		Slug: slug, Name: name, Owner: effects.OwnedBySpell, Concentration: d.Concentration, Duration: duration, Scaling: scaling,
 		Parts: append(head, parts...),
+	}
+	for _, s := range scaling {
+		f, _ := def.Scaled(s)
+		text = append(text, s.Text(f))
 	}
 	return Built{Definition: def, Surface: ground, Text: text}
 }

@@ -39138,6 +39138,52 @@ func (o OptOidcPending) Or(d OidcPending) OidcPending {
 	return d
 }
 
+// NewOptPartValue returns new OptPartValue with value set to v.
+func NewOptPartValue(v PartValue) OptPartValue {
+	return OptPartValue{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptPartValue is optional PartValue.
+type OptPartValue struct {
+	Value PartValue
+	Set   bool
+}
+
+// IsSet returns true if OptPartValue was set.
+func (o OptPartValue) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptPartValue) Reset() {
+	var v PartValue
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptPartValue) SetTo(v PartValue) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptPartValue) Get() (v PartValue, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptPartValue) Or(d PartValue) PartValue {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptProficiencies returns new OptProficiencies with value set to v.
 func NewOptProficiencies(v Proficiencies) OptProficiencies {
 	return OptProficiencies{
@@ -40223,6 +40269,8 @@ type Part struct {
 	Kind   string      `json:"kind"`
 	Values PartValues  `json:"values"`
 	Groups []PartGroup `json:"groups"`
+	// How the Part's scalable fields grow with the level its Effect is activated at.
+	Scaling []PartScaling `json:"scaling"`
 }
 
 // GetKind returns the value of Kind.
@@ -40240,6 +40288,11 @@ func (s *Part) GetGroups() []PartGroup {
 	return s.Groups
 }
 
+// GetScaling returns the value of Scaling.
+func (s *Part) GetScaling() []PartScaling {
+	return s.Scaling
+}
+
 // SetKind sets the value of Kind.
 func (s *Part) SetKind(val string) {
 	s.Kind = val
@@ -40253,6 +40306,11 @@ func (s *Part) SetValues(val PartValues) {
 // SetGroups sets the value of Groups.
 func (s *Part) SetGroups(val []PartGroup) {
 	s.Groups = val
+}
+
+// SetScaling sets the value of Scaling.
+func (s *Part) SetScaling(val []PartScaling) {
+	s.Scaling = val
 }
 
 // One value an author fills in for a Part. Min and max bound a number; max also bounds the length of a
@@ -40698,6 +40756,229 @@ func (s *PartNarrow) SetOptions(val []string) {
 	s.Options = val
 }
 
+// One Scaling rule over a scalable field: along an axis, by a linear rule (base and per), a table of
+// steps, a formula of the level, or a class table's column. Class names the class for a class level or
+// a class table.
+// Ref: #/components/schemas/PartScaling
+type PartScaling struct {
+	Field   string          `json:"field"`
+	Axis    PartScalingAxis `json:"axis"`
+	Class   OptString       `json:"class"`
+	Rule    PartScalingRule `json:"rule"`
+	Base    OptInt32        `json:"base"`
+	Per     OptPartValue    `json:"per"`
+	Steps   []PartStep      `json:"steps"`
+	Formula OptString       `json:"formula"`
+	Column  OptString       `json:"column"`
+}
+
+// GetField returns the value of Field.
+func (s *PartScaling) GetField() string {
+	return s.Field
+}
+
+// GetAxis returns the value of Axis.
+func (s *PartScaling) GetAxis() PartScalingAxis {
+	return s.Axis
+}
+
+// GetClass returns the value of Class.
+func (s *PartScaling) GetClass() OptString {
+	return s.Class
+}
+
+// GetRule returns the value of Rule.
+func (s *PartScaling) GetRule() PartScalingRule {
+	return s.Rule
+}
+
+// GetBase returns the value of Base.
+func (s *PartScaling) GetBase() OptInt32 {
+	return s.Base
+}
+
+// GetPer returns the value of Per.
+func (s *PartScaling) GetPer() OptPartValue {
+	return s.Per
+}
+
+// GetSteps returns the value of Steps.
+func (s *PartScaling) GetSteps() []PartStep {
+	return s.Steps
+}
+
+// GetFormula returns the value of Formula.
+func (s *PartScaling) GetFormula() OptString {
+	return s.Formula
+}
+
+// GetColumn returns the value of Column.
+func (s *PartScaling) GetColumn() OptString {
+	return s.Column
+}
+
+// SetField sets the value of Field.
+func (s *PartScaling) SetField(val string) {
+	s.Field = val
+}
+
+// SetAxis sets the value of Axis.
+func (s *PartScaling) SetAxis(val PartScalingAxis) {
+	s.Axis = val
+}
+
+// SetClass sets the value of Class.
+func (s *PartScaling) SetClass(val OptString) {
+	s.Class = val
+}
+
+// SetRule sets the value of Rule.
+func (s *PartScaling) SetRule(val PartScalingRule) {
+	s.Rule = val
+}
+
+// SetBase sets the value of Base.
+func (s *PartScaling) SetBase(val OptInt32) {
+	s.Base = val
+}
+
+// SetPer sets the value of Per.
+func (s *PartScaling) SetPer(val OptPartValue) {
+	s.Per = val
+}
+
+// SetSteps sets the value of Steps.
+func (s *PartScaling) SetSteps(val []PartStep) {
+	s.Steps = val
+}
+
+// SetFormula sets the value of Formula.
+func (s *PartScaling) SetFormula(val OptString) {
+	s.Formula = val
+}
+
+// SetColumn sets the value of Column.
+func (s *PartScaling) SetColumn(val OptString) {
+	s.Column = val
+}
+
+type PartScalingAxis string
+
+const (
+	PartScalingAxisSlotLevel      PartScalingAxis = "slot_level"
+	PartScalingAxisCharacterLevel PartScalingAxis = "character_level"
+	PartScalingAxisClassLevel     PartScalingAxis = "class_level"
+	PartScalingAxisTableColumn    PartScalingAxis = "table_column"
+	PartScalingAxisCharges        PartScalingAxis = "charges"
+)
+
+// AllValues returns all PartScalingAxis values.
+func (PartScalingAxis) AllValues() []PartScalingAxis {
+	return []PartScalingAxis{
+		PartScalingAxisSlotLevel,
+		PartScalingAxisCharacterLevel,
+		PartScalingAxisClassLevel,
+		PartScalingAxisTableColumn,
+		PartScalingAxisCharges,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s PartScalingAxis) MarshalText() ([]byte, error) {
+	switch s {
+	case PartScalingAxisSlotLevel:
+		return []byte(s), nil
+	case PartScalingAxisCharacterLevel:
+		return []byte(s), nil
+	case PartScalingAxisClassLevel:
+		return []byte(s), nil
+	case PartScalingAxisTableColumn:
+		return []byte(s), nil
+	case PartScalingAxisCharges:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *PartScalingAxis) UnmarshalText(data []byte) error {
+	switch PartScalingAxis(data) {
+	case PartScalingAxisSlotLevel:
+		*s = PartScalingAxisSlotLevel
+		return nil
+	case PartScalingAxisCharacterLevel:
+		*s = PartScalingAxisCharacterLevel
+		return nil
+	case PartScalingAxisClassLevel:
+		*s = PartScalingAxisClassLevel
+		return nil
+	case PartScalingAxisTableColumn:
+		*s = PartScalingAxisTableColumn
+		return nil
+	case PartScalingAxisCharges:
+		*s = PartScalingAxisCharges
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type PartScalingRule string
+
+const (
+	PartScalingRuleLinear  PartScalingRule = "linear"
+	PartScalingRuleTable   PartScalingRule = "table"
+	PartScalingRuleFormula PartScalingRule = "formula"
+	PartScalingRuleColumn  PartScalingRule = "column"
+)
+
+// AllValues returns all PartScalingRule values.
+func (PartScalingRule) AllValues() []PartScalingRule {
+	return []PartScalingRule{
+		PartScalingRuleLinear,
+		PartScalingRuleTable,
+		PartScalingRuleFormula,
+		PartScalingRuleColumn,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s PartScalingRule) MarshalText() ([]byte, error) {
+	switch s {
+	case PartScalingRuleLinear:
+		return []byte(s), nil
+	case PartScalingRuleTable:
+		return []byte(s), nil
+	case PartScalingRuleFormula:
+		return []byte(s), nil
+	case PartScalingRuleColumn:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *PartScalingRule) UnmarshalText(data []byte) error {
+	switch PartScalingRule(data) {
+	case PartScalingRuleLinear:
+		*s = PartScalingRuleLinear
+		return nil
+	case PartScalingRuleTable:
+		*s = PartScalingRuleTable
+		return nil
+	case PartScalingRuleFormula:
+		*s = PartScalingRuleFormula
+		return nil
+	case PartScalingRuleColumn:
+		*s = PartScalingRuleColumn
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // Fields a builder form draws together under a label.
 // Ref: #/components/schemas/PartSection
 type PartSection struct {
@@ -40723,6 +41004,33 @@ func (s *PartSection) SetLabel(val string) {
 // SetFields sets the value of Fields.
 func (s *PartSection) SetFields(val []string) {
 	s.Fields = val
+}
+
+// One step of a Scaling table, the value from a level on.
+// Ref: #/components/schemas/PartStep
+type PartStep struct {
+	At    int32     `json:"at"`
+	Value PartValue `json:"value"`
+}
+
+// GetAt returns the value of At.
+func (s *PartStep) GetAt() int32 {
+	return s.At
+}
+
+// GetValue returns the value of Value.
+func (s *PartStep) GetValue() PartValue {
+	return s.Value
+}
+
+// SetAt sets the value of At.
+func (s *PartStep) SetAt(val int32) {
+	s.At = val
+}
+
+// SetValue sets the value of Value.
+func (s *PartStep) SetValue(val PartValue) {
+	s.Value = val
 }
 
 // One field's value, in the slot its field type reads: text for dice, text and a choice, number, flag,
@@ -48807,10 +49115,12 @@ func (s *Spell) SetMentions(val []ConditionRef) {
 type SpellBuild struct {
 	Entry  OptLibraryEntry `json:"entry"`
 	Design SpellDesign     `json:"design"`
-	Effect string          `json:"effect"`
-	Text   []string        `json:"text"`
-	Hexes  []BuilderHex    `json:"hexes"`
-	Holds  PartHolds       `json:"holds"`
+	// The fields the spell's own Scaling grows, its area's and its Activation's.
+	Activation []PartField  `json:"activation"`
+	Effect     string       `json:"effect"`
+	Text       []string     `json:"text"`
+	Hexes      []BuilderHex `json:"hexes"`
+	Holds      PartHolds    `json:"holds"`
 }
 
 // GetEntry returns the value of Entry.
@@ -48821,6 +49131,11 @@ func (s *SpellBuild) GetEntry() OptLibraryEntry {
 // GetDesign returns the value of Design.
 func (s *SpellBuild) GetDesign() SpellDesign {
 	return s.Design
+}
+
+// GetActivation returns the value of Activation.
+func (s *SpellBuild) GetActivation() []PartField {
+	return s.Activation
 }
 
 // GetEffect returns the value of Effect.
@@ -48851,6 +49166,11 @@ func (s *SpellBuild) SetEntry(val OptLibraryEntry) {
 // SetDesign sets the value of Design.
 func (s *SpellBuild) SetDesign(val SpellDesign) {
 	s.Design = val
+}
+
+// SetActivation sets the value of Activation.
+func (s *SpellBuild) SetActivation(val []PartField) {
+	s.Activation = val
 }
 
 // SetEffect sets the value of Effect.
@@ -48958,6 +49278,9 @@ type SpellDesign struct {
 	// The spell's Parts in order. A Part that rolls a save may leave its ability out: it rolls the spell's
 	// save.
 	Parts []Part `json:"parts"`
+	// How the spell's area or its Activation grows with the slot it is cast with; a Part's own Scaling
+	// sits on the Part. The fields it may grow are the build's activation.
+	Scaling []PartScaling `json:"scaling"`
 }
 
 // GetTargeting returns the value of Targeting.
@@ -49005,6 +49328,11 @@ func (s *SpellDesign) GetParts() []Part {
 	return s.Parts
 }
 
+// GetScaling returns the value of Scaling.
+func (s *SpellDesign) GetScaling() []PartScaling {
+	return s.Scaling
+}
+
 // SetTargeting sets the value of Targeting.
 func (s *SpellDesign) SetTargeting(val SpellDesignTargeting) {
 	s.Targeting = val
@@ -49048,6 +49376,11 @@ func (s *SpellDesign) SetTurnDamage(val OptSpellDesignTurnDamage) {
 // SetParts sets the value of Parts.
 func (s *SpellDesign) SetParts(val []Part) {
 	s.Parts = val
+}
+
+// SetScaling sets the value of Scaling.
+func (s *SpellDesign) SetScaling(val []PartScaling) {
+	s.Scaling = val
 }
 
 type SpellDesignCastingTime struct {

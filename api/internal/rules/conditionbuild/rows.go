@@ -74,7 +74,7 @@ func (r row) upgrade() effects.Authored {
 	if !ok {
 		v = effects.Values{}
 	}
-	return effects.Authored{Kind: kind, Values: v, Groups: []effects.AuthoredGroup{}}
+	return effects.Authored{Kind: kind, Values: v, Groups: []effects.AuthoredGroup{}, Scaling: nil}
 }
 
 func text(s string) effects.Value { return effects.Value{Text: s, Number: 0, Flag: false, Texts: nil} }

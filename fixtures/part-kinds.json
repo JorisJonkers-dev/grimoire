@@ -1,4 +1,73 @@
 {
+  "activation": {
+    "spell": [
+      {
+        "formula": false,
+        "label": "Size in feet",
+        "max": 500,
+        "min": 5,
+        "name": "size_ft",
+        "options": [],
+        "required": true,
+        "scalable": true,
+        "type": "number"
+      },
+      {
+        "formula": false,
+        "label": "Range in feet",
+        "max": 5280,
+        "min": 0,
+        "name": "range_ft",
+        "options": [],
+        "required": false,
+        "scalable": true,
+        "type": "number"
+      },
+      {
+        "formula": true,
+        "label": "Duration",
+        "max": 1000,
+        "min": 0,
+        "name": "duration",
+        "options": [],
+        "required": false,
+        "scalable": true,
+        "type": "number"
+      },
+      {
+        "formula": false,
+        "label": "Duration unit",
+        "max": 0,
+        "min": 0,
+        "name": "duration_unit",
+        "options": [
+          "instant",
+          "rounds",
+          "minutes",
+          "hours",
+          "until_dispelled",
+          "until_rest",
+          "permanent",
+          "end_of_next_turn",
+          "until_cured"
+        ],
+        "required": false,
+        "scalable": true,
+        "type": "choice"
+      },
+      {
+        "formula": false,
+        "label": "Concentration",
+        "max": 0,
+        "min": 0,
+        "name": "concentration",
+        "options": [],
+        "required": false,
+        "scalable": true,
+        "type": "flag"
+      }
+    ]
+  },
   "holds": {
     "condition": {
       "beneath": [],

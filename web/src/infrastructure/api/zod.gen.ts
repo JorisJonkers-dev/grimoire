@@ -2071,6 +2071,40 @@ export const zPartValue = z.object({
 });
 
 /**
+ * One step of a Scaling table, the value from a level on.
+ */
+export const zPartStep = z.object({
+    at: z.int().gte(1).lte(20),
+    value: zPartValue
+});
+
+/**
+ * One Scaling rule over a scalable field: along an axis, by a linear rule (base and per), a table of steps, a formula of the level, or a class table's column. Class names the class for a class level or a class table.
+ */
+export const zPartScaling = z.object({
+    field: z.string().max(40),
+    axis: z.enum([
+        'slot_level',
+        'character_level',
+        'class_level',
+        'table_column',
+        'charges'
+    ]),
+    class: z.string().max(80).optional(),
+    rule: z.enum([
+        'linear',
+        'table',
+        'formula',
+        'column'
+    ]),
+    base: z.int().gte(0).lte(20).optional(),
+    per: zPartValue.optional(),
+    steps: z.array(zPartStep).max(20).optional(),
+    formula: z.string().max(60).optional(),
+    column: z.string().max(80).optional()
+});
+
+/**
  * Fields a builder form draws together under a label.
  */
 export const zPartSection = z.object({
@@ -5861,7 +5895,8 @@ export const zSpellDesign = z.object({
         dice: z.string().max(20),
         damageType: z.string().max(20)
     }).optional(),
-    parts: z.array(z.lazy((): any => zPart)).max(100)
+    parts: z.array(z.lazy((): any => zPart)).max(100),
+    scaling: z.array(zPartScaling).max(10).optional()
 });
 
 /**
@@ -5870,7 +5905,8 @@ export const zSpellDesign = z.object({
 export const zPart = z.object({
     kind: z.string().max(40),
     values: z.record(z.string(), zPartValue),
-    groups: z.array(z.lazy((): any => zPartGroup)).max(20).optional()
+    groups: z.array(z.lazy((): any => zPartGroup)).max(20).optional(),
+    scaling: z.array(zPartScaling).max(10).optional()
 });
 
 /**
@@ -5895,6 +5931,7 @@ export const zSpellPreviewInput = z.object({
 export const zSpellBuild = z.object({
     entry: zLibraryEntry.optional(),
     design: zSpellDesign,
+    activation: z.array(zPartField).max(20),
     effect: z.string().max(40),
     text: z.array(z.string().max(1000)).max(200),
     hexes: z.array(zBuilderHex).max(20000),

@@ -12912,6 +12912,11 @@ components:
           description: "The spell's Parts in order. A Part that rolls a save may leave its ability out: it rolls the spell's save."
           maxItems: 100
           items: { $ref: "#/components/schemas/Part" }
+        scaling:
+          type: array
+          description: "How the spell's area or its Activation grows with the slot it is cast with; a Part's own Scaling sits on the Part. The fields it may grow are the build's activation."
+          maxItems: 10
+          items: { $ref: "#/components/schemas/PartScaling" }
     Part:
       type: object
       description: "One Part of an Effect, of a kind the rules know: the kind's slug, its values by field name, and the Parts beneath it in named groups. The kind's definition (listPartKinds) says which fields and groups it takes; the server checks a Part against it. A kind that holds no Parts beneath it may leave groups out."
@@ -12927,6 +12932,37 @@ components:
           type: array
           maxItems: 20
           items: { $ref: "#/components/schemas/PartGroup" }
+        scaling:
+          type: array
+          description: How the Part's scalable fields grow with the level its Effect is activated at.
+          maxItems: 10
+          items: { $ref: "#/components/schemas/PartScaling" }
+    PartScaling:
+      type: object
+      description: "One Scaling rule over a scalable field: along an axis, by a linear rule (base and per), a table of steps, a formula of the level, or a class table's column. Class names the class for a class level or a class table."
+      additionalProperties: false
+      required: [field, axis, rule]
+      properties:
+        field: { type: string, maxLength: 40 }
+        axis: { type: string, enum: [slot_level, character_level, class_level, table_column, charges] }
+        class: { type: string, maxLength: 80 }
+        rule: { type: string, enum: [linear, table, formula, column] }
+        base: { type: integer, format: int32, minimum: 0, maximum: 20 }
+        per: { $ref: "#/components/schemas/PartValue" }
+        steps:
+          type: array
+          maxItems: 20
+          items: { $ref: "#/components/schemas/PartStep" }
+        formula: { type: string, maxLength: 60 }
+        column: { type: string, maxLength: 80 }
+    PartStep:
+      type: object
+      description: One step of a Scaling table, the value from a level on.
+      additionalProperties: false
+      required: [at, value]
+      properties:
+        at: { type: integer, format: int32, minimum: 1, maximum: 20 }
+        value: { $ref: "#/components/schemas/PartValue" }
     PartValue:
       type: object
       description: "One field's value, in the slot its field type reads: text for dice, text and a choice, number, flag, or texts for several choices."
@@ -13079,10 +13115,15 @@ components:
       type: object
       description: A homebrew spell in the Effect builder, the Effect slug it runs under in play, its rules text, its area as hexes, and what it takes as Parts.
       additionalProperties: false
-      required: [design, effect, text, hexes, holds]
+      required: [design, effect, text, hexes, holds, activation]
       properties:
         entry: { $ref: "#/components/schemas/LibraryEntry" }
         design: { $ref: "#/components/schemas/SpellDesign" }
+        activation:
+          type: array
+          description: The fields the spell's own Scaling grows, its area's and its Activation's.
+          maxItems: 20
+          items: { $ref: "#/components/schemas/PartField" }
         effect: { type: string, maxLength: 40 }
         text:
           type: array

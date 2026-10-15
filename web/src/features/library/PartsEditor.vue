@@ -3,12 +3,13 @@ import { computed, ref } from 'vue'
 import type { Part, PartHolds, PartKind } from '@/infrastructure/api/types.gen'
 import { GButton } from '@/shared/ui'
 import PartFields from './PartFields.vue'
+import ScalingEditor from './ScalingEditor.vue'
 import { freshPart, heading, namedGroups } from './partForm'
 
 // A list of Parts drawn from the served kind definitions: a picker of the kinds this list takes, each
 // Part's fields, and the Parts beneath it in their groups, drawn by this same list.
 const parts = defineModel<Part[]>({ required: true })
-const props = defineProps<{ kinds: PartKind[]; holds: PartHolds; allowed: string[]; label: string; adds: string; noun: string; prefix: string }>()
+const props = defineProps<{ kinds: PartKind[]; holds: PartHolds; allowed: string[]; label: string; adds: string; noun: string; prefix: string; scales?: boolean }>()
 
 const kindOf = (slug: string) => props.kinds.find((k) => k.slug === slug)
 const offered = computed(() => props.allowed.flatMap((slug) => props.kinds.filter((k) => k.slug === slug)))
@@ -32,6 +33,7 @@ function removeMode(p: Part, m: number) {
   p.groups = p.groups?.filter((_, i) => i !== m)
 }
 const named = (i: number) => `${props.noun} ${String(i + 1)}`
+const scalable = (kind: PartKind) => (props.scales ? kind.fields.filter((f) => f.scalable) : [])
 </script>
 
 <template>
@@ -59,6 +61,10 @@ const named = (i: number) => `${props.noun} ${String(i + 1)}`
         <template v-for="kind in [kindOf(p.kind)]" :key="kind?.slug ?? p.kind">
           <template v-if="kind">
             <PartFields :model-value="p" :kind="kind" :holds="holds" :prefix="`${prefix}-${String(i)}`" />
+            <fieldset v-if="scalable(kind).length" class="group">
+              <legend>Scaling</legend>
+              <ScalingEditor v-model="p.scaling" :fields="scalable(kind)" :label="`${named(i)} scaling`" :prefix="`${prefix}-${String(i)}-scaling`" />
+            </fieldset>
             <fieldset v-for="g in namedGroups(p, kind)" :key="g.name" class="group">
               <legend>{{ heading(g.name) }}</legend>
               <PartsEditor
@@ -70,6 +76,7 @@ const named = (i: number) => `${props.noun} ${String(i + 1)}`
                 :adds="`Add a Part to ${heading(g.name)}`"
                 :noun="`${named(i)}, ${g.name}, part`"
                 :prefix="`${prefix}-${String(i)}-${g.name}`"
+                :scales="scales"
               />
             </fieldset>
             <template v-if="kind.openGroups">
@@ -96,6 +103,7 @@ const named = (i: number) => `${props.noun} ${String(i + 1)}`
                   :adds="`Add a Part to mode ${String(m + 1)}`"
                   :noun="`${named(i)}, mode ${String(m + 1)}, part`"
                   :prefix="`${prefix}-${String(i)}-mode-${String(m)}`"
+                  :scales="scales"
                 />
               </fieldset>
               <GButton :data-testid="`${prefix}-${String(i)}-add-mode`" @click="addMode(p)">Add a mode</GButton>

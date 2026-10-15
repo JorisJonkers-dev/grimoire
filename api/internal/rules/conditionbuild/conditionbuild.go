@@ -121,6 +121,9 @@ func parts(in []effects.Authored) ([]effects.Part, error) {
 		if !slices.Contains(kinds, a.Kind) {
 			return nil, DesignError("a condition holds Parts of the kinds " + strings.Join(kinds, ", "))
 		}
+		if len(a.Scaling) > 0 {
+			return nil, DesignError("a condition does not scale: it is not activated at a level")
+		}
 	}
 	out, err := effects.Decode(in)
 	if err != nil {

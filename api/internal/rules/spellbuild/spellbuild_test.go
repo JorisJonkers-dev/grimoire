@@ -301,3 +301,71 @@ func TestASpellServesWhatItHolds(t *testing.T) {
 		t.Errorf("holds %+v, want %+v", got, want)
 	}
 }
+
+// A spell scales its Parts, its area and its Activation: Scaling on a Part grows that Part's field, and
+// the spell's own Scaling grows its area or the Activation; each reads as a rules line.
+func TestASpellScales(t *testing.T) {
+	t.Parallel()
+	damage := part("save_damage", effects.Values{"dice": text("8d6"), "damage_type": text("fire"), "half": {Flag: true}})
+	damage.Scaling = []effects.AuthoredScaling{{Field: "dice", Axis: "slot_level", Rule: "linear", Base: 3, Per: &effects.Value{Text: "1d6"}}}
+	d := spellbuild.Design{
+		Targeting: spellbuild.Targeting{Shape: "sphere", SizeFt: 20, RangeFt: 150}, Save: "dexterity", Duration: spellbuild.Duration{Unit: "instant"},
+		CastingTime: spellbuild.CastingTime{Kind: "action"}, Components: spellbuild.Components{Verbal: true},
+		Scaling: []effects.AuthoredScaling{
+			{Field: "size_ft", Axis: "slot_level", Rule: "linear", Base: 3, Per: &effects.Value{Number: 5}},
+			{Field: "duration", Axis: "slot_level", Rule: "table", Steps: []effects.AuthoredStep{{At: 5, Value: effects.Value{Number: 1}}}},
+		},
+		Parts: []effects.Authored{damage},
+	}
+	b, err := spellbuild.Build("hb-ball", "Ball", d, surfaces)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []effects.Scaling{
+		{Part: 0, Field: "size_ft", Axis: effects.SlotLevel, Class: "", Rule: effects.Linear{Base: 3, Per: effects.Value{Number: 5}}},
+		{Part: effects.OnActivation, Field: "duration", Axis: effects.SlotLevel, Class: "", Rule: effects.Table{Steps: []effects.Step{{At: 5, Value: effects.Value{Number: 1}}}}},
+		{Part: 1, Field: "dice", Axis: effects.SlotLevel, Class: "", Rule: effects.Linear{Base: 3, Per: effects.Value{Text: "1d6"}}},
+	}
+	if !reflect.DeepEqual(b.Definition.Scaling, want) {
+		t.Fatalf("scaling = %+v", b.Definition.Scaling)
+	}
+	if a, _ := (effects.Catalog{"hb-ball": b.Definition}).AreaAt("hb-ball", effects.Level{Slot: 5}); a.Area.SizeFt != 30 || a.Damage.Dice != "10d6" {
+		t.Fatalf("at slot 5 = %+v", a)
+	}
+	lines := b.Text[len(b.Text)-3:]
+	if !reflect.DeepEqual(lines, []string{
+		"Using a Higher-Level Spell Slot: the size in feet increases by 5 for each slot level above 3.",
+		"Using a Higher-Level Spell Slot: the duration becomes 1 at slot level 5.",
+		"Using a Higher-Level Spell Slot: the damage increases by 1d6 for each slot level above 3.",
+	}) {
+		t.Fatalf("text = %q", b.Text)
+	}
+	saving := part("branch", effects.Values{"when": text("hp_at_most"), "n": number(20)}, then(part("manual", effects.Values{"instruction": text("It sleeps.")})))
+	saving.Scaling = []effects.AuthoredScaling{{Field: "n", Axis: "slot_level", Rule: "linear", Base: 1, Per: &effects.Value{Number: 10}}}
+	d.Parts, d.Scaling = []effects.Authored{saving}, nil
+	if b, err := spellbuild.Build("hb-sleep", "Sleep", d, surfaces); err != nil || b.Definition.Scaling[0].Part != 2 {
+		t.Fatalf("after the area and its save, the branch is Part 2 = %+v %v", b.Definition.Scaling, err)
+	}
+	for want, change := range map[string]func(*spellbuild.Design){
+		"scaling 1: field: choose a field that scales": func(d *spellbuild.Design) {
+			d.Scaling = []effects.AuthoredScaling{{Field: "shape", Axis: "slot_level", Rule: "table"}}
+		},
+		"part 1: scaling 1: field: choose a field that scales": func(d *spellbuild.Design) { d.Parts[0].Scaling[0].Field = "when" },
+	} {
+		bad := d
+		bad.Parts = []effects.Authored{saving}
+		bad.Parts[0].Scaling = append([]effects.AuthoredScaling{}, saving.Scaling...)
+		change(&bad)
+		if _, err := spellbuild.Build("hb-bad", "Bad", bad, surfaces); err == nil || err.Error() != want {
+			t.Errorf("want %q, got %v", want, err)
+		}
+	}
+	fields, scales := spellbuild.Activation()
+	names := []string{}
+	for _, f := range fields {
+		names = append(names, f.Name)
+	}
+	if !reflect.DeepEqual(names, []string{"size_ft", "range_ft", "duration", "duration_unit", "concentration"}) || len(scales) != 5 || !scales[2].Formula {
+		t.Fatalf("a spell scales %v %+v", names, scales)
+	}
+}
