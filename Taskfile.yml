@@ -3,6 +3,10 @@ version: "3"
 
 vars:
   DATABASE_URL: postgres://grimoire:grimoire@localhost:5432/grimoire?sslmode=disable
+  MUTATION_SHARD_1: effects hex attack dice
+  MUTATION_SHARD_2: itembuild monsterbuild speciesbuild tactics vision combat
+  MUTATION_SHARD_3: subclassbuild spellbuild classbuild featbuild vehicles variants downtime standing
+  MUTATION_NAMED: "{{.MUTATION_SHARD_1}} {{.MUTATION_SHARD_2}} {{.MUTATION_SHARD_3}}"
 
 tasks:
   default:
@@ -94,54 +98,27 @@ tasks:
       - task: mutation:3
       - task: mutation:4
 
+  # Shards 1 to 3 name their packages, about 700 mutants each; shard 4 takes the root package and every
+  # package the others do not name, so a new package is never skipped.
   mutation:1:
     desc: Mutation testing, shard 1 of 4 (CI runs the shards in parallel)
     dir: api
-    cmds:
-      - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules
+    cmd: for p in {{.MUTATION_SHARD_1}}; do go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/$p || exit 1; done
 
   mutation:2:
     desc: Mutation testing, shard 2 of 4 (CI runs the shards in parallel)
     dir: api
-    cmds:
-      - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/dice
-      - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/hex
-      - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/vision
-      - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/combat
+    cmd: for p in {{.MUTATION_SHARD_2}}; do go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/$p || exit 1; done
 
   mutation:3:
     desc: Mutation testing, shard 3 of 4 (CI runs the shards in parallel)
     dir: api
-    cmds:
-      - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/attack
-      - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/tactics
-      - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/effects
-      - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/mounted
-      - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/vehicles
-      - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/guides
-      - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/difficulty
+    cmd: for p in {{.MUTATION_SHARD_3}}; do go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/$p || exit 1; done
 
   mutation:4:
     desc: Mutation testing, shard 4 of 4 (CI runs the shards in parallel)
     dir: api
-    cmds:
-      - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/travel
-      - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/surprise
-      - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/encounters
-      - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/loot
-      - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/shops
-      - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/surface
-      - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/inventory
-      - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/objects
-      - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/movement
-      - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/spellbuild
-      - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/itembuild
-      - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/subclassbuild
-      - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/classbuild
-      - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/speciesbuild
-      - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/featbuild
-      - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/conditionbuild
-      - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/monsterbuild
+    cmd: go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 --exclude-files '^({{.MUTATION_NAMED | trim | splitList " " | join "|"}})/' ./internal/rules
 
   android:
     desc: Build the Capacitor Android shell as a debug APK from the web build (needs Java 21 and the Android SDK)
