@@ -208,6 +208,7 @@ func TestInvalidEffectsAreRefused(t *testing.T) {
 		{Slug: "bad-axis", Name: "x", Scaling: []effects.Scaling{{Part: effects.OnActivation, Field: "duration", Axis: "phase_of_moon", Rule: effects.Linear{Base: 1, Per: effects.Value{Number: 1}}}}},
 		{Slug: "bad-column", Name: "x", Parts: damage, Scaling: []effects.Scaling{{Part: 0, Field: "dice", Axis: effects.SlotLevel, Rule: effects.Column{Name: "Sneak Attack"}}}},
 		{Slug: "bad-field", Name: "x", Parts: damage, Scaling: []effects.Scaling{{Part: 0, Field: "colour", Axis: effects.SlotLevel, Rule: effects.Linear{Base: 1, Per: effects.Value{Text: "1d6"}}}}},
+		{Slug: "bad-formula-field", Name: "x", Parts: damage, Scaling: []effects.Scaling{{Part: 0, Field: "colour", Axis: effects.SlotLevel, Rule: effects.Formula{Expr: "level"}}}},
 		{Slug: "bad-part", Name: "x", Parts: damage, Scaling: []effects.Scaling{{Part: 4, Field: "dice", Axis: effects.SlotLevel, Rule: effects.Linear{Base: 1, Per: effects.Value{Text: "1d6"}}}}},
 		{Slug: "bad-branch", Name: "x", Parts: []effects.Part{effects.Branch{When: effects.Condition{Kind: "full_moon"}}}},
 		{Slug: "bad-reveal", Name: "x", Parts: []effects.Part{effects.Reveal{Qualities: []string{"shiny"}}}},
