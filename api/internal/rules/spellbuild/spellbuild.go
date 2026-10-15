@@ -209,14 +209,16 @@ func (c Components) check() error {
 
 func (d Design) turnDamage() error {
 	t := d.TurnDamage
-	switch {
-	case t == nil:
+	if t == nil {
 		return nil
-	case !dicePattern.MatchString(t.Dice):
+	}
+	if !dicePattern.MatchString(t.Dice) {
 		return DesignError("damage dice look like 2d6")
-	case !slices.Contains(DamageTypes(), t.DamageType):
+	}
+	if !slices.Contains(DamageTypes(), t.DamageType) {
 		return DesignError("choose a damage type: " + strings.Join(DamageTypes(), ", "))
-	case d.rounds() == 0:
+	}
+	if d.rounds() == 0 {
 		return DesignError("start-of-turn damage needs a duration in rounds, minutes or hours")
 	}
 	return nil
