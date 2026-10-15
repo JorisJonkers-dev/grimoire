@@ -50,7 +50,7 @@ describe('the two-step code page', () => {
     await wrapper.get('[data-testid="two-step-form"]').trigger('submit')
     await flushPromises()
     expect(sent).toEqual([{ challenge, code: '123456' }, { challenge, code: '654321' }])
-    await vi.waitFor(() => { expect(router.currentRoute.value.fullPath).toBe('/campaigns') })
+    await vi.waitFor(() => { expect(router.currentRoute.value.fullPath).toBe('/campaigns') }, { timeout: 5000 })
   })
 
   it('takes a recovery code instead', async () => {

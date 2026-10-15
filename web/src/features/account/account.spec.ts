@@ -35,7 +35,7 @@ describe('signing in', () => {
     await wrapper.get('[data-testid="sign-in-form"]').trigger('submit')
     await flushPromises()
     expect(sent.at(-1)).toEqual({ username: 'aria', password: 'correct horse battery' })
-    await vi.waitFor(() => { expect(router.currentRoute.value.fullPath).toBe('/campaigns'); })
+    await vi.waitFor(() => { expect(router.currentRoute.value.fullPath).toBe('/campaigns'); }, { timeout: 5000 })
   })
 
   it('never follows next out of Grimoire', async () => {

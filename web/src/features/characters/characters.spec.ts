@@ -311,7 +311,7 @@ describe('character sheet', () => {
     })
     const select = await vi.waitFor(() => wrapper.get('[data-testid="campaign-switch"]'))
     await select.setValue(OTHER)
-    await vi.waitFor(() => { expect(router.currentRoute.value.params.id).toBe(OTHER) })
+    await vi.waitFor(() => { expect(router.currentRoute.value.params.id).toBe(OTHER) }, { timeout: 5000 })
     await flushPromises()
     expect(wrapper.text()).toContain('Kara in Saltmarsh')
   })

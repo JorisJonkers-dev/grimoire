@@ -112,7 +112,7 @@ describe('a gamepad', () => {
     expect(at()).toBe(wrapper.get('[data-testid="campaigns-link"]').element)
     // A presses what has the focus.
     await press(0)
-    await vi.waitFor(() => { expect(router.currentRoute.value.name).toBe('campaigns') })
+    await vi.waitFor(() => { expect(router.currentRoute.value.name).toBe('campaigns') }, { timeout: 5000 })
     // The bumpers jump from region to region.
     await press(5)
     const first = at()

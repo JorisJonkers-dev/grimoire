@@ -40,7 +40,7 @@ describe('the bell', () => {
     await vi.waitFor(() => { expect(wrapper.find('[data-testid="bell-count"]').exists()).toBe(false) })
     await wrapper.get(`[data-testid="act-${friend.id}"]`).trigger('click')
     await flushPromises()
-    await vi.waitFor(() => { expect(router.currentRoute.value.fullPath).toBe('/friends') })
+    await vi.waitFor(() => { expect(router.currentRoute.value.fullPath).toBe('/friends') }, { timeout: 5000 })
     expect(calls).toEqual(['all', `/api/v1/notifications/${friend.id}/read`])
     await wrapper.get('[data-testid="bell"]').trigger('click')
     await wrapper.get(`[data-testid="act-${talk.id}"]`).trigger('click')

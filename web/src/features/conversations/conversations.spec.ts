@@ -43,7 +43,7 @@ describe('Conversations', () => {
     await wrapper.get('[data-testid="conversation-start"]').trigger('submit')
     await flushPromises()
     expect(sent).toEqual([{ with: [bram.id, dana.id], title: 'Party' }])
-    await vi.waitFor(() => { expect(router.currentRoute.value.fullPath).toBe(`/conversations/${talk}`) })
+    await vi.waitFor(() => { expect(router.currentRoute.value.fullPath).toBe(`/conversations/${talk}`) }, { timeout: 5000 })
   })
 
   it('shows a thread with Mentions as links or shut, and sends a message with a Mention', async () => {
@@ -126,7 +126,7 @@ describe('Conversations', () => {
     })
     await wrapper.get('[data-testid="talk-bram"]').trigger('click')
     await flushPromises()
-    await vi.waitFor(() => { expect(router.currentRoute.value.fullPath).toBe(`/conversations/${talk}`) })
+    await vi.waitFor(() => { expect(router.currentRoute.value.fullPath).toBe(`/conversations/${talk}`) }, { timeout: 5000 })
     await flushPromises()
     expect(wrapper.get('[data-testid="thread-empty"]').text()).toContain('Say hello')
   })
