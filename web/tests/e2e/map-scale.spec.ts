@@ -1,6 +1,6 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, type Locator, type Page, test } from '@playwright/test'
 import { crypt } from './maps'
+import { violations } from './axe'
 
 /** Drags a calibration point to a place on the picture, in the picture's own pixels. */
 async function dragTo(page: Page, point: Locator, x: number, y: number) {
@@ -52,7 +52,7 @@ test('a DM takes the Default World, sets its grid and scale, and calibrates it f
   await expect(page.getByTestId('calibrated')).toHaveText('Calibrated: a cell is 40.0 px across.')
   await expect(page.getByTestId('calibrate-measured')).toHaveText('Now 10.0 cells, 120.0 miles apart.')
   await expect(page.getByTestId('origin-x')).toHaveValue('500')
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
 
   // It is all kept.
   await page.reload()

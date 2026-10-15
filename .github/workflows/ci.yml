@@ -177,13 +177,19 @@ jobs:
             type=gha,scope=image-api
 
   e2e:
-    name: End-to-end (${{ matrix.device }})
+    name: End-to-end (${{ matrix.device }}${{ matrix.shard && format(' {0}', matrix.shard) || '' }})
     runs-on: ubuntu-latest
     timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
-        device: [phone, tablet, desktop, tv]
+        device: [phone, tablet, tv]
+        # Desktop alone runs the multi-client scenarios, so it is split in two to finish with the rest.
+        include:
+          - device: desktop
+            shard: 1/2
+          - device: desktop
+            shard: 2/2
     env:
       GRIMOIRE_DATABASE_URL: postgres://grimoire:grimoire@localhost:5432/grimoire?sslmode=disable
     services:
@@ -224,12 +230,12 @@ jobs:
           E2E_EXTERNAL_SERVERS: "1"
         run: |
           pnpm --filter @grimoire/web exec playwright install --with-deps chromium
-          pnpm --filter @grimoire/web e2e --project=${{ matrix.device }}
+          pnpm --filter @grimoire/web e2e --project=${{ matrix.device }} ${{ matrix.shard && format('--shard={0}', matrix.shard) || '' }}
       - name: Keep the traces of failed tests
         if: ${{ failure() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: e2e-traces-${{ matrix.device }}
+          name: e2e-traces-${{ matrix.device }}${{ matrix.shard && format('-{0}', strategy.job-index) || '' }}
           path: web/test-results
           retention-days: 7
           if-no-files-found: ignore

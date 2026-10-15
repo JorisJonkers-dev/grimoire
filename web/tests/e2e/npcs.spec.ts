@@ -1,5 +1,5 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
+import { violations } from './axe'
 
 test('a DM edits an NPC, compares two revisions and restores the first', async ({ page }, info) => {
   await page.goto('/campaigns')
@@ -17,7 +17,7 @@ test('a DM edits an NPC, compares two revisions and restores the first', async (
   await history.getByRole('checkbox', { name: 'Compare revision 1' }).check()
   await history.getByRole('checkbox', { name: 'Compare revision 2' }).check()
   await expect(page.getByTestId('npc-diff')).toContainText('Wants Tamsin.')
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
 
   await page.getByTestId('restore-1').click()
   await expect(history).toContainText('#3 restore from #1')

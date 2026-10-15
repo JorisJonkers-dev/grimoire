@@ -1,5 +1,5 @@
-import AxeBuilder from '@axe-core/playwright'
 import { devices, expect, type CDPSession, type Page, test } from '@playwright/test'
+import { violations } from './axe'
 
 async function enter(page: Page, face: string) {
   const card = page.getByTestId('roll-card')
@@ -62,12 +62,12 @@ test('on a phone a player swipes between pages over the map, with a sheet on an 
   await expect(page.getByTestId('hotbar-Scout')).toBeHidden()
   await expect(page.getByTestId('resources')).toBeVisible()
   await expect(page.getByTestId('chip-action')).toHaveAttribute('aria-label', 'Action: available')
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
 
   await page.getByTestId('page-actions').tap()
   await expect(page.getByTestId('hotbar-Scout')).toBeVisible()
   await expect(page.getByTestId('spell-list')).toBeHidden()
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
 
   // A swipe across the sheet turns to the next page, and one across the bar turns back.
   const cdp = await page.context().newCDPSession(page)
@@ -85,7 +85,7 @@ test('on a phone a player swipes between pages over the map, with a sheet on an 
   for (const key of ['character', 'party']) {
     await page.getByTestId(`page-${key}`).tap()
     await expect(page.getByTestId(`page-${key}`)).toHaveAttribute('aria-current', 'page')
-    expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+    expect(await violations(page)).toEqual([])
   }
   await expect(page.getByTestId('tokens')).toBeVisible()
   await page.getByTestId('page-map').tap()

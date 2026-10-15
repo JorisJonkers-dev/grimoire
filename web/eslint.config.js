@@ -29,5 +29,10 @@ export default tseslint.config(
     },
   },
   { files: ['**/*.spec.ts', 'tests/**/*.ts', 'src/test/**/*.ts'], rules: { '@typescript-eslint/require-await': 'off' } },
+  {
+    files: ['tests/e2e/**/*.ts'],
+    ignores: ['tests/e2e/axe.ts'],
+    rules: { 'no-restricted-imports': ['error', { paths: [{ name: '@axe-core/playwright', message: "Use violations() from './axe', which keeps a map's cells from slowing the scan." }] }] },
+  },
   { files: ['eslint.config.js'], ...tseslint.configs.disableTypeChecked },
 )

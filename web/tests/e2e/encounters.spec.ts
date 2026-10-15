@@ -1,5 +1,5 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
+import { violations } from './axe'
 
 test('the DM prepares random encounters, and rests and checks roll them secretly or on the table', async ({ page, browser }, info) => {
   test.skip(info.project.name !== 'desktop', 'one multi-client run is enough')
@@ -35,7 +35,7 @@ test('the DM prepares random encounters, and rests and checks roll them secretly
   await page.getByTestId('entry-monsters-0').fill('goblin x3')
   await page.getByTestId('save-table').click()
   await expect(page.getByTestId('table-Road')).toContainText('1× Ambush (goblin x3)')
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
   await page.getByTestId('to-campaign').click()
 
   const context = await browser.newContext({ extraHTTPHeaders: { 'X-User-Id': `e2e-wilds-${stamp}` } })

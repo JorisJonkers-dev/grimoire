@@ -1,5 +1,5 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
+import { violations } from './axe'
 
 test('an author builds the Lantern Warden in the subclass builder, reads it back and saves it', async ({ page }, info) => {
   const name = `Lantern Warden ${info.project.name} ${String(Date.now())}`
@@ -31,7 +31,7 @@ test('an author builds the Lantern Warden in the subclass builder, reads it back
   await expect(lines).toContainText('Level 3 choice: Lantern Style, pick 1 of Bog Glass, Ember Wick.')
   await expect(lines).toContainText('Lantern Light: uses equal to your Proficiency Bonus from level 3, back on a Long Rest.')
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
 
   await page.getByTestId('subclass-save').click()
   await expect(page.getByTestId('subclass-status')).toHaveText('Saved as Revision 2.')

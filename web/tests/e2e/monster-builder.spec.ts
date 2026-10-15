@@ -1,5 +1,5 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
+import { violations } from './axe'
 
 test('an author builds a legendary creature in the monster builder and reads its estimated Challenge', async ({ page }, info) => {
   const name = `Bog King ${info.project.name} ${String(Date.now())}`
@@ -25,7 +25,7 @@ test('an author builds a legendary creature in the monster builder and reads its
   await expect(lines).toContainText('Phase 2: Drowned King (120 HP).')
   await expect(page.getByTestId('monster-estimate')).toContainText('Estimated Challenge')
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
   await page.getByTestId('monster-save').click()
   await expect(page.getByTestId('monster-status')).toHaveText('Saved as Revision 2.')
 })

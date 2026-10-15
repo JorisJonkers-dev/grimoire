@@ -1,5 +1,5 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, type Locator, type Page, test } from '@playwright/test'
+import { violations } from './axe'
 
 async function enter(card: Locator, face: string) {
   await card.getByTestId('face-0').fill(face)
@@ -53,7 +53,7 @@ test('the DM runs creatures from a console the players never see', async ({ page
   await expect(grik.getByTestId('agent-notes')).toContainText('No agent has acted on Grik.')
   await expect(page.locator('[data-testid^="caption-"]')).toHaveText(/→ Scout/)
   await expect(page.locator('[data-hex="1,0"]')).toHaveAttribute('aria-label', /suggested: .* against Scout/)
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
 
   // None of it reaches the player.
   await expect(player.getByTestId('initiative-rail')).toContainText('Round 1')
@@ -79,5 +79,5 @@ test('the DM runs creatures from a console the players never see', async ({ page
   await page.getByTestId('bulk-hp').fill('2')
   await page.getByTestId('bulk-hurt').click()
   for (const label of ['Grik', 'Snag']) await expect(page.getByTestId(`creature-${label}`)).toContainText('8 / 10 hit points')
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
 })

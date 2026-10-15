@@ -1,5 +1,5 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, type Page, test } from '@playwright/test'
+import { violations } from './axe'
 
 async function enter(page: Page, face: string) {
   const card = page.getByTestId('roll-card')
@@ -57,7 +57,7 @@ test('initiative is revealed on every screen and a player gets a banner as their
     expect(still.getByTestId('turn-banner')).toContainText('Aria'),
   ])
   // The rolls and the banner stay readable for as long as they show, also while they leave.
-  for (let i = 0; i < 3; i++) expect((await new AxeBuilder({ page: player }).analyze()).violations).toEqual([])
+  for (let i = 0; i < 3; i++) expect(await violations(player)).toEqual([])
   await expect(still.getByTestId('initiative-rail')).toContainText('Round 1')
   await expect(still.getByTestId('rolled-Aria')).toHaveCount(0)
   await expect(page.getByTestId('turn-banner')).toHaveCount(0)

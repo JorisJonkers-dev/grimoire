@@ -1,5 +1,5 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, type Page, test } from '@playwright/test'
+import { violations } from './axe'
 
 async function enter(page: Page, faces: string[]) {
   const card = page.getByTestId('roll-card')
@@ -68,7 +68,7 @@ test('a hidden goblin springs its zone on the party, and whoever missed it is su
   await expect(page.getByTestId('zone-Ambush')).toContainText('Waiting for Perception · Stealth DC 16')
   await expect(player.getByTestId('roll-card')).toContainText('Perception for Aria')
   await expect(player.locator('[data-hex="3,0"]')).not.toHaveAttribute('aria-label', /Goblin/)
-  expect((await new AxeBuilder({ page: player }).analyze()).violations).toEqual([])
+  expect(await violations(player)).toEqual([])
   await enter(player, ['3'])
 
   for (const p of [page, player, table]) {

@@ -1,6 +1,6 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
 import { buildFighter } from './wizard'
+import { violations } from './axe'
 
 test('the DM grants Heroic Inspiration and the player spends it on a reroll', async ({ page, browser }, info) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
@@ -34,7 +34,7 @@ test('the DM grants Heroic Inspiration and the player spends it on a reroll', as
   const card = page.getByTestId('roll-card')
   await card.getByTestId('roll-rest').click()
   await expect(card.getByTestId('inspiration-choice')).toContainText('You have Heroic Inspiration')
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
   await card.getByTestId('reroll-0').click()
   await expect(card.getByTestId('rerolled')).toBeVisible()
   await expect(card.getByTestId('roll-total')).toContainText('Total')

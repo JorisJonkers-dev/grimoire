@@ -1,6 +1,6 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
 import { buildFighter } from './wizard'
+import { violations } from './axe'
 
 test('a player builds a Character through the wizard and plays from the sheet', async ({ page }, info) => {
   await page.goto('/campaigns')
@@ -12,7 +12,7 @@ test('a player builds a Character through the wizard and plays from the sheet', 
   await expect(page.getByTestId('starting-level')).toContainText('level 1')
   await buildFighter(page, 'Kara', true)
   await expect(page.getByTestId('step-review')).toContainText('Kara')
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
   await page.getByTestId('create-character').click()
 
   const sheet = page.getByTestId('character-sheet')
@@ -30,7 +30,7 @@ test('a player builds a Character through the wizard and plays from the sheet', 
   await expect(sheet.getByTestId('temp-hp')).toHaveCount(0)
   await sheet.getByTestId('hp-heal').click()
   await expect(sheet.getByTestId('hp')).toHaveText('12 / 12')
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
 
   const phone = info.project.name === 'phone'
   const trait = sheet.getByTestId('trait').filter({ hasText: 'Second Wind' })
@@ -42,5 +42,5 @@ test('a player builds a Character through the wizard and plays from the sheet', 
   await trait.locator('summary').click()
   await expect(trait).toContainText('Bonus Action')
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
 })

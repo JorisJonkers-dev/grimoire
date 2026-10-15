@@ -1,6 +1,6 @@
 import { createHmac } from 'node:crypto'
-import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
+import { violations } from './axe'
 
 // RFC 6238 with SHA-1, six digits and 30-second steps, as an authenticator app computes it.
 function totp(secret: string, at: number) {
@@ -47,7 +47,7 @@ test('two-step sign-in asks for one numeric code after the password', async ({ b
   const code = page.getByTestId('two-step-code')
   await expect(code).toHaveAttribute('inputmode', 'numeric')
   await expect(code).toHaveAttribute('autocomplete', 'one-time-code')
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
   await code.fill('000000')
   await page.getByRole('button', { name: 'Continue' }).click()

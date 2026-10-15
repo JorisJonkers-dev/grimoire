@@ -1,6 +1,6 @@
-import AxeBuilder from '@axe-core/playwright'
 import { devices, expect, type Page, test } from '@playwright/test'
 import { buildFighter } from './wizard'
+import { violations } from './axe'
 
 /** Resolves once the page's next save of a layout has reached the server. */
 const saved = (page: Page) => page.waitForResponse((r) => r.url().includes('/action-bars') && r.request().method() === 'PUT' && r.ok())
@@ -59,7 +59,7 @@ test('a player arranges their Character\'s action bars, and finds them the same 
   const bars = player.getByTestId('action-bars')
   await expect(bars.getByTestId('bar-1').locator('.tile:not(.tile--add)')).toHaveCount(10)
   await expect(bars.getByTestId('edit-bars')).toHaveAttribute('aria-pressed', 'true')
-  expect((await new AxeBuilder({ page: player }).analyze()).violations).toEqual([])
+  expect(await violations(player)).toEqual([])
 
   // Drag Dodge to the front, put Dash away, and move the sword to the second bar by tapping.
   await bars.getByTestId('action-dodge').dragTo(bars.getByTestId('bar-1').locator('.tile').first())
@@ -95,7 +95,7 @@ test('a player arranges their Character\'s action bars, and finds them the same 
   await broughtBack
   await expect(small.getByTestId('bar-1').locator('.tile:not(.tile--add)').last()).toContainText('Dash')
   await small.getByTestId('edit-bars').click()
-  expect((await new AxeBuilder({ page: phone }).analyze()).violations).toEqual([])
+  expect(await violations(phone)).toEqual([])
 
   // Back on the desktop the key 1 plays the first tile: Dodge, which takes the action.
   await player.reload()

@@ -1,5 +1,5 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, type Page, test } from '@playwright/test'
+import { violations } from './axe'
 
 const focusedHex = (page: Page) => page.evaluate(() => document.activeElement?.getAttribute('data-hex') ?? null)
 
@@ -75,7 +75,7 @@ test('a player takes a turn with the keyboard alone', async ({ page, browser }, 
   await expect(keys).toBeVisible()
   await expect(keys.getByTestId('key-row').filter({ hasText: 'End turn' })).toHaveText(/^E\s*End turn$/)
   await expect(keys.getByTestId('key-map-close')).toBeFocused()
-  expect((await new AxeBuilder({ page: player }).analyze()).violations).toEqual([])
+  expect(await violations(player)).toEqual([])
   // While the list shows, the keys behind it do nothing.
   await player.keyboard.press('e')
   await expect(player.getByTestId('turn-Aria')).toBeVisible()
@@ -104,7 +104,7 @@ test('the keys are listed on any page, and / goes to the search', async ({ page 
   await expect(page.getByTestId('key-map')).toBeVisible()
   await expect(page.getByTestId('key-map').getByTestId('key-row').filter({ hasText: /Search/ })).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
   await page.keyboard.press('Escape')
   await expect(page.getByTestId('key-map')).toHaveCount(0)
 })

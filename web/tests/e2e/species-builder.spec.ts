@@ -1,5 +1,5 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
+import { violations } from './axe'
 
 test('an author builds the Marshkin in the species builder with a lineage and saves it', async ({ page }, info) => {
   const name = `Marshkin ${info.project.name} ${String(Date.now())}`
@@ -28,7 +28,7 @@ test('an author builds the Marshkin in the species builder with a lineage and sa
   await expect(lines).toContainText('Size. Medium or Small, chosen when you select this species.')
   await expect(lines).toContainText('Level 1: Druidcraft. You can cast Druidcraft at will.')
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
 
   await page.getByTestId('species-save').click()
   await expect(page.getByTestId('species-status')).toHaveText('Saved as Revision 2.')

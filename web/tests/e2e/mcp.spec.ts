@@ -1,5 +1,5 @@
-import AxeBuilder from '@axe-core/playwright'
 import { type APIRequestContext, expect, test } from '@playwright/test'
+import { violations } from './axe'
 
 // An MCP client over Streamable HTTP, speaking JSON-RPC the way an agent's connector does.
 async function connect(request: APIRequestContext) {
@@ -42,7 +42,7 @@ test('an agent preps an NPC through MCP and the DM undoes it from the activity p
   const entry = page.getByTestId('activity-Tamsin-1')
   await expect(entry).toContainText('e2e-agent created the NPC Tamsin')
   await expect(page.getByTestId('mcp-url')).toHaveValue(/\/mcp$/)
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
   await page.getByTestId('undo-Tamsin-1').click()
   await expect(entry).toContainText('changed since')
   await expect(page.getByTestId('undo-Tamsin-1')).toHaveCount(0)
@@ -70,7 +70,7 @@ test('an agent spawns an encounter in a live session and the DM undoes it from t
   const entry = page.getByTestId(`log-${String(actionSeq)}`)
   await expect(entry).toContainText('encounter spawned: Goblin Warrior 1, Goblin Warrior 2')
   await expect(entry).toContainText('via e2e-agent')
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
 
   await page.getByTestId(`undo-${String(actionSeq)}`).click()
   await expect(page.locator('[data-hex="0,0"]')).not.toHaveAttribute('aria-label', /Goblin/)

@@ -1,5 +1,5 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
+import { violations } from './axe'
 
 test('find a spell, read it and open a condition it mentions', async ({ page }) => {
   await page.goto('/compendium/spells')
@@ -8,7 +8,7 @@ test('find a spell, read it and open a condition it mentions', async ({ page }) 
   await expect(page.getByRole('heading', { level: 1, name: 'Hold Person' })).toBeVisible()
   await page.getByRole('button', { name: /paralyzed/i }).first().click()
   await expect(page.getByTestId('condition-popover')).toBeVisible()
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
 })
 
 test('switch a spell between the 2024 and 2014 rules', async ({ page }) => {
@@ -22,7 +22,7 @@ test('attribution names the author and the SRD', async ({ page }) => {
   await page.goto('/about/attribution')
   await expect(page.getByRole('heading', { level: 2, name: 'System Reference Document 5.2' })).toBeVisible()
   await expect(page.getByRole('contentinfo')).toContainText('Joris Jonkers')
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
 })
 
 test('browse monsters, read a statblock and see the automation report', async ({ page }) => {
@@ -32,7 +32,7 @@ test('browse monsters, read a statblock and see the automation report', async ({
   await expect(page.getByTestId('entry-facts')).toContainText('Armor Class')
   await expect(page.getByTestId('entry-facts')).toContainText('Challenge')
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
   await page.getByRole('link', { name: 'Automation coverage' }).click()
   await expect(page.getByTestId('automation-table')).toContainText('Monsters')
 })

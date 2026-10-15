@@ -1,5 +1,5 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
+import { violations } from './axe'
 
 test('a DM keeps a creature in the Library, links it, overrides it and pins a Revision', async ({ page }, info) => {
   const stamp = `${info.project.name} ${String(Date.now())}`
@@ -22,7 +22,7 @@ test('a DM keeps a creature in the Library, links it, overrides it and pins a Re
   await page.getByTestId('library-add').click()
   await expect(page.getByRole('heading', { level: 1 })).toContainText(hag)
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
   await page.getByTestId('entry-link-target').selectOption({ label: campaign })
   await page.getByTestId('entry-link').click()
   await expect(page.getByTestId('entry-uses')).toContainText(`${campaign} · follows the latest`)
@@ -40,7 +40,7 @@ test('a DM keeps a creature in the Library, links it, overrides it and pins a Re
   await card.getByTestId('pin').selectOption('1')
   await expect(card.getByTestId('pin')).toHaveValue('1')
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
 
   await page.goto('/library')
   await page.getByRole('link', { name: hag }).click()

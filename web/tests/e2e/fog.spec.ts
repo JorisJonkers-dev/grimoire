@@ -1,6 +1,6 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
 import { crypt } from './maps'
+import { violations } from './axe'
 
 
 test('the party sees only what light and darkvision show, and walking pushes the fog back', async ({ page, browser }, info) => {
@@ -75,7 +75,7 @@ test('the party sees only what light and darkvision show, and walking pushes the
   expect(seen).not.toContain('Shade')
   expect(seen).not.toContain('Lurker')
   expect(seen).not.toContain('"walls"')
-  expect((await new AxeBuilder({ page: player }).analyze()).violations).toEqual([])
+  expect(await violations(player)).toEqual([])
 
   const image = await player.getByTestId('map-image').getAttribute('href')
   const masked = await player.request.get(String(image), { headers: { 'X-User-Id': `e2e-fog-${stamp}` } })

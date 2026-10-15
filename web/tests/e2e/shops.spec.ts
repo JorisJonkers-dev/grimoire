@@ -1,6 +1,6 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, type Page, test } from '@playwright/test'
 import { buildFighter } from './wizard'
+import { violations } from './axe'
 
 async function enter(page: Page, faces: string[]) {
   const card = page.getByTestId('roll-card')
@@ -49,7 +49,7 @@ test('the DM opens a shop stocked from a loot table, and a player haggles, buys 
   await expect(store).toContainText('Nothing in stock.')
   await store.getByRole('button', { name: 'Reroll stock of Store' }).click()
   await expect(store.getByTestId('stock-Store-rope')).toHaveText('6× rope · 1 gp')
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
   await page.getByTestId('to-campaign').click()
 
   const context = await browser.newContext({ extraHTTPHeaders: { 'X-User-Id': `e2e-market-${stamp}` } })
@@ -84,7 +84,7 @@ test('the DM opens a shop stocked from a loot table, and a player haggles, buys 
   await shop.getByTestId('haggle').click()
   await expect(shop.getByTestId('haggle-pending')).toBeVisible()
   await expect(shop.getByTestId('roll-card')).toContainText('Haggle at Store')
-  expect((await new AxeBuilder({ page: player }).analyze()).violations).toEqual([])
+  expect(await violations(player)).toEqual([])
   await enter(player, ['20'])
   await expect(shop.getByTestId('haggle-result')).toHaveText('Haggled: 10% off')
   await expect(shop.getByTestId('stock-rope').getByTestId('price')).toHaveText('9 sp')

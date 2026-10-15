@@ -1,5 +1,5 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, type Page, test } from '@playwright/test'
+import { violations } from './axe'
 
 async function enter(page: Page, face: string) {
   const card = page.getByTestId('roll-card')
@@ -73,7 +73,7 @@ test('initiative from Roll Cards, then turns with the action economy on every sc
   await expect(turn.getByTestId('movement')).toHaveText('20 / 30 ft')
   await player.locator('[data-hex="-5,2"]').click()
   await expect(player.getByTestId('rejection')).toHaveText('Aria has 20 ft of movement left.')
-  expect((await new AxeBuilder({ page: player }).analyze()).violations).toEqual([])
+  expect(await violations(player)).toEqual([])
   await turn.getByTestId('end-turn').click()
 
   await expect(page.getByTestId('turn-Goblin')).toBeVisible()

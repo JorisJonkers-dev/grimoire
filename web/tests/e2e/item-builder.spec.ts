@@ -1,5 +1,5 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
+import { violations } from './axe'
 
 test('an author builds the Ashwood Bow in the item builder, checks its price and saves it', async ({ page }, info) => {
   const name = `Ashwood Bow ${info.project.name} ${String(Date.now())}`
@@ -36,7 +36,7 @@ test('an author builds the Ashwood Bow in the item builder, checks its price and
   await expect(card).toContainText('It has 3 charges and regains 1d4 expended charges daily at dawn.')
   await expect(page.getByTestId('price-check')).toContainText('Its properties point to rare, not uncommon.')
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  expect(await violations(page)).toEqual([])
 
   await page.getByTestId('item-save').click()
   await expect(page.getByTestId('item-status')).toHaveText('Saved as Revision 2.')
