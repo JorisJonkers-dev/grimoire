@@ -1,0 +1,50 @@
+# The approved Manual exception list (#244). Only the maintainer changes it.
+# ground: dm_knowledge (knowledge only the DM holds), on_the_spot (content authored on the spot) or
+# free_form (how a creature pursues a free-form instruction or bargain).
+# Every other part of a listed entry is automated as usual.
+
+- {entry: spells/augury, ground: dm_knowledge, parts: [the omen], reason: Only the DM knows what the future holds.}
+- {entry: spells/commune, ground: dm_knowledge, parts: [the answers], reason: Only the DM knows what the deity answers.}
+- {entry: spells/commune-with-nature, ground: dm_knowledge, parts: [what the caster learns], reason: Only the DM knows the surrounding land.}
+- {entry: spells/contact-other-plane, ground: dm_knowledge, parts: [the answers], reason: Only the DM knows what the entity answers.}
+- {entry: spells/detect-thoughts, ground: dm_knowledge, parts: [the thoughts read], reason: Only the DM knows what a creature thinks.}
+- {entry: spells/divination, ground: dm_knowledge, parts: [the answer], reason: Only the DM knows what the god's servant answers.}
+- {entry: spells/find-the-path, ground: dm_knowledge, parts: [the route], reason: Only the DM knows the way to the destination.}
+- {entry: spells/legend-lore, ground: dm_knowledge, parts: [the lore], reason: Only the DM knows the legends told of the subject.}
+- {entry: spells/locate-animals-or-plants, ground: dm_knowledge, parts: [the direction and distance], reason: Only the DM knows where unplaced creatures and plants are.}
+- {entry: spells/scrying, ground: dm_knowledge, parts: [what the sensor shows], reason: Only the DM knows what happens away from the Map.}
+- {entry: spells/speak-with-animals, ground: dm_knowledge, parts: [what the animals say], reason: Only the DM knows what the animals know and answer.}
+- {entry: spells/speak-with-dead, ground: dm_knowledge, parts: [the corpse's answers], reason: Only the DM knows what the dead knew.}
+- {entry: spells/speak-with-plants, ground: dm_knowledge, parts: [what the plants say], reason: Only the DM knows what the plants witnessed.}
+- {entry: spells/creation, ground: on_the_spot, parts: [the object created], reason: The object is authored at the table.}
+- {entry: spells/fabricate, ground: on_the_spot, parts: [the object made], reason: The product is authored at the table.}
+- {entry: spells/stone-shape, ground: on_the_spot, parts: [the shape given], reason: The shape is authored at the table.}
+- {entry: spells/wish, ground: on_the_spot, parts: [any wish beyond duplicating a spell], reason: The outcome of a free wish is authored at the table.}
+- {entry: spells/hallucinatory-terrain, ground: on_the_spot, parts: [the illusory terrain], reason: The illusion is authored at the table.}
+- {entry: spells/major-image, ground: on_the_spot, parts: [the image], reason: The illusion is authored at the table.}
+- {entry: spells/minor-illusion, ground: on_the_spot, parts: [the sound or image], reason: The illusion is authored at the table.}
+- {entry: spells/mirage-arcane, ground: on_the_spot, parts: [the illusory terrain], reason: The illusion is authored at the table.}
+- {entry: spells/phantasmal-force, ground: on_the_spot, parts: [the phantasm], reason: The illusion is authored at the table.}
+- {entry: spells/programmed-illusion, ground: on_the_spot, parts: [the illusion and its trigger], reason: The illusion is authored at the table.}
+- {entry: spells/project-image, ground: on_the_spot, parts: [the image's behaviour], reason: The illusion is authored at the table.}
+- {entry: spells/silent-image, ground: on_the_spot, parts: [the image], reason: The illusion is authored at the table.}
+- {entry: spells/dream, ground: free_form, parts: [the message], reason: The message and how the target takes it are free-form.}
+- {entry: spells/geas, ground: free_form, parts: [the command], reason: How the target pursues the command is free-form.}
+- {entry: spells/magic-mouth, ground: free_form, parts: [the message and its trigger], reason: The message and its trigger are free-form.}
+- {entry: spells/mass-suggestion, ground: free_form, parts: [the suggested course], reason: How each target pursues the suggestion is free-form.}
+- {entry: spells/modify-memory, ground: free_form, parts: [the memory changed], reason: The changed memory is free-form.}
+- {entry: spells/planar-ally, ground: free_form, parts: [the bargain and the service], reason: The bargain and how the ally serves are free-form.}
+- {entry: spells/suggestion, ground: free_form, parts: [the suggested course], reason: How the target pursues the suggestion is free-form.}
+- {entry: features/druid/wild-shape, ground: on_the_spot, parts: [the gear the form can wear], reason: The DM decides which Objects the form can wear or carry.}
+- {entry: monsters/aboleth, ground: dm_knowledge, parts: [Probing Telepathy's desires], reason: Only the DM knows a creature's greatest desires.}
+- {entry: monsters/djinni, ground: on_the_spot, parts: [Wishes], reason: The outcome of a wish is authored at the table.}
+- {entry: monsters/efreeti, ground: on_the_spot, parts: [Wishes], reason: The outcome of a wish is authored at the table.}
+- {entry: monsters/planetar, ground: dm_knowledge, parts: [Divine Awareness], reason: Only the DM knows whether something is a lie.}
+- {entry: monsters/solar, ground: dm_knowledge, parts: [Divine Awareness], reason: Only the DM knows whether something is a lie.}
+- {entry: monsters/vampire, ground: dm_knowledge, parts: [Vampire Weakness's Forbiddance and stake], reason: Only the DM knows whether a residence invites the vampire and how a stake is placed.}
+- {entry: monsters/vampire-spawn, ground: dm_knowledge, parts: [Vampire Weakness's Forbiddance and stake], reason: Only the DM knows whether a residence invites the spawn and how a stake is placed.}
+- {entry: monsters/sprite, ground: dm_knowledge, parts: [Heart Sight's emotions], reason: Only the DM knows what a creature feels.}
+- {entry: items/mysterious-deck, ground: on_the_spot, parts: [Fates, Flames, Rogue, Ruin, Sage, Void, the keep's contents], reason: These cards and the keep are authored at the table.}
+- {entry: items/bag-of-beans, ground: on_the_spot, parts: [the planted-bean table], reason: What grows from a planted bean is authored at the table.}
+- {entry: items/dragon-orb, ground: on_the_spot, parts: [the dragon essence, Call Dragons], reason: The essence's will and the dragons called are authored at the table.}
+- {entry: items/marvelous-pigments, ground: on_the_spot, parts: [the painted creation], reason: The painted object is authored at the table.}

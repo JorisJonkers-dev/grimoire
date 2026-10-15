@@ -146,6 +146,7 @@ type Querier interface {
 	ClearClassChildren(ctx context.Context, classID int64) error
 	ClearClassSpells(ctx context.Context, arg ClearClassSpellsParams) error
 	ClearContainerCoins(ctx context.Context, containerID uuid.UUID) error
+	ClearDesignEffects(ctx context.Context) error
 	ClearEffectParts(ctx context.Context, effectID int64) error
 	ClearEffectScalingRules(ctx context.Context, effectID int64) error
 	ClearEffects(ctx context.Context, sessionID uuid.UUID) error
@@ -201,6 +202,7 @@ type Querier interface {
 	DeleteCompanion(ctx context.Context, arg DeleteCompanionParams) (int64, error)
 	DeleteContainer(ctx context.Context, id uuid.UUID) error
 	DeleteContainerCoins(ctx context.Context, arg DeleteContainerCoinsParams) error
+	DeleteDesignEffects(ctx context.Context, keep []string) error
 	DeleteDiceSet(ctx context.Context, id uuid.UUID) error
 	DeleteDying(ctx context.Context, tokenID uuid.UUID) error
 	DeleteEdge(ctx context.Context, arg DeleteEdgeParams) error
@@ -469,6 +471,7 @@ type Querier interface {
 	// And those of every token still on the map when the Session ends.
 	KeepCompanionsHP(ctx context.Context, sessionID uuid.UUID) error
 	LastDamage(ctx context.Context, sessionID pgtype.UUID) (LastDamageRow, error)
+	LatestDesignHash(ctx context.Context) (string, error)
 	LatestSnapshotHash(ctx context.Context) (string, error)
 	// Takes the next level once, only while it is unlocked.
 	LevelUpCharacter(ctx context.Context, arg LevelUpCharacterParams) (int64, error)
@@ -600,6 +603,7 @@ type Querier interface {
 	MapWalls(ctx context.Context, mapID uuid.UUID) ([]MapWallsRow, error)
 	MarchingOrder(ctx context.Context, campaignID uuid.UUID) ([]uuid.UUID, error)
 	MarkConversationRead(ctx context.Context, arg MarkConversationReadParams) error
+	MarkDesignEffect(ctx context.Context, slug string) error
 	MarkDigest(ctx context.Context, arg MarkDigestParams) error
 	// The live groups in which a member plays a party token, the Session the party split from first.
 	MemberGroups(ctx context.Context, arg MemberGroupsParams) ([]uuid.UUID, error)
@@ -653,6 +657,7 @@ type Querier interface {
 	ReadAllNotifications(ctx context.Context, arg ReadAllNotificationsParams) error
 	ReadNotification(ctx context.Context, arg ReadNotificationParams) (int64, error)
 	RecordCompendiumImport(ctx context.Context, snapshotHash string) (int64, error)
+	RecordDesignLoad(ctx context.Context, designHash string) error
 	RecoveryCodesLeft(ctx context.Context, accountID uuid.UUID) (int32, error)
 	RemoveMember(ctx context.Context, arg RemoveMemberParams) error
 	RemoveReveal(ctx context.Context, arg RemoveRevealParams) error

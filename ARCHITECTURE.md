@@ -677,9 +677,23 @@ results are all owners of Effects.
 
 Import maps Open5e fields to Parts where the data allows (damage dice, save ability, area, condition
 names). What cannot be mapped automatically gets `automation_level = partial|manual`; the coverage
-report (§2.1) lists them, and completing them is ordinary work (a migration of Part rows + tests),
-usually done through MCP by an agent and reviewed via Revisions. Kinds the census still needs (healing,
-senses, triggers, objects and walls, Notes) are added by the same recipe.
+report (§2.1) lists them. Kinds the census still needs (healing, senses, triggers, objects and walls,
+Notes) are added by the same recipe.
+
+**Design files.** SRD Effects are authored as one strict YAML file per entry under
+`api/db/designs/srd-2024/` (`spells/<slug>.yaml`, `conditions/<slug>.yaml`), embedded in the binary
+like the seed. A file names its entry, the seed's name for it, `automation: full` or `exception`, and
+its Effects. Each Effect has an Activation (concentration, duration), Parts in the generic shape
+(a `kind`, each field by name, the Parts beneath under each group's name, and the Part's own
+`scaling`), and the Activation's own Scaling. `compendium/designs.Read` decodes every Part and rule
+through the kinds and checks every file against the seed. It also checks the approved Manual exception
+list (`_exceptions.yaml`, both ways) and the `_no-effect.yaml` lists. It reports every problem at
+once. `TestTheShippedDesignFilesRead` runs that check in CI. The loader (`pgstore.LoadDesigns`) runs
+right after the snapshot import, at start and through `grimoire import`. It runs in one transaction
+and is skipped when the hash over all files matches the last load (`ops.design_loads`). It replaces
+any Effect of the same slug, and removes an Effect an earlier load wrote whose file is gone
+(`compendium.design_effects`). A failed read or load stops the start. Features, items and monsters
+load once their link tickets land.
 
 ### 9.4 Manual fallback
 

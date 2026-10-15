@@ -22,6 +22,7 @@ import (
 	campaignpg "github.com/JorisJonkers-dev/grimoire/api/internal/campaign/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium/corrections"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium/crosscheck"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium/designs"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium/open5e"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium/snapshot"
@@ -248,11 +249,25 @@ func runImport(ctx context.Context, store *pgstore.Store, logger *slog.Logger) e
 		return err
 	}
 	logger.Info("compendium import", "changed", changed, "spells", len(snap.Spells), "hash", hash[:12])
+	set, err := designs.Read(designFiles(), snap)
+	if err != nil {
+		return err
+	}
+	loaded, err := store.LoadDesigns(ctx, set)
+	if err != nil {
+		return err
+	}
+	logger.Info("design files", "loaded", loaded, "effects", len(set.Effects), "hash", set.Hash[:12])
 	return nil
 }
 
 func seeds() fs.FS {
 	sub, _ := fs.Sub(db.Seeds, "seeds")
+	return sub
+}
+
+func designFiles() fs.FS {
+	sub, _ := fs.Sub(db.Designs, "designs")
 	return sub
 }
 
