@@ -4,6 +4,7 @@ import (
 	"context"
 	"io/fs"
 	"reflect"
+	"strings"
 	"testing"
 	"testing/fstest"
 
@@ -219,5 +220,23 @@ func TestGroupsOfPartsHaveNames(t *testing.T) {
 		if _, err := pool.Exec(ctx, q); err == nil {
 			t.Errorf("a Part beneath another names its group, and only such a Part: %s", q)
 		}
+	}
+}
+
+// A Manual Effect's instruction runs to 500 letters, as the homebrew builders always let it.
+func TestManualInstructionsRunToFiveHundredLetters(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	s := pgstore.New(openPool(t))
+	long := effects.Definition{Slug: "long-manual", Name: "Long", Owner: effects.OwnedBySpell, Parts: []effects.Part{effects.Manual{Instruction: strings.Repeat("m", 500)}}}
+	if err := s.SaveEffect(ctx, effects.Owner{Kind: effects.OwnedBySpell, Slug: long.Slug}, long); err != nil {
+		t.Fatal(err)
+	}
+	if got, err := s.Effects(ctx); err != nil || !reflect.DeepEqual(got[long.Slug], long) {
+		t.Fatalf("a 500-letter instruction = %+v %v", got[long.Slug], err)
+	}
+	longer := effects.Definition{Slug: "longer-manual", Name: "Longer", Owner: effects.OwnedBySpell, Parts: []effects.Part{effects.Manual{Instruction: strings.Repeat("m", 501)}}}
+	if err := s.SaveEffect(ctx, effects.Owner{Kind: effects.OwnedBySpell, Slug: longer.Slug}, longer); err == nil {
+		t.Fatal("a 501-letter instruction was stored")
 	}
 }
