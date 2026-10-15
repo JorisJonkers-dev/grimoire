@@ -38458,6 +38458,25 @@ func (s *LiveCommand) Validate() error {
 		})
 	}
 	if err := func() error {
+		if s.Targets == nil {
+			return nil // optional
+		}
+		if err := (validate.Array{
+			MinLength:    0,
+			MinLengthSet: false,
+			MaxLength:    50,
+			MaxLengthSet: true,
+		}).ValidateLength(len(s.Targets)); err != nil {
+			return errors.Wrap(err, "array")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "targets",
+			Error: err,
+		})
+	}
+	if err := func() error {
 		if value, ok := s.EffectMode.Get(); ok {
 			if err := func() error {
 				if err := (validate.String{
@@ -40094,6 +40113,8 @@ func (s LiveCommandKind) Validate() error {
 	case "preview_area":
 		return nil
 	case "cast_area":
+		return nil
+	case "activate":
 		return nil
 	case "paint_surface":
 		return nil

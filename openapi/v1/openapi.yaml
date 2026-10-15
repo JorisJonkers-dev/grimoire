@@ -12298,7 +12298,7 @@ components:
       required: [nonce, kind, q, r, hidden]
       properties:
         nonce: { type: string, minLength: 1, maxLength: 64 }
-        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual, preview_area, cast_area, paint_surface, set_elevation, table_camera, table_scene, table_blackout, table_caption, ping, set_world, add_node, add_route, remove_node, remove_route, place_party, travel, add_zone, remove_zone, hold_zone, spring_zone, rest, encounter_check, schedule_check, roll_loot, move_item, move_coins, claim_loot, settle_loot, trade, open_shop, close_shop, buy, sell, haggle, spawn_encounter, adjust_hp, undo, propose_rest, agree_rest, spend_hit_die, finish_rest, interrupt_rest, take_action, unarmed, interact, swap_weapons, set_reaction, stabilise, revive, teleport, summon, command, set_visibility, place_object, remove_object, use_object, damage_object, find_object, unlock, disarm, jump, throw, mount, dismount, sneak, explore, pass_turn, legendary_action, lair_action, legendary_resistance, checkpoint, rewind, split_party, rejoin_party, table_follow, assign_control, measure_route, find_map, set_clock, set_marching_order] }
+        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual, preview_area, cast_area, activate, paint_surface, set_elevation, table_camera, table_scene, table_blackout, table_caption, ping, set_world, add_node, add_route, remove_node, remove_route, place_party, travel, add_zone, remove_zone, hold_zone, spring_zone, rest, encounter_check, schedule_check, roll_loot, move_item, move_coins, claim_loot, settle_loot, trade, open_shop, close_shop, buy, sell, haggle, spawn_encounter, adjust_hp, undo, propose_rest, agree_rest, spend_hit_die, finish_rest, interrupt_rest, take_action, unarmed, interact, swap_weapons, set_reaction, stabilise, revive, teleport, summon, command, set_visibility, place_object, remove_object, use_object, damage_object, find_object, unlock, disarm, jump, throw, mount, dismount, sneak, explore, pass_turn, legendary_action, lair_action, legendary_resistance, checkpoint, rewind, split_party, rejoin_party, table_follow, assign_control, measure_route, find_map, set_clock, set_marching_order] }
         caption: { type: string, maxLength: 400 }
         tokenId: { $ref: "#/components/schemas/Id" }
         label: { type: string, maxLength: 40 }
@@ -12335,7 +12335,13 @@ components:
         effectName: { type: string, maxLength: 80 }
         sourceId: { $ref: "#/components/schemas/Id" }
         rounds: { type: integer, format: int32, minimum: 0, maximum: 100 }
-        slot: { type: integer, format: int32, minimum: 1, maximum: 9, description: "The spell slot level an area spell is cast with; left out, it is cast at its lowest." }
+        slot: { type: integer, format: int32, minimum: 1, maximum: 9, description: "The spell slot level a spell is cast with; left out, it is cast at its lowest." }
+        targets:
+          type: array
+          description: The tokens an Activation picks, within its Effect's Targeting.
+          maxItems: 50
+          items: { $ref: "#/components/schemas/Id" }
+        force: { type: boolean, description: "Lets the DM pick targets the Effect's Targeting refuses; the Action Log records it." }
         effectMode: { type: string, maxLength: 80, description: "The option an Effect that offers a choice is applied in." }
         tempHp: { type: integer, format: int32, minimum: 1, maximum: 999, description: "Temporary Hit Points a form gives, such as a druid's level for Wild Shape." }
         qualities: { type: array, maxItems: 8, items: { $ref: "#/components/schemas/VisibilityQuality" } }

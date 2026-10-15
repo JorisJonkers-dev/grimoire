@@ -662,6 +662,14 @@ dispelled, until a rest, permanent, end of next turn, until cured, with repeat s
 spell's range and targets line. It is stored in `compendium.effect_targeting`, one row per Effect. No
 row states no Targeting, as for an Effect that is only applied by hand.
 
+**Activation** in a live Session is the `activate` command: a caster, an Effect, the slot it is cast
+with and the tokens it picks.
+- **Picks are judged by Targeting.** Each pick becomes a `Candidate` judged with the caster's own Senses (`state.sees`, not the party's shared sight). A token the member cannot see is no pick at all.
+- **An illegal pick is refused with the reason.** The DM may `force` it, and the Action Log records `activation_forced` apart from `effect_activated`.
+- **On a legal pick the Effect lands on every target.** The caster is its source, and it takes its duration and its concentration. A new concentration Effect ends the caster's last one.
+- **In combat it takes the caster's action**, on the caster's own turn. Out of combat it costs nothing.
+- **What it refuses for now.** An area Effect still goes through `cast_area`. An Effect that states no Targeting is applied by the DM by hand, as is one that does more as it lands (temporary hit points, a form, a dispel); those are for later Activation work.
+
 **Scaling.** An Effect holds any number of `Scaling` rules, each growing one scalable value: a field of
 one Part (counted depth first, as the Parts are stored) or of the Activation (`OnActivation`: the
 duration, its unit, concentration, and the number of targets). A rule grows its value along one axis

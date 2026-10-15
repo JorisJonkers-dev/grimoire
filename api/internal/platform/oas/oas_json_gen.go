@@ -37973,6 +37973,22 @@ func (s *LiveCommand) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.Targets != nil {
+			e.FieldStart("targets")
+			e.ArrStart()
+			for _, elem := range s.Targets {
+				elem.Encode(e)
+			}
+			e.ArrEnd()
+		}
+	}
+	{
+		if s.Force.Set {
+			e.FieldStart("force")
+			s.Force.Encode(e)
+		}
+	}
+	{
 		if s.EffectMode.Set {
 			e.FieldStart("effectMode")
 			s.EffectMode.Encode(e)
@@ -38474,7 +38490,7 @@ func (s *LiveCommand) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfLiveCommand = [111]string{
+var jsonFieldsNameOfLiveCommand = [113]string{
 	0:   "nonce",
 	1:   "kind",
 	2:   "caption",
@@ -38508,84 +38524,86 @@ var jsonFieldsNameOfLiveCommand = [111]string{
 	30:  "sourceId",
 	31:  "rounds",
 	32:  "slot",
-	33:  "effectMode",
-	34:  "tempHp",
-	35:  "qualities",
-	36:  "seenThrough",
-	37:  "disguise",
-	38:  "objectId",
-	39:  "objectKind",
-	40:  "objectName",
-	41:  "armorClass",
-	42:  "hpMax",
-	43:  "secret",
-	44:  "radiusFt",
-	45:  "links",
-	46:  "detectDc",
-	47:  "disarmDc",
-	48:  "triggerFt",
-	49:  "lockDc",
-	50:  "key",
-	51:  "method",
-	52:  "saveAbility",
-	53:  "saveDc",
-	54:  "effectId",
-	55:  "cured",
-	56:  "controlled",
-	57:  "manualId",
-	58:  "surface",
-	59:  "elevationFt",
-	60:  "camera",
-	61:  "zoomPct",
-	62:  "scene",
-	63:  "title",
-	64:  "body",
-	65:  "nodeId",
-	66:  "toNodeId",
-	67:  "routeId",
-	68:  "distanceMi",
-	69:  "pace",
-	70:  "vehicleId",
-	71:  "zoneId",
-	72:  "radiusHexes",
-	73:  "dmOnly",
-	74:  "rest",
-	75:  "tableId",
-	76:  "mode",
-	77:  "entry",
-	78:  "due",
-	79:  "lootTableId",
-	80:  "fromId",
-	81:  "buys",
-	82:  "sells",
-	83:  "instanceId",
-	84:  "action",
-	85:  "legend",
-	86:  "detail",
-	87:  "trigger",
-	88:  "option",
-	89:  "offHand",
-	90:  "cleave",
-	91:  "reactionKind",
-	92:  "reactionMode",
-	93:  "condition",
-	94:  "toId",
-	95:  "itemSlug",
-	96:  "coin",
-	97:  "count",
-	98:  "shopId",
-	99:  "monsters",
-	100: "hpDelta",
-	101: "seq",
-	102: "name",
-	103: "checkpointId",
-	104: "characterIds",
-	105: "gameDay",
-	106: "gameMinute",
-	107: "factionId",
-	108: "companionId",
-	109: "tokenIds",
-	110: "sessionId",
+	33:  "targets",
+	34:  "force",
+	35:  "effectMode",
+	36:  "tempHp",
+	37:  "qualities",
+	38:  "seenThrough",
+	39:  "disguise",
+	40:  "objectId",
+	41:  "objectKind",
+	42:  "objectName",
+	43:  "armorClass",
+	44:  "hpMax",
+	45:  "secret",
+	46:  "radiusFt",
+	47:  "links",
+	48:  "detectDc",
+	49:  "disarmDc",
+	50:  "triggerFt",
+	51:  "lockDc",
+	52:  "key",
+	53:  "method",
+	54:  "saveAbility",
+	55:  "saveDc",
+	56:  "effectId",
+	57:  "cured",
+	58:  "controlled",
+	59:  "manualId",
+	60:  "surface",
+	61:  "elevationFt",
+	62:  "camera",
+	63:  "zoomPct",
+	64:  "scene",
+	65:  "title",
+	66:  "body",
+	67:  "nodeId",
+	68:  "toNodeId",
+	69:  "routeId",
+	70:  "distanceMi",
+	71:  "pace",
+	72:  "vehicleId",
+	73:  "zoneId",
+	74:  "radiusHexes",
+	75:  "dmOnly",
+	76:  "rest",
+	77:  "tableId",
+	78:  "mode",
+	79:  "entry",
+	80:  "due",
+	81:  "lootTableId",
+	82:  "fromId",
+	83:  "buys",
+	84:  "sells",
+	85:  "instanceId",
+	86:  "action",
+	87:  "legend",
+	88:  "detail",
+	89:  "trigger",
+	90:  "option",
+	91:  "offHand",
+	92:  "cleave",
+	93:  "reactionKind",
+	94:  "reactionMode",
+	95:  "condition",
+	96:  "toId",
+	97:  "itemSlug",
+	98:  "coin",
+	99:  "count",
+	100: "shopId",
+	101: "monsters",
+	102: "hpDelta",
+	103: "seq",
+	104: "name",
+	105: "checkpointId",
+	106: "characterIds",
+	107: "gameDay",
+	108: "gameMinute",
+	109: "factionId",
+	110: "companionId",
+	111: "tokenIds",
+	112: "sessionId",
 }
 
 // Decode decodes LiveCommand from json.
@@ -38593,7 +38611,7 @@ func (s *LiveCommand) Decode(d *jx.Decoder) error {
 	if s == nil {
 		return errors.New("invalid: unable to decode LiveCommand to nil")
 	}
-	var requiredBitSet [14]uint8
+	var requiredBitSet [15]uint8
 
 	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
 		switch string(k) {
@@ -38948,6 +38966,33 @@ func (s *LiveCommand) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"slot\"")
+			}
+		case "targets":
+			if err := func() error {
+				s.Targets = make([]ID, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem ID
+					if err := elem.Decode(d); err != nil {
+						return err
+					}
+					s.Targets = append(s.Targets, elem)
+					return nil
+				}); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"targets\"")
+			}
+		case "force":
+			if err := func() error {
+				s.Force.Reset()
+				if err := s.Force.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"force\"")
 			}
 		case "effectMode":
 			if err := func() error {
@@ -39794,9 +39839,10 @@ func (s *LiveCommand) Decode(d *jx.Decoder) error {
 	}
 	// Validate required fields.
 	var failures []validate.FieldError
-	for i, mask := range [14]uint8{
+	for i, mask := range [15]uint8{
 		0b11000011,
 		0b00000001,
+		0b00000000,
 		0b00000000,
 		0b00000000,
 		0b00000000,
@@ -40062,6 +40108,8 @@ func (s *LiveCommandKind) Decode(d *jx.Decoder) error {
 		*s = LiveCommandKindPreviewArea
 	case LiveCommandKindCastArea:
 		*s = LiveCommandKindCastArea
+	case LiveCommandKindActivate:
+		*s = LiveCommandKindActivate
 	case LiveCommandKindPaintSurface:
 		*s = LiveCommandKindPaintSurface
 	case LiveCommandKindSetElevation:

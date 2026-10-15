@@ -161,6 +161,21 @@ func ambient(a string) vision.Ambient {
 
 // vision is the party's shared sight on the active Map.
 func (s *state) vision() map[hex.Coord]bool {
+	var viewers []vision.Viewer
+	for _, t := range s.tokens {
+		if t.Kind == domain.TokenParty && !t.Hidden {
+			viewers = append(viewers, viewer(t))
+		}
+	}
+	return s.sight(viewers)
+}
+
+func viewer(t domain.Token) vision.Viewer {
+	return vision.Viewer{At: hex.Coord{Q: t.Q, R: t.R}, DarkvisionFt: t.DarkvisionFt}
+}
+
+// sight is what the viewers see together on the active Map.
+func (s *state) sight(viewers []vision.Viewer) map[hex.Coord]bool {
 	if s.board == nil {
 		return nil
 	}
@@ -171,12 +186,6 @@ func (s *state) vision() map[hex.Coord]bool {
 	scene := vision.Scene{Grid: g, Ambient: ambient(s.board.Map.Ambient)}
 	for _, l := range s.board.Lights {
 		scene.Lights = append(scene.Lights, vision.Light{At: l.At, BrightFt: l.BrightFt, DimFt: l.DimFt})
-	}
-	var viewers []vision.Viewer
-	for _, t := range s.tokens {
-		if t.Kind == domain.TokenParty && !t.Hidden {
-			viewers = append(viewers, vision.Viewer{At: hex.Coord{Q: t.Q, R: t.R}, DarkvisionFt: t.DarkvisionFt})
-		}
 	}
 	return scene.Visible(viewers)
 }
