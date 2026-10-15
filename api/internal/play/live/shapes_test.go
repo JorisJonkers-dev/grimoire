@@ -36,12 +36,20 @@ func shapedTable(t *testing.T) (world, *table, map[string]string) {
 		}},
 		{Slug: "hold-fast", Name: "Hold Fast", Owner: effects.OwnedBySpell, Duration: effects.Duration{Kind: effects.Rounds, Amount: 3, RepeatSave: "wisdom"}, Parts: []effects.Part{effects.Immobile{}}},
 		{Slug: "weary", Name: "Weary", Owner: effects.OwnedByFeature, Duration: effects.Duration{Kind: effects.UntilRest}, Parts: []effects.Part{effects.SpeedPenalty{Ft: 5}}},
-		{Slug: "frost-burst", Name: "Frost Burst", Owner: effects.OwnedBySpell, Scaling: &effects.Scaling{Axis: effects.SlotLevel, Base: 1, Dice: "1d6"}, Parts: []effects.Part{
+		{Slug: "frost-burst", Name: "Frost Burst", Owner: effects.OwnedBySpell, Scaling: []effects.Scaling{{Part: 1, Field: "dice", Axis: effects.SlotLevel, Class: "", Rule: effects.Linear{Base: 1, Per: effects.Value{Text: "1d6"}}}}, Parts: []effects.Part{
 			effects.Area{Shape: hex.SphereArea, SizeFt: 5, RangeFt: 60},
 			effects.SaveDamage{Ability: "constitution", Dice: "2d6", Type: "cold", Half: true},
 			effects.Branch{When: effects.Condition{Kind: effects.FailsBy, N: 5}, Then: []effects.Part{
 				effects.SaveCondition{Ability: "constitution", Slug: "prone"}, effects.Manual{Instruction: "frost rimes its armour."},
 			}},
+		}},
+		{Slug: "swelling-burst", Name: "Swelling Burst", Owner: effects.OwnedBySpell, Concentration: true, Duration: effects.Duration{Kind: effects.Minutes, Amount: 1}, Scaling: []effects.Scaling{
+			{Part: 0, Field: "size_ft", Axis: effects.SlotLevel, Class: "", Rule: effects.Linear{Base: 1, Per: effects.Value{Number: 5}}},
+			{Part: 1, Field: "dice", Axis: effects.SlotLevel, Class: "", Rule: effects.Linear{Base: 1, Per: effects.Value{Text: "1d6"}}},
+			{Part: effects.OnActivation, Field: "concentration", Axis: effects.SlotLevel, Class: "", Rule: effects.Table{Steps: []effects.Step{{At: 2, Value: effects.Value{Flag: false}}}}},
+		}, Parts: []effects.Part{
+			effects.Area{Shape: hex.SphereArea, SizeFt: 5, RangeFt: 60},
+			effects.SaveDamage{Ability: "dexterity", Dice: "1d6", Type: "fire", Half: true},
 		}},
 	} {
 		if err := comppg.New(w.pool).SaveEffect(ctx, effects.Owner{Kind: d.Owner, Slug: d.Slug}, d); err != nil {

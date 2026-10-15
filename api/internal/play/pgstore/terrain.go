@@ -60,7 +60,7 @@ func (s *Store) saveSurfaces(ctx context.Context, sid uuid.UUID, ground map[hex.
 
 //nolint:gosec // coordinates and DCs are bounded by the rules
 func (s *Store) insertCast(ctx context.Context, sid uuid.UUID, c *domain.AreaCast) error {
-	p := queries.InsertCastParams{ID: c.ID, SessionID: sid, CasterTokenID: uuid.UUID(c.Caster), Spell: c.Spell, Dc: int32(c.DC)}
+	p := queries.InsertCastParams{ID: c.ID, SessionID: sid, CasterTokenID: uuid.UUID(c.Caster), Spell: c.Spell, Dc: int32(c.DC), SlotLevel: pgtype.Int4{Int32: int32(c.Slot), Valid: c.Slot > 0}}
 	if c.DamageRoll != nil {
 		p.DamageRollID = pgtype.UUID{Bytes: *c.DamageRoll, Valid: true}
 	}
@@ -102,7 +102,7 @@ func (s *Store) LoadTerrain(ctx context.Context, id domain.SessionID) (map[hex.C
 	if err != nil {
 		return nil, nil, err
 	}
-	cast := &domain.AreaCast{ID: c.ID, Caster: domain.TokenID(c.CasterTokenID), Spell: c.Spell, DC: int(c.Dc)}
+	cast := &domain.AreaCast{ID: c.ID, Caster: domain.TokenID(c.CasterTokenID), Spell: c.Spell, DC: int(c.Dc), Slot: int(c.SlotLevel.Int32)}
 	if c.DamageRollID.Valid {
 		roll := domain.RollID(c.DamageRollID.Bytes)
 		cast.DamageRoll = &roll

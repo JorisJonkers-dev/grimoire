@@ -2,6 +2,7 @@ package live_test
 
 import (
 	"context"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -59,5 +60,51 @@ func TestSRDAreaSpellsScaleWithTheirSlot(t *testing.T) {
 				t.Fatalf("damage at slot %d = %q %v", c.slot, roll.Notation, err)
 			}
 		})
+	}
+}
+
+// A cast applies all its Scaling before it picks targets: a bigger area at a higher slot takes in the
+// goblin, rolls more dice, and needs no concentration; the cast keeps its slot through a restart, so it
+// resolves as it was cast.
+func TestAnAreaSpellIsActivatedAtItsSlot(t *testing.T) {
+	t.Parallel()
+	w, tb, ids := shapedTable(t)
+	tb.fight(ids, "Aria", "Goblin")
+	tb.dmSays(live.Command{Kind: live.CmdApplyEffect, TargetID: ids["Aria"], SourceID: ids["Aria"], Effect: "bless"})
+	burst := live.Command{Kind: live.CmdPreviewArea, TokenID: ids["Aria"], Effect: "swelling-burst", Q: 1, R: 0, Slot: 1}
+	targets := func(a *live.AreaPreview) []string {
+		var out []string
+		for _, tg := range a.Targets {
+			out = append(out, tg.TokenID)
+		}
+		return out
+	}
+	if a := tb.playerSays(burst).Area; len(a.Hexes) != 7 || slices.Contains(targets(a), ids["Goblin"]) || len(a.Ends) != 1 {
+		t.Fatalf("at slot 1 = %+v", a)
+	}
+	burst.Slot = 2
+	if a := tb.playerSays(burst).Area; len(a.Hexes) != 19 || !slices.Contains(targets(a), ids["Goblin"]) || a.Ends != nil {
+		t.Fatalf("at slot 2 = %+v", a)
+	}
+	burst.Kind = live.CmdCastArea
+	u := tb.playerSays(burst)
+	roll, err := pgstore.New(w.pool).Roll(context.Background(), w.session.CampaignID, domain.RollID(uuid.MustParse(u.View.Area.DamageRollID)))
+	if err != nil || roll.Notation != "2d6" || len(u.View.Area.Saves) != 2 {
+		t.Fatalf("cast at slot 2 = %q %+v", roll.Notation, u.View.Area)
+	}
+	w.hub.Close(w.session.ID)
+	tb.dm = join(t, w, w.dm, dmCaller, live.AudienceDM)
+	tb.player = join(t, w, w.player, playerCaller, live.AudienceParty)
+	tb.fill(u.View.Area.DamageRollID, w.player, 1, 1)
+	for _, s := range u.View.Area.Saves {
+		if s.TokenID == ids["Aria"] {
+			tb.fill(s.RollID, w.player, 20, 1) // Bless adds its die
+			continue
+		}
+		tb.fill(s.RollID, w.dm, 20)
+	}
+	v := barrier(t, w, tb)
+	if a := token(v, "Aria"); v.Area != nil || effect(a, "Bless") == nil || effect(a, "Swelling Burst") != nil {
+		t.Fatalf("resolved at slot 2, Bless kept = %+v %+v", v.Area, a.Effects)
 	}
 }

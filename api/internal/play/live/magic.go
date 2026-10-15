@@ -124,8 +124,7 @@ func (s *state) forced(from domain.Token, t domain.Token, push effects.ForcedMov
 
 // sustained puts a concentration area spell on its caster, ending what the caster concentrated on
 // before; an emanation then moves with the caster.
-func (s *state) sustained(caster domain.Token, slug string) *Write {
-	def, _ := s.catalog.Lookup(slug)
+func (s *state) sustained(caster domain.Token, slug string, def effects.Definition) *Write {
 	if !def.Concentration {
 		return nil
 	}

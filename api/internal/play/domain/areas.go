@@ -19,6 +19,7 @@ type AreaCast struct {
 	Caster     TokenID
 	Spell      string
 	DC         int
+	Slot       int
 	DamageRoll *RollID
 	Hexes      []hex.Coord
 	Targets    []AreaTarget
