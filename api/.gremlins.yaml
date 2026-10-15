@@ -1,0 +1,7 @@
+# Mutation gate for the rules engine: every mutant must be killed.
+# Gremlins v0.6.0 ignores --threshold-efficacy on the command line, so the threshold lives here. It fails
+# a run whose efficacy is at or below the threshold, so 100 would fail a perfect run; 99.99 fails one
+# lived mutant in any package under 10,000 mutants.
+unleash:
+  threshold:
+    efficacy: 99.99

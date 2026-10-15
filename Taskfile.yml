@@ -103,22 +103,22 @@ tasks:
   mutation:1:
     desc: Mutation testing, shard 1 of 4 (CI runs the shards in parallel)
     dir: api
-    cmd: for p in {{.MUTATION_SHARD_1}}; do go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/$p || exit 1; done
+    cmd: for p in {{.MUTATION_SHARD_1}}; do go tool gremlins unleash --config .gremlins.yaml --timeout-coefficient 40 --workers 4 ./internal/rules/$p || exit 1; done
 
   mutation:2:
     desc: Mutation testing, shard 2 of 4 (CI runs the shards in parallel)
     dir: api
-    cmd: for p in {{.MUTATION_SHARD_2}}; do go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/$p || exit 1; done
+    cmd: for p in {{.MUTATION_SHARD_2}}; do go tool gremlins unleash --config .gremlins.yaml --timeout-coefficient 40 --workers 4 ./internal/rules/$p || exit 1; done
 
   mutation:3:
     desc: Mutation testing, shard 3 of 4 (CI runs the shards in parallel)
     dir: api
-    cmd: for p in {{.MUTATION_SHARD_3}}; do go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/$p || exit 1; done
+    cmd: for p in {{.MUTATION_SHARD_3}}; do go tool gremlins unleash --config .gremlins.yaml --timeout-coefficient 40 --workers 4 ./internal/rules/$p || exit 1; done
 
   mutation:4:
     desc: Mutation testing, shard 4 of 4 (CI runs the shards in parallel)
     dir: api
-    cmd: go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 --exclude-files '^({{.MUTATION_NAMED | trim | splitList " " | join "|"}})/' ./internal/rules
+    cmd: go tool gremlins unleash --config .gremlins.yaml --timeout-coefficient 40 --workers 4 --exclude-files '^({{.MUTATION_NAMED | trim | splitList " " | join "|"}})/' ./internal/rules
 
   android:
     desc: Build the Capacitor Android shell as a debug APK from the web build (needs Java 21 and the Android SDK)
