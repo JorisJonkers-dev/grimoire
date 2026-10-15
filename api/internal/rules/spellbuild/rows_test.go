@@ -70,3 +70,29 @@ func TestDesignsSavedAsRowsStillBuild(t *testing.T) {
 		t.Fatalf("the burst = %+v", b.Definition.Parts)
 	}
 }
+
+// A row of a type the builder never had, and a design that is not JSON of a design, do not read as a spell.
+func TestRowsThatNeverBuilt(t *testing.T) {
+	t.Parallel()
+	odd := rows(t, `{"targeting":{"shape":"sphere","sizeFt":20,"rangeFt":0},"save":"wisdom","duration":{"unit":"instant"},"castingTime":{"kind":"action"},
+"components":{"verbal":true},"parts":[{"type":"song"},{"type":"damage","when":"later","dice":"2d6","damageType":"fire"}]}`)
+	if odd.Parts[0].Kind != "song" || odd.Parts[1].Kind != "save_damage" {
+		t.Fatalf("odd rows read as %+v", odd.Parts)
+	}
+	if _, err := spellbuild.Build("hb-odd", "Odd", odd, surfaces); err == nil || !strings.Contains(err.Error(), "a spell holds Parts of the kinds") {
+		t.Fatalf("a song = %v", err)
+	}
+	for _, raw := range []string{`{"parts":"many"}`, `{"parts":[1]}`, `[]`} {
+		var d spellbuild.Design
+		if err := json.Unmarshal([]byte(raw), &d); err == nil {
+			t.Errorf("%s read as %+v", raw, d)
+		}
+	}
+	if d := rows(t, `{"parts":[]}`); d.Parts == nil || d.TurnDamage != nil {
+		t.Fatalf("no parts = %+v", d)
+	}
+	authored := rows(t, `{"parts":[{"kind":"light","values":{"bright_ft":{"number":5}},"groups":[]}],"turnDamage":{"dice":"1d4","damageType":"acid"}}`)
+	if len(authored.Parts) != 1 || authored.Parts[0].Kind != "light" || authored.Parts[0].Values["bright_ft"].Number != 5 || authored.TurnDamage.Dice != "1d4" {
+		t.Fatalf("Parts authored by kind read as %+v", authored)
+	}
+}

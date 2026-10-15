@@ -12,6 +12,25 @@ import (
 
 var surfaces = []string{"fog", "grease"}
 
+func part(kind string, values effects.Values, groups ...effects.AuthoredGroup) effects.Authored {
+	return effects.Authored{Kind: kind, Values: values, Groups: groups}
+}
+
+func text(s string) effects.Value { return effects.Value{Text: s} }
+
+func number(n int) effects.Value { return effects.Value{Number: n} }
+
+// then is the group of Parts a branch adds.
+func then(parts ...effects.Authored) effects.AuthoredGroup {
+	return effects.AuthoredGroup{Name: "then", Parts: parts}
+}
+
+// charmedIf charms a creature of one type that fails the spell's save.
+func charmedIf(creature string) effects.Authored {
+	failed := part("branch", effects.Values{"when": text("fails_by"), "n": number(1)}, then(part("save_condition", effects.Values{"condition": text("charmed")})))
+	return part("branch", effects.Values{"when": text("creature_is"), "creature_type": text(creature)}, then(failed))
+}
+
 // lantern is the Marsh Lantern: a moving light that reveals the invisible, charms Undead and Fey that
 // fail a Wisdom save, and burns with radiant light those who start their turn near it.
 func lantern() spellbuild.Design {
@@ -19,11 +38,12 @@ func lantern() spellbuild.Design {
 		Targeting: spellbuild.Targeting{Shape: "emanation", SizeFt: 10}, Save: "wisdom", Concentration: true,
 		Duration: spellbuild.Duration{Unit: "minutes", Amount: 1}, Ritual: true, CastingTime: spellbuild.CastingTime{Kind: "action"},
 		Components: spellbuild.Components{Verbal: true, Somatic: true, Material: &spellbuild.Material{Text: "a lantern of bog glass", CostGP: 25, Consumed: true, Item: "lantern"}},
-		Parts: []spellbuild.Part{
-			{Type: "light", BrightFt: 20, DimFt: 20},
-			{Type: "reveal", Qualities: []string{"invisible"}},
-			{Type: "condition", Condition: "charmed", OnlyTypes: []string{"undead", "fey"}},
-			{Type: "damage", When: "start_of_turn", Dice: "1d6", DamageType: "radiant"},
+		TurnDamage: &spellbuild.TurnDamage{Dice: "1d6", DamageType: "radiant"},
+		Parts: []effects.Authored{
+			part("light", effects.Values{"bright_ft": number(20), "dim_ft": number(20)}),
+			part("reveal", effects.Values{"qualities": {Texts: []string{"invisible"}}}),
+			charmedIf("undead"),
+			charmedIf("fey"),
 		},
 	}
 }
@@ -58,13 +78,17 @@ func TestTheMarshLanternBuildsIntoAnEffect(t *testing.T) {
 		"Components: V, S, M (a lantern of bog glass worth 25+ gp, which the spell consumes).",
 		"Area: a 10-foot emanation from the caster.",
 		"Duration: Concentration, up to 1 minute.",
-		"Bright light fills 20 feet around the spell, and dim light another 20 feet.",
-		"Every creature and object in the area loses Invisible.",
-		"A creature that fails the Wisdom saving throw has the Charmed condition, if it is Undead or Fey.",
+		"Bright light fills 20 feet around where it lands, and dim light another 20 feet.",
+		"Every creature and object in the area loses Invisible, whatever anyone's senses.",
+		"If the creature is an undead, if a creature fails the save by 1 or more, on a failed Wisdom saving throw, a creature has the Charmed condition.",
+		"If the creature is a fey, if a creature fails the save by 1 or more, on a failed Wisdom saving throw, a creature has the Charmed condition.",
 		"A creature that starts its turn in the area takes 1d6 radiant damage.",
 	}
 	if !reflect.DeepEqual(b.Text, wantText) {
 		t.Fatalf("text =\n%s", strings.Join(b.Text, "\n"))
+	}
+	if d := lantern(); d.Parts[2].Groups[0].Parts[0].Groups[0].Parts[0].Values["ability"].Text != "" {
+		t.Fatal("building fills the spell's save in without changing the design")
 	}
 }
 
@@ -74,31 +98,34 @@ func TestOtherPartsAndMetadata(t *testing.T) {
 		Targeting: spellbuild.Targeting{Shape: "sphere", SizeFt: 20, RangeFt: 150}, Save: "dexterity",
 		Duration: spellbuild.Duration{Unit: "instant"}, CastingTime: spellbuild.CastingTime{Kind: "reaction", Trigger: "when_damaged"},
 		Components: spellbuild.Components{Material: &spellbuild.Material{Text: "a pinch of sulfur"}},
-		Parts: []spellbuild.Part{
-			{Type: "damage", When: "on_cast", Dice: "8d6", DamageType: "fire", Half: true},
-			{Type: "condition", Condition: "prone"},
-			{Type: "surface", Surface: "grease", Rounds: 3},
-			{Type: "manual", Text: "Flammable objects ignite."},
+		Parts: []effects.Authored{
+			part("save_damage", effects.Values{"dice": text("8d6"), "damage_type": text("fire"), "half": {Flag: true}}),
+			part("save_condition", effects.Values{"ability": text("dexterity"), "condition": text("prone")}),
+			part("create_surface", effects.Values{"surface": text("grease"), "rounds": number(3)}),
+			part("manual", effects.Values{"instruction": text("Flammable objects ignite.")}),
 		},
 	}
 	b, err := spellbuild.Build("hb-burst", "Burst", d, surfaces)
 	if err != nil {
 		t.Fatal(err)
 	}
-	comps := b.Definition.Parts
-	if len(comps) != 5 || comps[1] != (effects.SaveDamage{Ability: "dexterity", Dice: "8d6", Type: "fire", Half: true}) || b.Surface != nil {
-		t.Fatalf("parts = %+v", comps)
+	want := []effects.Part{
+		effects.Area{Shape: hex.SphereArea, SizeFt: 20, RangeFt: 150},
+		effects.SaveDamage{Ability: "dexterity", Dice: "8d6", Type: "fire", Half: true},
+		effects.SaveCondition{Ability: "dexterity", Slug: "prone"},
+		effects.CreateSurface{Surface: "grease", Rounds: 3},
+		effects.Manual{Instruction: "Flammable objects ignite."},
 	}
-	if comps[3] != (effects.CreateSurface{Surface: "grease", Rounds: 3}) || comps[4] != (effects.Manual{Instruction: "Flammable objects ignite."}) {
-		t.Fatalf("surface and manual = %+v", comps[3:])
+	if !reflect.DeepEqual(b.Definition.Parts, want) || b.Surface != nil {
+		t.Fatalf("parts = %+v", b.Definition.Parts)
 	}
 	for i, want := range []string{
 		"Casting Time: 1 reaction, which you take when damaged.",
 		"Components: M (a pinch of sulfur).",
 		"Area: a 20-foot sphere at a point within 150 feet.",
 		"Duration: Instantaneous.",
-		"Each creature in the area takes 8d6 fire damage on a failed Dexterity saving throw, or half as much on a successful one.",
-		"A creature that fails the Dexterity saving throw has the Prone condition.",
+		"Each creature in the area makes a Dexterity saving throw, taking 8d6 fire damage on a failed save or half as much damage on a successful one.",
+		"On a failed Dexterity saving throw, a creature has the Prone condition.",
 		"The area is covered in grease for 3 rounds.",
 		"Flammable objects ignite.",
 	} {
@@ -106,11 +133,11 @@ func TestOtherPartsAndMetadata(t *testing.T) {
 			t.Errorf("text[%d] = %q, want %q", i, b.Text[i], want)
 		}
 	}
-	d.Parts = []spellbuild.Part{{Type: "damage", When: "on_cast", Dice: "2d8", DamageType: "cold"}}
+	d.Parts = []effects.Authored{part("save_damage", effects.Values{"dice": text("2d8"), "damage_type": text("cold")})}
 	d.CastingTime = spellbuild.CastingTime{Kind: "minutes", Minutes: 10}
 	d.Components = spellbuild.Components{Somatic: true}
 	b, _ = spellbuild.Build("hb-chill", "Chill", d, surfaces)
-	if b.Text[0] != "Casting Time: 10 minutes." || b.Text[1] != "Components: S." || b.Text[4] != "Each creature in the area takes 2d8 cold damage on a failed Dexterity saving throw." {
+	if b.Text[0] != "Casting Time: 10 minutes." || b.Text[1] != "Components: S." || b.Text[4] != "Each creature in the area makes a Dexterity saving throw, taking 2d8 cold damage on a failed save." {
 		t.Fatalf("text = %v", b.Text)
 	}
 	d.CastingTime, d.Save, d.Parts = spellbuild.CastingTime{Kind: "bonus_action"}, "", nil
@@ -126,12 +153,18 @@ func TestDesignsAreChecked(t *testing.T) {
 		change(&d)
 		return d
 	}
-	part := func(p spellbuild.Part) func(*spellbuild.Design) {
-		return func(d *spellbuild.Design) { d.Parts = []spellbuild.Part{p} }
+	only := func(p ...effects.Authored) func(*spellbuild.Design) {
+		return func(d *spellbuild.Design) { d.TurnDamage, d.Parts = nil, p }
 	}
-	many := make([]spellbuild.Part, 31)
+	many := make([]effects.Authored, 31)
 	for i := range many {
-		many[i] = spellbuild.Part{Type: "manual", Text: "x"}
+		many[i] = part("manual", effects.Values{"instruction": text("x")})
+	}
+	burn := part("save_damage", effects.Values{"dice": text("2d6"), "damage_type": text("fire")})
+	fog := part("create_surface", effects.Values{"surface": text("fog"), "rounds": number(2)})
+	light := part("light", effects.Values{"bright_ft": number(5)})
+	first := func(p effects.Authored) effects.Authored {
+		return part("branch", effects.Values{"when": text("first_each_turn")}, then(p))
 	}
 	for name, c := range map[string]struct {
 		change func(*spellbuild.Design)
@@ -145,7 +178,7 @@ func TestDesignsAreChecked(t *testing.T) {
 		"far":            {func(d *spellbuild.Design) { d.Targeting.RangeFt = 1005 }, "range is 0 to 1000"},
 		"uneven range":   {func(d *spellbuild.Design) { d.Targeting.RangeFt = 7 }, "range is 0 to 1000"},
 		"save":           {func(d *spellbuild.Design) { d.Save = "luck" }, "the save is an ability"},
-		"too many parts": {func(d *spellbuild.Design) { d.Parts = many }, "30 parts"},
+		"too many parts": {func(d *spellbuild.Design) { d.Parts = many }, "30 Parts"},
 		"concentrating":  {func(d *spellbuild.Design) { d.Duration = spellbuild.Duration{Unit: "instant"} }, "needs no concentration"},
 		"no time":        {func(d *spellbuild.Design) { d.Duration.Amount = 0 }, "1 to 100 rounds"},
 		"long":           {func(d *spellbuild.Design) { d.Duration.Amount = 101 }, "1 to 100 rounds"},
@@ -158,50 +191,32 @@ func TestDesignsAreChecked(t *testing.T) {
 		"reaction ritual": {func(d *spellbuild.Design) {
 			d.CastingTime = spellbuild.CastingTime{Kind: "reaction", Trigger: "when_hit"}
 		}, "a ritual takes"},
-		"no components":  {func(d *spellbuild.Design) { d.Components = spellbuild.Components{} }, "at least one component"},
-		"blank material": {func(d *spellbuild.Design) { d.Components.Material.Text = " " }, "describe the Material"},
-		"long material":  {func(d *spellbuild.Design) { d.Components.Material.Text = strings.Repeat("a", 201) }, "describe the Material"},
-		"negative cost":  {func(d *spellbuild.Design) { d.Components.Material.CostGP = -1 }, "costs 0 to 100000"},
-		"dear":           {func(d *spellbuild.Design) { d.Components.Material.CostGP = 100001 }, "costs 0 to 100000"},
-		"free consumed":  {func(d *spellbuild.Design) { d.Components.Material.CostGP = 0 }, "only a Material Component with a cost"},
-		"part type":      {part(spellbuild.Part{Type: "song"}), "a part is"},
-		"blank manual":   {part(spellbuild.Part{Type: "manual", Text: " "}), "a manual part"},
-		"long manual":    {part(spellbuild.Part{Type: "manual", Text: strings.Repeat("a", 501)}), "a manual part"},
-		"dice":           {part(spellbuild.Part{Type: "damage", When: "on_cast", Dice: "2d7", DamageType: "fire"}), "damage dice"},
-		"damage type":    {part(spellbuild.Part{Type: "damage", When: "on_cast", Dice: "2d6", DamageType: "pain"}), "damage type"},
-		"when":           {part(spellbuild.Part{Type: "damage", When: "later", Dice: "2d6", DamageType: "fire"}), "on cast or at the start"},
-		"twice on cast": {func(d *spellbuild.Design) {
-			d.Parts = []spellbuild.Part{{Type: "damage", When: "on_cast", Dice: "2d6", DamageType: "fire"}, {Type: "damage", When: "on_cast", Dice: "2d6", DamageType: "fire"}}
-		}, "on cast once"},
-		"unsaved damage": {func(d *spellbuild.Design) {
-			d.Save, d.Parts = "", []spellbuild.Part{{Type: "damage", When: "on_cast", Dice: "2d6", DamageType: "fire"}}
-		}, "needs the save"},
-		"instant burn": {func(d *spellbuild.Design) {
-			d.Concentration, d.Duration = false, spellbuild.Duration{Unit: "instant"}
-		}, "needs a duration in rounds"},
-		"two grounds": {func(d *spellbuild.Design) {
-			d.Parts = append(d.Parts, spellbuild.Part{Type: "surface", Surface: "fog", Rounds: 2})
-		}, "one Surface or one start-of-turn damage"},
-		"burn after ground": {func(d *spellbuild.Design) {
-			d.Parts = []spellbuild.Part{{Type: "surface", Surface: "fog", Rounds: 2}, {Type: "damage", When: "start_of_turn", Dice: "1d6", DamageType: "radiant"}}
-		}, "one Surface or one start-of-turn damage"},
-		"condition": {part(spellbuild.Part{Type: "condition", Condition: "sleepy"}), "choose a condition"},
-		"unsaved charm": {func(d *spellbuild.Design) {
-			d.Save, d.Parts = "", []spellbuild.Part{{Type: "condition", Condition: "charmed"}}
-		}, "needs the save"},
-		"creature type":  {part(spellbuild.Part{Type: "condition", Condition: "charmed", OnlyTypes: []string{"robot"}}), "creature types"},
-		"two lights":     {func(d *spellbuild.Design) { d.Parts = append(d.Parts, spellbuild.Part{Type: "light", BrightFt: 5}) }, "one light"},
-		"dark":           {part(spellbuild.Part{Type: "light", BrightFt: 0}), "light reaches"},
-		"blinding":       {part(spellbuild.Part{Type: "light", BrightFt: 125}), "light reaches"},
-		"uneven bright":  {part(spellbuild.Part{Type: "light", BrightFt: 7}), "light reaches"},
-		"negative dim":   {part(spellbuild.Part{Type: "light", BrightFt: 5, DimFt: -5}), "light reaches"},
-		"wide dim":       {part(spellbuild.Part{Type: "light", BrightFt: 5, DimFt: 125}), "light reaches"},
-		"uneven dim":     {part(spellbuild.Part{Type: "light", BrightFt: 5, DimFt: 3}), "light reaches"},
-		"empty reveal":   {part(spellbuild.Part{Type: "reveal"}), "at least one Visibility Quality"},
-		"quality":        {part(spellbuild.Part{Type: "reveal", Qualities: []string{"shy"}}), "reveal Visibility Qualities"},
-		"surface":        {part(spellbuild.Part{Type: "surface", Surface: "lava", Rounds: 2}), "choose a Surface"},
-		"no rounds":      {part(spellbuild.Part{Type: "surface", Surface: "fog"}), "1 to 100 rounds"},
-		"endless ground": {part(spellbuild.Part{Type: "surface", Surface: "fog", Rounds: 101}), "1 to 100 rounds"},
+		"no components":   {func(d *spellbuild.Design) { d.Components = spellbuild.Components{} }, "at least one component"},
+		"blank material":  {func(d *spellbuild.Design) { d.Components.Material.Text = " " }, "describe the Material"},
+		"long material":   {func(d *spellbuild.Design) { d.Components.Material.Text = strings.Repeat("a", 201) }, "describe the Material"},
+		"negative cost":   {func(d *spellbuild.Design) { d.Components.Material.CostGP = -1 }, "costs 0 to 100000"},
+		"dear":            {func(d *spellbuild.Design) { d.Components.Material.CostGP = 100001 }, "costs 0 to 100000"},
+		"free consumed":   {func(d *spellbuild.Design) { d.Components.Material.CostGP = 0 }, "only a Material Component with a cost"},
+		"turn dice":       {func(d *spellbuild.Design) { d.TurnDamage.Dice = "2d7" }, "damage dice look like 2d6"},
+		"turn type":       {func(d *spellbuild.Design) { d.TurnDamage.DamageType = "pain" }, "choose a damage type"},
+		"instant burn":    {func(d *spellbuild.Design) { d.Concentration, d.Duration = false, spellbuild.Duration{Unit: "instant"} }, "needs a duration in rounds"},
+		"kind":            {only(part("song", nil)), "a spell holds Parts of the kinds branch, create_surface, light, manual, reveal, save_condition, save_damage"},
+		"passive":         {only(part("bonus_die", nil)), "a spell holds Parts of the kinds"},
+		"beneath":         {only(first(light)), "beneath a branch, a spell holds Parts of the kinds branch, manual, save_condition"},
+		"deep beneath":    {only(first(first(fog))), "beneath a branch, a spell holds Parts of the kinds"},
+		"kind's own":      {only(part("save_damage", effects.Values{"dice": text("2d7"), "damage_type": text("fire")})), "part 1: dice: write the damage like 8d6"},
+		"beneath's own":   {only(first(part("manual", nil))), "part 1: then: part 1: instruction: write up to 500 letters"},
+		"twice on cast":   {only(burn, burn), "on cast once"},
+		"unsaved damage":  {func(d *spellbuild.Design) { d.Save, d.TurnDamage, d.Parts = "", nil, []effects.Authored{burn} }, "needs the save"},
+		"unsaved charm":   {func(d *spellbuild.Design) { d.Save, d.TurnDamage = "", nil }, "needs the save"},
+		"another save":    {only(part("save_damage", effects.Values{"ability": text("strength"), "dice": text("2d6"), "damage_type": text("fire")})), "rolls the spell's save, wisdom"},
+		"another beneath": {only(first(part("save_condition", effects.Values{"ability": text("strength"), "condition": text("prone")}))), "rolls the spell's save, wisdom"},
+		"two grounds":     {func(d *spellbuild.Design) { d.Parts = append(d.Parts, fog) }, "one Surface or one start-of-turn damage"},
+		"two surfaces":    {only(fog, fog), "one Surface or one start-of-turn damage"},
+		"condition":       {only(part("save_condition", effects.Values{"condition": text("sleepy")})), "choose a condition"},
+		"deep condition":  {only(first(first(part("save_condition", effects.Values{"condition": text("sleepy")})))), "choose a condition"},
+		"two lights":      {func(d *spellbuild.Design) { d.Parts = append(d.Parts, light) }, "one light"},
+		"surface":         {only(part("create_surface", effects.Values{"surface": text("lava"), "rounds": number(2)})), "choose a Surface"},
 	} {
 		_, err := spellbuild.Build("hb-x", "X", with(c.change), surfaces)
 		if err == nil || !strings.Contains(err.Error(), c.want) {
@@ -213,9 +228,9 @@ func TestDesignsAreChecked(t *testing.T) {
 			d.Targeting = spellbuild.Targeting{Shape: "cube", SizeFt: 300, RangeFt: 1000}
 			d.Duration = spellbuild.Duration{Unit: "hours", Amount: 100}
 			d.Components.Material.CostGP = 100000
-			d.Parts = append(make([]spellbuild.Part, 0, 30), d.Parts...)
+			d.Parts = append(make([]effects.Authored, 0, 30), d.Parts...)
 			for len(d.Parts) < 30 {
-				d.Parts = append(d.Parts, spellbuild.Part{Type: "manual", Text: strings.Repeat("a", 500)})
+				d.Parts = append(d.Parts, part("manual", effects.Values{"instruction": text(strings.Repeat("a", 500))}))
 			}
 		},
 		"least": func(d *spellbuild.Design) {
@@ -223,14 +238,18 @@ func TestDesignsAreChecked(t *testing.T) {
 			d.Duration = spellbuild.Duration{Unit: "until_dispelled"}
 			d.CastingTime = spellbuild.CastingTime{Kind: "minutes", Minutes: 1440}
 			d.Components.Material = &spellbuild.Material{Text: strings.Repeat("a", 200)}
-			d.Parts = []spellbuild.Part{
-				{Type: "light", BrightFt: 120, DimFt: 120}, {Type: "surface", Surface: "fog", Rounds: 100}, {Type: "damage", When: "on_cast", Dice: "99d20", DamageType: "acid"},
+			d.TurnDamage, d.Parts = nil, []effects.Authored{
+				part("light", effects.Values{"bright_ft": number(120), "dim_ft": number(120)}), fog,
+				part("save_damage", effects.Values{"ability": text("wisdom"), "dice": text("99d20"), "damage_type": text("acid")}),
 			}
 		},
 		"brief": func(d *spellbuild.Design) {
 			d.Duration = spellbuild.Duration{Unit: "rounds", Amount: 1}
 			d.CastingTime = spellbuild.CastingTime{Kind: "minutes", Minutes: 1}
-			d.Parts = []spellbuild.Part{{Type: "light", BrightFt: 5}, {Type: "surface", Surface: "fog", Rounds: 1}}
+			d.TurnDamage, d.Parts = nil, []effects.Authored{light, fog}
+		},
+		"deep": func(d *spellbuild.Design) {
+			d.TurnDamage, d.Parts = nil, []effects.Authored{first(first(part("manual", effects.Values{"instruction": text("Ring.")})))}
 		},
 	} {
 		if _, err := spellbuild.Build("hb-x", "X", with(change), surfaces); err != nil {
@@ -253,7 +272,7 @@ func TestTheAreaPreviews(t *testing.T) {
 	if len(ball) != 7 {
 		t.Fatalf("a 5-foot sphere at a point = %v", ball)
 	}
-	if len(spellbuild.Shapes()) != 8 || len(spellbuild.Triggers()) != 5 || len(spellbuild.CreatureTypes()) != 14 {
+	if len(spellbuild.Shapes()) != 8 || len(spellbuild.Triggers()) != 5 {
 		t.Fatal("the builder's lists")
 	}
 }

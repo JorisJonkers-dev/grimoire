@@ -98,3 +98,13 @@ func TestAuthoredPartsThatDoNotDecode(t *testing.T) {
 		t.Fatalf("the kind's own refusal is kept = %v", err)
 	}
 }
+
+// An authored Part with no values or groups writes them as empty, never null, as the wire requires.
+func TestAuthoredPartsWriteEmptyAsEmpty(t *testing.T) {
+	t.Parallel()
+	bare := effects.Authored{Kind: "branch", Values: nil, Groups: []effects.AuthoredGroup{{Name: "then", Parts: nil}}}
+	out, err := json.Marshal([]effects.Authored{bare, {Kind: "immobile", Values: nil, Groups: nil}})
+	if err != nil || string(out) != `[{"kind":"branch","values":{},"groups":[{"name":"then","parts":[]}]},{"kind":"immobile","values":{},"groups":[]}]` {
+		t.Fatalf("written as %s %v", out, err)
+	}
+}

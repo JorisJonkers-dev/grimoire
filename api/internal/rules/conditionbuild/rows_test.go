@@ -47,3 +47,29 @@ func TestDesignsSavedAsRowsStillBuild(t *testing.T) {
 		t.Fatalf("parts = %+v", got)
 	}
 }
+
+// A row of a type the builder never had does not check, a design that is not JSON of a design does not
+// read, and Parts authored by kind read as they are.
+func TestRowsThatNeverBuilt(t *testing.T) {
+	t.Parallel()
+	var d conditionbuild.Design
+	if err := json.Unmarshal([]byte(`{"icon":"snow","color":"#7fa8dd","ends":"rest","parts":[{"type":"explode"},{"type":"manual","text":"  Shiver. "}]}`), &d); err != nil {
+		t.Fatal(err)
+	}
+	if d.Parts[0].Kind != "explode" || d.Parts[1].Values["instruction"].Text != "Shiver." {
+		t.Fatalf("odd rows read as %+v", d.Parts)
+	}
+	if err := conditionbuild.Check(d); err == nil || !strings.Contains(err.Error(), "a condition holds Parts of the kinds") {
+		t.Fatalf("an explosion = %v", err)
+	}
+	for _, raw := range []string{`{"parts":"many"}`, `{"parts":[1]}`} {
+		var bad conditionbuild.Design
+		if err := json.Unmarshal([]byte(raw), &bad); err == nil {
+			t.Errorf("%s read as %+v", raw, bad)
+		}
+	}
+	var authored conditionbuild.Design
+	if err := json.Unmarshal([]byte(`{"parts":[{"kind":"immobile","values":{},"groups":[]}]}`), &authored); err != nil || len(authored.Parts) != 1 || authored.Parts[0].Kind != "immobile" {
+		t.Fatalf("Parts authored by kind read as %+v %v", authored, err)
+	}
+}

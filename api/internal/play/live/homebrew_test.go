@@ -18,6 +18,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/live"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/dice"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/effects"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/spellbuild"
 )
 
@@ -50,11 +51,12 @@ func TestAHomebrewSpellRunsInPlay(t *testing.T) {
 		Targeting: spellbuild.Targeting{Shape: "emanation", SizeFt: 10}, Save: "wisdom", Concentration: true,
 		Duration: spellbuild.Duration{Unit: "minutes", Amount: 1}, CastingTime: spellbuild.CastingTime{Kind: "action"},
 		Components: spellbuild.Components{Verbal: true, Material: &spellbuild.Material{Text: "a lantern of bog glass"}},
-		Parts: []spellbuild.Part{
-			{Type: "light", BrightFt: 20, DimFt: 20},
-			{Type: "reveal", Qualities: []string{"invisible"}},
-			{Type: "condition", Condition: "charmed", OnlyTypes: []string{"undead", "fey"}},
-			{Type: "damage", When: "start_of_turn", Dice: "1d6", DamageType: "radiant"},
+		TurnDamage: &spellbuild.TurnDamage{Dice: "1d6", DamageType: "radiant"},
+		Parts: []effects.Authored{
+			{Kind: "light", Values: effects.Values{"bright_ft": {Number: 20}, "dim_ft": {Number: 20}}},
+			{Kind: "reveal", Values: effects.Values{"qualities": {Texts: []string{"invisible"}}}},
+			charmedIf("undead"),
+			charmedIf("fey"),
 		},
 	}
 	if _, err := lib.SaveSpell(ctx, dmCaller, entry.ID, design); err != nil {
@@ -123,5 +125,15 @@ func TestAHomebrewSpellRunsInPlay(t *testing.T) {
 	tb.playerSays(live.Command{Kind: live.CmdEndTurn, CombatantID: combatant(v, "Aria").ID})
 	if got := manuals(look(t, w, tb.dm)); !strings.Contains(got, "Zombie starts its turn in marsh lantern: 1d6 radiant damage.") {
 		t.Fatalf("the zombie burns at the start of its turn = %s", got)
+	}
+}
+
+// charmedIf charms a creature of one type that fails the spell's save.
+func charmedIf(creature string) effects.Authored {
+	charm := effects.Authored{Kind: "save_condition", Values: effects.Values{"condition": {Text: "charmed"}}}
+	failed := effects.Authored{Kind: "branch", Values: effects.Values{"when": {Text: "fails_by"}, "n": {Number: 1}}, Groups: []effects.AuthoredGroup{{Name: "then", Parts: []effects.Authored{charm}}}}
+	return effects.Authored{
+		Kind: "branch", Values: effects.Values{"when": {Text: "creature_is"}, "creature_type": {Text: creature}},
+		Groups: []effects.AuthoredGroup{{Name: "then", Parts: []effects.Authored{failed}}},
 	}
 }

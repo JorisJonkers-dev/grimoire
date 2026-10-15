@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/library/domain"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/effects"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/spellbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/apperr"
@@ -28,7 +29,7 @@ type Surfaces func(ctx context.Context) ([]string, error)
 func firstDesign() spellbuild.Design {
 	return spellbuild.Design{
 		Targeting: spellbuild.Targeting{Shape: "sphere", SizeFt: 20, RangeFt: 60}, Duration: spellbuild.Duration{Unit: "instant"},
-		CastingTime: spellbuild.CastingTime{Kind: "action"}, Components: spellbuild.Components{Verbal: true, Somatic: true}, Parts: []spellbuild.Part{},
+		CastingTime: spellbuild.CastingTime{Kind: "action"}, Components: spellbuild.Components{Verbal: true, Somatic: true}, Parts: []effects.Authored{},
 	}
 }
 

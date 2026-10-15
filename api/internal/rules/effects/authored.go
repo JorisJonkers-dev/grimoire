@@ -1,6 +1,7 @@
 package effects
 
 import (
+	"encoding/json"
 	"slices"
 	"strconv"
 )
@@ -17,6 +18,27 @@ type Authored struct {
 type AuthoredGroup struct {
 	Name  string     `json:"name"`
 	Parts []Authored `json:"parts"`
+}
+
+// MarshalJSON writes no values and no groups as empty rather than null, as the wire requires.
+func (a Authored) MarshalJSON() ([]byte, error) {
+	type plain Authored
+	if a.Values == nil {
+		a.Values = Values{}
+	}
+	if a.Groups == nil {
+		a.Groups = []AuthoredGroup{}
+	}
+	return json.Marshal(plain(a))
+}
+
+// MarshalJSON writes a group of no Parts as empty rather than null.
+func (g AuthoredGroup) MarshalJSON() ([]byte, error) {
+	type plain AuthoredGroup
+	if g.Parts == nil {
+		g.Parts = []Authored{}
+	}
+	return json.Marshal(plain(g))
 }
 
 // PartError is an authored Part its kind refuses, with where it sits.
