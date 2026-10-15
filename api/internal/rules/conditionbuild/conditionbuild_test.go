@@ -10,23 +10,35 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/effects"
 )
 
+func part(kind string, values effects.Values) effects.Authored {
+	return effects.Authored{Kind: kind, Values: values, Groups: nil}
+}
+
+func edge(against, advantage bool) effects.Authored {
+	return part("edge", effects.Values{"against": {Flag: against}, "advantage": {Flag: advantage}, "range": {Text: "any"}})
+}
+
+func saveEdge(ability, mode string) effects.Authored {
+	return part("save_edge", effects.Values{"ability": {Text: ability}, "mode": {Text: mode}})
+}
+
 func frostbite() conditionbuild.Design {
 	return conditionbuild.Design{
 		Icon: "snow", Color: "#7fa8dd", Text: "Cold seeps into the bones.", Ends: "rest", Ability: "",
 		Stacks: true, MaxLevel: 4, PerLevel: conditionbuild.Penalty{D20: 1, SpeedFt: 5, DeathAt: 0},
-		Parts: []conditionbuild.Part{
-			{Type: "attack_disadvantage"},
-			{Type: "attacked_advantage"},
-			{Type: "save_disadvantage", Ability: "dexterity"},
-			{Type: "save_fails", Ability: "strength"},
-			{Type: "save_advantage", Ability: "constitution"},
-			{Type: "attack_advantage"},
-			{Type: "attacked_disadvantage"},
-			{Type: "incapacitated"},
-			{Type: "immobile"},
-			{Type: "speed_penalty", Feet: 10},
-			{Type: "crit_within", Feet: 5},
-			{Type: "manual", Text: "The DM decides what the cold does to gear."},
+		Parts: []effects.Authored{
+			edge(false, false),
+			edge(true, true),
+			saveEdge("dexterity", "disadvantage"),
+			saveEdge("strength", "fail"),
+			saveEdge("constitution", "advantage"),
+			edge(false, true),
+			edge(true, false),
+			part("incapacitated", nil),
+			part("immobile", nil),
+			part("speed_penalty", effects.Values{"ft": {Number: 10}}),
+			part("crit_within", effects.Values{"feet": {Number: 5}}),
+			part("manual", effects.Values{"instruction": {Text: "The DM decides what the cold does to gear."}}),
 		},
 	}
 }
@@ -98,7 +110,7 @@ func TestALingeringInjuryLastsUntilItsCure(t *testing.T) {
 	t.Parallel()
 	d := conditionbuild.Design{
 		Icon: "skull", Color: "#aa3344", Text: "The leg never set right.", Ends: "cure", Cure: "  Regenerate, or a month of rest ", PerLevel: conditionbuild.Penalty{},
-		Parts: []conditionbuild.Part{{Type: "speed_penalty", Feet: 10}},
+		Parts: []effects.Authored{part("speed_penalty", effects.Values{"ft": {Number: 10}})},
 	}
 	if err := conditionbuild.Check(d); err != nil {
 		t.Fatal(err)
@@ -170,11 +182,14 @@ func TestConditionDesignsThatDoNotBuild(t *testing.T) {
 		"a −0 to −5 penalty":          func(d *conditionbuild.Design) { d.PerLevel.D20 = 6 },
 		"0 to 30 feet per level":      func(d *conditionbuild.Design) { d.PerLevel.SpeedFt = 31 },
 		"kill at a level up to its":   func(d *conditionbuild.Design) { d.PerLevel.DeathAt = 5 },
-		"up to 20 parts":              func(d *conditionbuild.Design) { d.Parts = make([]conditionbuild.Part, 21) },
-		"choose each part":            func(d *conditionbuild.Design) { d.Parts[0].Type = "explode" },
-		"the ability each save part":  func(d *conditionbuild.Design) { d.Parts[2].Ability = "" },
-		"5 to 60 feet":                func(d *conditionbuild.Design) { d.Parts[9].Feet = 0 },
-		"describe each manual part":   func(d *conditionbuild.Design) { d.Parts[11].Text = "" },
+		"up to 20 Parts":              func(d *conditionbuild.Design) { d.Parts = make([]effects.Authored, 21) },
+		"a condition holds Parts of the kinds crit_within, edge, immobile, incapacitated, manual, save_edge, speed_penalty": func(d *conditionbuild.Design) { d.Parts[0].Kind = "summon" },
+		"part 3: ability: choose one of the options":    func(d *conditionbuild.Design) { d.Parts[2].Values = effects.Values{"mode": {Text: "fail"}} },
+		"part 10: ft: runs from 0 to 120":               func(d *conditionbuild.Design) { d.Parts[9].Values = effects.Values{"ft": {Number: 125}} },
+		"part 12: instruction: write up to 500 letters": func(d *conditionbuild.Design) { d.Parts[11].Values = nil },
+		"part 9: groups: Speed 0 holds no group named then": func(d *conditionbuild.Design) {
+			d.Parts[8].Groups = []effects.AuthoredGroup{{Name: "then", Parts: nil}}
+		},
 	} {
 		d := frostbite()
 		change(&d)
@@ -183,12 +198,12 @@ func TestConditionDesignsThatDoNotBuild(t *testing.T) {
 		}
 	}
 	d := frostbite()
-	d.Text, d.MaxLevel, d.PerLevel, d.Parts[9].Feet, d.Parts[10].Feet = strings.Repeat("x", 2000), 10, conditionbuild.Penalty{D20: 5, SpeedFt: 30, DeathAt: 10}, 60, 5
-	d.Parts = append(d.Parts, make([]conditionbuild.Part, 8)...)
-	for i := 12; i < 20; i++ {
-		d.Parts[i] = conditionbuild.Part{Type: "incapacitated"}
+	d.Text, d.MaxLevel, d.PerLevel = strings.Repeat("x", 2000), 10, conditionbuild.Penalty{D20: 5, SpeedFt: 30, DeathAt: 10}
+	d.Parts[9].Values, d.Parts[10].Values = effects.Values{"ft": {Number: 120}}, effects.Values{"feet": {Number: 0}}
+	for len(d.Parts) < 20 {
+		d.Parts = append(d.Parts, part("incapacitated", nil))
 	}
-	d.Parts[11].Text = strings.Repeat("m", 500)
+	d.Parts[11].Values = effects.Values{"instruction": {Text: strings.Repeat("m", 500)}}
 	if err := conditionbuild.Check(d); err != nil {
 		t.Fatalf("a design at its limits: %v", err)
 	}
@@ -196,7 +211,7 @@ func TestConditionDesignsThatDoNotBuild(t *testing.T) {
 	if err := conditionbuild.Check(d); err != nil {
 		t.Fatalf("a design at its low limits: %v", err)
 	}
-	d.Parts[11].Text = strings.Repeat("m", 501)
+	d.Parts[11].Values = effects.Values{"instruction": {Text: strings.Repeat("m", 501)}}
 	if err := conditionbuild.Check(d); err == nil {
 		t.Fatal("a manual part of 501 characters builds")
 	}

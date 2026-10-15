@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"net/http"
 	"sort"
 	"strings"
@@ -96,9 +97,10 @@ func tool(doc node, path, method string, o, x node) (Tool, error) {
 	}
 	t.Description = strings.TrimSpace(fmt.Sprint(o["summary"]) + ". " + fmt.Sprint(o["description"]))
 	props, required := node{}, []string{}
+	r := &resolver{doc: doc, defs: node{}, recurs: map[string]bool{}}
 	params, _ := o["parameters"].([]any)
 	for _, raw := range params {
-		p, err := resolve(doc, raw, 0)
+		p, err := r.resolve(raw, nil, 0)
 		if err != nil {
 			return Tool{}, err
 		}
@@ -107,7 +109,7 @@ func tool(doc node, path, method string, o, x node) (Tool, error) {
 	if rb, ok := o["requestBody"].(node); ok {
 		content, _ := rb["content"].(node)
 		media, _ := content["application/json"].(node)
-		body, err := resolve(doc, media["schema"], 0)
+		body, err := r.resolve(media["schema"], nil, 0)
 		if err != nil {
 			return Tool{}, err
 		}
@@ -125,7 +127,11 @@ func tool(doc node, path, method string, o, x node) (Tool, error) {
 	if err := t.kept(x, method); err != nil {
 		return Tool{}, err
 	}
-	schema, err := json.Marshal(node{"type": "object", "additionalProperties": false, "properties": props, "required": required})
+	input := node{"type": "object", "additionalProperties": false, "properties": props, "required": required}
+	if len(r.defs) > 0 {
+		input["$defs"] = r.defs
+	}
+	schema, err := json.Marshal(input)
 	t.InputSchema = schema
 	return t, err
 }
@@ -215,48 +221,92 @@ func (t *Tool) param(p, props node, required []string) []string {
 	return required
 }
 
-// resolve inlines every $ref below a node, so the tool schema stands alone.
-func resolve(doc node, v any, depth int) (any, error) {
+// resolver inlines every $ref below a node, so the tool schema stands alone. A schema that recurs beneath
+// a property or an item, as a Part holds Parts, goes once into $defs and is referred to where it recurs.
+type resolver struct {
+	doc    node
+	defs   node
+	recurs map[string]bool
+}
+
+// resolve inlines v; open holds the schemas being inlined around it, true once a property or an item lies
+// between that schema and here.
+func (r *resolver) resolve(v any, open map[string]bool, depth int) (any, error) {
 	if depth > 32 {
 		return nil, errors.New("schema nests too deep")
 	}
 	switch x := v.(type) {
 	case node:
-		return resolveNode(doc, x, depth)
+		return r.resolveNode(x, open, depth)
 	case []any:
 		out := make([]any, len(x))
 		for i, child := range x {
-			r, err := resolve(doc, child, depth+1)
+			c, err := r.resolve(child, open, depth+1)
 			if err != nil {
 				return nil, err
 			}
-			out[i] = r
+			out[i] = c
 		}
 		return out, nil
 	}
 	return v, nil
 }
 
-func resolveNode(doc, x node, depth int) (any, error) {
+func (r *resolver) resolveNode(x node, open map[string]bool, depth int) (any, error) {
 	if ref, ok := x["$ref"].(string); ok {
-		target, err := lookup(doc, ref)
-		if err != nil {
-			return nil, err
-		}
-		return resolve(doc, target, depth+1)
+		return r.ref(ref, open, depth)
 	}
 	out := node{}
 	for k, child := range x {
 		if k == "discriminator" || k == "example" {
 			continue
 		}
-		r, err := resolve(doc, child, depth+1)
+		inner := open
+		if k == "properties" || k == "items" || k == "additionalProperties" {
+			inner = guarded(open)
+		}
+		c, err := r.resolve(child, inner, depth+1)
 		if err != nil {
 			return nil, err
 		}
-		out[k] = r
+		out[k] = c
 	}
 	return out, nil
+}
+
+// ref inlines the schema a $ref names, or refers to it in $defs where it recurs.
+func (r *resolver) ref(ref string, open map[string]bool, depth int) (any, error) {
+	name := ref[strings.LastIndex(ref, "/")+1:]
+	if beneath, ok := open[ref]; ok {
+		if !beneath {
+			return nil, fmt.Errorf("schema %s is nothing but itself", name)
+		}
+		r.recurs[ref] = true
+		return node{"$ref": "#/$defs/" + name}, nil
+	}
+	target, err := lookup(r.doc, ref)
+	if err != nil {
+		return nil, err
+	}
+	inner := maps.Clone(open)
+	if inner == nil {
+		inner = map[string]bool{}
+	}
+	inner[ref] = false
+	out, err := r.resolve(target, inner, depth+1)
+	if err == nil && r.recurs[ref] {
+		r.defs[name] = out
+	}
+	return out, err
+}
+
+// guarded marks every schema being inlined as having a property or an item beneath it.
+func guarded(open map[string]bool) map[string]bool {
+	out := make(map[string]bool, len(open))
+	for k := range open {
+		out[k] = true
+	}
+	return out
 }
 
 func lookup(doc node, ref string) (any, error) {

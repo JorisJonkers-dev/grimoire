@@ -57,10 +57,10 @@ type Field struct {
 // Value is one authored value: Text for dice, text and a choice, Number, Flag, or Texts for several
 // choices.
 type Value struct {
-	Text   string
-	Number int
-	Flag   bool
-	Texts  []string
+	Text   string   `json:"text,omitempty"`
+	Number int      `json:"number,omitempty"`
+	Flag   bool     `json:"flag,omitempty"`
+	Texts  []string `json:"texts,omitempty"`
 }
 
 // Values are a Part's authored values by field name, before they are checked.

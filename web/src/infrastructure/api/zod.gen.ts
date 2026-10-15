@@ -2061,104 +2061,45 @@ export const zImportReport = z.object({
 });
 
 /**
- * One row of a spell design; which fields count depends on its type.
+ * One field's value, in the slot its field type reads: text for dice, text and a choice, number, flag, or texts for several choices.
  */
-export const zSpellPart = z.object({
+export const zPartValue = z.object({
+    text: z.string().max(1000).optional(),
+    number: z.int().gte(-100000).lte(100000).optional(),
+    flag: z.boolean().optional(),
+    texts: z.array(z.string().max(80)).max(20).optional()
+});
+
+/**
+ * One value an author fills in for a Part. Min and max bound a number; max also bounds the length of a text.
+ */
+export const zPartField = z.object({
+    name: z.string().max(40),
+    label: z.string().max(80),
     type: z.enum([
-        'damage',
-        'condition',
-        'light',
-        'reveal',
-        'surface',
-        'manual'
+        'dice',
+        'number',
+        'flag',
+        'text',
+        'choice',
+        'choices'
     ]),
-    when: z.enum(['on_cast', 'start_of_turn']).optional(),
-    dice: z.string().max(20).optional(),
-    damageType: z.string().max(20).optional(),
-    half: z.boolean().optional(),
-    condition: z.string().max(40).optional(),
-    onlyTypes: z.array(z.string().max(20)).max(14).optional(),
-    brightFt: z.int().gte(0).lte(1000).optional(),
-    dimFt: z.int().gte(-1000).lte(1000).optional(),
-    qualities: z.array(z.string().max(20)).max(8).optional(),
-    surface: z.string().max(40).optional(),
-    rounds: z.int().gte(0).lte(1000).optional(),
-    text: z.string().max(1000).optional()
+    options: z.array(z.string().max(80)).max(100),
+    required: z.boolean(),
+    min: z.int().gte(-100000).lte(100000),
+    max: z.int().gte(-100000).lte(100000)
 });
 
 /**
- * A homebrew spell as the Effect builder makes it, from Targeting and typed parts listed as rows.
+ * A kind of Part as its definition: what an author fills in, and the groups of Parts it holds beneath it.
  */
-export const zSpellDesign = z.object({
-    targeting: z.object({
-        shape: z.enum([
-            'sphere',
-            'cylinder',
-            'emanation',
-            'ring',
-            'cone',
-            'cube',
-            'line',
-            'wall'
-        ]),
-        sizeFt: z.int().gte(0).lte(1000),
-        rangeFt: z.int().gte(0).lte(5000)
-    }),
-    save: z.enum([
-        'strength',
-        'dexterity',
-        'constitution',
-        'intelligence',
-        'wisdom',
-        'charisma'
-    ]).optional(),
-    concentration: z.boolean(),
-    duration: z.object({
-        unit: z.enum([
-            'instant',
-            'rounds',
-            'minutes',
-            'hours',
-            'until_dispelled'
-        ]),
-        amount: z.int().gte(0).lte(1000).optional()
-    }),
-    ritual: z.boolean(),
-    castingTime: z.object({
-        kind: z.enum([
-            'action',
-            'bonus_action',
-            'reaction',
-            'minutes'
-        ]),
-        minutes: z.int().gte(0).lte(10000).optional(),
-        trigger: z.enum([
-            'when_hit',
-            'when_damaged',
-            'ally_attacked',
-            'creature_casts',
-            'creature_enters_reach'
-        ]).optional()
-    }),
-    components: z.object({
-        verbal: z.boolean(),
-        somatic: z.boolean(),
-        material: z.object({
-            text: z.string().max(400),
-            costGp: z.int().gte(0).lte(1000000).optional(),
-            consumed: z.boolean().optional(),
-            item: z.string().max(80).optional()
-        }).optional()
-    }),
-    parts: z.array(zSpellPart).max(100)
-});
-
-/**
- * A design to preview, with the spell's name.
- */
-export const zSpellPreviewInput = z.object({
-    name: z.string().min(1).max(80),
-    design: zSpellDesign
+export const zPartKind = z.object({
+    slug: z.string().max(40),
+    label: z.string().max(80),
+    summary: z.string().max(400),
+    fields: z.array(zPartField).max(20),
+    groups: z.array(z.string().max(80)).max(20),
+    openGroups: z.boolean()
 });
 
 /**
@@ -2167,17 +2108,6 @@ export const zSpellPreviewInput = z.object({
 export const zBuilderHex = z.object({
     q: z.int().gte(-1000).lte(1000),
     r: z.int().gte(-1000).lte(1000)
-});
-
-/**
- * A homebrew spell in the Effect builder, the Effect slug it runs under in play, its rules text and its area as hexes.
- */
-export const zSpellBuild = z.object({
-    entry: zLibraryEntry.optional(),
-    design: zSpellDesign,
-    effect: z.string().max(40),
-    text: z.array(z.string().max(1000)).max(200),
-    hexes: z.array(zBuilderHex).max(20000)
 });
 
 /**
@@ -2423,49 +2353,6 @@ export const zRollTablePreviewInput = z.object({
 export const zRollTableBuild = z.object({
     entry: zLibraryEntry.optional(),
     design: zRollTableDesign,
-    lines: z.array(z.string().max(2400)).max(400)
-});
-
-/**
- * A homebrew condition as the condition builder makes it, from its icon, how it ends, how it stacks and what it does.
- */
-export const zConditionDesign = z.object({
-    icon: z.string().max(40),
-    color: z.string().max(20),
-    text: z.string().max(8000),
-    ends: z.string().max(40),
-    ability: z.string().max(40).optional(),
-    cure: z.string().max(200).optional(),
-    stacks: z.boolean().optional(),
-    maxLevel: z.int().gte(-100000).lte(100000).optional(),
-    perLevel: z.object({
-        d20: z.int().gte(-100000).lte(100000),
-        speedFt: z.int().gte(-100000).lte(100000),
-        deathAt: z.int().gte(-100000).lte(100000)
-    }),
-    parts: z.array(z.object({
-        type: z.string().max(40),
-        ability: z.string().max(40).optional(),
-        feet: z.int().gte(-100000).lte(100000).optional(),
-        text: z.string().max(2000).optional()
-    })).max(40)
-});
-
-/**
- * A design to preview, with the condition's name.
- */
-export const zConditionPreviewInput = z.object({
-    name: z.string().min(1).max(80),
-    design: zConditionDesign
-});
-
-/**
- * A homebrew condition in its builder, the slug it is known by, and how it reads back.
- */
-export const zConditionBuild = z.object({
-    entry: zLibraryEntry.optional(),
-    design: zConditionDesign,
-    slug: z.string().max(40).optional(),
     lines: z.array(z.string().max(2400)).max(400)
 });
 
@@ -5860,6 +5747,151 @@ export const zProblem = z.object({
 });
 
 /**
+ * A homebrew spell as the Effect builder makes it, from Targeting and the Parts it holds, each of a kind the rules know.
+ */
+export const zSpellDesign = z.object({
+    targeting: z.object({
+        shape: z.enum([
+            'sphere',
+            'cylinder',
+            'emanation',
+            'ring',
+            'cone',
+            'cube',
+            'line',
+            'wall'
+        ]),
+        sizeFt: z.int().gte(0).lte(1000),
+        rangeFt: z.int().gte(0).lte(5000)
+    }),
+    save: z.enum([
+        'strength',
+        'dexterity',
+        'constitution',
+        'intelligence',
+        'wisdom',
+        'charisma'
+    ]).optional(),
+    concentration: z.boolean(),
+    duration: z.object({
+        unit: z.enum([
+            'instant',
+            'rounds',
+            'minutes',
+            'hours',
+            'until_dispelled'
+        ]),
+        amount: z.int().gte(0).lte(1000).optional()
+    }),
+    ritual: z.boolean(),
+    castingTime: z.object({
+        kind: z.enum([
+            'action',
+            'bonus_action',
+            'reaction',
+            'minutes'
+        ]),
+        minutes: z.int().gte(0).lte(10000).optional(),
+        trigger: z.enum([
+            'when_hit',
+            'when_damaged',
+            'ally_attacked',
+            'creature_casts',
+            'creature_enters_reach'
+        ]).optional()
+    }),
+    components: z.object({
+        verbal: z.boolean(),
+        somatic: z.boolean(),
+        material: z.object({
+            text: z.string().max(400),
+            costGp: z.int().gte(0).lte(1000000).optional(),
+            consumed: z.boolean().optional(),
+            item: z.string().max(80).optional()
+        }).optional()
+    }),
+    turnDamage: z.object({
+        dice: z.string().max(20),
+        damageType: z.string().max(20)
+    }).optional(),
+    parts: z.array(z.lazy((): any => zPart)).max(100)
+});
+
+/**
+ * One Part of an Effect, of a kind the rules know: the kind's slug, its values by field name, and the Parts beneath it in named groups. The kind's definition (listPartKinds) says which fields and groups it takes; the server checks a Part against it. A kind that holds no Parts beneath it may leave groups out.
+ */
+export const zPart = z.object({
+    kind: z.string().max(40),
+    values: z.record(z.string(), zPartValue),
+    groups: z.array(z.lazy((): any => zPartGroup)).max(20).optional()
+});
+
+/**
+ * One named group of Parts beneath a Part, such as what a branch adds or one mode of a choice.
+ */
+export const zPartGroup = z.object({
+    name: z.string().max(80),
+    parts: z.array(zPart).max(30)
+});
+
+/**
+ * A design to preview, with the spell's name.
+ */
+export const zSpellPreviewInput = z.object({
+    name: z.string().min(1).max(80),
+    design: zSpellDesign
+});
+
+/**
+ * A homebrew spell in the Effect builder, the Effect slug it runs under in play, its rules text and its area as hexes.
+ */
+export const zSpellBuild = z.object({
+    entry: zLibraryEntry.optional(),
+    design: zSpellDesign,
+    effect: z.string().max(40),
+    text: z.array(z.string().max(1000)).max(200),
+    hexes: z.array(zBuilderHex).max(20000)
+});
+
+/**
+ * A design to preview, with the condition's name.
+ */
+export const zConditionPreviewInput = z.object({
+    name: z.string().min(1).max(80),
+    design: z.lazy((): any => zConditionDesign)
+});
+
+/**
+ * A homebrew condition in its builder, the slug it is known by, and how it reads back.
+ */
+export const zConditionBuild = z.object({
+    entry: zLibraryEntry.optional(),
+    design: z.lazy((): any => zConditionDesign),
+    slug: z.string().max(40).optional(),
+    lines: z.array(z.string().max(2400)).max(400)
+});
+
+/**
+ * A homebrew condition as the condition builder makes it, from its icon, how it ends, how it stacks and what it does as Parts of kinds the rules know.
+ */
+export const zConditionDesign = z.object({
+    icon: z.string().max(40),
+    color: z.string().max(20),
+    text: z.string().max(8000),
+    ends: z.string().max(40),
+    ability: z.string().max(40).optional(),
+    cure: z.string().max(200).optional(),
+    stacks: z.boolean().optional(),
+    maxLevel: z.int().gte(-100000).lte(100000).optional(),
+    perLevel: z.object({
+        d20: z.int().gte(-100000).lte(100000),
+        speedFt: z.int().gte(-100000).lte(100000),
+        deathAt: z.int().gte(-100000).lte(100000)
+    }),
+    parts: z.array(zPart).max(40)
+});
+
+/**
  * Retrain id.
  */
 export const zRetrainId = zId;
@@ -7875,32 +7907,10 @@ export const zReviewSharedSubmissionPath = z.object({
  */
 export const zReviewSharedSubmissionResponse = zSharedSubmission;
 
-export const zPreviewSpellBody = zSpellPreviewInput;
-
 /**
- * The preview.
+ * Every kind, in slug order.
  */
-export const zPreviewSpellResponse = zSpellBuild;
-
-export const zGetSpellBuildPath = z.object({
-    entryId: zId
-});
-
-/**
- * The spell.
- */
-export const zGetSpellBuildResponse = zSpellBuild;
-
-export const zSaveSpellBuildBody = zSpellDesign;
-
-export const zSaveSpellBuildPath = z.object({
-    entryId: zId
-});
-
-/**
- * The spell.
- */
-export const zSaveSpellBuildResponse = zSpellBuild;
+export const zListPartKindsResponse = z.array(zPartKind).max(200);
 
 export const zPreviewItemBody = zItemPreviewInput;
 
@@ -8063,33 +8073,6 @@ export const zSaveBackgroundBuildPath = z.object({
  * The background.
  */
 export const zSaveBackgroundBuildResponse = zBackgroundBuild;
-
-export const zPreviewConditionBody = zConditionPreviewInput;
-
-/**
- * The preview.
- */
-export const zPreviewConditionResponse = zConditionBuild;
-
-export const zGetConditionBuildPath = z.object({
-    entryId: zId
-});
-
-/**
- * The condition.
- */
-export const zGetConditionBuildResponse = zConditionBuild;
-
-export const zSaveConditionBuildBody = zConditionDesign;
-
-export const zSaveConditionBuildPath = z.object({
-    entryId: zId
-});
-
-/**
- * The condition.
- */
-export const zSaveConditionBuildResponse = zConditionBuild;
 
 export const zPreviewRollTableBody = zRollTablePreviewInput;
 
@@ -8794,6 +8777,60 @@ export const zGetHealthResponse = zHealthStatus;
  * The API is ready.
  */
 export const zGetReadinessResponse = zHealthStatus;
+
+export const zPreviewSpellBody = zSpellPreviewInput;
+
+/**
+ * The preview.
+ */
+export const zPreviewSpellResponse = zSpellBuild;
+
+export const zGetSpellBuildPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The spell.
+ */
+export const zGetSpellBuildResponse = zSpellBuild;
+
+export const zSaveSpellBuildBody = zSpellDesign;
+
+export const zSaveSpellBuildPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The spell.
+ */
+export const zSaveSpellBuildResponse = zSpellBuild;
+
+export const zPreviewConditionBody = zConditionPreviewInput;
+
+/**
+ * The preview.
+ */
+export const zPreviewConditionResponse = zConditionBuild;
+
+export const zGetConditionBuildPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The condition.
+ */
+export const zGetConditionBuildResponse = zConditionBuild;
+
+export const zSaveConditionBuildBody = zConditionDesign;
+
+export const zSaveConditionBuildPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The condition.
+ */
+export const zSaveConditionBuildResponse = zConditionBuild;
 
 export const zLiveCommandWebhookRequest = z.object({
     body: zLiveCommand,

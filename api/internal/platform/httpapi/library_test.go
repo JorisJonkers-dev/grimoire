@@ -618,11 +618,19 @@ func mustJSON(t *testing.T, v any) string {
 	return string(raw)
 }
 
-const lanternDesign = `{"targeting":{"shape":"emanation","sizeFt":10,"rangeFt":0},"save":"wisdom","concentration":true,
+var lanternDesign = `{"targeting":{"shape":"emanation","sizeFt":10,"rangeFt":0},"save":"wisdom","concentration":true,
 "duration":{"unit":"minutes","amount":1},"ritual":true,"castingTime":{"kind":"action"},
 "components":{"verbal":true,"somatic":false,"material":{"text":"a lantern of bog glass","costGp":25,"consumed":true,"item":"lantern"}},
-"parts":[{"type":"light","brightFt":20,"dimFt":20},{"type":"reveal","qualities":["invisible"]},
-{"type":"condition","condition":"charmed","onlyTypes":["undead","fey"]},{"type":"damage","when":"start_of_turn","dice":"1d6","damageType":"radiant"}]}`
+"turnDamage":{"dice":"1d6","damageType":"radiant"},
+"parts":[{"kind":"light","values":{"bright_ft":{"number":20},"dim_ft":{"number":20}}},{"kind":"reveal","values":{"qualities":{"texts":["invisible"]}}},` +
+	charmedIf("undead") + `,` + charmedIf("fey") + `]}`
+
+// charmedIf is a branch that charms a creature of one type that fails the spell's save, on the wire.
+func charmedIf(creature string) string {
+	return `{"kind":"branch","values":{"when":{"text":"creature_is"},"creature_type":{"text":"` + creature + `"}},"groups":[{"name":"then","parts":[
+{"kind":"branch","values":{"when":{"text":"fails_by"},"n":{"number":1}},"groups":[{"name":"then","parts":[
+{"kind":"save_condition","values":{"condition":{"text":"charmed"}}}]}]}]}]}`
+}
 
 // An author builds a spell in the Effect builder: a fresh spell opens with a starting design, a preview
 // draws the area and writes the rules text, a design the rules cannot run is refused with the reason,
@@ -642,7 +650,7 @@ func TestTheEffectBuilder(t *testing.T) {
 	preview := decode(t, rec)
 	text := strings.Join(toStrings(preview["text"].([]any)), "\n")
 	if rec.Code != http.StatusOK || len(preview["hexes"].([]any)) != 18 || !strings.Contains(text, "Casting Time: 1 action or Ritual.") ||
-		!strings.Contains(text, "has the Charmed condition, if it is Undead or Fey.") || !strings.Contains(text, "starts its turn in the area takes 1d6 radiant damage") {
+		!strings.Contains(text, "If the creature is a fey, if a creature fails the save by 1 or more, on a failed Wisdom saving throw, a creature has the Charmed condition.") || !strings.Contains(text, "starts its turn in the area takes 1d6 radiant damage") {
 		t.Fatalf("preview: %d %v", rec.Code, preview)
 	}
 	bad := strings.Replace(lanternDesign, `"save":"wisdom",`, "", 1)

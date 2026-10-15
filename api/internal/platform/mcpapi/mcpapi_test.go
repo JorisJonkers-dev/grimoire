@@ -55,13 +55,36 @@ func TestToolsMatchTheSpecAndItsRoutes(t *testing.T) {
 			t.Fatalf("%s: no route for %s %s", tool.Name, tool.Method, tool.Path)
 		}
 		var schema map[string]any
-		if err := json.Unmarshal(tool.InputSchema, &schema); err != nil || schema["type"] != "object" || strings.Contains(string(tool.InputSchema), "$ref") {
+		if err := json.Unmarshal(tool.InputSchema, &schema); err != nil || schema["type"] != "object" || !standsAlone(schema, schema) {
 			t.Fatalf("%s: schema %s", tool.Name, tool.InputSchema)
 		}
 	}
 	if len(seen) < 40 {
 		t.Fatalf("only %d tools", len(seen))
 	}
+}
+
+// standsAlone reports whether every $ref below v names a schema in the tool schema's own $defs.
+func standsAlone(root map[string]any, v any) bool {
+	switch x := v.(type) {
+	case map[string]any:
+		if ref, ok := x["$ref"].(string); ok {
+			defs, _ := root["$defs"].(map[string]any)
+			return strings.HasPrefix(ref, "#/$defs/") && defs[strings.TrimPrefix(ref, "#/$defs/")] != nil
+		}
+		for _, child := range x {
+			if !standsAlone(root, child) {
+				return false
+			}
+		}
+	case []any:
+		for _, child := range x {
+			if !standsAlone(root, child) {
+				return false
+			}
+		}
+	}
+	return true
 }
 
 func normalise(t *testing.T, tools []mcpapi.Tool) any {
@@ -448,5 +471,56 @@ func TestToolsReportLibraryRevisionsAndWhatIsPending(t *testing.T) {
 	api.role = "player"
 	if text, failed := callTool(t, s, "propose_standing_change", map[string]any{"campaignId": cid, "factionId": faction, "body": map[string]any{"delta": 2, "reason": "x"}}); !failed || text != "Only the campaign's DM can use Grimoire's tools on it." {
 		t.Fatalf("a Player's agent: %s", text)
+	}
+}
+
+// A schema that holds itself beneath a property or an item, as a Part holds Parts, is exported once under
+// $defs and referred to from where it recurs; a schema that is nothing but itself still is refused.
+func TestExportKeepsRecursiveSchemasInDefs(t *testing.T) {
+	t.Parallel()
+	tools, err := mcpapi.Export([]byte(`paths:
+  /a:
+    put:
+      x-mcp: { tool: save, entity: npc }
+      summary: Save
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Design" }
+components:
+  schemas:
+    Design: { type: object, properties: { parts: { type: array, items: { $ref: "#/components/schemas/Part" } } } }
+    Part:
+      type: object
+      properties:
+        kind: { type: string }
+        values: { type: object, additionalProperties: { $ref: "#/components/schemas/Value" } }
+        groups: { type: array, items: { $ref: "#/components/schemas/Group" } }
+    Value: { type: object, properties: { text: { type: string } } }
+    Group: { type: object, properties: { parts: { type: array, items: { $ref: "#/components/schemas/Part" } } } }
+`))
+	if err != nil || len(tools) != 1 {
+		t.Fatalf("tools %+v, %v", tools, err)
+	}
+	var schema map[string]any
+	if err := json.Unmarshal(tools[0].InputSchema, &schema); err != nil {
+		t.Fatal(err)
+	}
+	body := schema["properties"].(map[string]any)["body"].(map[string]any)
+	part := body["properties"].(map[string]any)["parts"].(map[string]any)["items"].(map[string]any)
+	group := part["properties"].(map[string]any)["groups"].(map[string]any)["items"].(map[string]any)
+	if ref := group["properties"].(map[string]any)["parts"].(map[string]any)["items"]; !reflect.DeepEqual(ref, map[string]any{"$ref": "#/$defs/Part"}) {
+		t.Fatalf("the Part beneath a group = %v", ref)
+	}
+	defs := schema["$defs"].(map[string]any)
+	if len(defs) != 1 || !reflect.DeepEqual(defs["Part"], part) {
+		t.Fatalf("$defs = %v", defs)
+	}
+	if value := part["properties"].(map[string]any)["values"].(map[string]any)["additionalProperties"].(map[string]any); value["type"] != "object" {
+		t.Fatalf("a schema that does not recur is inlined = %v", value)
+	}
+	plain, _ := mcpapi.Export([]byte("paths:\n  /a:\n    get:\n      x-mcp: { tool: read }\n      summary: Read\n"))
+	if strings.Contains(string(plain[0].InputSchema), "$defs") {
+		t.Fatalf("a tool with nothing recursive has no $defs = %s", plain[0].InputSchema)
 	}
 }

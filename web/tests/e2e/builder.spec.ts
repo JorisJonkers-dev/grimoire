@@ -35,7 +35,7 @@ test('an author builds the Marsh Lantern in the Effect builder, previews its are
   await expect(page.getByTestId('area-hex')).toHaveCount(18)
   const text = page.getByTestId('rules-text')
   await expect(text).toContainText('Casting Time: 1 action or Ritual.')
-  await expect(text).toContainText('has the Charmed condition, if it is Undead or Fey.')
+  await expect(text).toContainText('If the creature is a fey, if a creature fails the save by 1 or more, on a failed Wisdom saving throw, a creature has the Charmed condition.')
   await expect(text).toContainText('starts its turn in the area takes 1d6 radiant damage')
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
   expect(await violations(page)).toEqual([])

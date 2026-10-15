@@ -5875,6 +5875,35 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/builders/part-kinds:
+    get:
+      operationId: listPartKinds
+      x-ogen-operation-group: Read
+      x-mcp: { tool: list_part_kinds }
+      summary: List the kinds of Part
+      description: "Every kind of Part an Effect may hold, as its definition: the fields an author fills in with their bounds and options, and the groups of Parts it holds beneath it. A builder draws its form from these, and a Part sent to a builder is checked against its kind's definition."
+      tags: [Library]
+      responses:
+        "200":
+          description: Every kind, in slug order.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 200
+                items:
+                  $ref: "#/components/schemas/PartKind"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /api/v1/builders/spells/preview:
     post:
       operationId: previewSpell
@@ -12824,7 +12853,7 @@ components:
         reason: { type: string, maxLength: 300 }
     SpellDesign:
       type: object
-      description: A homebrew spell as the Effect builder makes it, from Targeting and typed parts listed as rows.
+      description: A homebrew spell as the Effect builder makes it, from Targeting and the Parts it holds, each of a kind the rules know.
       additionalProperties: false
       required: [targeting, concentration, duration, ritual, castingTime, components, parts]
       properties:
@@ -12870,35 +12899,92 @@ components:
                 costGp: { type: integer, format: int32, minimum: 0, maximum: 1000000 }
                 consumed: { type: boolean }
                 item: { type: string, maxLength: 80 }
+        turnDamage:
+          type: object
+          description: Damage each creature takes when it starts its turn in the area, through a Surface of the spell's own.
+          additionalProperties: false
+          required: [dice, damageType]
+          properties:
+            dice: { type: string, maxLength: 20 }
+            damageType: { type: string, maxLength: 20 }
         parts:
           type: array
+          description: "The spell's Parts in order. A Part that rolls a save may leave its ability out: it rolls the spell's save."
           maxItems: 100
-          items: { $ref: "#/components/schemas/SpellPart" }
-    SpellPart:
+          items: { $ref: "#/components/schemas/Part" }
+    Part:
       type: object
-      description: One row of a spell design; which fields count depends on its type.
+      description: "One Part of an Effect, of a kind the rules know: the kind's slug, its values by field name, and the Parts beneath it in named groups. The kind's definition (listPartKinds) says which fields and groups it takes; the server checks a Part against it. A kind that holds no Parts beneath it may leave groups out."
       additionalProperties: false
-      required: [type]
+      required: [kind, values]
       properties:
-        type: { type: string, enum: [damage, condition, light, reveal, surface, manual] }
-        when: { type: string, enum: [on_cast, start_of_turn] }
-        dice: { type: string, maxLength: 20 }
-        damageType: { type: string, maxLength: 20 }
-        half: { type: boolean }
-        condition: { type: string, maxLength: 40 }
-        onlyTypes:
+        kind: { type: string, maxLength: 40 }
+        values:
+          type: object
+          maxProperties: 20
+          additionalProperties: { $ref: "#/components/schemas/PartValue" }
+        groups:
           type: array
-          maxItems: 14
-          items: { type: string, maxLength: 20 }
-        brightFt: { type: integer, format: int32, minimum: 0, maximum: 1000 }
-        dimFt: { type: integer, format: int32, minimum: -1000, maximum: 1000 }
-        qualities:
-          type: array
-          maxItems: 8
-          items: { type: string, maxLength: 20 }
-        surface: { type: string, maxLength: 40 }
-        rounds: { type: integer, format: int32, minimum: 0, maximum: 1000 }
+          maxItems: 20
+          items: { $ref: "#/components/schemas/PartGroup" }
+    PartValue:
+      type: object
+      description: "One field's value, in the slot its field type reads: text for dice, text and a choice, number, flag, or texts for several choices."
+      additionalProperties: false
+      properties:
         text: { type: string, maxLength: 1000 }
+        number: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        flag: { type: boolean }
+        texts:
+          type: array
+          maxItems: 20
+          items: { type: string, maxLength: 80 }
+    PartGroup:
+      type: object
+      description: One named group of Parts beneath a Part, such as what a branch adds or one mode of a choice.
+      additionalProperties: false
+      required: [name, parts]
+      properties:
+        name: { type: string, maxLength: 80 }
+        parts:
+          type: array
+          maxItems: 30
+          items: { $ref: "#/components/schemas/Part" }
+    PartKind:
+      type: object
+      description: "A kind of Part as its definition: what an author fills in, and the groups of Parts it holds beneath it."
+      additionalProperties: false
+      required: [slug, label, summary, fields, groups, openGroups]
+      properties:
+        slug: { type: string, maxLength: 40 }
+        label: { type: string, maxLength: 80 }
+        summary: { type: string, maxLength: 400 }
+        fields:
+          type: array
+          maxItems: 20
+          items: { $ref: "#/components/schemas/PartField" }
+        groups:
+          type: array
+          description: The groups of Parts the kind holds beneath it, by name; most kinds hold none.
+          maxItems: 20
+          items: { type: string, maxLength: 80 }
+        openGroups: { type: boolean, description: "The author names each group, as a choice names its modes; groups is then empty." }
+    PartField:
+      type: object
+      description: "One value an author fills in for a Part. Min and max bound a number; max also bounds the length of a text."
+      additionalProperties: false
+      required: [name, label, type, options, required, min, max]
+      properties:
+        name: { type: string, maxLength: 40 }
+        label: { type: string, maxLength: 80 }
+        type: { type: string, enum: [dice, number, flag, text, choice, choices] }
+        options:
+          type: array
+          maxItems: 100
+          items: { type: string, maxLength: 80 }
+        required: { type: boolean }
+        min: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        max: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
     SpellPreviewInput:
       type: object
       description: A design to preview, with the spell's name.
@@ -13297,7 +13383,7 @@ components:
           items: { type: string, maxLength: 2400 }
     ConditionDesign:
       type: object
-      description: A homebrew condition as the condition builder makes it, from its icon, how it ends, how it stacks and what it does.
+      description: A homebrew condition as the condition builder makes it, from its icon, how it ends, how it stacks and what it does as Parts of kinds the rules know.
       additionalProperties: false
       required: [icon, color, text, ends, perLevel, parts]
       properties:
@@ -13320,15 +13406,7 @@ components:
         parts:
           type: array
           maxItems: 40
-          items:
-            type: object
-            additionalProperties: false
-            required: [type]
-            properties:
-              type: { type: string, maxLength: 40 }
-              ability: { type: string, maxLength: 40 }
-              feet: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
-              text: { type: string, maxLength: 2000 }
+          items: { $ref: "#/components/schemas/Part" }
     MonsterPreviewInput:
       type: object
       description: A design to preview, with the creature's name.

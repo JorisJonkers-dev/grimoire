@@ -1,5 +1,5 @@
-// Package spellbuild turns a homebrew spell's design, its Targeting and typed parts listed as rows, into
-// an Effect the rules engine runs, with its rules text.
+// Package spellbuild turns a homebrew spell's design, its Targeting and the Parts it holds, each of a kind
+// the rules know, into an Effect the rules engine runs, with its rules text.
 package spellbuild
 
 import (
@@ -27,7 +27,15 @@ type Design struct {
 	Ritual        bool        `json:"ritual"`
 	CastingTime   CastingTime `json:"castingTime"`
 	Components    Components  `json:"components"`
-	Parts         []Part      `json:"parts"`
+	// TurnDamage hurts each creature that starts its turn in the area, through a Surface of the spell's own.
+	TurnDamage *TurnDamage        `json:"turnDamage,omitempty"`
+	Parts      []effects.Authored `json:"parts"`
+}
+
+// TurnDamage is damage a creature takes when it starts its turn in the spell's area.
+type TurnDamage struct {
+	Dice       string `json:"dice"`
+	DamageType string `json:"damageType"`
 }
 
 // Targeting is the spell's area: its shape and size, and how far away its point may be (0 from the caster).
@@ -66,39 +74,6 @@ type Material struct {
 	Item     string `json:"item,omitempty"`
 }
 
-// Part kinds.
-const (
-	DamagePart    = "damage"
-	ConditionPart = "condition"
-	LightPart     = "light"
-	RevealPart    = "reveal"
-	SurfacePart   = "surface"
-	ManualPart    = "manual"
-)
-
-// When a damage part lands: as the spell is cast, or on each creature that starts its turn in the area.
-const (
-	OnCast      = "on_cast"
-	StartOfTurn = "start_of_turn"
-)
-
-// Part is one row of a design; which fields count depends on its Type.
-type Part struct {
-	Type       string   `json:"type"`
-	When       string   `json:"when,omitempty"`
-	Dice       string   `json:"dice,omitempty"`
-	DamageType string   `json:"damageType,omitempty"`
-	Half       bool     `json:"half,omitempty"`
-	Condition  string   `json:"condition,omitempty"`
-	OnlyTypes  []string `json:"onlyTypes,omitempty"`
-	BrightFt   int      `json:"brightFt,omitempty"`
-	DimFt      int      `json:"dimFt,omitempty"`
-	Qualities  []string `json:"qualities,omitempty"`
-	Surface    string   `json:"surface,omitempty"`
-	Rounds     int      `json:"rounds,omitempty"`
-	Text       string   `json:"text,omitempty"`
-}
-
 // Surface is the ground a spell's start-of-turn damage lies on: a Surface of its own, harming whoever
 // starts a turn in it.
 type Surface struct {
@@ -131,11 +106,6 @@ func Conditions() []string {
 	return []string{"blinded", "charmed", "deafened", "frightened", "grappled", "incapacitated", "invisible", "paralyzed", "petrified", "poisoned", "prone", "restrained", "stunned", "unconscious"}
 }
 
-// CreatureTypes are the creature types a part can be limited to.
-func CreatureTypes() []string {
-	return []string{"aberration", "beast", "celestial", "construct", "dragon", "elemental", "fey", "fiend", "giant", "humanoid", "monstrosity", "ooze", "plant", "undead"}
-}
-
 // Triggers are what a reaction spell answers.
 func Triggers() []string {
 	return []string{"when_hit", "when_damaged", "ally_attacked", "creature_casts", "creature_enters_reach"}
@@ -149,18 +119,16 @@ func Shapes() []string {
 var dicePattern = regexp.MustCompile(`^[1-9][0-9]?d(4|6|8|10|12|20)$`)
 
 // Build checks a design and turns it into an Effect named slug and name. surfaces are the Surface kinds
-// a part may lay down.
+// a Part may lay down.
 func Build(slug, name string, d Design, surfaces []string) (Built, error) {
 	if err := d.check(); err != nil {
 		return Built{}, err
 	}
-	b := builder{slug: slug, name: name, d: d, surfaces: surfaces, comps: nil, text: nil, surface: nil, saveDamage: false, light: false, ground: false}
-	for _, p := range d.Parts {
-		if err := b.part(p); err != nil {
-			return Built{}, err
-		}
+	parts, err := d.parts(surfaces)
+	if err != nil {
+		return Built{}, err
 	}
-	return b.finish(), nil
+	return d.finish(slug, name, parts), nil
 }
 
 // check validates everything but the parts.
@@ -176,7 +144,7 @@ func (d Design) check() error {
 	case d.Save != "" && !slices.Contains(Abilities(), d.Save):
 		return DesignError("the save is an ability: " + strings.Join(Abilities(), ", "))
 	case len(d.Parts) > 30:
-		return DesignError("keep it to 30 parts")
+		return DesignError("keep it to 30 Parts")
 	}
 	if err := d.Duration.check(d.Concentration); err != nil {
 		return err
@@ -184,7 +152,10 @@ func (d Design) check() error {
 	if err := d.CastingTime.check(d.Ritual); err != nil {
 		return err
 	}
-	return d.Components.check()
+	if err := d.Components.check(); err != nil {
+		return err
+	}
+	return d.turnDamage()
 }
 
 func (u Duration) check(concentration bool) error {
@@ -236,176 +207,52 @@ func (c Components) check() error {
 	return nil
 }
 
-// builder gathers the Effect's Parts and text as the design's parts come.
-type builder struct {
-	slug, name string
-	d          Design
-	surfaces   []string
-	comps      []effects.Part
-	text       []string
-	surface    *Surface
-	saveDamage bool
-	light      bool
-	ground     bool
-}
-
-func (b *builder) part(p Part) error {
-	switch p.Type {
-	case DamagePart:
-		return b.damage(p)
-	case ConditionPart:
-		return b.condition(p)
-	case LightPart:
-		return b.lights(p)
-	case RevealPart:
-		return b.reveal(p)
-	case SurfacePart:
-		return b.lay(p)
-	case ManualPart:
-		if strings.TrimSpace(p.Text) == "" || len([]rune(p.Text)) > 500 {
-			return DesignError("a manual part says in up to 500 characters what the DM does")
-		}
-		b.comps = append(b.comps, effects.Manual{Instruction: p.Text})
-		b.text = append(b.text, p.Text)
+func (d Design) turnDamage() error {
+	t := d.TurnDamage
+	if t == nil {
 		return nil
 	}
-	return DesignError("a part is damage, condition, light, reveal, surface or manual")
-}
-
-func (b *builder) damage(p Part) error {
-	switch {
-	case !dicePattern.MatchString(p.Dice):
+	if !dicePattern.MatchString(t.Dice) {
 		return DesignError("damage dice look like 2d6")
-	case !slices.Contains(DamageTypes(), p.DamageType):
+	}
+	if !slices.Contains(DamageTypes(), t.DamageType) {
 		return DesignError("choose a damage type: " + strings.Join(DamageTypes(), ", "))
-	case p.When == StartOfTurn:
-		return b.turnDamage(p)
-	case p.When != OnCast:
-		return DesignError("damage lands on cast or at the start of a turn")
-	case b.d.Save == "":
-		return DesignError("damage on cast needs the save the targets make")
-	case b.saveDamage:
-		return DesignError("a spell deals its damage on cast once")
 	}
-	b.saveDamage = true
-	b.comps = append(b.comps, effects.SaveDamage{Ability: b.d.Save, Dice: p.Dice, Type: p.DamageType, Half: p.Half})
-	text := "Each creature in the area takes " + p.Dice + " " + p.DamageType + " damage on a failed " + title(b.d.Save) + " saving throw"
-	if p.Half {
-		text += ", or half as much on a successful one"
-	}
-	b.text = append(b.text, text+".")
-	return nil
-}
-
-func (b *builder) turnDamage(p Part) error {
-	switch {
-	case b.ground:
-		return DesignError("a spell leaves one Surface or one start-of-turn damage, not both")
-	case b.rounds() == 0:
+	if d.rounds() == 0 {
 		return DesignError("start-of-turn damage needs a duration in rounds, minutes or hours")
 	}
-	b.ground = true
-	b.surface = &Surface{Slug: b.slug + "-ground", Name: b.name, Dice: p.Dice, Type: p.DamageType}
-	b.comps = append(b.comps, effects.CreateSurface{Surface: surface.Kind(b.surface.Slug), Rounds: b.rounds()})
-	b.text = append(b.text, "A creature that starts its turn in the area takes "+p.Dice+" "+p.DamageType+" damage.")
 	return nil
 }
 
 // rounds is how many rounds the spell lasts, 0 when its end is not counted.
-func (b *builder) rounds() int {
-	return effects.Duration{Kind: effects.DurationKind(b.d.Duration.Unit), Amount: b.d.Duration.Amount, RepeatSave: ""}.Rounds()
-}
-
-func (b *builder) condition(p Part) error {
-	switch {
-	case !slices.Contains(Conditions(), p.Condition):
-		return DesignError("choose a condition: " + strings.Join(Conditions(), ", "))
-	case b.d.Save == "":
-		return DesignError("a condition needs the save the targets make")
-	}
-	for _, t := range p.OnlyTypes {
-		if !slices.Contains(CreatureTypes(), t) {
-			return DesignError("limit it to creature types: " + strings.Join(CreatureTypes(), ", "))
-		}
-	}
-	failed := effects.Branch{When: effects.Condition{Kind: effects.FailsBy, N: 1, Type: ""}, Then: []effects.Part{effects.SaveCondition{Ability: b.d.Save, Slug: p.Condition}}}
-	text := "A creature that fails the " + title(b.d.Save) + " saving throw has the " + title(p.Condition) + " condition"
-	if len(p.OnlyTypes) == 0 {
-		b.comps = append(b.comps, failed)
-		b.text = append(b.text, text+".")
-		return nil
-	}
-	names := make([]string, 0, len(p.OnlyTypes))
-	for _, t := range p.OnlyTypes {
-		b.comps = append(b.comps, effects.Branch{When: effects.Condition{Kind: effects.CreatureIs, N: 0, Type: t}, Then: []effects.Part{failed}})
-		names = append(names, title(t))
-	}
-	b.text = append(b.text, text+", if it is "+strings.Join(names, " or ")+".")
-	return nil
-}
-
-func (b *builder) lights(p Part) error {
-	switch {
-	case b.light:
-		return DesignError("a spell sheds one light")
-	case p.BrightFt < 5 || p.BrightFt > 120 || p.BrightFt%5 != 0 || p.DimFt < 0 || p.DimFt > 120 || p.DimFt%5 != 0:
-		return DesignError("light reaches 5 to 120 feet bright and 0 to 120 feet dim, in steps of 5")
-	}
-	b.light = true
-	l := effects.Light{BrightFt: p.BrightFt, DimFt: p.DimFt}
-	b.comps = append(b.comps, l)
-	b.text = append(b.text, "Bright light fills "+strconv.Itoa(l.BrightFt)+" feet around the spell, and dim light another "+strconv.Itoa(l.DimFt)+" feet.")
-	return nil
-}
-
-func (b *builder) reveal(p Part) error {
-	if len(p.Qualities) == 0 {
-		return DesignError("a reveal strips at least one Visibility Quality")
-	}
-	for _, q := range p.Qualities {
-		if !slices.Contains(qualities(), q) {
-			return DesignError("reveal Visibility Qualities: " + strings.Join(qualities(), ", "))
-		}
-	}
-	b.comps = append(b.comps, effects.Reveal{Qualities: p.Qualities})
-	names := make([]string, 0, len(p.Qualities))
-	for _, q := range p.Qualities {
-		names = append(names, title(q))
-	}
-	b.text = append(b.text, "Every creature and object in the area loses "+strings.Join(names, " and ")+".")
-	return nil
-}
-
-func (b *builder) lay(p Part) error {
-	switch {
-	case b.ground:
-		return DesignError("a spell leaves one Surface or one start-of-turn damage, not both")
-	case !slices.Contains(b.surfaces, p.Surface):
-		return DesignError("choose a Surface: " + strings.Join(b.surfaces, ", "))
-	case p.Rounds < 1 || p.Rounds > 100:
-		return DesignError("a Surface lasts 1 to 100 rounds")
-	}
-	b.ground = true
-	b.comps = append(b.comps, effects.CreateSurface{Surface: surface.Kind(p.Surface), Rounds: p.Rounds})
-	b.text = append(b.text, "The area is covered in "+strings.ReplaceAll(p.Surface, "-", " ")+" for "+strconv.Itoa(p.Rounds)+" rounds.")
-	return nil
+func (d Design) rounds() int {
+	return effects.Duration{Kind: effects.DurationKind(d.Duration.Unit), Amount: d.Duration.Amount, RepeatSave: ""}.Rounds()
 }
 
 // finish puts the Effect together: the area first, the save the targets make when no damage names it,
-// then the parts in order; and the rules text with the spell's metadata.
-func (b *builder) finish() Built {
-	d := b.d
-	comps := []effects.Part{effects.Area{Shape: hex.Shape(d.Targeting.Shape), SizeFt: d.Targeting.SizeFt, RangeFt: d.Targeting.RangeFt}}
-	if d.Save != "" && !b.saveDamage {
-		comps = append(comps, effects.AreaSave{Ability: d.Save})
+// then the Parts in order and the Surface its start-of-turn damage lies on; and the rules text with the
+// spell's metadata.
+func (d Design) finish(slug, name string, parts []effects.Part) Built {
+	head := []effects.Part{effects.Area{Shape: hex.Shape(d.Targeting.Shape), SizeFt: d.Targeting.SizeFt, RangeFt: d.Targeting.RangeFt}}
+	if d.Save != "" && count(d.Parts, "save_damage") == 0 {
+		head = append(head, effects.AreaSave{Ability: d.Save})
 	}
 	duration := effects.Duration{Kind: effects.DurationKind(d.Duration.Unit), Amount: d.Duration.Amount, RepeatSave: ""}
-	def := effects.Definition{
-		Slug: b.slug, Name: b.name, Owner: effects.OwnedBySpell, Concentration: d.Concentration, Duration: duration, Scaling: nil,
-		Parts: append(comps, b.comps...),
-	}
 	text := []string{castingText(d), componentsText(d.Components), areaText(d.Targeting), duration.Text(d.Concentration)}
-	return Built{Definition: def, Surface: b.surface, Text: append(text, b.text...)}
+	for _, p := range parts {
+		text = append(text, p.Text())
+	}
+	var ground *Surface
+	if t := d.TurnDamage; t != nil {
+		ground = &Surface{Slug: slug + "-ground", Name: name, Dice: t.Dice, Type: t.DamageType}
+		parts = append(parts, effects.CreateSurface{Surface: surface.Kind(ground.Slug), Rounds: d.rounds()})
+		text = append(text, "A creature that starts its turn in the area takes "+t.Dice+" "+t.DamageType+" damage.")
+	}
+	def := effects.Definition{
+		Slug: slug, Name: name, Owner: effects.OwnedBySpell, Concentration: d.Concentration, Duration: duration, Scaling: nil,
+		Parts: append(head, parts...),
+	}
+	return Built{Definition: def, Surface: ground, Text: text}
 }
 
 func castingText(d Design) string {
@@ -456,15 +303,6 @@ func Preview(t Targeting) []hex.Coord {
 		aim = hex.Coord{Q: 1, R: 0}
 	}
 	return hex.Area(hex.Shape(t.Shape), hex.Coord{Q: 0, R: 0}, aim, t.SizeFt)
-}
-
-func qualities() []string {
-	return []string{"hidden", "invisible", "disguised", "illusory", "ethereal"}
-}
-
-// title capitalises a non-empty name.
-func title(s string) string {
-	return strings.ToUpper(s[:1]) + s[1:]
 }
 
 // Slug is what a Library entry's homebrew is known by in play: a spell's Effect slug, an item's slug.

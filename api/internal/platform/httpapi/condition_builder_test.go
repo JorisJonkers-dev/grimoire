@@ -7,7 +7,8 @@ import (
 )
 
 const frostbiteDesign = `{"icon":"snow","color":"#7fa8dd","text":"Cold seeps into the bones.","ends":"rest","stacks":true,"maxLevel":3,
-"perLevel":{"d20":1,"speedFt":5,"deathAt":0},"parts":[{"type":"attacked_advantage"},{"type":"save_disadvantage","ability":"dexterity"}]}`
+"perLevel":{"d20":1,"speedFt":5,"deathAt":0},"parts":[{"kind":"edge","values":{"against":{"flag":true},"advantage":{"flag":true},"range":{"text":"any"}}},
+{"kind":"save_edge","values":{"ability":{"text":"dexterity"},"mode":{"text":"disadvantage"}}}]}`
 
 // An author builds Frostbite in the condition builder, and a DM picks the Campaign's exhaustion.
 func TestTheConditionBuilderAndExhaustionVariants(t *testing.T) {

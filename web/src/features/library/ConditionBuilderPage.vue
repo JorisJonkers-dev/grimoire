@@ -4,8 +4,10 @@ import { useMutation, useQuery } from '@tanstack/vue-query'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { getConditionBuildOptions, previewConditionMutation, saveConditionBuildMutation } from '@/infrastructure/api/@tanstack/vue-query.gen'
+import type { ConditionBuild, ConditionDesign } from '@/infrastructure/api/types.gen'
 import { GButton, StatusIcon } from '@/shared/ui'
 import { abilities } from './classPresets'
+import { conditionDesign, conditionForm, type ConditionForm } from './partRows'
 import { useBuilder } from './useBuilder'
 
 const route = useRoute()
@@ -14,8 +16,9 @@ const path = computed(() => ({ path: { entryId: entryId.value } }))
 const condition = useQuery(computed(() => ({ ...getConditionBuildOptions(path.value), retry: false })))
 const preview = useMutation(previewConditionMutation())
 const save = useMutation(saveConditionBuildMutation())
-const { design, shown, status, name, readOnly, problem, runPreview, runSave } = useBuilder({
+const { design, shown, status, name, readOnly, problem, runPreview, runSave } = useBuilder<ConditionDesign, ConditionBuild, ConditionForm>({
   entryId, data: condition.data, key: computed(() => getConditionBuildOptions(path.value).queryKey), preview, save, fallback: 'Condition',
+  form: { read: conditionForm, write: conditionDesign },
 })
 
 // Only a condition that lasts until cured names a cure.
@@ -88,7 +91,8 @@ const parts = [
           <h2>What it does</h2>
           <ol class="rows">
             <li v-for="(p, i) in design.parts" :key="i" class="row-item">
-              <label class="g-field"><span>Part</span>
+              <span v-if="p.type === 'kept'" class="kept" :data-testid="`condition-part-${String(i)}-kept`">{{ p.part?.kind }}: kept as written; this builder cannot change it yet.</span>
+              <label v-else class="g-field"><span>Part</span>
                 <select v-model="p.type" :data-testid="`condition-part-${String(i)}-type`"><option v-for="t in parts" :key="t.value" :value="t.value">{{ t.label }}</option></select>
               </label>
               <label v-if="p.type.startsWith('save_')" class="g-field"><span>Ability</span>
@@ -138,6 +142,10 @@ h2 {
 }
 .line {
   margin: 0;
+}
+.kept {
+  align-self: center;
+  color: var(--color-text-2);
 }
 .layout {
   display: grid;

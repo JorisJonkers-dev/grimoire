@@ -1,6 +1,6 @@
 // Package conditionbuild turns a homebrew condition's design, its icon, how it ends, whether and how it
-// stacks, and what it does as typed parts, into an Effect the engine runs; and names the exhaustion
-// variants a Campaign can play with.
+// stacks, and what it does as Parts of kinds the rules know, into an Effect the engine runs; and names
+// the exhaustion variants a Campaign can play with.
 package conditionbuild
 
 import (
@@ -24,11 +24,11 @@ type Design struct {
 	Ends    string `json:"ends"`
 	Ability string `json:"ability,omitempty"`
 	// Cure is what ends a condition that lasts until cured: a lingering injury.
-	Cure     string  `json:"cure,omitempty"`
-	Stacks   bool    `json:"stacks,omitempty"`
-	MaxLevel int     `json:"maxLevel,omitempty"`
-	PerLevel Penalty `json:"perLevel"`
-	Parts    []Part  `json:"parts"`
+	Cure     string             `json:"cure,omitempty"`
+	Stacks   bool               `json:"stacks,omitempty"`
+	MaxLevel int                `json:"maxLevel,omitempty"`
+	PerLevel Penalty            `json:"perLevel"`
+	Parts    []effects.Authored `json:"parts"`
 }
 
 // Penalty is what each level of a stacking condition takes, and the level it kills at (0 never).
@@ -36,14 +36,6 @@ type Penalty struct {
 	D20     int `json:"d20"`
 	SpeedFt int `json:"speedFt"`
 	DeathAt int `json:"deathAt"`
-}
-
-// Part is one thing the condition does.
-type Part struct {
-	Type    string `json:"type"`
-	Ability string `json:"ability,omitempty"`
-	Feet    int    `json:"feet,omitempty"`
-	Text    string `json:"text,omitempty"`
 }
 
 // Condition is a built design: the Effect it runs as and how it looks on a token.
@@ -69,11 +61,9 @@ func abilities() []string {
 	return []string{"strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"}
 }
 
-func partTypes() []string {
-	return []string{
-		"attack_advantage", "attack_disadvantage", "attacked_advantage", "attacked_disadvantage", "save_advantage", "save_disadvantage",
-		"save_fails", "incapacitated", "immobile", "speed_penalty", "crit_within", "manual",
-	}
+// kinds are the kinds of Part a condition holds: what folds into its bearer, and what the DM decides.
+func kinds() []string {
+	return []string{"crit_within", "edge", "immobile", "incapacitated", "manual", "save_edge", "speed_penalty"}
 }
 
 // Check validates a design.
@@ -96,19 +86,15 @@ func Check(d Design) error {
 	case d.Ends != "cure" && d.Cure != "":
 		return DesignError("only a condition that lasts until cured names a cure")
 	case len(d.Parts) > 20:
-		return DesignError("keep it to up to 20 parts")
+		return DesignError("keep it to up to 20 Parts")
 	}
 	if d.Stacks {
 		if err := stacking(d); err != nil {
 			return err
 		}
 	}
-	for _, p := range d.Parts {
-		if err := part(p); err != nil {
-			return err
-		}
-	}
-	return nil
+	_, err := parts(d.Parts)
+	return err
 }
 
 func stacking(d Design) error {
@@ -125,18 +111,18 @@ func stacking(d Design) error {
 	return nil
 }
 
-func part(p Part) error {
-	switch {
-	case !slices.Contains(partTypes(), p.Type):
-		return DesignError("choose each part from " + strings.Join(partTypes(), ", "))
-	case strings.HasPrefix(p.Type, "save_") && !slices.Contains(abilities(), p.Ability):
-		return DesignError("name the ability each save part reads")
-	case (p.Type == "speed_penalty" || p.Type == "crit_within") && (p.Feet < 5 || p.Feet > 60):
-		return DesignError("make each distance 5 to 60 feet")
-	case p.Type == "manual" && (strings.TrimSpace(p.Text) == "" || len([]rune(p.Text)) > 500):
-		return DesignError("describe each manual part in up to 500 characters")
+// parts checks the Parts against the kinds a condition holds and decodes each through its kind.
+func parts(in []effects.Authored) ([]effects.Part, error) {
+	for _, a := range in {
+		if !slices.Contains(kinds(), a.Kind) {
+			return nil, DesignError("a condition holds Parts of the kinds " + strings.Join(kinds(), ", "))
+		}
 	}
-	return nil
+	out, err := effects.Decode(in)
+	if err != nil {
+		return nil, DesignError(err.Error())
+	}
+	return out, nil
 }
 
 // Compile builds a checked design into the condition a slug names.
@@ -150,48 +136,16 @@ func Compile(slug, name string, d Design) Condition {
 	case "cure":
 		duration.Kind = effects.UntilCured
 	}
-	parts := make([]effects.Part, 0, len(d.Parts)+1)
+	var all []effects.Part
 	if d.Stacks {
-		parts = append(parts, effects.Exhausting{D20PerLevel: d.PerLevel.D20, SpeedFtPerLevel: d.PerLevel.SpeedFt, DeathAt: d.PerLevel.DeathAt, MaxLevel: d.MaxLevel})
+		all = append(all, effects.Exhausting{D20PerLevel: d.PerLevel.D20, SpeedFtPerLevel: d.PerLevel.SpeedFt, DeathAt: d.PerLevel.DeathAt, MaxLevel: d.MaxLevel})
 	}
-	for _, p := range d.Parts {
-		parts = append(parts, effectPart(p))
-	}
+	checked, _ := parts(d.Parts) // the design was checked when saved
+	all = append(all, checked...)
 	return Condition{
-		Definition: effects.Definition{Slug: slug, Name: name, Owner: effects.OwnedByCondition, Concentration: false, Duration: duration, Scaling: nil, Parts: parts},
+		Definition: effects.Definition{Slug: slug, Name: name, Owner: effects.OwnedByCondition, Concentration: false, Duration: duration, Scaling: nil, Parts: all},
 		Icon:       d.Icon, Color: strings.ToLower(d.Color), Text: strings.TrimSpace(d.Text), Cure: strings.TrimSpace(d.Cure), ends: d.Ends, ability: d.Ability,
 	}
-}
-
-func effectPart(p Part) effects.Part {
-	edge := func(against, advantage bool) effects.Part {
-		return effects.Edge{Against: against, Advantage: advantage, Range: effects.AnyRange, SourceOnly: false}
-	}
-	switch p.Type {
-	case "attack_advantage":
-		return edge(false, true)
-	case "attack_disadvantage":
-		return edge(false, false)
-	case "attacked_advantage":
-		return edge(true, true)
-	case "attacked_disadvantage":
-		return edge(true, false)
-	case "save_advantage":
-		return effects.SaveEdge{Ability: p.Ability, Mode: effects.SaveAdvantage}
-	case "save_disadvantage":
-		return effects.SaveEdge{Ability: p.Ability, Mode: effects.SaveDisadvantage}
-	case "save_fails":
-		return effects.SaveEdge{Ability: p.Ability, Mode: effects.SaveFails}
-	case "incapacitated":
-		return effects.Incapacitated{}
-	case "immobile":
-		return effects.Immobile{}
-	case "speed_penalty":
-		return effects.SpeedPenalty{Ft: p.Feet}
-	case "crit_within":
-		return effects.CritWithin{Feet: p.Feet}
-	}
-	return effects.Manual{Instruction: strings.TrimSpace(p.Text)}
 }
 
 // Lines are a condition as its author reads it back: its text, how it ends, and what each part does.

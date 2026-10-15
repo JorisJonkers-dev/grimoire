@@ -21,6 +21,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/live"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/conditionbuild"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/effects"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/spellbuild"
 )
 
@@ -49,7 +50,7 @@ func TestALingeringInjuryStaysUntilItsCure(t *testing.T) {
 	}
 	design := conditionbuild.Design{
 		Icon: "skull", Color: "#aa3344", Text: "The leg never set right.", Ends: "cure", Cure: "Regenerate", Stacks: true, MaxLevel: 3,
-		PerLevel: conditionbuild.Penalty{SpeedFt: 5}, Parts: []conditionbuild.Part{{Type: "speed_penalty", Feet: 10}},
+		PerLevel: conditionbuild.Penalty{SpeedFt: 5}, Parts: []effects.Authored{{Kind: "speed_penalty", Values: effects.Values{"ft": {Number: 10}}}},
 	}
 	if _, err := lib.SaveCondition(ctx, dmCaller, entry.ID, design); err != nil {
 		t.Fatal(err)

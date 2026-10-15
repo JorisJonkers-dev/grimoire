@@ -169,6 +169,7 @@ const (
 	ListNotificationsOperation             OperationName = "ListNotifications"
 	ListNpcRevisionsOperation              OperationName = "ListNpcRevisions"
 	ListNpcsOperation                      OperationName = "ListNpcs"
+	ListPartKindsOperation                 OperationName = "ListPartKinds"
 	ListProposalsOperation                 OperationName = "ListProposals"
 	ListReleaseNotesOperation              OperationName = "ListReleaseNotes"
 	ListRetrainChoicesOperation            OperationName = "ListRetrainChoices"

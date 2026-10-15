@@ -41,6 +41,8 @@ numbers.
 ## Consequences
 
 A new kind adds its rules file, its store file, its query file, its migration and one line in each
-list of kinds, and touches no switch. Because migrations can now apply out of order, a migration must
+list of kinds, and touches no switch. The API carries every Part in one generic recursive shape,
+checked by the kind's own definition, and serves each kind's definition, so a new kind needs no change
+to the OpenAPI document either. Because migrations can now apply out of order, a migration must
 not depend on another migration merged in the same window; a kind's migration touches only its own
 table and its own row.

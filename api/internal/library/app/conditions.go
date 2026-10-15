@@ -7,6 +7,7 @@ import (
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/library/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/conditionbuild"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/effects"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/spellbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/apperr"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
@@ -25,7 +26,7 @@ type ConditionBuild struct {
 func firstCondition() conditionbuild.Design {
 	return conditionbuild.Design{
 		Icon: "spiral", Color: "#bfb199", Text: "", Ends: "removed", Ability: "", Stacks: false, MaxLevel: 0,
-		PerLevel: conditionbuild.Penalty{D20: 0, SpeedFt: 0, DeathAt: 0}, Parts: []conditionbuild.Part{},
+		PerLevel: conditionbuild.Penalty{D20: 0, SpeedFt: 0, DeathAt: 0}, Parts: []effects.Authored{},
 	}
 }
 

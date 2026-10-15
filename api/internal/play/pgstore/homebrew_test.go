@@ -13,6 +13,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg/pgtest"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/conditionbuild"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/effects"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/itembuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/monsterbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/spellbuild"
@@ -31,7 +32,7 @@ func TestHomebrewSpellsBuildForPlay(t *testing.T) {
 	design := spellbuild.Design{
 		Targeting: spellbuild.Targeting{Shape: "sphere", SizeFt: 10, RangeFt: 30}, Save: "dexterity", Duration: spellbuild.Duration{Unit: "rounds", Amount: 2},
 		CastingTime: spellbuild.CastingTime{Kind: "action"}, Components: spellbuild.Components{Verbal: true},
-		Parts: []spellbuild.Part{{Type: "damage", When: "start_of_turn", Dice: "1d4", DamageType: "acid"}},
+		TurnDamage: &spellbuild.TurnDamage{Dice: "1d4", DamageType: "acid"}, Parts: []effects.Authored{},
 	}
 	var ids []string
 	for _, name := range []string{"Acid Pool", "Broken", "Odd"} {
@@ -56,7 +57,7 @@ func TestHomebrewSpellsBuildForPlay(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	cold := conditionbuild.Design{Icon: "snow", Color: "#7fa8dd", Ends: "rest", Stacks: true, MaxLevel: 3, PerLevel: conditionbuild.Penalty{D20: 1}, Parts: []conditionbuild.Part{}}
+	cold := conditionbuild.Design{Icon: "snow", Color: "#7fa8dd", Ends: "rest", Stacks: true, MaxLevel: 3, PerLevel: conditionbuild.Penalty{D20: 1}, Parts: []effects.Authored{}}
 	if _, err := lib.SaveCondition(ctx, dm, frost.ID, cold); err != nil {
 		t.Fatal(err)
 	}

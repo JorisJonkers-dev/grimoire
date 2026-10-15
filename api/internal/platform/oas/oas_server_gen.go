@@ -1767,6 +1767,14 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/npcs
 	ListNpcs(ctx context.Context, params ListNpcsParams) (ListNpcsRes, error)
+	// ListPartKinds implements listPartKinds operation.
+	//
+	// Every kind of Part an Effect may hold, as its definition: the fields an author fills in with their
+	// bounds and options, and the groups of Parts it holds beneath it. A builder draws its form from
+	// these, and a Part sent to a builder is checked against its kind's definition.
+	//
+	// GET /api/v1/builders/part-kinds
+	ListPartKinds(ctx context.Context) (ListPartKindsRes, error)
 	// ListProposals implements listProposals operation.
 	//
 	// The Campaign's Proposals, newest first: every one for a DM, a Player's own otherwise.

@@ -30,7 +30,7 @@ func (manualKind) Describe() Description {
 	return Description{
 		Slug: "manual", Label: "Manual Effect", Summary: "An outcome the DM decides by hand from a prompt; play waits on it.",
 		Fields: []Field{
-			{Name: "instruction", Label: "Instruction", Type: TextField, Options: nil, Required: true, Min: 0, Max: 300},
+			{Name: "instruction", Label: "Instruction", Type: TextField, Options: nil, Required: true, Min: 0, Max: 500},
 		},
 		Groups: nil, OpenGroups: false,
 	}

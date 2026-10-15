@@ -3162,7 +3162,7 @@ export type ManualPart = {
 };
 
 /**
- * A homebrew spell as the Effect builder makes it, from Targeting and typed parts listed as rows.
+ * A homebrew spell as the Effect builder makes it, from Targeting and the Parts it holds, each of a kind the rules know.
  */
 export type SpellDesign = {
     targeting: {
@@ -3192,26 +3192,77 @@ export type SpellDesign = {
             item?: string;
         };
     };
-    parts: Array<SpellPart>;
+    /**
+     * Damage each creature takes when it starts its turn in the area, through a Surface of the spell's own.
+     */
+    turnDamage?: {
+        dice: string;
+        damageType: string;
+    };
+    /**
+     * The spell's Parts in order. A Part that rolls a save may leave its ability out: it rolls the spell's save.
+     */
+    parts: Array<Part>;
 };
 
 /**
- * One row of a spell design; which fields count depends on its type.
+ * One Part of an Effect, of a kind the rules know: the kind's slug, its values by field name, and the Parts beneath it in named groups. The kind's definition (listPartKinds) says which fields and groups it takes; the server checks a Part against it. A kind that holds no Parts beneath it may leave groups out.
  */
-export type SpellPart = {
-    type: 'damage' | 'condition' | 'light' | 'reveal' | 'surface' | 'manual';
-    when?: 'on_cast' | 'start_of_turn';
-    dice?: string;
-    damageType?: string;
-    half?: boolean;
-    condition?: string;
-    onlyTypes?: Array<string>;
-    brightFt?: number;
-    dimFt?: number;
-    qualities?: Array<string>;
-    surface?: string;
-    rounds?: number;
+export type Part = {
+    kind: string;
+    values: {
+        [key: string]: PartValue;
+    };
+    groups?: Array<PartGroup>;
+};
+
+/**
+ * One field's value, in the slot its field type reads: text for dice, text and a choice, number, flag, or texts for several choices.
+ */
+export type PartValue = {
     text?: string;
+    number?: number;
+    flag?: boolean;
+    texts?: Array<string>;
+};
+
+/**
+ * One named group of Parts beneath a Part, such as what a branch adds or one mode of a choice.
+ */
+export type PartGroup = {
+    name: string;
+    parts: Array<Part>;
+};
+
+/**
+ * A kind of Part as its definition: what an author fills in, and the groups of Parts it holds beneath it.
+ */
+export type PartKind = {
+    slug: string;
+    label: string;
+    summary: string;
+    fields: Array<PartField>;
+    /**
+     * The groups of Parts the kind holds beneath it, by name; most kinds hold none.
+     */
+    groups: Array<string>;
+    /**
+     * The author names each group, as a choice names its modes; groups is then empty.
+     */
+    openGroups: boolean;
+};
+
+/**
+ * One value an author fills in for a Part. Min and max bound a number; max also bounds the length of a text.
+ */
+export type PartField = {
+    name: string;
+    label: string;
+    type: 'dice' | 'number' | 'flag' | 'text' | 'choice' | 'choices';
+    options: Array<string>;
+    required: boolean;
+    min: number;
+    max: number;
 };
 
 /**
@@ -3515,7 +3566,7 @@ export type ConditionBuild = {
 };
 
 /**
- * A homebrew condition as the condition builder makes it, from its icon, how it ends, how it stacks and what it does.
+ * A homebrew condition as the condition builder makes it, from its icon, how it ends, how it stacks and what it does as Parts of kinds the rules know.
  */
 export type ConditionDesign = {
     icon: string;
@@ -3534,12 +3585,7 @@ export type ConditionDesign = {
         speedFt: number;
         deathAt: number;
     };
-    parts: Array<{
-        type: string;
-        ability?: string;
-        feet?: number;
-        text?: string;
-    }>;
+    parts: Array<Part>;
 };
 
 /**
@@ -12635,6 +12681,35 @@ export type ReviewSharedSubmissionResponses = {
 };
 
 export type ReviewSharedSubmissionResponse = ReviewSharedSubmissionResponses[keyof ReviewSharedSubmissionResponses];
+
+export type ListPartKindsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/builders/part-kinds';
+};
+
+export type ListPartKindsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListPartKindsError = ListPartKindsErrors[keyof ListPartKindsErrors];
+
+export type ListPartKindsResponses = {
+    /**
+     * Every kind, in slug order.
+     */
+    200: Array<PartKind>;
+};
+
+export type ListPartKindsResponse = ListPartKindsResponses[keyof ListPartKindsResponses];
 
 export type PreviewSpellData = {
     body: SpellPreviewInput;

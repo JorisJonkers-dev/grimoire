@@ -15,6 +15,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/live"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/conditionbuild"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/effects"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/spellbuild"
 )
 
@@ -34,7 +35,7 @@ func TestCustomConditionsAndExhaustionVariants(t *testing.T) {
 	}
 	design := conditionbuild.Design{
 		Icon: "snow", Color: "#7fa8dd", Ends: "rest", Stacks: true, MaxLevel: 2, PerLevel: conditionbuild.Penalty{D20: 1, SpeedFt: 5},
-		Parts: []conditionbuild.Part{{Type: "attacked_advantage"}},
+		Parts: []effects.Authored{{Kind: "edge", Values: effects.Values{"against": {Flag: true}, "advantage": {Flag: true}, "range": {Text: "any"}}}},
 	}
 	if _, err := lib.SaveCondition(ctx, dmCaller, entry.ID, design); err != nil {
 		t.Fatal(err)
