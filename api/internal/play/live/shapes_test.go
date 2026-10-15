@@ -20,7 +20,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
 )
 
-// shapedTable stores Effects with modes, durations, branches and scaling before anyone joins, then puts
+// shapedTable stores Effects with modes, durations, branches, scaling and Targeting before anyone joins, then puts
 // Aria at the centre and a goblin three hexes east.
 func shapedTable(t *testing.T) (world, *table, map[string]string) {
 	t.Helper()
@@ -34,6 +34,32 @@ func shapedTable(t *testing.T) (world, *table, map[string]string) {
 				{Name: "Reduce", Parts: []effects.Part{effects.Manual{Instruction: "Weapon damage drops by 1d4."}}},
 			}},
 		}},
+		{
+			Slug: "blessing", Name: "Blessing", Owner: effects.OwnedBySpell, Concentration: true, Duration: effects.Duration{Kind: effects.Minutes, Amount: 1},
+			Targeting: effects.Targeting{Kind: effects.TargetCreatures, Count: 3, RangeFt: 30},
+			Parts:     []effects.Part{effects.BonusDie{On: []effects.Roll{effects.AttackRolls}, Dice: "1d4"}},
+		},
+		{
+			Slug: "ward", Name: "Ward", Owner: effects.OwnedBySpell, Duration: effects.Duration{Kind: effects.Hours, Amount: 1},
+			Targeting: effects.Targeting{Kind: effects.TargetCreatures, Count: 1, RangeFt: 0, Willing: true},
+			Parts:     []effects.Part{effects.SpeedPenalty{Ft: 5}},
+		},
+		{
+			Slug: "glare", Name: "Glare", Owner: effects.OwnedBySpell, Targeting: effects.Targeting{Kind: effects.TargetCreatures, RangeFt: 60, Seen: true},
+			Scaling: []effects.Scaling{{Part: effects.OnActivation, Field: "targets", Axis: effects.SlotLevel, Rule: effects.Linear{Base: 2, Per: effects.Value{Number: 1}}}},
+			Parts:   []effects.Part{effects.SpeedPenalty{Ft: 10}},
+		},
+		{
+			Slug: "boon", Name: "Boon", Owner: effects.OwnedBySpell, Targeting: effects.Targeting{Kind: effects.TargetCreatures, RangeFt: 30},
+			Parts: []effects.Part{effects.TempHP{Amount: 5}},
+		},
+		{
+			Slug: "twin-ward", Name: "Twin Ward", Owner: effects.OwnedBySpell, Targeting: effects.Targeting{Kind: effects.TargetSelf},
+			Parts: []effects.Part{effects.Choice{Modes: []effects.Group{
+				{Name: "Fast", Parts: []effects.Part{effects.SpeedPenalty{Ft: 5}}},
+				{Name: "Slow", Parts: []effects.Part{effects.SpeedPenalty{Ft: 10}}},
+			}}},
+		},
 		{Slug: "hold-fast", Name: "Hold Fast", Owner: effects.OwnedBySpell, Duration: effects.Duration{Kind: effects.Rounds, Amount: 3, RepeatSave: "wisdom"}, Parts: []effects.Part{effects.Immobile{}}},
 		{Slug: "weary", Name: "Weary", Owner: effects.OwnedByFeature, Duration: effects.Duration{Kind: effects.UntilRest}, Parts: []effects.Part{effects.SpeedPenalty{Ft: 5}}},
 		{Slug: "frost-burst", Name: "Frost Burst", Owner: effects.OwnedBySpell, Scaling: []effects.Scaling{{Part: 1, Field: "dice", Axis: effects.SlotLevel, Class: "", Rule: effects.Linear{Base: 1, Per: effects.Value{Text: "1d6"}}}}, Parts: []effects.Part{

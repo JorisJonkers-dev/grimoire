@@ -190,15 +190,17 @@ type Write struct {
 	created     effects.CreateSurface
 	elevation   int
 	effect      *domain.Effect
-	ended       []domain.EffectID
-	manuals     []domain.ManualPrompt
-	newSaves    []domain.PendingSave
-	resolved    uuid.UUID
-	saved       domain.RollID
-	resume      *domain.Resume
-	answered    *domain.ReactionPrompt
-	total       int
-	resource    combat.Resource
+	// activated are the Effects an Activation puts on each of its targets.
+	activated []domain.Effect
+	ended     []domain.EffectID
+	manuals   []domain.ManualPrompt
+	newSaves  []domain.PendingSave
+	resolved  uuid.UUID
+	saved     domain.RollID
+	resume    *domain.Resume
+	answered  *domain.ReactionPrompt
+	total     int
+	resource  combat.Resource
 }
 
 // loaded is what the rules keep between a Session's runtimes besides tokens, Combat and Effects.
@@ -954,7 +956,7 @@ func (r *runtime) handle(req request) {
 // playerMay lists the changes a Player may ask for; each is checked against what they control.
 func playerMay(kind string) bool {
 	switch kind {
-	case CmdWalk, CmdEndTurn, CmdSpend, CmdAttack, CmdReact, CmdCastArea, CmdMoveItem, CmdMoveCoins, CmdClaimLoot, CmdBuy, CmdSell, CmdHaggle, CmdTrade,
+	case CmdWalk, CmdEndTurn, CmdSpend, CmdAttack, CmdReact, CmdCastArea, CmdActivate, CmdMoveItem, CmdMoveCoins, CmdClaimLoot, CmdBuy, CmdSell, CmdHaggle, CmdTrade,
 		CmdProposeRest, CmdAgreeRest, CmdSpendHitDie, CmdTakeAction, CmdUnarmed, CmdInteract, CmdSwapWeapons, CmdSetReaction, CmdStabilise, CmdRevive, CmdTeleport, CmdSummon, CmdCommand, CmdUseObject, CmdUnlock, CmdDisarm, CmdJump, CmdThrow, CmdSneak, CmdPassTurn, CmdSetMarchingOrder, CmdMount, CmdDismount:
 		return true
 	}
@@ -1046,7 +1048,7 @@ func apply(s *state, w *Write) {
 	}
 	fell := heights != nil && s.falls(w, heights)
 	s.formBroken(w)
-	changed := w.effect != nil || len(w.ended)+len(w.manuals)+len(w.newSaves) > 0 || w.resolved != uuid.Nil || w.saved != domain.RollID{}
+	changed := w.effect != nil || len(w.activated)+len(w.ended)+len(w.manuals)+len(w.newSaves) > 0 || w.resolved != uuid.Nil || w.saved != domain.RollID{}
 	w.Cured = s.curedBy(w)
 	applyEffects(s, w)
 	s.ride(w, seats)
@@ -1169,7 +1171,8 @@ func change(s *state, w *Write) {
 	case domain.ActionReactionOffered, domain.ActionReactionUsed, domain.ActionReactionDeclined, domain.ActionCountered:
 		applyReaction(s, w)
 		return
-	case domain.ActionEffectApplied, domain.ActionEffectEnded, domain.ActionSavePassed, domain.ActionSaveFailed, domain.ActionManualResolved:
+	case domain.ActionEffectApplied, domain.ActionEffectEnded, domain.ActionSavePassed, domain.ActionSaveFailed, domain.ActionManualResolved,
+		domain.ActionActivated, domain.ActionActivationForced:
 		return
 	case domain.ActionLegendaryAction, domain.ActionLairAction, domain.ActionLegendaryResistance:
 		return // the Legend changes with every write, after this

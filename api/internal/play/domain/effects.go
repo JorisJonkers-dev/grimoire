@@ -58,4 +58,8 @@ const (
 	ActionSavePassed     = "save_passed"
 	ActionSaveFailed     = "save_failed"
 	ActionManualResolved = "manual_resolved"
+	// ActionActivated puts an Effect on the targets its Targeting allows; ActionActivationForced is the DM
+	// putting it on targets its Targeting refuses.
+	ActionActivated        = "effect_activated"
+	ActionActivationForced = "activation_forced"
 )

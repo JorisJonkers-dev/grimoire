@@ -22908,8 +22908,12 @@ type LiveCommand struct {
 	EffectName OptString `json:"effectName"`
 	SourceId   OptID     `json:"sourceId"`
 	Rounds     OptInt32  `json:"rounds"`
-	// The spell slot level an area spell is cast with; left out, it is cast at its lowest.
+	// The spell slot level a spell is cast with; left out, it is cast at its lowest.
 	Slot OptInt32 `json:"slot"`
+	// The tokens an Activation picks, within its Effect's Targeting.
+	Targets []ID `json:"targets"`
+	// Lets the DM pick targets the Effect's Targeting refuses; the Action Log records it.
+	Force OptBool `json:"force"`
 	// The option an Effect that offers a choice is applied in.
 	EffectMode OptString `json:"effectMode"`
 	// Temporary Hit Points a form gives, such as a druid's level for Wild Shape.
@@ -23193,6 +23197,16 @@ func (s *LiveCommand) GetRounds() OptInt32 {
 // GetSlot returns the value of Slot.
 func (s *LiveCommand) GetSlot() OptInt32 {
 	return s.Slot
+}
+
+// GetTargets returns the value of Targets.
+func (s *LiveCommand) GetTargets() []ID {
+	return s.Targets
+}
+
+// GetForce returns the value of Force.
+func (s *LiveCommand) GetForce() OptBool {
+	return s.Force
 }
 
 // GetEffectMode returns the value of EffectMode.
@@ -23748,6 +23762,16 @@ func (s *LiveCommand) SetRounds(val OptInt32) {
 // SetSlot sets the value of Slot.
 func (s *LiveCommand) SetSlot(val OptInt32) {
 	s.Slot = val
+}
+
+// SetTargets sets the value of Targets.
+func (s *LiveCommand) SetTargets(val []ID) {
+	s.Targets = val
+}
+
+// SetForce sets the value of Force.
+func (s *LiveCommand) SetForce(val OptBool) {
+	s.Force = val
 }
 
 // SetEffectMode sets the value of EffectMode.
@@ -24356,6 +24380,7 @@ const (
 	LiveCommandKindResolveManual       LiveCommandKind = "resolve_manual"
 	LiveCommandKindPreviewArea         LiveCommandKind = "preview_area"
 	LiveCommandKindCastArea            LiveCommandKind = "cast_area"
+	LiveCommandKindActivate            LiveCommandKind = "activate"
 	LiveCommandKindPaintSurface        LiveCommandKind = "paint_surface"
 	LiveCommandKindSetElevation        LiveCommandKind = "set_elevation"
 	LiveCommandKindTableCamera         LiveCommandKind = "table_camera"
@@ -24466,6 +24491,7 @@ func (LiveCommandKind) AllValues() []LiveCommandKind {
 		LiveCommandKindResolveManual,
 		LiveCommandKindPreviewArea,
 		LiveCommandKindCastArea,
+		LiveCommandKindActivate,
 		LiveCommandKindPaintSurface,
 		LiveCommandKindSetElevation,
 		LiveCommandKindTableCamera,
@@ -24603,6 +24629,8 @@ func (s LiveCommandKind) MarshalText() ([]byte, error) {
 	case LiveCommandKindPreviewArea:
 		return []byte(s), nil
 	case LiveCommandKindCastArea:
+		return []byte(s), nil
+	case LiveCommandKindActivate:
 		return []byte(s), nil
 	case LiveCommandKindPaintSurface:
 		return []byte(s), nil
@@ -24848,6 +24876,9 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 		return nil
 	case LiveCommandKindCastArea:
 		*s = LiveCommandKindCastArea
+		return nil
+	case LiveCommandKindActivate:
+		*s = LiveCommandKindActivate
 		return nil
 	case LiveCommandKindPaintSurface:
 		*s = LiveCommandKindPaintSurface

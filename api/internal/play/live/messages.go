@@ -56,6 +56,7 @@ const (
 	CmdPreviewArea      = "preview_area"
 	CmdMeasureRoute     = "measure_route"
 	CmdCastArea         = "cast_area"
+	CmdActivate         = "activate"
 	CmdPaintSurface     = "paint_surface"
 	CmdSetElevation     = "set_elevation"
 	CmdTableCamera      = "table_camera"
@@ -195,6 +196,9 @@ type Command struct {
 	Rounds       int              `json:"rounds,omitempty"`
 	// Slot is the spell slot level an area spell is cast with; 0 casts it at its lowest.
 	Slot int `json:"slot,omitempty"`
+	// Targets are the tokens an Activation picks; Force lets the DM pick targets its Targeting refuses.
+	Targets []string `json:"targets,omitempty"`
+	Force   bool     `json:"force,omitempty"`
 	// EffectMode is the option an Effect that offers a choice is applied in.
 	EffectMode string `json:"effectMode,omitempty"`
 	// TempHP sets the Temporary Hit Points of a form, such as a druid's level for Wild Shape.

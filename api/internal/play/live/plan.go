@@ -33,6 +33,8 @@ func (r *runtime) plan(req request) (Write, string) {
 		return r.planEffect(cmd)
 	case CmdCastArea:
 		return r.planCast(m, cmd)
+	case CmdActivate:
+		return r.planActivate(m, cmd)
 	case CmdPaintSurface, CmdSetElevation:
 		return r.planTerrain(cmd)
 	case CmdTableCamera, CmdTableScene, CmdTableBlackout, CmdTableCaption:

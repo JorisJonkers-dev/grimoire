@@ -9,6 +9,7 @@ import (
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/attack"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/combat"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/effects"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
@@ -323,6 +324,12 @@ func applyEffects(s *state, w *Write) {
 		} else {
 			fx.Active = append(fx.Active, *w.effect)
 		}
+	}
+	fx.Active = append(fx.Active, w.activated...)
+	if (w.Kind == domain.ActionActivated || w.Kind == domain.ActionActivationForced) && w.Combatant != (domain.CombatantID{}) {
+		i := slices.IndexFunc(s.combat.Combatants, func(x domain.Combatant) bool { return x.ID == w.Combatant })
+		s.combat.Combatants[i].Economy, _ = s.combat.Combatants[i].Economy.Spend(combat.Action)
+		w.Combat = s.combat
 	}
 	if w.Formed != nil {
 		s.tokens[w.Formed.ID] = *w.Formed
