@@ -171,3 +171,42 @@ func TestAuthoredScalingOnTheWire(t *testing.T) {
 		t.Fatalf("no scaling written as %s", raw)
 	}
 }
+
+// Every limit a rule is checked against is itself allowed: the most rules, the longest class, column and
+// formula, the least and greatest base, per and step.
+func TestAuthoredScalingAcceptsItsLimits(t *testing.T) {
+	t.Parallel()
+	linear := func(base int) effects.AuthoredScaling {
+		return effects.AuthoredScaling{Field: "dice", Axis: "slot_level", Rule: "linear", Base: base, Per: dice("1d6")}
+	}
+	ten := make([]effects.AuthoredScaling, 10)
+	for i := range ten {
+		ten[i] = linear(1)
+	}
+	twenty := make([]effects.AuthoredStep, 20)
+	for i := range twenty {
+		twenty[i] = effects.AuthoredStep{At: i + 1, Value: effects.Value{Text: "2d6"}}
+	}
+	long := strings.Repeat("a", 80)
+	damage := []effects.AuthoredScaling{
+		linear(0), linear(20),
+		{Field: "dice", Axis: "class_level", Class: long, Rule: "linear", Base: 1, Per: dice("1d6")},
+		{Field: "dice", Axis: "table_column", Class: "rogue", Rule: "column", Column: long},
+		{Field: "dice", Axis: "slot_level", Rule: "table", Steps: twenty},
+	}
+	amount := []effects.AuthoredScaling{
+		{Field: "amount", Axis: "slot_level", Rule: "linear", Base: 1, Per: &effects.Value{Number: -1000}},
+		{Field: "amount", Axis: "slot_level", Rule: "linear", Base: 1, Per: &effects.Value{Number: 1000}},
+		{Field: "amount", Axis: "slot_level", Rule: "formula", Formula: strings.Repeat("1+", 27) + "level "},
+		{Field: "amount", Axis: "slot_level", Rule: "table", Steps: []effects.AuthoredStep{{At: 1, Value: effects.Value{Number: 1}}, {At: 20, Value: effects.Value{Number: 500}}}},
+	}
+	for name, in := range map[string][]effects.Authored{
+		"ten rules": {{Kind: "save_damage", Values: effects.Values{"dice": {Text: "2d6"}}, Scaling: ten}},
+		"damage":    {{Kind: "save_damage", Values: effects.Values{"dice": {Text: "2d6"}}, Scaling: damage}},
+		"amount":    {{Kind: "temp_hp", Values: effects.Values{"amount": {Number: 5}}, Scaling: amount}},
+	} {
+		if got, err := effects.DecodeScaling(in, 0); err != nil || len(got) != len(in[0].Scaling) {
+			t.Errorf("%s: %v", name, err)
+		}
+	}
+}
