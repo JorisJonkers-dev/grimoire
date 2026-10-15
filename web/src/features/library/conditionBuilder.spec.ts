@@ -4,12 +4,16 @@ import type { ConditionBuild, ConditionDesign } from '@/infrastructure/api/types
 import { expectAccessible } from '@/test/axe'
 import { mountApp, unmountAll } from '@/test/mountApp'
 import { jsonResponse } from '@/test/mountWithQuery'
+import served from '../../../../fixtures/part-kinds.json'
 
 const COND = '0190c7a8-0000-7000-8000-0000000000f8'
 const at = '2026-10-03T20:00:00Z'
 const start: ConditionDesign = { icon: 'spiral', color: '#bfb199', text: '', ends: 'removed', perLevel: { d20: 0, speedFt: 0, deathAt: 0 }, parts: [] }
 const entry = { id: COND, kind: 'condition' as const, name: 'Frostbite', fields: [], revision: 1, createdAt: at, updatedAt: at }
-const build = (design: ConditionDesign, extra: Partial<ConditionBuild> = {}): ConditionBuild => ({ entry, design, slug: 'hb-c', lines: ['Lasts until removed.'], ...extra })
+const build = (design: ConditionDesign, extra: Partial<ConditionBuild> = {}): ConditionBuild => ({
+  entry, design, slug: 'hb-c', lines: ['Lasts until removed.'], holds: served.holds.condition, ...extra,
+})
+const kinds = { '/api/v1/builders/part-kinds': () => served.kinds }
 
 afterEach(() => {
   unmountAll()
@@ -20,6 +24,7 @@ describe('condition builder', () => {
   it('builds Frostbite with an icon, stacking levels and parts, previews and saves it', async () => {
     const sent: { method: string; body: unknown }[] = []
     const { wrapper } = await mountApp(`/library/${COND}/condition`, {
+      ...kinds,
       '/api/v1/builders/conditions/preview': async (_u, req) => {
         const body = (await req.clone().json()) as { name: string; design: ConditionDesign }
         sent.push({ method: 'PREVIEW', body })
@@ -48,15 +53,19 @@ describe('condition builder', () => {
     await set('condition-d20', 1)
     await set('condition-speed', 5)
     await set('condition-death', 0)
-    for (let i = 0; i < 4; i++) await wrapper.get('[data-testid="condition-add-part"]').trigger('click')
-    await set('condition-part-1-type', 'save_disadvantage')
-    await set('condition-part-1-ability', 'dexterity')
-    await set('condition-part-2-type', 'speed_penalty')
-    await set('condition-part-2-feet', 10)
-    await set('condition-part-3-type', 'manual')
-    await set('condition-part-3-text', 'The DM decides what the cold does to gear.')
-    await wrapper.get('[data-testid="condition-add-part"]').trigger('click')
-    await wrapper.get('[data-testid="condition-part-4-remove"]').trigger('click')
+    const add = async (kind: string) => {
+      await set('condition-parts-kind', kind)
+      await wrapper.get('[data-testid="condition-parts-add"]').trigger('click')
+    }
+    for (const kind of ['edge', 'save_edge', 'speed_penalty', 'manual', 'immobile']) await add(kind)
+    await set('condition-parts-0-against', true)
+    await set('condition-parts-0-advantage', true)
+    await set('condition-parts-1-mode', 'disadvantage')
+    await set('condition-parts-1-ability', 'dexterity')
+    await set('condition-parts-2-ft', 10)
+    await set('condition-parts-3-instruction', 'The DM decides what the cold does to gear.')
+    await wrapper.get('[data-testid="condition-parts-4-remove"]').trigger('click')
+    await expectAccessible(wrapper.element as Element)
     await wrapper.get('[data-testid="condition-preview"]').trigger('click')
     await flushPromises()
     expect(wrapper.get('[data-testid="condition-lines"]').text()).toContain('it rises to level 3 at most')
