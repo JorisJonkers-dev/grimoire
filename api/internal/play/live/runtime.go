@@ -190,8 +190,10 @@ type Write struct {
 	created     effects.CreateSurface
 	elevation   int
 	effect      *domain.Effect
-	// activated are the Effects an Activation puts on each of its targets.
+	// activated are the Effects an Activation puts on each of its targets; landed is one that failed its
+	// initial save.
 	activated []domain.Effect
+	landed    domain.EffectID
 	ended     []domain.EffectID
 	manuals   []domain.ManualPrompt
 	newSaves  []domain.PendingSave

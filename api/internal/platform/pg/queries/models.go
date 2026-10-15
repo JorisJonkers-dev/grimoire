@@ -815,6 +815,12 @@ type CompendiumEffectGrant struct {
 	Name     string
 }
 
+type CompendiumEffectInitialSafe struct {
+	EffectID int64
+	Ability  string
+	Dc       int32
+}
+
 type CompendiumEffectKind struct {
 	Slug string
 }
@@ -1602,6 +1608,7 @@ type PlayActiveEffect struct {
 	SaveDc        pgtype.Int4
 	Level         int32
 	Mode          pgtype.Text
+	Pending       bool
 }
 
 type PlayAreaCast struct {

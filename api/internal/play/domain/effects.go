@@ -21,6 +21,9 @@ type Effect struct {
 	// was applied in, when it offers a choice.
 	Level int
 	Mode  string
+	// Pending is an Effect an Activation put on a target that has not made its initial save yet; it
+	// counts for nothing until the save fails.
+	Pending bool
 }
 
 // Holder is whose turns count an Effect down: its source's, or the bearer's when it has none.

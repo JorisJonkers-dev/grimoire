@@ -145,6 +145,7 @@ func TestShapedEffectsRoundTrip(t *testing.T) {
 			Kind: effects.TargetCreatures, Count: 2, RangeFt: 60, Side: effects.Enemies, Types: []string{"undead", "fiend"},
 			Seen: true, Willing: false, SpreadFt: 30,
 		},
+		Save: effects.InitialSave{Ability: "wisdom", DC: 0},
 		Scaling: []effects.Scaling{
 			{Part: effects.OnActivation, Field: "concentration", Axis: effects.SlotLevel, Class: "", Rule: effects.Table{Steps: []effects.Step{{At: 4, Value: effects.Value{Flag: false}}, {At: 6, Value: effects.Value{Flag: true}}}}},
 			{Part: effects.OnActivation, Field: "duration", Axis: effects.SlotLevel, Class: "", Rule: effects.Formula{Expr: "10 * (level - 2)"}},
@@ -184,11 +185,11 @@ func TestShapedEffectsRoundTrip(t *testing.T) {
 	if b := got["bless"]; b.Duration != (effects.Duration{Kind: effects.Minutes, Amount: 1}) {
 		t.Fatalf("bless lasts a minute = %+v", b.Duration)
 	}
-	d.Scaling, d.Duration, d.Targeting = nil, effects.Duration{}, effects.Targeting{Kind: effects.TargetSelf}
+	d.Scaling, d.Duration, d.Targeting, d.Save = nil, effects.Duration{}, effects.Targeting{Kind: effects.TargetSelf}, effects.InitialSave{}
 	if err := s.SaveEffect(ctx, effects.Owner{Kind: effects.OwnedBySpell, Slug: d.Slug}, d); err != nil {
 		t.Fatal(err)
 	}
-	if got, _ := s.Effects(ctx); got[d.Slug].Scaling != nil || got[d.Slug].Duration != (effects.Duration{}) || !reflect.DeepEqual(got[d.Slug].Targeting, d.Targeting) {
+	if got, _ := s.Effects(ctx); got[d.Slug].Scaling != nil || got[d.Slug].Duration != (effects.Duration{}) || !reflect.DeepEqual(got[d.Slug].Targeting, d.Targeting) || got[d.Slug].Save != (effects.InitialSave{}) {
 		t.Fatalf("saving again clears the scaling = %+v", got[d.Slug])
 	}
 }

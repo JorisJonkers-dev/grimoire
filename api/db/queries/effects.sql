@@ -53,3 +53,13 @@ DELETE FROM compendium.effect_targeting WHERE effect_id = @effect_id;
 
 -- name: ListEffectTargeting :many
 SELECT effect_id, kind, target_count, range_ft, side, creature_types, seen, willing, spread_ft FROM compendium.effect_targeting;
+
+-- name: UpsertEffectInitialSave :exec
+INSERT INTO compendium.effect_initial_saves (effect_id, ability, dc) VALUES (@effect_id, @ability, @dc)
+ON CONFLICT (effect_id) DO UPDATE SET ability = EXCLUDED.ability, dc = EXCLUDED.dc;
+
+-- name: ClearEffectInitialSave :exec
+DELETE FROM compendium.effect_initial_saves WHERE effect_id = @effect_id;
+
+-- name: ListEffectInitialSaves :many
+SELECT effect_id, ability, dc FROM compendium.effect_initial_saves;

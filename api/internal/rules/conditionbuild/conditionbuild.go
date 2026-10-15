@@ -153,6 +153,7 @@ func Compile(slug, name string, d Design) Condition {
 		Definition: effects.Definition{
 			Slug: slug, Name: name, Owner: effects.OwnedByCondition, Concentration: false, Duration: duration, Scaling: nil, Parts: all,
 			Targeting: effects.Targeting{Kind: "", Count: 0, RangeFt: 0, Side: effects.AnySide, Types: nil, Seen: false, Willing: false, SpreadFt: 0},
+			Save:      effects.InitialSave{Ability: "", DC: 0},
 		},
 		Icon: d.Icon, Color: strings.ToLower(d.Color), Text: strings.TrimSpace(d.Text), Cure: strings.TrimSpace(d.Cure), ends: d.Ends, ability: d.Ability,
 	}

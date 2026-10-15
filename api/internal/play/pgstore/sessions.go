@@ -237,6 +237,7 @@ func (s *Store) Commit(ctx context.Context, sess domain.Session, board *domain.M
 			func() error { return tx.saveForms(ctx, sid, w) },
 			func() error { return tx.saveObjects(ctx, board, w) },
 			func() error { return tx.saveCombat(ctx, sess, w, actor, c, now) },
+			func() error { return tx.openActivation(ctx, sess, w, actor, c, now) },
 			func() error { return tx.saveEffects(ctx, sid, w.Effects) },
 			func() error { return tx.saveTerrain(ctx, sid, board, w) },
 			func() error { return tx.saveTable(ctx, sid, w.Table) },
@@ -726,6 +727,15 @@ func (s *Store) logWrite(ctx context.Context, actionID uuid.UUID, w live.Write) 
 	return nil
 }
 
+// openActivation opens the initial saves an Activation asks for outside a Combat, before the saves that
+// wait on them are written; in a Combat, saveCombat opens them.
+func (s *Store) openActivation(ctx context.Context, sess domain.Session, w live.Write, actor domain.Member, c caller.Caller, now time.Time) error {
+	if w.Combat != nil || (w.Kind != domain.ActionActivated && w.Kind != domain.ActionActivationForced) {
+		return nil
+	}
+	return s.openRolls(ctx, sess, w.Rolls, actor, c, now)
+}
+
 // saveCombat opens the Roll Requests a Combat starts with, then writes the Combat and its Combatants.
 //
 //nolint:gosec // rounds, counts and feet are bounded by the rules
@@ -891,7 +901,7 @@ func (s *Store) saveEffects(ctx context.Context, sid uuid.UUID, fx *domain.Effec
 func (s *Store) insertEffect(ctx context.Context, sid uuid.UUID, e domain.Effect) error {
 	p := queries.InsertEffectParams{
 		ID: uuid.UUID(e.ID), SessionID: sid, TargetTokenID: uuid.UUID(e.Target), Slug: e.Slug, Name: e.Name, Concentration: e.Concentration,
-		Level: int32(max(1, e.Level)), //nolint:gosec // at most ten levels
+		Pending: e.Pending, Level: int32(max(1, e.Level)), //nolint:gosec // at most ten levels
 	}
 	if e.Source != nil {
 		p.SourceTokenID = pgtype.UUID{Bytes: *e.Source, Valid: true}
@@ -918,7 +928,7 @@ func (s *Store) LoadEffects(ctx context.Context, id domain.SessionID) (domain.Ef
 		e := domain.Effect{
 			ID: domain.EffectID(r.ID), Target: domain.TokenID(r.TargetTokenID), Slug: r.Slug, Name: r.Name, Concentration: r.Concentration,
 			RoundsLeft: int(r.RoundsLeft.Int32), SaveAbility: r.SaveAbility.String, SaveDC: int(r.SaveDc.Int32), Level: int(r.Level),
-			Mode: r.Mode.String,
+			Mode: r.Mode.String, Pending: r.Pending,
 		}
 		if r.SourceTokenID.Valid {
 			src := domain.TokenID(r.SourceTokenID.Bytes)

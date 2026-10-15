@@ -29,6 +29,7 @@ type Definition struct {
 	Concentration bool
 	Duration      Duration
 	Targeting     Targeting
+	Save          InitialSave
 	Scaling       []Scaling
 	Parts         []Part
 }

@@ -60,6 +60,21 @@ func shapedTable(t *testing.T) (world, *table, map[string]string) {
 				{Name: "Slow", Parts: []effects.Part{effects.SpeedPenalty{Ft: 10}}},
 			}}},
 		},
+		{
+			Slug: "slumber", Name: "Slumber", Owner: effects.OwnedBySpell, Duration: effects.Duration{Kind: effects.Minutes, Amount: 1},
+			Targeting: effects.Targeting{Kind: effects.TargetCreatures, RangeFt: 60}, Save: effects.InitialSave{Ability: "wisdom"},
+			Parts: []effects.Part{effects.SpeedPenalty{Ft: 10}},
+		},
+		{
+			Slug: "snare", Name: "Snare", Owner: effects.OwnedBySpell, Duration: effects.Duration{Kind: effects.Rounds, Amount: 2},
+			Targeting: effects.Targeting{Kind: effects.TargetCreatures, RangeFt: 60}, Save: effects.InitialSave{Ability: "dexterity", DC: 15},
+			Parts: []effects.Part{effects.Manual{Instruction: "Roots grip it."}},
+		},
+		{
+			Slug: "daze", Name: "Daze", Owner: effects.OwnedBySpell, Duration: effects.Duration{Kind: effects.Rounds, Amount: 1},
+			Targeting: effects.Targeting{Kind: effects.TargetCreatures, RangeFt: 60}, Save: effects.InitialSave{Ability: "wisdom"},
+			Parts: []effects.Part{effects.Incapacitated{}},
+		},
 		{Slug: "hold-fast", Name: "Hold Fast", Owner: effects.OwnedBySpell, Duration: effects.Duration{Kind: effects.Rounds, Amount: 3, RepeatSave: "wisdom"}, Parts: []effects.Part{effects.Immobile{}}},
 		{Slug: "weary", Name: "Weary", Owner: effects.OwnedByFeature, Duration: effects.Duration{Kind: effects.UntilRest}, Parts: []effects.Part{effects.SpeedPenalty{Ft: 5}}},
 		{Slug: "frost-burst", Name: "Frost Burst", Owner: effects.OwnedBySpell, Scaling: []effects.Scaling{{Part: 1, Field: "dice", Axis: effects.SlotLevel, Class: "", Rule: effects.Linear{Base: 1, Per: effects.Value{Text: "1d6"}}}}, Parts: []effects.Part{

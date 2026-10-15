@@ -9,9 +9,13 @@ import (
 // come, how long it lasts, and how it scales.
 func (d Definition) Text() []string {
 	out := sentences(d.Parts)
-	if line := d.Targeting.Text(); line != "" {
-		out = append([]string{line}, out...)
+	var head []string
+	for _, line := range []string{d.Targeting.Text(), d.Save.Text()} {
+		if line != "" {
+			head = append(head, line)
+		}
 	}
+	out = append(head, out...)
 	if line := d.Duration.Text(d.Concentration); line != "" {
 		out = append(out, line)
 	}

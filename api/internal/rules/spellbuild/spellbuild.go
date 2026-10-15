@@ -305,6 +305,7 @@ func (d Design) finish(slug, name string, parts []effects.Part, scaling []effect
 	def := effects.Definition{
 		Slug: slug, Name: name, Owner: effects.OwnedBySpell, Concentration: d.Concentration, Duration: duration, Scaling: scaling,
 		Targeting: effects.Targeting{Kind: "", Count: 0, RangeFt: 0, Side: effects.AnySide, Types: nil, Seen: false, Willing: false, SpreadFt: 0},
+		Save:      effects.InitialSave{Ability: "", DC: 0},
 		Parts:     append(head, parts...),
 	}
 	for _, s := range scaling {

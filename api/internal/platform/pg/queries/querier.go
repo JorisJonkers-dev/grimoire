@@ -147,6 +147,7 @@ type Querier interface {
 	ClearClassSpells(ctx context.Context, arg ClearClassSpellsParams) error
 	ClearContainerCoins(ctx context.Context, containerID uuid.UUID) error
 	ClearDesignEffects(ctx context.Context) error
+	ClearEffectInitialSave(ctx context.Context, effectID int64) error
 	ClearEffectParts(ctx context.Context, effectID int64) error
 	ClearEffectScalingRules(ctx context.Context, effectID int64) error
 	ClearEffectTargeting(ctx context.Context, effectID int64) error
@@ -513,6 +514,7 @@ type Querier interface {
 	ListEffectForcedMoves(ctx context.Context) ([]ListEffectForcedMovesRow, error)
 	ListEffectForms(ctx context.Context) ([]ListEffectFormsRow, error)
 	ListEffectGrants(ctx context.Context) ([]ListEffectGrantsRow, error)
+	ListEffectInitialSaves(ctx context.Context) ([]CompendiumEffectInitialSafe, error)
 	ListEffectLights(ctx context.Context) ([]ListEffectLightsRow, error)
 	ListEffectManual(ctx context.Context) ([]ListEffectManualRow, error)
 	ListEffectMoveCosts(ctx context.Context) ([]ListEffectMoveCostsRow, error)
@@ -897,6 +899,7 @@ type Querier interface {
 	UpsertDamageType(ctx context.Context, arg UpsertDamageTypeParams) (int64, error)
 	UpsertDocument(ctx context.Context, arg UpsertDocumentParams) (int64, error)
 	UpsertEffectDefinition(ctx context.Context, arg UpsertEffectDefinitionParams) (int64, error)
+	UpsertEffectInitialSave(ctx context.Context, arg UpsertEffectInitialSaveParams) error
 	UpsertEffectTargeting(ctx context.Context, arg UpsertEffectTargetingParams) error
 	UpsertFeat(ctx context.Context, arg UpsertFeatParams) (int64, error)
 	UpsertItem(ctx context.Context, arg UpsertItemParams) error

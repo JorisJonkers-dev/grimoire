@@ -253,7 +253,7 @@ func (r *runtime) checkEffect(cmd Command) (domain.Token, string, *domain.TokenI
 func (s *state) actives(id domain.TokenID) []effects.Active {
 	var out []effects.Active
 	for _, e := range s.fx.Active {
-		if e.Target == id {
+		if e.Target == id && !e.Pending {
 			a := effects.Active{Slug: e.Slug, Source: "", Level: e.Level, Mode: e.Mode}
 			if e.Source != nil {
 				a.Source = uuid.UUID(*e.Source).String()
@@ -301,16 +301,24 @@ func (r *runtime) saveRoll(m domain.Member, t domain.Token, ability, purpose str
 	return r.request(m, t, name+" "+purpose, notation, domain.Modifier{Label: name + " save", Value: bonus}, domain.Modifier{Label: "Exhaustion", Value: -p.Penalty}), true
 }
 
-// saveRolled ends an Effect whose saving throw met its DC.
+// saveRolled ends an Effect whose saving throw met its DC; an Effect waiting on its initial save lands
+// when the save fails.
 func (r *runtime) saveRolled(p domain.PendingSave) {
 	roll, err := r.store.Roll(context.Background(), r.st.session.CampaignID, p.RollID)
 	if err != nil || roll.Status != domain.StatusResolved {
 		return
 	}
 	i := slices.IndexFunc(r.st.fx.Active, func(e domain.Effect) bool { return e.ID == p.Effect })
-	w := Write{Kind: domain.ActionSaveFailed, Token: r.st.tokens[r.st.fx.Active[i].Target], saved: p.RollID}
-	if roll.Total >= p.DC {
+	e := r.st.fx.Active[i]
+	w := Write{Kind: domain.ActionSaveFailed, Token: r.st.tokens[e.Target], saved: p.RollID}
+	switch {
+	case roll.Total >= p.DC:
 		w.Kind, w.ended = domain.ActionSavePassed, []domain.EffectID{p.Effect}
+	case e.Pending:
+		w.landed = e.ID
+		for _, text := range r.st.catalog.Instructions(e.Slug, e.Name, e.Mode) {
+			w.manuals = append(w.manuals, domain.ManualPrompt{ID: uuid.New(), Text: w.Token.Label + ": " + text})
+		}
 	}
 	r.commit(request{}, w, roll.Roller, caller.Caller{Subject: roll.Roller.Subject, Origin: caller.OriginSystem, Client: ""})
 }
@@ -326,6 +334,9 @@ func applyEffects(s *state, w *Write) {
 		}
 	}
 	fx.Active = append(fx.Active, w.activated...)
+	if i := slices.IndexFunc(fx.Active, func(e domain.Effect) bool { return e.ID == w.landed }); i >= 0 {
+		fx.Active[i].Pending = false
+	}
 	if (w.Kind == domain.ActionActivated || w.Kind == domain.ActionActivationForced) && w.Combatant != (domain.CombatantID{}) {
 		i := slices.IndexFunc(s.combat.Combatants, func(x domain.Combatant) bool { return x.ID == w.Combatant })
 		s.combat.Combatants[i].Economy, _ = s.combat.Combatants[i].Economy.Spend(combat.Action)
@@ -359,7 +370,7 @@ func (s *state) tick(started map[domain.TokenID]bool) bool {
 	var expired []domain.EffectID
 	changed := false
 	for i, e := range s.fx.Active {
-		if e.RoundsLeft == 0 || !started[e.Holder()] {
+		if e.RoundsLeft == 0 || e.Pending || !started[e.Holder()] {
 			continue
 		}
 		changed = true
@@ -533,7 +544,7 @@ func (r *runtime) carryInjuries(w Write, actor domain.Member, c caller.Caller) {
 func (s *state) effectViews(id domain.TokenID) []EffectView {
 	var out []EffectView
 	for _, e := range s.fx.Active {
-		if e.Target != id {
+		if e.Target != id || e.Pending {
 			continue
 		}
 		v := EffectView{ID: uuid.UUID(e.ID).String(), Slug: e.Slug, Name: e.Name, Concentration: e.Concentration, RoundsLeft: e.RoundsLeft, Mode: e.Mode}
