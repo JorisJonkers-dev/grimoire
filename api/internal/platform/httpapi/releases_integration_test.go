@@ -5,6 +5,7 @@ package httpapi_test
 import (
 	"context"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -23,72 +24,152 @@ func unseen(t *testing.T, h http.Handler, session string) map[string]any {
 
 // An Admin drafts the one Release Note of a full release from its changelog, edits it and schedules
 // it; once live it rings every bell and shows on each Dashboard until seen.
-func TestReleaseNotes(t *testing.T) {
-	t.Parallel()
+// newsDesk is Aria and Bram, and a stack where root drafts Release Notes.
+type newsDesk struct {
+	st         stack
+	aria, bram string
+}
+
+func newNewsDesk(t *testing.T) *newsDesk {
+	t.Helper()
 	st := newStack(t, func(*identityapp.Service) {})
-	h := st.public
-	aria, bram := setUp(t, st.trusted, h, "aria"), setUp(t, st.trusted, h, "bram")
-	if rec := send(h, http.MethodPost, "/api/v1/admin/release-notes", aria, "", `{"version":"1.1.0"}`); rec.Code != http.StatusForbidden {
-		t.Fatalf("a non-Admin drafts: %d", rec.Code)
+	return &newsDesk{st: st, aria: setUp(t, st.trusted, st.public, "aria"), bram: setUp(t, st.trusted, st.public, "bram")}
+}
+
+func (n *newsDesk) root(method, path, body string) *httptest.ResponseRecorder {
+	return send(n.st.trusted, method, "/api/v1/admin/release-notes"+path, "", "root", body)
+}
+
+// draft drafts the note for 1.1.0 and returns its id.
+func (n *newsDesk) draft(t *testing.T) string {
+	t.Helper()
+	rec := n.root(http.MethodPost, "", `{"version":"v1.1.0"}`)
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("draft: %d", rec.Code)
 	}
-	rec := send(st.trusted, http.MethodPost, "/api/v1/admin/release-notes", "", "root", `{"version":"v1.1.0"}`)
-	draft := decode(t, rec)
-	id, _ := draft["id"].(string)
-	if rec.Code != http.StatusCreated || draft["status"] != "draft" || draft["version"] != "1.1.0" || draft["title"] != "What is new in Grimoire 1.1.0" ||
+	id, _ := decode(t, rec)["id"].(string)
+	return id
+}
+
+// live drafts, edits and schedules the 1.1.0 note an hour on, and announces it two hours on.
+func (n *newsDesk) live(t *testing.T) string {
+	t.Helper()
+	id := n.draft(t)
+	n.root(http.MethodPut, "/"+id, `{"title":" Friends arrive ","body":"- You can now add Friends."}`)
+	n.root(http.MethodPost, "/"+id+"/publish", `{"at":"`+n.st.now.Now().Add(time.Hour).Format(time.RFC3339)+`"}`)
+	n.st.now.pass(2 * time.Hour)
+	if err := n.st.social.AnnounceReleases(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	return id
+}
+
+func TestOnlyAnAdminDraftsReleaseNotes(t *testing.T) {
+	t.Parallel()
+	n := newNewsDesk(t)
+	if rec := send(n.st.public, http.MethodPost, "/api/v1/admin/release-notes", n.aria, "", `{"version":"1.1.0"}`); rec.Code != http.StatusForbidden {
+		t.Fatalf("%d", rec.Code)
+	}
+}
+
+func TestADraftIsWrittenFromTheChangelog(t *testing.T) {
+	t.Parallel()
+	n := newNewsDesk(t)
+	rec := n.root(http.MethodPost, "", `{"version":"v1.1.0"}`)
+	if draft := decode(t, rec); rec.Code != http.StatusCreated || draft["status"] != "draft" || draft["version"] != "1.1.0" || draft["title"] != "What is new in Grimoire 1.1.0" ||
 		draft["body"] != "- Social: Friends with requests\n- Release Notes" {
 		t.Fatalf("draft: %d %v", rec.Code, draft)
 	}
+}
+
+func TestAVersionIsDraftedOnceAndNeverAsAPreRelease(t *testing.T) {
+	t.Parallel()
+	n := newNewsDesk(t)
+	n.draft(t)
 	for body, want := range map[string]int{`{"version":"1.1.0"}`: http.StatusConflict, `{"version":"1.2.0-rc.1"}`: http.StatusUnprocessableEntity} {
-		if rec := send(st.trusted, http.MethodPost, "/api/v1/admin/release-notes", "", "root", body); rec.Code != want {
-			t.Errorf("draft %s = %d", body, rec.Code)
-		}
+		t.Run(body, func(t *testing.T) {
+			if rec := n.root(http.MethodPost, "", body); rec.Code != want {
+				t.Fatalf("%d", rec.Code)
+			}
+		})
 	}
-	rec = send(st.trusted, http.MethodPut, "/api/v1/admin/release-notes/"+id, "", "root", `{"title":" Friends arrive ","body":"- You can now add Friends."}`)
-	if rec.Code != http.StatusOK || decode(t, rec)["title"] != "Friends arrive" {
-		t.Fatalf("edit: %d %s", rec.Code, rec.Body.String())
+}
+
+func TestAnEditedNoteIsTrimmed(t *testing.T) {
+	t.Parallel()
+	n := newNewsDesk(t)
+	if rec := n.root(http.MethodPut, "/"+n.draft(t), `{"title":" Friends arrive ","body":"- You can now add Friends."}`); rec.Code != http.StatusOK || decode(t, rec)["title"] != "Friends arrive" {
+		t.Fatalf("%d %s", rec.Code, rec.Body.String())
 	}
-	later := st.now.Now().Add(time.Hour).Format(time.RFC3339)
-	rec = send(st.trusted, http.MethodPost, "/api/v1/admin/release-notes/"+id+"/publish", "", "root", `{"at":"`+later+`"}`)
-	if rec.Code != http.StatusOK || decode(t, rec)["status"] != "scheduled" {
-		t.Fatalf("schedule: %d %s", rec.Code, rec.Body.String())
+}
+
+func TestANoteScheduledForLaterDoesNotShowYet(t *testing.T) {
+	t.Parallel()
+	n := newNewsDesk(t)
+	id := n.draft(t)
+	if rec := n.root(http.MethodPost, "/"+id+"/publish", `{"at":"`+n.st.now.Now().Add(time.Hour).Format(time.RFC3339)+`"}`); rec.Code != http.StatusOK || decode(t, rec)["status"] != "scheduled" {
+		t.Fatalf("schedule: %d", rec.Code)
 	}
-	if note := unseen(t, h, aria); note != nil {
-		t.Fatalf("a scheduled note shows = %v", note)
+	if note := unseen(t, n.st.public, n.aria); note != nil {
+		t.Fatalf("shows = %v", note)
 	}
-	if rec := send(h, http.MethodPost, "/api/v1/release-notes/"+id+"/seen", aria, "", ""); rec.Code != http.StatusNoContent {
-		t.Fatalf("seeing a note not live yet: %d", rec.Code)
+	if rec := send(n.st.public, http.MethodPost, "/api/v1/release-notes/"+id+"/seen", n.aria, "", ""); rec.Code != http.StatusNoContent {
+		t.Fatalf("seeing it: %d", rec.Code)
 	}
-	st.now.pass(2 * time.Hour)
-	if err := st.social.AnnounceReleases(context.Background()); err != nil {
-		t.Fatal(err)
-	}
-	if got, _ := bell(t, h, bram); len(got) != 1 || got[0]["kind"] != "release_note" || got[0]["title"] != "Friends arrive" || got[0]["actionPath"] != "/" {
+}
+
+func TestALiveNoteRingsEveryonesBell(t *testing.T) {
+	t.Parallel()
+	n := newNewsDesk(t)
+	n.live(t)
+	if got, _ := bell(t, n.st.public, n.bram); len(got) != 1 || got[0]["kind"] != "release_note" || got[0]["title"] != "Friends arrive" || got[0]["actionPath"] != "/" {
 		t.Fatalf("bram's bell = %v", got)
 	}
-	if note := unseen(t, h, aria); note == nil || note["id"] != id || note["status"] != "published" {
+}
+
+func TestALiveNoteShowsUntilEachReaderHasSeenIt(t *testing.T) {
+	t.Parallel()
+	n := newNewsDesk(t)
+	id := n.live(t)
+	if note := unseen(t, n.st.public, n.aria); note == nil || note["id"] != id || note["status"] != "published" {
 		t.Fatalf("aria's Dashboard = %v", note)
 	}
-	if rec := send(h, http.MethodPost, "/api/v1/release-notes/"+id+"/seen", aria, "", ""); rec.Code != http.StatusNoContent {
+	if rec := send(n.st.public, http.MethodPost, "/api/v1/release-notes/"+id+"/seen", n.aria, "", ""); rec.Code != http.StatusNoContent {
 		t.Fatalf("seen: %d", rec.Code)
 	}
-	if note := unseen(t, h, aria); note != nil {
-		t.Fatalf("a seen note shows again = %v", note)
+	if note := unseen(t, n.st.public, n.aria); note != nil {
+		t.Fatalf("shows again = %v", note)
 	}
-	if note := unseen(t, h, bram); note == nil {
-		t.Fatal("bram has not seen it yet")
+	if note := unseen(t, n.st.public, n.bram); note == nil {
+		t.Fatal("gone for bram too")
 	}
-	if rec := send(st.trusted, http.MethodPut, "/api/v1/admin/release-notes/"+id, "", "root", `{"title":"Late","body":""}`); rec.Code != http.StatusConflict {
-		t.Fatalf("editing an announced note: %d", rec.Code)
+}
+
+func TestAnAnnouncedNoteIsNotEdited(t *testing.T) {
+	t.Parallel()
+	n := newNewsDesk(t)
+	if rec := n.root(http.MethodPut, "/"+n.live(t), `{"title":"Late","body":""}`); rec.Code != http.StatusConflict {
+		t.Fatalf("%d", rec.Code)
 	}
-	rec = send(st.trusted, http.MethodPost, "/api/v1/admin/release-notes", "", "root", `{"version":"1.2.0"}`)
-	next, _ := decode(t, rec)["id"].(string)
-	if rec := send(st.trusted, http.MethodPost, "/api/v1/admin/release-notes/"+next+"/publish", "", "root", `{}`); rec.Code != http.StatusOK || decode(t, rec)["status"] != "published" {
-		t.Fatalf("publish now: %d", rec.Code)
+}
+
+func TestANoteWithoutATimeIsPublishedAtOnce(t *testing.T) {
+	t.Parallel()
+	n := newNewsDesk(t)
+	n.draft(t)
+	next, _ := decode(t, n.root(http.MethodPost, "", `{"version":"1.2.0"}`))["id"].(string)
+	if rec := n.root(http.MethodPost, "/"+next+"/publish", `{}`); rec.Code != http.StatusOK || decode(t, rec)["status"] != "published" {
+		t.Fatalf("publish: %d", rec.Code)
 	}
-	if list := decode(t, send(st.trusted, http.MethodGet, "/api/v1/admin/release-notes", "", "root", ""))["items"].([]any); len(list) != 2 {
+	if list := decode(t, n.root(http.MethodGet, "", ""))["items"].([]any); len(list) != 2 {
 		t.Fatalf("list = %v", list)
 	}
-	if rec := send(st.trusted, http.MethodPost, "/api/v1/admin/release-notes/0190c7a8-0000-7000-8000-0000000000c1/publish", "", "root", `{}`); rec.Code != http.StatusNotFound {
-		t.Fatalf("a missing note: %d", rec.Code)
+}
+
+func TestPublishingAMissingNoteIsNotFound(t *testing.T) {
+	t.Parallel()
+	n := newNewsDesk(t)
+	if rec := n.root(http.MethodPost, "/0190c7a8-0000-7000-8000-0000000000c1/publish", `{}`); rec.Code != http.StatusNotFound {
+		t.Fatalf("%d", rec.Code)
 	}
 }

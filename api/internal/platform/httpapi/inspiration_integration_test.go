@@ -29,75 +29,170 @@ func rollD20(t *testing.T, h http.Handler, rolls string) (string, map[string]any
 
 // The DM grants Heroic Inspiration; it shows on the sheet and in the roster. A roll by its holder waits
 // to be kept or rerolled once, and a reroll spends it. It can also be passed to an ally that lacks it.
-func TestHeroicInspiration(t *testing.T) {
-	t.Parallel()
+// inspiredTable is a Campaign with Kara, a player's Character, and Ines, the DM's.
+type inspiredTable struct {
+	h                            http.Handler
+	id, chars, rolls, kara, ines string
+}
+
+func newInspiredTable(t *testing.T) *inspiredTable {
+	t.Helper()
 	h := realCampaigns(t)
 	id, _ := campaignWithPlayer(t, h)
-	chars := "/api/v1/campaigns/" + id + "/characters"
-	rolls := "/api/v1/campaigns/" + id + "/rolls"
-	kara := chars + "/" + decode(t, call(h, http.MethodPost, chars, "player", build))["id"].(string)
-	inesID := decode(t, call(h, http.MethodPost, chars, "dm", strings.Replace(build, `"Kara"`, `"Ines"`, 1)))["id"].(string)
+	i := &inspiredTable{h: h, id: id, chars: "/api/v1/campaigns/" + id + "/characters", rolls: "/api/v1/campaigns/" + id + "/rolls"}
+	i.kara = i.chars + "/" + decode(t, call(h, http.MethodPost, i.chars, "player", build))["id"].(string)
+	i.ines = decode(t, call(h, http.MethodPost, i.chars, "dm", strings.Replace(build, `"Kara"`, `"Ines"`, 1)))["id"].(string)
+	return i
+}
 
-	if _, plain := rollD20(t, h, rolls); plain["status"] != "resolved" || plain["choosing"] != false {
-		t.Fatalf("a roll without Inspiration = %v", plain)
-	}
-	if rec := call(h, http.MethodPatch, kara, "player", `{"heroicInspiration":true}`); rec.Code != http.StatusForbidden {
-		t.Fatalf("a player granting it: %d", rec.Code)
-	}
-	if sheet := decode(t, call(h, http.MethodPatch, kara, "dm", `{"heroicInspiration":true}`)); sheet["heroicInspiration"] != true {
+func (i *inspiredTable) inspire(t *testing.T) {
+	t.Helper()
+	if sheet := decode(t, call(i.h, http.MethodPatch, i.kara, "dm", `{"heroicInspiration":true}`)); sheet["heroicInspiration"] != true {
 		t.Fatalf("granted = %v", sheet["heroicInspiration"])
 	}
-	if roster(t, h, id, "Kara") != true || roster(t, h, id, "Ines") != false {
-		t.Fatal("the roster does not show Heroic Inspiration")
-	}
+}
 
-	one, held := rollD20(t, h, rolls)
-	if held["status"] != "pending" || held["choosing"] != true || held["total"] != nil {
-		t.Fatalf("a roll with Inspiration = %v", held)
+// held is a d20 Kara rolled with Heroic Inspiration, waiting for her choice.
+func (i *inspiredTable) held(t *testing.T) string {
+	t.Helper()
+	i.inspire(t)
+	one, _ := rollD20(t, i.h, i.rolls)
+	return one
+}
+
+func (i *inspiredTable) pass(to string) *httptest.ResponseRecorder {
+	return call(i.h, http.MethodPost, i.kara+"/inspiration/pass", "player", `{"to":"`+to+`"}`)
+}
+
+func TestARollWithoutHeroicInspirationResolvesAtOnce(t *testing.T) {
+	t.Parallel()
+	i := newInspiredTable(t)
+	if _, plain := rollD20(t, i.h, i.rolls); plain["status"] != "resolved" || plain["choosing"] != false {
+		t.Fatalf("roll = %v", plain)
 	}
-	if rec := call(h, http.MethodPost, one+"/reroll", "dm", `{"die":0}`); rec.Code != http.StatusForbidden {
-		t.Fatalf("the DM spending a player's Inspiration: %d", rec.Code)
+}
+
+func TestOnlyTheDMGrantsHeroicInspiration(t *testing.T) {
+	t.Parallel()
+	i := newInspiredTable(t)
+	if rec := call(i.h, http.MethodPatch, i.kara, "player", `{"heroicInspiration":true}`); rec.Code != http.StatusForbidden {
+		t.Fatalf("a player granting it: %d", rec.Code)
 	}
-	if rec := call(h, http.MethodPost, one+"/reroll", "player", `{"die":3}`); rec.Code != http.StatusNotFound {
-		t.Fatalf("rerolling a die that is not there: %d", rec.Code)
+	i.inspire(t)
+}
+
+func TestTheRosterShowsWhoHasHeroicInspiration(t *testing.T) {
+	t.Parallel()
+	i := newInspiredTable(t)
+	i.inspire(t)
+	if roster(t, i.h, i.id, "Kara") != true || roster(t, i.h, i.id, "Ines") != false {
+		t.Fatal("the roster")
 	}
-	rerolled := decode(t, call(h, http.MethodPost, one+"/reroll", "player", `{"die":0}`))
+}
+
+func TestARollWithHeroicInspirationWaitsForAChoice(t *testing.T) {
+	t.Parallel()
+	i := newInspiredTable(t)
+	i.inspire(t)
+	if _, held := rollD20(t, i.h, i.rolls); held["status"] != "pending" || held["choosing"] != true || held["total"] != nil {
+		t.Fatalf("roll = %v", held)
+	}
+}
+
+func TestTheDMCannotSpendAPlayersInspiration(t *testing.T) {
+	t.Parallel()
+	i := newInspiredTable(t)
+	if rec := call(i.h, http.MethodPost, i.held(t)+"/reroll", "dm", `{"die":0}`); rec.Code != http.StatusForbidden {
+		t.Fatalf("%d", rec.Code)
+	}
+}
+
+func TestRerollingADieThatIsNotThereIsNotFound(t *testing.T) {
+	t.Parallel()
+	i := newInspiredTable(t)
+	if rec := call(i.h, http.MethodPost, i.held(t)+"/reroll", "player", `{"die":3}`); rec.Code != http.StatusNotFound {
+		t.Fatalf("%d", rec.Code)
+	}
+}
+
+func TestARerollResolvesTheRollAndSpendsTheInspiration(t *testing.T) {
+	t.Parallel()
+	i := newInspiredTable(t)
+	rerolled := decode(t, call(i.h, http.MethodPost, i.held(t)+"/reroll", "player", `{"die":0}`))
 	if rerolled["status"] != "resolved" || rerolled["rerolled"] != true || rerolled["choosing"] != false {
 		t.Fatalf("rerolled = %v", rerolled)
 	}
-	if rec := call(h, http.MethodPost, one+"/keep", "player", ""); rec.Code != http.StatusConflict {
-		t.Fatalf("keeping a resolved roll: %d", rec.Code)
+	if roster(t, i.h, i.id, "Kara") != false {
+		t.Fatal("the Inspiration was not spent")
 	}
-	if roster(t, h, id, "Kara") != false {
-		t.Fatal("a reroll did not spend Heroic Inspiration")
-	}
-	log := call(h, http.MethodGet, "/api/v1/campaigns/"+id+"/log?limit=10", "dm", "").Body.String()
-	if strings.Count(log, `"kind":"die_rolled"`) < 3 {
-		t.Fatalf("the reroll is not in the Action Log: %s", log)
-	}
+}
 
-	call(h, http.MethodPatch, kara, "dm", `{"heroicInspiration":true}`)
-	one, _ = rollD20(t, h, rolls)
-	if kept := decode(t, call(h, http.MethodPost, one+"/keep", "player", "")); kept["status"] != "resolved" || kept["rerolled"] != false || roster(t, h, id, "Kara") != true {
+func TestAResolvedRollIsNotKeptAgain(t *testing.T) {
+	t.Parallel()
+	i := newInspiredTable(t)
+	one := i.held(t)
+	call(i.h, http.MethodPost, one+"/reroll", "player", `{"die":0}`)
+	if rec := call(i.h, http.MethodPost, one+"/keep", "player", ""); rec.Code != http.StatusConflict {
+		t.Fatalf("%d", rec.Code)
+	}
+}
+
+func TestARerollIsInTheActionLog(t *testing.T) {
+	t.Parallel()
+	i := newInspiredTable(t)
+	rollD20(t, i.h, i.rolls)
+	call(i.h, http.MethodPost, i.held(t)+"/reroll", "player", `{"die":0}`)
+	if log := call(i.h, http.MethodGet, "/api/v1/campaigns/"+i.id+"/log?limit=10", "dm", "").Body.String(); strings.Count(log, `"kind":"die_rolled"`) < 3 {
+		t.Fatalf("log = %s", log)
+	}
+}
+
+func TestKeepingTheRollKeepsTheInspiration(t *testing.T) {
+	t.Parallel()
+	i := newInspiredTable(t)
+	if kept := decode(t, call(i.h, http.MethodPost, i.held(t)+"/keep", "player", "")); kept["status"] != "resolved" || kept["rerolled"] != false || roster(t, i.h, i.id, "Kara") != true {
 		t.Fatalf("kept = %v", kept)
 	}
+}
 
-	for body, want := range map[string]int{
-		`{"to":"` + strings.TrimPrefix(kara, chars+"/") + `"}`: http.StatusUnprocessableEntity,
-		`{"to":"0190c7a8-0000-7000-8000-0000000000ff"}`:        http.StatusNotFound,
-	} {
-		if rec := call(h, http.MethodPost, kara+"/inspiration/pass", "player", body); rec.Code != want {
-			t.Fatalf("pass %s: %d", body, rec.Code)
-		}
+func TestInspirationIsPassedOnlyToAnotherCharacterThatIsThere(t *testing.T) {
+	t.Parallel()
+	i := newInspiredTable(t)
+	i.inspire(t)
+	for to, want := range map[string]int{strings.TrimPrefix(i.kara, i.chars+"/"): http.StatusUnprocessableEntity, "0190c7a8-0000-7000-8000-0000000000ff": http.StatusNotFound} {
+		t.Run(to, func(t *testing.T) {
+			if rec := i.pass(to); rec.Code != want {
+				t.Fatalf("%d", rec.Code)
+			}
+		})
 	}
-	if rec := call(h, http.MethodPost, kara+"/inspiration/pass", "dm", `{"to":"`+inesID+`"}`); rec.Code != http.StatusForbidden {
-		t.Fatalf("the DM passing a player's Inspiration: %d", rec.Code)
+}
+
+func TestTheDMCannotPassAPlayersInspiration(t *testing.T) {
+	t.Parallel()
+	i := newInspiredTable(t)
+	i.inspire(t)
+	if rec := call(i.h, http.MethodPost, i.kara+"/inspiration/pass", "dm", `{"to":"`+i.ines+`"}`); rec.Code != http.StatusForbidden {
+		t.Fatalf("%d", rec.Code)
 	}
-	if sheet := decode(t, call(h, http.MethodPost, kara+"/inspiration/pass", "player", `{"to":"`+inesID+`"}`)); sheet["heroicInspiration"] != false || roster(t, h, id, "Ines") != true {
+}
+
+func TestPassingInspirationGivesItAway(t *testing.T) {
+	t.Parallel()
+	i := newInspiredTable(t)
+	i.inspire(t)
+	if sheet := decode(t, i.pass(i.ines)); sheet["heroicInspiration"] != false || roster(t, i.h, i.id, "Ines") != true {
 		t.Fatalf("passed = %v", sheet["heroicInspiration"])
 	}
-	if rec := call(h, http.MethodPost, kara+"/inspiration/pass", "player", `{"to":"`+inesID+`"}`); rec.Code != http.StatusUnprocessableEntity {
-		t.Fatalf("passing what it no longer has: %d", rec.Code)
+}
+
+func TestInspirationNoLongerHeldIsNotPassed(t *testing.T) {
+	t.Parallel()
+	i := newInspiredTable(t)
+	i.inspire(t)
+	i.pass(i.ines)
+	if rec := i.pass(i.ines); rec.Code != http.StatusUnprocessableEntity {
+		t.Fatalf("%d", rec.Code)
 	}
 }
 

@@ -4,6 +4,7 @@ package httpapi_test
 
 import (
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
@@ -91,28 +92,52 @@ func TestNotificationsAreDelivered(t *testing.T) {
 
 // Preferences start from the defaults, turning a kind off in app keeps it out of the bell, and
 // security always shows.
-func TestNotificationPreferences(t *testing.T) {
-	t.Parallel()
+func preferences(t *testing.T) (http.Handler, string, string) {
+	t.Helper()
 	trusted, public, _, _ := accountServers(t)
-	aria, bram := setUp(t, trusted, public, "aria"), setUp(t, trusted, public, "bram")
+	return public, setUp(t, trusted, public, "aria"), setUp(t, trusted, public, "bram")
+}
+
+func TestEachKindOfNotificationHasItsDefaultPreferences(t *testing.T) {
+	t.Parallel()
+	public, _, bram := preferences(t)
 	rec := send(public, http.MethodGet, "/api/v1/notification-preferences", bram, "", "")
-	body := rec.Body.String()
-	if rec.Code != http.StatusOK || !strings.Contains(body, `{"kind":"security","inApp":true,"push":true,"email":true}`) ||
+	if body := rec.Body.String(); rec.Code != http.StatusOK || !strings.Contains(body, `{"kind":"security","inApp":true,"push":true,"email":true}`) ||
 		!strings.Contains(body, `{"kind":"release_note","inApp":true,"push":false,"email":false}`) || len(decode(t, rec)["items"].([]any)) != 8 {
 		t.Fatalf("defaults: %d %s", rec.Code, body)
 	}
-	rec = send(public, http.MethodPut, "/api/v1/notification-preferences", bram, "", `{"items":[{"kind":"friend_request","inApp":false,"push":false,"email":true}]}`)
-	if rec.Code != http.StatusOK || !strings.Contains(rec.Body.String(), `{"kind":"friend_request","inApp":false,"push":false,"email":true}`) {
-		t.Fatalf("set: %d %s", rec.Code, rec.Body.String())
+}
+
+func silenceFriendRequests(t *testing.T, public http.Handler, who string) *httptest.ResponseRecorder {
+	t.Helper()
+	return send(public, http.MethodPut, "/api/v1/notification-preferences", who, "", `{"items":[{"kind":"friend_request","inApp":false,"push":false,"email":true}]}`)
+}
+
+func TestANotificationPreferenceIsSet(t *testing.T) {
+	t.Parallel()
+	public, _, bram := preferences(t)
+	if rec := silenceFriendRequests(t, public, bram); rec.Code != http.StatusOK || !strings.Contains(rec.Body.String(), `{"kind":"friend_request","inApp":false,"push":false,"email":true}`) {
+		t.Fatalf("%d %s", rec.Code, rec.Body.String())
 	}
+}
+
+func TestAKindTurnedOffDoesNotRingButWhatItIsAboutStillArrives(t *testing.T) {
+	t.Parallel()
+	public, aria, bram := preferences(t)
+	silenceFriendRequests(t, public, bram)
 	send(public, http.MethodPost, "/api/v1/friend-requests", aria, "", `{"username":"bram"}`)
 	if got, unread := bell(t, public, bram); len(got) != 0 || unread != 0 {
-		t.Fatalf("a kind turned off rings = %v", got)
+		t.Fatalf("rang = %v", got)
 	}
 	if got := usernames(friendsOf(t, public, bram), "incoming"); strings.Join(got, ",") != "aria" {
-		t.Fatalf("the request itself still arrives = %v", got)
+		t.Fatalf("incoming = %v", got)
 	}
+}
+
+func TestSecurityNoticesCannotBeTurnedOffInTheApp(t *testing.T) {
+	t.Parallel()
+	public, _, bram := preferences(t)
 	if rec := send(public, http.MethodPut, "/api/v1/notification-preferences", bram, "", `{"items":[{"kind":"security","inApp":false,"push":true,"email":true}]}`); rec.Code != http.StatusUnprocessableEntity {
-		t.Fatalf("security off in app: %d", rec.Code)
+		t.Fatalf("%d", rec.Code)
 	}
 }
