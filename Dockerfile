@@ -40,6 +40,6 @@ COPY --from=app /out/grimoire /grimoire
 COPY CHANGELOG.md /CHANGELOG.md
 ENV GRIMOIRE_CHANGELOG=/CHANGELOG.md
 EXPOSE 8080
-USER nonroot:nonroot
+USER 65532:65532
 ENTRYPOINT ["/grimoire"]
 CMD ["serve"]
