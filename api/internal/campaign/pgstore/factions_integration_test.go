@@ -50,47 +50,127 @@ func factionNamed(t *testing.T, list []app.FactionView, name string) app.Faction
 // A DM keeps Factions and decides every Standing Change. A change is only ever suggested, by a person
 // or by an agent, and moves nothing until the DM confirms it in person. Players see tiers and the
 // reasons the DM shared: never a number, an unshared reason, a pending change or the DM's notes.
-func TestFactionsStandingAndTheChangesTheDMDecides(t *testing.T) {
-	t.Parallel()
+// factionTable is a Campaign with Tamsin, a Player's Character, and Old Joris, the DM's, and two
+// Factions: the Lantern Watch and the Grey Hands.
+type factionTable struct {
+	t             *testing.T
+	ctx           context.Context
+	db            *pg.Store
+	campaign      domain.CampaignID
+	s             *app.Factions
+	tamsin, joris domain.CharacterID
+	agent         caller.Caller
+	watch, guild  app.FactionView
+}
+
+func newFactionTable(t *testing.T) *factionTable {
+	t.Helper()
 	ctx := context.Background()
 	db := open(t)
 	_, d := npcs(t, pgstore.New(db.Pool()))
-	s := &app.Factions{Repo: pgstore.New(db.Pool()), Now: func() time.Time { return time.Date(2026, 10, 3, 12, 0, 0, 0, time.UTC) }}
-	tamsin, joris := hero(t, db, d.ID, playerCaller.Subject, "Tamsin"), hero(t, db, d.ID, dmCaller.Subject, "Old Joris")
-	agent := caller.MCP(dmCaller.Subject, "Claude")
+	f := &factionTable{
+		t: t, ctx: ctx, db: db, campaign: d.ID,
+		s:     &app.Factions{Repo: pgstore.New(db.Pool()), Now: func() time.Time { return time.Date(2026, 10, 3, 12, 0, 0, 0, time.UTC) }},
+		agent: caller.MCP(dmCaller.Subject, "Claude"),
+	}
+	f.tamsin, f.joris = hero(t, db, d.ID, playerCaller.Subject, "Tamsin"), hero(t, db, d.ID, dmCaller.Subject, "Old Joris")
+	var err error
+	if f.watch, err = f.s.Create(ctx, dmCaller, d.ID, app.FactionInput{Name: "  The Lantern Watch ", Archetype: "city-watch", Goals: "Keep the peace.", Territory: "Oakford", Notes: "The captain takes bribes."}); err != nil {
+		t.Fatal(err)
+	}
+	f.guild, _ = f.s.Create(ctx, dmCaller, d.ID, app.FactionInput{Name: "Grey Hands"})
+	return f
+}
 
-	watch, err := s.Create(ctx, dmCaller, d.ID, app.FactionInput{Name: "  The Lantern Watch ", Archetype: "city-watch", Goals: "Keep the peace.", Territory: "Oakford", Notes: "The captain takes bribes."})
-	if err != nil || watch.Faction.Name != "The Lantern Watch" || watch.Tier != standing.Neutral || watch.Faction.Score != 0 {
-		t.Fatalf("create = %+v %v", watch, err)
+func (f *factionTable) list(c caller.Caller) []app.FactionView {
+	f.t.Helper()
+	list, err := f.s.List(f.ctx, c, f.campaign)
+	if err != nil {
+		f.t.Fatal(err)
 	}
-	guild, _ := s.Create(ctx, dmCaller, d.ID, app.FactionInput{Name: "Grey Hands"})
-	lists := func(c caller.Caller) []app.FactionView {
-		t.Helper()
-		list, err := s.List(ctx, c, d.ID)
-		if err != nil {
-			t.Fatal(err)
-		}
-		return list
-	}
-	suggest := func(c caller.Caller, faction domain.FactionID, g app.Suggestion) domain.StandingChange {
-		t.Helper()
-		ch, err := s.Propose(ctx, c, d.ID, faction, g)
-		if err != nil {
-			t.Fatal(err)
-		}
-		return ch
-	}
+	return list
+}
 
-	// A suggestion waits: from the DM's own hand and from an agent's alike, and the Standing stays put.
-	byHand := suggest(dmCaller, watch.Faction.ID, app.Suggestion{Delta: 30, Reason: " Returned the stolen seal. ", ShareReason: true})
-	byAgent := suggest(agent, watch.Faction.ID, app.Suggestion{Delta: -70, Reason: "Killed a watchman.", ShareReason: false})
-	own := suggest(dmCaller, watch.Faction.ID, app.Suggestion{Character: &tamsin, Delta: 45, Reason: "Tamsin saved the captain's son."})
-	other := suggest(dmCaller, watch.Faction.ID, app.Suggestion{Character: &joris, Delta: -30, Reason: "Old Joris insulted the captain.", ShareReason: true})
-	dmWatch := factionNamed(t, lists(dmCaller), "The Lantern Watch")
-	if byHand.Status != domain.ChangePending || byAgent.Status != domain.ChangePending || byHand.Reason != "Returned the stolen seal." || dmWatch.Tier != standing.Neutral || dmWatch.Faction.Score != 0 || len(dmWatch.Changes) != 4 {
-		t.Fatalf("suggested = %+v %+v, the Watch %+v", byHand, byAgent, dmWatch)
+func (f *factionTable) named(c caller.Caller, name string) app.FactionView {
+	f.t.Helper()
+	return factionNamed(f.t, f.list(c), name)
+}
+
+func (f *factionTable) suggest(c caller.Caller, faction domain.FactionID, g app.Suggestion) domain.StandingChange {
+	f.t.Helper()
+	ch, err := f.s.Propose(f.ctx, c, f.campaign, faction, g)
+	if err != nil {
+		f.t.Fatal(err)
 	}
-	for _, ch := range dmWatch.Changes {
+	return ch
+}
+
+func (f *factionTable) decide(id domain.ChangeID, d app.Decision) {
+	f.t.Helper()
+	if err := f.s.Decide(f.ctx, dmCaller, f.campaign, id, d); err != nil {
+		f.t.Fatal(err)
+	}
+}
+
+var confirmed = app.Decision{Confirm: true}
+
+func (f *factionTable) sealReturned() domain.StandingChange {
+	return f.suggest(dmCaller, f.watch.Faction.ID, app.Suggestion{Delta: 30, Reason: " Returned the stolen seal. ", ShareReason: true})
+}
+
+func (f *factionTable) watchmanKilled() domain.StandingChange {
+	return f.suggest(f.agent, f.watch.Faction.ID, app.Suggestion{Delta: -70, Reason: "Killed a watchman.", ShareReason: false})
+}
+
+// editedDown confirms the agent's suggestion as -50, with the DM's own reason, not shared.
+func (f *factionTable) editedDown(id domain.ChangeID) {
+	delta, reason, share := -50, " A watchman died in the brawl. ", false
+	f.decide(id, app.Decision{Confirm: true, Delta: &delta, Reason: &reason, ShareReason: &share})
+}
+
+// decided is the Watch after the DM confirmed the seal (+30), edited the agent's suggestion to -50,
+// confirmed Tamsin's +45 and +10, and dismissed Old Joris's -30.
+type decided struct {
+	byHand, byAgent, own, other, again domain.StandingChange
+}
+
+func (f *factionTable) decideAll() decided {
+	var d decided
+	d.byHand, d.byAgent = f.sealReturned(), f.watchmanKilled()
+	d.own = f.suggest(dmCaller, f.watch.Faction.ID, app.Suggestion{Character: &f.tamsin, Delta: 45, Reason: "Tamsin saved the captain's son."})
+	d.other = f.suggest(dmCaller, f.watch.Faction.ID, app.Suggestion{Character: &f.joris, Delta: -30, Reason: "Old Joris insulted the captain.", ShareReason: true})
+	f.decide(d.byHand.ID, confirmed)
+	f.editedDown(d.byAgent.ID)
+	f.decide(d.own.ID, confirmed)
+	f.decide(d.other.ID, app.Decision{Confirm: false})
+	d.again = f.suggest(dmCaller, f.watch.Faction.ID, app.Suggestion{Character: &f.tamsin, Delta: 10, Reason: "Tamsin stood a round."})
+	f.decide(d.again.ID, confirmed)
+	return d
+}
+
+func TestANewFactionIsTrimmedAndStartsNeutral(t *testing.T) {
+	t.Parallel()
+	if watch := newFactionTable(t).watch; watch.Faction.Name != "The Lantern Watch" || watch.Tier != standing.Neutral || watch.Faction.Score != 0 {
+		t.Fatalf("created %+v", watch)
+	}
+}
+
+func TestASuggestionWaitsAndTheStandingStaysPut(t *testing.T) {
+	t.Parallel()
+	f := newFactionTable(t)
+	byHand, byAgent := f.sealReturned(), f.watchmanKilled()
+	watch := f.named(dmCaller, "The Lantern Watch")
+	if byHand.Status != domain.ChangePending || byAgent.Status != domain.ChangePending || byHand.Reason != "Returned the stolen seal." || watch.Tier != standing.Neutral || watch.Faction.Score != 0 || len(watch.Changes) != 2 {
+		t.Fatalf("suggested %+v %+v, the Watch %+v", byHand, byAgent, watch)
+	}
+}
+
+func TestTheDMSeesEachSuggestionAndWhereItCameFrom(t *testing.T) {
+	t.Parallel()
+	f := newFactionTable(t)
+	f.sealReturned()
+	byAgent := f.watchmanKilled()
+	for _, ch := range f.named(dmCaller, "The Lantern Watch").Changes {
 		if ch.Status != domain.ChangePending || ch.DM == nil {
 			t.Fatalf("a suggestion on the DM's list = %+v", ch)
 		}
@@ -98,106 +178,148 @@ func TestFactionsStandingAndTheChangesTheDMDecides(t *testing.T) {
 			t.Fatalf("the agent's suggestion = %+v", ch.DM)
 		}
 	}
-	// A Player sees no suggestion at all.
-	if seen := factionNamed(t, lists(playerCaller), "The Lantern Watch"); len(seen.Changes) != 0 || len(seen.Personal) != 0 || seen.Tier != standing.Neutral {
-		t.Fatalf("a Player before anything is decided = %+v", seen)
-	}
+}
 
-	// Only the DM decides, and only in person: an agent acting for the DM is refused.
-	confirm := app.Decision{Confirm: true}
-	if err := s.Decide(ctx, agent, d.ID, byHand.ID, confirm); !errors.Is(err, domain.ErrForbidden) {
-		t.Fatalf("an agent confirms = %v", err)
+func TestAPlayerSeesNoSuggestion(t *testing.T) {
+	t.Parallel()
+	f := newFactionTable(t)
+	f.sealReturned()
+	if seen := f.named(playerCaller, "The Lantern Watch"); len(seen.Changes) != 0 || len(seen.Personal) != 0 || seen.Tier != standing.Neutral {
+		t.Fatalf("a Player sees %+v", seen)
 	}
-	if err := s.Decide(ctx, playerCaller, d.ID, byHand.ID, confirm); !errors.Is(err, domain.ErrForbidden) {
-		t.Fatalf("a Player confirms = %v", err)
+}
+
+func TestOnlyTheDMInPersonDecidesAChange(t *testing.T) {
+	t.Parallel()
+	f := newFactionTable(t)
+	byHand := f.sealReturned()
+	for name, c := range map[string]struct {
+		who  caller.Caller
+		want error
+	}{"an agent for the DM": {f.agent, domain.ErrForbidden}, "a Player": {playerCaller, domain.ErrForbidden}, "a stranger": {stranger, domain.ErrNotFound}} {
+		t.Run(name, func(t *testing.T) {
+			if err := f.s.Decide(f.ctx, c.who, f.campaign, byHand.ID, confirmed); !errors.Is(err, c.want) {
+				t.Fatalf("err = %v", err)
+			}
+		})
 	}
-	if err := s.Decide(ctx, stranger, d.ID, byHand.ID, confirm); !errors.Is(err, domain.ErrNotFound) {
-		t.Fatalf("a stranger confirms = %v", err)
-	}
-	if got := factionNamed(t, lists(dmCaller), "The Lantern Watch"); got.Faction.Score != 0 {
+	if got := f.named(dmCaller, "The Lantern Watch"); got.Faction.Score != 0 {
 		t.Fatalf("a refused decision moved the Standing: %+v", got.Faction)
 	}
+}
 
-	// Confirmed as suggested, the party's Standing moves; edited, it moves by what the DM says, with
-	// the DM's reason, shared or not as the DM chooses.
-	if err := s.Decide(ctx, dmCaller, d.ID, byHand.ID, confirm); err != nil {
-		t.Fatal(err)
+func TestAConfirmedChangeMovesThePartysStanding(t *testing.T) {
+	t.Parallel()
+	f := newFactionTable(t)
+	f.decide(f.sealReturned().ID, confirmed)
+	if got := f.named(dmCaller, "The Lantern Watch"); got.Faction.Score != 30 || got.Tier != standing.Friendly {
+		t.Fatalf("the Watch = %+v", got.Faction)
 	}
-	if got := factionNamed(t, lists(dmCaller), "The Lantern Watch"); got.Faction.Score != 30 || got.Tier != standing.Friendly {
-		t.Fatalf("after the first change = %+v", got.Faction)
+}
+
+func TestAnEditedChangeMovesByWhatTheDMSaysWithTheirReason(t *testing.T) {
+	t.Parallel()
+	f := newFactionTable(t)
+	byAgent := f.watchmanKilled()
+	f.editedDown(byAgent.ID)
+	watch := f.named(dmCaller, "The Lantern Watch")
+	if watch.Faction.Score != -50 {
+		t.Fatalf("score = %d", watch.Faction.Score)
 	}
-	delta, reason, share := -50, " A watchman died in the brawl. ", false
-	if err := s.Decide(ctx, dmCaller, d.ID, byAgent.ID, app.Decision{Confirm: true, Delta: &delta, Reason: &reason, ShareReason: &share}); err != nil {
-		t.Fatal(err)
-	}
-	// A Personal Standing starts from the party's and then goes its own way.
-	if err := s.Decide(ctx, dmCaller, d.ID, own.ID, confirm); err != nil {
-		t.Fatal(err)
-	}
-	if err := s.Decide(ctx, dmCaller, d.ID, other.ID, app.Decision{Confirm: false}); err != nil {
-		t.Fatal(err)
-	}
-	dmWatch = factionNamed(t, lists(dmCaller), "The Lantern Watch")
-	if dmWatch.Faction.Score != -20 || dmWatch.Tier != standing.Unfriendly || len(dmWatch.Personal) != 1 || dmWatch.Personal[0].CharacterID != tamsin || *dmWatch.Personal[0].Score != 25 || dmWatch.Personal[0].Tier != standing.Friendly {
-		t.Fatalf("the DM's Watch = %+v %+v", dmWatch.Faction, dmWatch.Personal)
-	}
-	for _, ch := range dmWatch.Changes {
-		switch ch.ID {
-		case byAgent.ID:
-			if ch.Status != domain.ChangeConfirmed || ch.DM.Delta != -50 || ch.Reason != "A watchman died in the brawl." || ch.DM.ShareReason || ch.Rose {
-				t.Fatalf("the edited change = %+v %+v", ch, ch.DM)
-			}
-		case other.ID:
-			if ch.Status != domain.ChangeDismissed || ch.DM.Delta != -30 {
-				t.Fatalf("the dismissed change = %+v %+v", ch, ch.DM)
-			}
+	for _, ch := range watch.Changes {
+		if ch.ID == byAgent.ID && (ch.Status != domain.ChangeConfirmed || ch.DM.Delta != -50 || ch.Reason != "A watchman died in the brawl." || ch.DM.ShareReason || ch.Rose) {
+			t.Fatalf("the edited change = %+v %+v", ch, ch.DM)
 		}
 	}
-	// Once a Character has a Personal Standing, the next change moves that, not the party's again.
-	again := suggest(dmCaller, watch.Faction.ID, app.Suggestion{Character: &tamsin, Delta: 10, Reason: "Tamsin stood a round."})
-	if err := s.Decide(ctx, dmCaller, d.ID, again.ID, confirm); err != nil {
-		t.Fatal(err)
+}
+
+func TestAPersonalStandingStartsFromThePartysAndGoesItsOwnWay(t *testing.T) {
+	t.Parallel()
+	f := newFactionTable(t)
+	f.decide(f.sealReturned().ID, confirmed)
+	f.editedDown(f.watchmanKilled().ID)
+	f.decide(f.suggest(dmCaller, f.watch.Faction.ID, app.Suggestion{Character: &f.tamsin, Delta: 45, Reason: "Tamsin saved the captain's son."}).ID, confirmed)
+	watch := f.named(dmCaller, "The Lantern Watch")
+	if watch.Faction.Score != -20 || watch.Tier != standing.Unfriendly || len(watch.Personal) != 1 || watch.Personal[0].CharacterID != f.tamsin || *watch.Personal[0].Score != 25 || watch.Personal[0].Tier != standing.Friendly {
+		t.Fatalf("the Watch = %+v %+v", watch.Faction, watch.Personal)
 	}
-	if got := factionNamed(t, lists(dmCaller), "The Lantern Watch"); *got.Personal[0].Score != 35 || got.Faction.Score != -20 {
-		t.Fatalf("a second Personal change = %+v %+v", got.Personal, got.Faction)
+}
+
+func TestADismissedChangeMovesNothing(t *testing.T) {
+	t.Parallel()
+	f := newFactionTable(t)
+	other := f.suggest(dmCaller, f.watch.Faction.ID, app.Suggestion{Character: &f.joris, Delta: -30, Reason: "Old Joris insulted the captain.", ShareReason: true})
+	f.decide(other.ID, app.Decision{Confirm: false})
+	watch := f.named(dmCaller, "The Lantern Watch")
+	if watch.Faction.Score != 0 || len(watch.Personal) != 0 {
+		t.Fatalf("the Watch = %+v %+v", watch.Faction, watch.Personal)
 	}
-	// A change is decided through its own Campaign only: the same DM, asking through another of their
-	// Campaigns, finds nothing there to decide.
-	campaigns, _ := service(t, pgstore.New(db.Pool()))
-	elsewhere, err := campaigns.Create(ctx, dmCaller, app.CreateInput{Name: "Elsewhere", DisplayName: "Joris"})
+	for _, ch := range watch.Changes {
+		if ch.ID == other.ID && (ch.Status != domain.ChangeDismissed || ch.DM.Delta != -30) {
+			t.Fatalf("the dismissed change = %+v %+v", ch, ch.DM)
+		}
+	}
+}
+
+func TestTheNextChangeForACharacterMovesTheirPersonalStanding(t *testing.T) {
+	t.Parallel()
+	f := newFactionTable(t)
+	f.decideAll()
+	if got := f.named(dmCaller, "The Lantern Watch"); *got.Personal[0].Score != 35 || got.Faction.Score != -20 {
+		t.Fatalf("the Watch = %+v %+v", got.Personal, got.Faction)
+	}
+}
+
+func TestAChangeIsDecidedOnlyThroughItsOwnCampaign(t *testing.T) {
+	t.Parallel()
+	f := newFactionTable(t)
+	campaigns, _ := service(t, pgstore.New(f.db.Pool()))
+	elsewhere, err := campaigns.Create(f.ctx, dmCaller, app.CreateInput{Name: "Elsewhere", DisplayName: "Joris"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	stray := suggest(dmCaller, watch.Faction.ID, app.Suggestion{Delta: 60, Reason: "A stray change."})
-	if err := s.Decide(ctx, dmCaller, elsewhere.ID, stray.ID, confirm); !errors.Is(err, domain.ErrNotFound) {
-		t.Fatalf("a change decided through another Campaign = %v", err)
+	stray := f.suggest(dmCaller, f.watch.Faction.ID, app.Suggestion{Delta: 60, Reason: "A stray change."})
+	if err := f.s.Decide(f.ctx, dmCaller, elsewhere.ID, stray.ID, confirmed); !errors.Is(err, domain.ErrNotFound) {
+		t.Fatalf("decided through another Campaign = %v", err)
 	}
-	if _, err := s.Propose(ctx, dmCaller, elsewhere.ID, watch.Faction.ID, app.Suggestion{Delta: 60, Reason: "A stray change."}); !errors.Is(err, domain.ErrNotFound) {
-		t.Fatalf("a change proposed through another Campaign = %v", err)
+	if _, err := f.s.Propose(f.ctx, dmCaller, elsewhere.ID, f.watch.Faction.ID, app.Suggestion{Delta: 60, Reason: "A stray change."}); !errors.Is(err, domain.ErrNotFound) {
+		t.Fatalf("proposed through another Campaign = %v", err)
 	}
-	if got := factionNamed(t, lists(dmCaller), "The Lantern Watch"); got.Faction.Score != -20 {
-		t.Fatalf("the Standing after a stray decision = %+v", got.Faction)
+	if got := f.named(dmCaller, "The Lantern Watch"); got.Faction.Score != 0 {
+		t.Fatalf("the Standing moved: %+v", got.Faction)
 	}
-	if err := s.Decide(ctx, dmCaller, d.ID, stray.ID, app.Decision{Confirm: false}); err != nil {
-		t.Fatal(err)
-	}
-	// Decided once, a change is not decided again.
-	for _, id := range []domain.ChangeID{byHand.ID, other.ID} {
-		if err := s.Decide(ctx, dmCaller, d.ID, id, confirm); !errors.Is(err, domain.ErrConflict) {
-			t.Fatalf("decided twice = %v", err)
-		}
-	}
-	if err := s.Decide(ctx, dmCaller, d.ID, uuid.New(), confirm); !errors.Is(err, domain.ErrNotFound) {
-		t.Fatalf("deciding nothing = %v", err)
-	}
+}
 
-	// What a Player sees: the tier, their own Character's Personal Standing as a tier, the changes that
-	// were confirmed for the party and for their own Character, and a reason only where it was shared.
-	seen := factionNamed(t, lists(playerCaller), "The Lantern Watch")
+func TestAChangeIsNotDecidedTwice(t *testing.T) {
+	t.Parallel()
+	f := newFactionTable(t)
+	d := f.decideAll()
+	for name, id := range map[string]domain.ChangeID{"confirmed": d.byHand.ID, "dismissed": d.other.ID} {
+		t.Run(name, func(t *testing.T) {
+			if err := f.s.Decide(f.ctx, dmCaller, f.campaign, id, confirmed); !errors.Is(err, domain.ErrConflict) {
+				t.Fatalf("err = %v", err)
+			}
+		})
+	}
+}
+
+func TestDecidingNoChangeIsNotFound(t *testing.T) {
+	t.Parallel()
+	f := newFactionTable(t)
+	if err := f.s.Decide(f.ctx, dmCaller, f.campaign, uuid.New(), confirmed); !errors.Is(err, domain.ErrNotFound) {
+		t.Fatalf("err = %v", err)
+	}
+}
+
+func TestAPlayerSeesTheTierTheirOwnPersonalTierAndOnlySharedReasons(t *testing.T) {
+	t.Parallel()
+	f := newFactionTable(t)
+	d := f.decideAll()
+	seen := f.named(playerCaller, "The Lantern Watch")
 	if seen.Tier != standing.Unfriendly || seen.DM || seen.Faction.Score != 0 || seen.Faction.Notes != "" || seen.Faction.Goals != "" || seen.Faction.Territory != "" {
 		t.Fatalf("a Player's Watch = %+v", seen)
 	}
-	if len(seen.Personal) != 1 || seen.Personal[0].CharacterID != tamsin || seen.Personal[0].Tier != standing.Friendly || seen.Personal[0].Score != nil {
+	if len(seen.Personal) != 1 || seen.Personal[0].CharacterID != f.tamsin || seen.Personal[0].Tier != standing.Friendly || seen.Personal[0].Score != nil {
 		t.Fatalf("a Player's Personal Standing = %+v", seen.Personal)
 	}
 	if len(seen.Changes) != 4 {
@@ -207,101 +329,182 @@ func TestFactionsStandingAndTheChangesTheDMDecides(t *testing.T) {
 		want := map[domain.ChangeID]struct {
 			reason string
 			rose   bool
-		}{byHand.ID: {"Returned the stolen seal.", true}, byAgent.ID: {"", false}, own.ID: {"", true}, again.ID: {"", true}}[ch.ID]
+		}{d.byHand.ID: {"Returned the stolen seal.", true}, d.byAgent.ID: {"", false}, d.own.ID: {"", true}, d.again.ID: {"", true}}[ch.ID]
 		if ch.DM != nil || ch.Status != domain.ChangeConfirmed || ch.Reason != want.reason || ch.Rose != want.rose {
 			t.Fatalf("a Player's change = %+v", ch)
 		}
 	}
-	raw, _ := json.Marshal(lists(playerCaller))
+}
+
+func TestNothingTheDMKeepsReachesAPlayer(t *testing.T) {
+	t.Parallel()
+	f := newFactionTable(t)
+	f.decideAll()
+	raw, _ := json.Marshal(f.list(playerCaller))
 	for _, secret := range []string{"watchman", "bribes", "Old Joris", "insulted", "Keep the peace", "Oakford", "captain's son", "stood a round", "Claude", "mcp", ":-50", ":-20", `"Score":25`, `"Delta"`} {
-		if strings.Contains(string(raw), secret) {
-			t.Fatalf("%q reached a Player: %s", secret, raw)
-		}
+		t.Run(secret, func(t *testing.T) {
+			if strings.Contains(string(raw), secret) {
+				t.Fatalf("it reached a Player: %s", raw)
+			}
+		})
 	}
-	// The DM, whose own Character it is not, sees every Personal Standing; a Player sees only their own.
-	if err := s.Decide(ctx, dmCaller, d.ID, suggest(dmCaller, guild.Faction.ID, app.Suggestion{Character: &joris, Delta: 80, Reason: "An old debt.", ShareReason: true}).ID, confirm); err != nil {
-		t.Fatal(err)
+}
+
+func TestTheDMSeesEveryPersonalStandingAndAPlayerOnlyTheirOwn(t *testing.T) {
+	t.Parallel()
+	f := newFactionTable(t)
+	f.decide(f.suggest(dmCaller, f.guild.Faction.ID, app.Suggestion{Character: &f.joris, Delta: 80, Reason: "An old debt.", ShareReason: true}).ID, confirmed)
+	if got := f.named(playerCaller, "Grey Hands"); len(got.Personal) != 0 || len(got.Changes) != 0 {
+		t.Fatalf("another Character's Standing reached a Player: %+v", got)
 	}
-	if got := factionNamed(t, lists(playerCaller), "Grey Hands"); len(got.Personal) != 0 || len(got.Changes) != 0 {
-		t.Fatalf("another Player's Personal Standing reached a Player: %+v", got)
-	}
-	if got := factionNamed(t, lists(dmCaller), "Grey Hands"); len(got.Personal) != 1 || got.Personal[0].Tier != standing.Allied || got.Faction.Score != 0 {
+	if got := f.named(dmCaller, "Grey Hands"); len(got.Personal) != 1 || got.Personal[0].Tier != standing.Allied || got.Faction.Score != 0 {
 		t.Fatalf("the DM's Grey Hands = %+v", got)
 	}
+}
 
-	// Refusals.
-	var rule *apperr.RuleError
-	bad := map[string]error{}
-	_, bad["no name"] = s.Create(ctx, dmCaller, d.ID, app.FactionInput{Name: " "})
-	_, bad["a long name"] = s.Create(ctx, dmCaller, d.ID, app.FactionInput{Name: strings.Repeat("a", 81)})
-	_, bad["long goals"] = s.Create(ctx, dmCaller, d.ID, app.FactionInput{Name: "A", Goals: strings.Repeat("a", 2001)})
-	_, bad["long territory"] = s.Create(ctx, dmCaller, d.ID, app.FactionInput{Name: "A", Territory: strings.Repeat("a", 2001)})
-	_, bad["long notes"] = s.Create(ctx, dmCaller, d.ID, app.FactionInput{Name: "A", Notes: strings.Repeat("a", 2001)})
-	_, bad["no change"] = s.Propose(ctx, dmCaller, d.ID, watch.Faction.ID, app.Suggestion{Delta: 0, Reason: "Nothing."})
-	_, bad["too much"] = s.Propose(ctx, dmCaller, d.ID, watch.Faction.ID, app.Suggestion{Delta: 101, Reason: "Everything."})
-	_, bad["no reason"] = s.Propose(ctx, dmCaller, d.ID, watch.Faction.ID, app.Suggestion{Delta: 5, Reason: "  "})
-	_, bad["a long reason"] = s.Propose(ctx, dmCaller, d.ID, watch.Faction.ID, app.Suggestion{Delta: 5, Reason: strings.Repeat("a", 501)})
-	pending := suggest(dmCaller, watch.Faction.ID, app.Suggestion{Delta: 5, Reason: "A favour."})
+func TestAFactionOrChangeOutsideTheRulesIsRefused(t *testing.T) {
+	t.Parallel()
+	f := newFactionTable(t)
+	pending := f.suggest(dmCaller, f.watch.Faction.ID, app.Suggestion{Delta: 5, Reason: "A favour."})
 	zero, blank := 0, " "
-	bad["confirmed at nothing"] = s.Decide(ctx, dmCaller, d.ID, pending.ID, app.Decision{Confirm: true, Delta: &zero})
-	bad["confirmed for no reason"] = s.Decide(ctx, dmCaller, d.ID, pending.ID, app.Decision{Confirm: true, Reason: &blank})
-	for name, err := range bad {
-		if !errors.Is(err, domain.ErrInvalid) {
-			t.Errorf("%s: %v", name, err)
-		}
+	create := func(in app.FactionInput) func() error {
+		return func() error { _, err := f.s.Create(f.ctx, dmCaller, f.campaign, in); return err }
 	}
-	nobody := domain.CharacterID(uuid.New())
-	if _, err := s.Propose(ctx, dmCaller, d.ID, watch.Faction.ID, app.Suggestion{Character: &nobody, Delta: 5, Reason: "Who?"}); !errors.As(err, &rule) {
-		t.Errorf("a Personal Standing for nobody: %v", err)
+	propose := func(g app.Suggestion) func() error {
+		return func() error { _, err := f.s.Propose(f.ctx, dmCaller, f.campaign, f.watch.Faction.ID, g); return err }
 	}
-	if _, err := s.Create(ctx, dmCaller, d.ID, app.FactionInput{Name: "Harpers", Archetype: "harpers"}); !errors.As(err, &rule) {
-		t.Errorf("an unknown archetype: %v", err)
+	for name, try := range map[string]func() error{
+		"no name":        create(app.FactionInput{Name: " "}),
+		"a long name":    create(app.FactionInput{Name: strings.Repeat("a", 81)}),
+		"long goals":     create(app.FactionInput{Name: "A", Goals: strings.Repeat("a", 2001)}),
+		"long territory": create(app.FactionInput{Name: "A", Territory: strings.Repeat("a", 2001)}),
+		"long notes":     create(app.FactionInput{Name: "A", Notes: strings.Repeat("a", 2001)}),
+		"no change":      propose(app.Suggestion{Delta: 0, Reason: "Nothing."}),
+		"too much":       propose(app.Suggestion{Delta: 101, Reason: "Everything."}),
+		"no reason":      propose(app.Suggestion{Delta: 5, Reason: "  "}),
+		"a long reason":  propose(app.Suggestion{Delta: 5, Reason: strings.Repeat("a", 501)}),
+		"confirmed at nothing": func() error {
+			return f.s.Decide(f.ctx, dmCaller, f.campaign, pending.ID, app.Decision{Confirm: true, Delta: &zero})
+		},
+		"confirmed for no reason": func() error {
+			return f.s.Decide(f.ctx, dmCaller, f.campaign, pending.ID, app.Decision{Confirm: true, Reason: &blank})
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			if err := try(); !errors.Is(err, domain.ErrInvalid) {
+				t.Fatalf("err = %v", err)
+			}
+		})
 	}
-	if _, err := s.Propose(ctx, dmCaller, d.ID, uuid.New(), app.Suggestion{Delta: 5, Reason: "Where?"}); !errors.Is(err, domain.ErrNotFound) {
-		t.Errorf("a change for no Faction: %v", err)
-	}
-	forbidden := map[string]error{}
-	_, forbidden["create"] = s.Create(ctx, playerCaller, d.ID, app.FactionInput{Name: "Mine"})
-	forbidden["update"] = s.Update(ctx, playerCaller, d.ID, watch.Faction.ID, app.FactionInput{Name: "Mine"})
-	forbidden["delete"] = s.Delete(ctx, playerCaller, d.ID, watch.Faction.ID)
-	_, forbidden["propose"] = s.Propose(ctx, playerCaller, d.ID, watch.Faction.ID, app.Suggestion{Delta: 100, Reason: "We are great."})
-	for name, err := range forbidden {
-		if !errors.Is(err, domain.ErrForbidden) {
-			t.Errorf("a Player may %s: %v", name, err)
-		}
-	}
-	if _, err := s.List(ctx, stranger, d.ID); !errors.Is(err, domain.ErrNotFound) {
-		t.Errorf("a stranger lists: %v", err)
-	}
-	// The edges of what is allowed are allowed, and the score stops at its ends.
-	for _, delta := range []int{100, 100, -100, -100, -100} {
-		if err := s.Decide(ctx, dmCaller, d.ID, suggest(dmCaller, guild.Faction.ID, app.Suggestion{Delta: delta, Reason: strings.Repeat("a", 500)}).ID, confirm); err != nil {
-			t.Fatal(err)
-		}
-	}
-	if got := factionNamed(t, lists(dmCaller), "Grey Hands"); got.Faction.Score != -100 || got.Tier != standing.Hostile {
-		t.Fatalf("at the end of the scale = %+v", got.Faction)
-	}
+}
 
-	// A DM renames a Faction and removes one; neither is done to another Campaign's.
-	if err := s.Update(ctx, dmCaller, d.ID, watch.Faction.ID, app.FactionInput{Name: "The Watch", Archetype: "", Notes: "Honest now."}); err != nil {
+func TestAPersonalStandingForNoCharacterIsRefused(t *testing.T) {
+	t.Parallel()
+	f := newFactionTable(t)
+	nobody := domain.CharacterID(uuid.New())
+	var rule *apperr.RuleError
+	if _, err := f.s.Propose(f.ctx, dmCaller, f.campaign, f.watch.Faction.ID, app.Suggestion{Character: &nobody, Delta: 5, Reason: "Who?"}); !errors.As(err, &rule) {
+		t.Fatalf("err = %v", err)
+	}
+}
+
+func TestAnUnknownFactionArchetypeIsRefused(t *testing.T) {
+	t.Parallel()
+	f := newFactionTable(t)
+	var rule *apperr.RuleError
+	if _, err := f.s.Create(f.ctx, dmCaller, f.campaign, app.FactionInput{Name: "Harpers", Archetype: "harpers"}); !errors.As(err, &rule) {
+		t.Fatalf("err = %v", err)
+	}
+}
+
+func TestAChangeForNoFactionIsNotFound(t *testing.T) {
+	t.Parallel()
+	f := newFactionTable(t)
+	if _, err := f.s.Propose(f.ctx, dmCaller, f.campaign, uuid.New(), app.Suggestion{Delta: 5, Reason: "Where?"}); !errors.Is(err, domain.ErrNotFound) {
+		t.Fatalf("err = %v", err)
+	}
+}
+
+func TestAPlayerCannotChangeFactions(t *testing.T) {
+	t.Parallel()
+	f := newFactionTable(t)
+	for name, try := range map[string]func() error{
+		"create": func() error {
+			_, err := f.s.Create(f.ctx, playerCaller, f.campaign, app.FactionInput{Name: "Mine"})
+			return err
+		},
+		"update": func() error {
+			return f.s.Update(f.ctx, playerCaller, f.campaign, f.watch.Faction.ID, app.FactionInput{Name: "Mine"})
+		},
+		"delete": func() error { return f.s.Delete(f.ctx, playerCaller, f.campaign, f.watch.Faction.ID) },
+		"propose": func() error {
+			_, err := f.s.Propose(f.ctx, playerCaller, f.campaign, f.watch.Faction.ID, app.Suggestion{Delta: 100, Reason: "We are great."})
+			return err
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			if err := try(); !errors.Is(err, domain.ErrForbidden) {
+				t.Fatalf("err = %v", err)
+			}
+		})
+	}
+}
+
+func TestAStrangerCannotListFactions(t *testing.T) {
+	t.Parallel()
+	f := newFactionTable(t)
+	if _, err := f.s.List(f.ctx, stranger, f.campaign); !errors.Is(err, domain.ErrNotFound) {
+		t.Fatalf("err = %v", err)
+	}
+}
+
+func TestTheStandingScoreStopsAtItsEnds(t *testing.T) {
+	t.Parallel()
+	f := newFactionTable(t)
+	for _, delta := range []int{100, 100, -100, -100, -100} {
+		f.decide(f.suggest(dmCaller, f.guild.Faction.ID, app.Suggestion{Delta: delta, Reason: strings.Repeat("a", 500)}).ID, confirmed)
+	}
+	if got := f.named(dmCaller, "Grey Hands"); got.Faction.Score != -100 || got.Tier != standing.Hostile {
+		t.Fatalf("Grey Hands = %+v", got.Faction)
+	}
+}
+
+func TestRenamingAFactionKeepsItsStanding(t *testing.T) {
+	t.Parallel()
+	f := newFactionTable(t)
+	f.decide(f.sealReturned().ID, confirmed)
+	if err := f.s.Update(f.ctx, dmCaller, f.campaign, f.watch.Faction.ID, app.FactionInput{Name: "The Watch", Archetype: "", Notes: "Honest now."}); err != nil {
 		t.Fatal(err)
 	}
-	if got := factionNamed(t, lists(dmCaller), "The Watch"); got.Faction.Notes != "Honest now." || got.Faction.Score != -20 || got.Faction.Archetype != "" {
+	if got := f.named(dmCaller, "The Watch"); got.Faction.Notes != "Honest now." || got.Faction.Score != 30 || got.Faction.Archetype != "" {
 		t.Fatalf("renamed = %+v", got.Faction)
 	}
-	for name, err := range map[string]error{
-		"update": s.Update(ctx, dmCaller, d.ID, uuid.New(), app.FactionInput{Name: "Nobody"}),
-		"delete": s.Delete(ctx, dmCaller, d.ID, uuid.New()),
+}
+
+func TestChangingOrRemovingNoFactionIsNotFound(t *testing.T) {
+	t.Parallel()
+	f := newFactionTable(t)
+	for name, try := range map[string]func() error{
+		"update": func() error {
+			return f.s.Update(f.ctx, dmCaller, f.campaign, uuid.New(), app.FactionInput{Name: "Nobody"})
+		},
+		"delete": func() error { return f.s.Delete(f.ctx, dmCaller, f.campaign, uuid.New()) },
 	} {
-		if !errors.Is(err, domain.ErrNotFound) {
-			t.Errorf("%s of no Faction: %v", name, err)
-		}
+		t.Run(name, func(t *testing.T) {
+			if err := try(); !errors.Is(err, domain.ErrNotFound) {
+				t.Fatalf("err = %v", err)
+			}
+		})
 	}
-	if err := s.Delete(ctx, dmCaller, d.ID, guild.Faction.ID); err != nil {
+}
+
+func TestADMRemovesAFaction(t *testing.T) {
+	t.Parallel()
+	f := newFactionTable(t)
+	if err := f.s.Delete(f.ctx, dmCaller, f.campaign, f.guild.Faction.ID); err != nil {
 		t.Fatal(err)
 	}
-	if list := lists(dmCaller); len(list) != 1 {
+	if list := f.list(dmCaller); len(list) != 1 {
 		t.Fatalf("after removing one = %+v", list)
 	}
 }
