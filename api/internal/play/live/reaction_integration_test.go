@@ -146,9 +146,21 @@ func TestReactionsPauseTheFight(t *testing.T) {
 	}
 }
 
-func TestReactionEdges(t *testing.T) {
-	t.Parallel()
-	ctx := context.Background()
+// edges is a fight between Aria, with Shield, and a goblin beside her; each step plays one beat of
+// it, so a test replays the beats before the one it checks.
+type edges struct {
+	t     *testing.T
+	w     world
+	tb    *table
+	rolls *app.Rolls
+	ids   map[string]string
+	start live.View
+	q, r  int
+	last  live.Update
+}
+
+func newEdges(t *testing.T) *edges {
+	t.Helper()
 	w := setup(t)
 	w.hub.Stats = bestiary{owner: w.player.ID}
 	rolls := &app.Rolls{
@@ -158,96 +170,200 @@ func TestReactionEdges(t *testing.T) {
 	tb := &table{t: t, w: w, rolls: rolls, dm: join(t, w, w.dm, dmCaller, live.AudienceDM), player: join(t, w, w.player, playerCaller, live.AudienceParty)}
 	tb.dmSays(live.Command{Kind: live.CmdPlace, CharacterID: uuid.NewString(), Shield: true})
 	d, _ := tb.dmSays(live.Command{Kind: live.CmdPlace, MonsterSlug: "goblin", TokenKind: domain.TokenEnemy, Q: 2})
-	ids := map[string]string{}
+	e := &edges{t: t, w: w, tb: tb, rolls: rolls, ids: map[string]string{}}
 	var setup []live.CombatantSetup
 	for _, tv := range d.View.Tokens {
-		ids[tv.Label] = tv.ID
+		e.ids[tv.Label] = tv.ID
 		setup = append(setup, live.CombatantSetup{TokenID: tv.ID, SpeedFt: 30})
 	}
 	d, _ = tb.dmSays(live.Command{Kind: live.CmdStartCombat, Combatants: setup})
 	tb.roll(combatant(d.View, "Aria"), w.player, 20)
 	tb.roll(combatant(d.View, "Goblin"), w.dm, 10)
-	fill := func(rollID string, faces ...int) {
-		t.Helper()
-		for i, f := range faces {
-			if _, err := rolls.SetDie(ctx, dmCaller, w.session.CampaignID, domain.RollID(uuid.MustParse(rollID)), i, app.Fill{Value: f}); err != nil {
-				t.Fatal(err)
-			}
-		}
-	}
-	drain := func(n int) live.Update {
-		t.Helper()
-		var u live.Update
-		for range n {
-			next(t, tb.player)
-			u = next(t, tb.dm)
-		}
-		return u
-	}
+	e.start = *d.View
+	return e
+}
 
-	u := tb.playerSays(live.Command{Kind: live.CmdWalk, TokenID: ids["Aria"], Q: 4, R: -1})
+func (e *edges) fill(rollID string, faces ...int) {
+	e.t.Helper()
+	for i, f := range faces {
+		if _, err := e.rolls.SetDie(context.Background(), dmCaller, e.w.session.CampaignID, domain.RollID(uuid.MustParse(rollID)), i, app.Fill{Value: f}); err != nil {
+			e.t.Fatal(err)
+		}
+	}
+}
+
+func (e *edges) drain(n int) live.Update {
+	e.t.Helper()
+	var u live.Update
+	for range n {
+		next(e.t, e.tb.player)
+		u = next(e.t, e.tb.dm)
+	}
+	return u
+}
+
+// walkOut has Aria walk away past the goblin, which stops her where she leaves its reach.
+func (e *edges) walkOut() live.Update {
+	e.t.Helper()
+	u := e.tb.playerSays(live.Command{Kind: live.CmdWalk, TokenID: e.ids["Aria"], Q: 4, R: -1})
 	a := token(u.View, "Aria")
-	if u.View.Combat.Prompt == nil || (a.Q == 0 && a.R == 0) || len(u.Steps) == 0 {
-		t.Fatalf("the walk goes as far as leaving the goblin's reach = %+v %+v", a, u.View.Combat)
-	}
-	tb.dmSays(live.Command{Kind: live.CmdPlace, Label: "Crate", TokenKind: domain.TokenObject, Q: 4, R: -1})
-	tb.dmSays(live.Command{Kind: live.CmdReact})
-	u = drain(1)
-	if b := token(u.View, "Aria"); b.Q != a.Q || b.R != a.R || u.View.Combat.Prompt != nil {
-		t.Fatalf("the crate now blocks the rest of the walk = %+v", b)
-	}
+	e.q, e.r = a.Q, a.R
+	return u
+}
 
-	u = tb.playerSays(live.Command{Kind: live.CmdWalk, TokenID: ids["Aria"], Q: a.Q + 1, R: a.R - 1})
-	if u.View == nil || u.View.Combat.Prompt == nil {
-		t.Fatalf("leaving reach again from %d,%d = %+v", a.Q, a.R, u)
-	}
-	d, _ = tb.dmSays(live.Command{Kind: live.CmdReact, Use: true})
-	fill(d.View.Combat.Attack.RollID, 20)
-	u = drain(1)
-	if u.View.Combat.Prompt != nil || u.View.Combat.Attack.Stage != domain.StageDamage || !u.View.Combat.Attack.Critical {
-		t.Fatalf("no Shield against a critical = %+v", u.View.Combat)
-	}
-	fill(u.View.Combat.Attack.RollID, 6, 6)
-	u = drain(2)
-	if b := token(u.View, "Aria"); *b.HP != 0 || b.Q != a.Q {
-		t.Fatalf("a fallen walker walks no further = %+v", b)
-	}
+// blockedAndDeclined drops a crate where she was going, and the goblin lets her go.
+func (e *edges) blockedAndDeclined() live.Update {
+	e.t.Helper()
+	e.tb.dmSays(live.Command{Kind: live.CmdPlace, Label: "Crate", TokenKind: domain.TokenObject, Q: 4, R: -1})
+	e.tb.dmSays(live.Command{Kind: live.CmdReact})
+	return e.drain(1)
+}
 
-	flush := func() {
-		for _, sub := range []*live.Subscriber{tb.dm, tb.player} {
-			for done := false; !done; {
-				select {
-				case <-sub.Out:
-				case <-time.After(250 * time.Millisecond):
-					done = true
-				}
+// leavesAgain has her step out of its reach once more.
+func (e *edges) leavesAgain() live.Update {
+	e.t.Helper()
+	return e.tb.playerSays(live.Command{Kind: live.CmdWalk, TokenID: e.ids["Aria"], Q: e.q + 1, R: e.r - 1})
+}
+
+// critted has the goblin take its opportunity attack and roll a 20.
+func (e *edges) critted() live.Update {
+	e.t.Helper()
+	d, _ := e.tb.dmSays(live.Command{Kind: live.CmdReact, Use: true})
+	e.fill(d.View.Combat.Attack.RollID, 20)
+	return e.drain(1)
+}
+
+// felled is the critical's damage, enough to drop her.
+func (e *edges) felled(crit live.Update) live.Update {
+	e.t.Helper()
+	e.fill(crit.View.Combat.Attack.RollID, 6, 6)
+	return e.drain(2)
+}
+
+func (e *edges) flush() {
+	for _, sub := range []*live.Subscriber{e.tb.dm, e.tb.player} {
+		for done := false; !done; {
+			select {
+			case <-sub.Out:
+			case <-time.After(250 * time.Millisecond):
+				done = true
 			}
 		}
 	}
-	flush()
-	tb.dmSays(live.Command{Kind: live.CmdUndoDamage})
-	flush()
-	tb.playerSays(live.Command{Kind: live.CmdEndTurn, CombatantID: combatant(u.View, "Aria").ID})
-	d, _ = tb.dmSays(live.Command{Kind: live.CmdAttack, TokenID: ids["Goblin"], TargetID: ids["Aria"]})
-	fill(d.View.Combat.Attack.RollID, 15)
-	u = drain(1)
-	if u.View.Combat.Prompt == nil || u.View.Combat.Prompt.Kind != domain.PromptShield {
-		t.Fatalf("shield offered = %+v", u.View.Combat)
-	}
-	tb.playerSays(live.Command{Kind: live.CmdReact})
-	u = drain(1)
-	if at := u.View.Combat.Attack; at == nil || at.Stage != domain.StageDamage {
-		t.Fatalf("declined, the hit stands = %+v", u.View.Combat)
-	}
-	fill(u.View.Combat.Attack.RollID, 1)
-	drain(1)
+}
 
-	tb.dmSays(live.Command{Kind: live.CmdEndTurn, CombatantID: combatant(d.View, "Goblin").ID})
-	u = tb.playerSays(live.Command{Kind: live.CmdWalk, TokenID: ids["Aria"], Q: a.Q + 1, R: a.R - 1})
-	if u.View.Combat.Prompt == nil {
-		t.Fatalf("a third opportunity = %+v", u.View.Combat)
+// attackedOnItsTurn undoes the damage, ends Aria's turn and has the goblin hit her with a 15.
+func (e *edges) attackedOnItsTurn(fallen live.Update) live.Update {
+	e.t.Helper()
+	e.flush()
+	e.tb.dmSays(live.Command{Kind: live.CmdUndoDamage})
+	e.flush()
+	e.tb.playerSays(live.Command{Kind: live.CmdEndTurn, CombatantID: combatant(fallen.View, "Aria").ID})
+	d, _ := e.tb.dmSays(live.Command{Kind: live.CmdAttack, TokenID: e.ids["Goblin"], TargetID: e.ids["Aria"]})
+	e.fill(d.View.Combat.Attack.RollID, 15)
+	return e.drain(1)
+}
+
+// toShield plays the fight up to the goblin's hit that Aria may Shield against.
+func (e *edges) toShield() live.Update {
+	e.t.Helper()
+	e.walkOut()
+	e.blockedAndDeclined()
+	e.leavesAgain()
+	return e.attackedOnItsTurn(e.felled(e.critted()))
+}
+
+func TestAWalkGoesAsFarAsLeavingAReactorsReachAndWaits(t *testing.T) {
+	t.Parallel()
+	e := newEdges(t)
+	u := e.walkOut()
+	if u.View.Combat.Prompt == nil || (e.q == 0 && e.r == 0) || len(u.Steps) == 0 {
+		t.Fatalf("Aria at %d,%d, combat %+v", e.q, e.r, u.View.Combat)
 	}
-	if _, p := tb.dmSays(live.Command{Kind: live.CmdRemove, TokenID: ids["Goblin"]}); p.View.Combat.Prompt != nil {
-		t.Fatalf("removing the reactor ends its prompt = %+v", p.View.Combat)
+}
+
+func TestADeclinedWalkGoesOnUntilWhatNowBlocksIt(t *testing.T) {
+	t.Parallel()
+	e := newEdges(t)
+	e.walkOut()
+	if u := e.blockedAndDeclined(); token(u.View, "Aria").Q != e.q || token(u.View, "Aria").R != e.r || u.View.Combat.Prompt != nil {
+		t.Fatalf("Aria = %+v", token(u.View, "Aria"))
+	}
+}
+
+func TestLeavingReachAgainPromptsAgain(t *testing.T) {
+	t.Parallel()
+	e := newEdges(t)
+	e.walkOut()
+	e.blockedAndDeclined()
+	if u := e.leavesAgain(); u.View == nil || u.View.Combat.Prompt == nil {
+		t.Fatalf("from %d,%d = %+v", e.q, e.r, u)
+	}
+}
+
+func TestShieldIsNotOfferedAgainstACriticalHit(t *testing.T) {
+	t.Parallel()
+	e := newEdges(t)
+	e.walkOut()
+	e.blockedAndDeclined()
+	e.leavesAgain()
+	if u := e.critted(); u.View.Combat.Prompt != nil || u.View.Combat.Attack.Stage != domain.StageDamage || !u.View.Combat.Attack.Critical {
+		t.Fatalf("combat = %+v", u.View.Combat)
+	}
+}
+
+func TestAFallenWalkerWalksNoFurther(t *testing.T) {
+	t.Parallel()
+	e := newEdges(t)
+	e.walkOut()
+	e.blockedAndDeclined()
+	e.leavesAgain()
+	if b := token(e.felled(e.critted()).View, "Aria"); *b.HP != 0 || b.Q != e.q {
+		t.Fatalf("Aria = %+v", b)
+	}
+}
+
+func TestShieldIsOfferedAgainstAHit(t *testing.T) {
+	t.Parallel()
+	if u := newEdges(t).toShield(); u.View.Combat.Prompt == nil || u.View.Combat.Prompt.Kind != domain.PromptShield {
+		t.Fatalf("combat = %+v", u.View.Combat)
+	}
+}
+
+func TestDecliningShieldLetsTheHitStand(t *testing.T) {
+	t.Parallel()
+	e := newEdges(t)
+	e.toShield()
+	e.tb.playerSays(live.Command{Kind: live.CmdReact})
+	if at := e.drain(1).View.Combat.Attack; at == nil || at.Stage != domain.StageDamage {
+		t.Fatalf("attack = %+v", at)
+	}
+}
+
+// nextTurnOut plays on to Aria's next turn, where she leaves the goblin's reach once more.
+func (e *edges) nextTurnOut() live.Update {
+	e.t.Helper()
+	e.toShield()
+	e.tb.playerSays(live.Command{Kind: live.CmdReact})
+	u := e.drain(1)
+	e.fill(u.View.Combat.Attack.RollID, 1)
+	e.drain(1)
+	e.tb.dmSays(live.Command{Kind: live.CmdEndTurn, CombatantID: combatant(&e.start, "Goblin").ID})
+	return e.tb.playerSays(live.Command{Kind: live.CmdWalk, TokenID: e.ids["Aria"], Q: e.q + 1, R: e.r - 1})
+}
+
+func TestANewRoundBringsANewOpportunity(t *testing.T) {
+	t.Parallel()
+	if u := newEdges(t).nextTurnOut(); u.View.Combat.Prompt == nil {
+		t.Fatalf("combat = %+v", u.View.Combat)
+	}
+}
+
+func TestRemovingTheReactorEndsItsPrompt(t *testing.T) {
+	t.Parallel()
+	e := newEdges(t)
+	e.nextTurnOut()
+	if _, p := e.tb.dmSays(live.Command{Kind: live.CmdRemove, TokenID: e.ids["Goblin"]}); p.View.Combat.Prompt != nil {
+		t.Fatalf("combat = %+v", p.View.Combat)
 	}
 }

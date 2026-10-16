@@ -177,7 +177,7 @@ func containsHex(hs []live.Hex, h live.Hex) bool {
 
 // A creature with Counterspell ready is asked when an enemy casts within 60 feet; countering spends its
 // Reaction and the spell never lands, while declining lets it resolve.
-func TestCounterspell(t *testing.T) {
+func TestACounterspellAnsweredStopsTheSpellBeforeItLands(t *testing.T) {
 	t.Parallel()
 	w, tb, ids := magicTable(t)
 	tb.dmSays(live.Command{Kind: live.CmdApplyEffect, TargetID: ids["Goblin"], Effect: "counterspell"})

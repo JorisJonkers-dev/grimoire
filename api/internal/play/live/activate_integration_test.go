@@ -99,25 +99,40 @@ func TestAnActivationTakesTheAction(t *testing.T) {
 // Sight is the caster's own; an Effect that does more as it lands, one with modes, and one cast below its
 // lowest slot are refused; a new concentration Effect ends the caster's last; and only the acting
 // creature activates in combat.
-func TestActivationChecks(t *testing.T) {
+func glareAt(ids map[string]string) live.Command {
+	return live.Command{Kind: live.CmdActivate, TokenID: ids["Aria"], Effect: "glare", Targets: []string{ids["Goblin"]}}
+}
+
+func TestAPlayerCannotTargetACreatureThePartyCannotSee(t *testing.T) {
 	t.Parallel()
 	_, tb, ids := activationTable(t)
 	tb.dmSays(live.Command{Kind: live.CmdSetVisibility, TokenID: ids["Goblin"], Qualities: []string{"invisible"}})
-	glare := live.Command{Kind: live.CmdActivate, TokenID: ids["Aria"], Effect: "glare", Targets: []string{ids["Goblin"]}}
-	if u := tb.playerSays(glare); u.Reason != "Choose targets on the map." {
-		t.Fatalf("a player picks a creature the party cannot see = %+v", u.Reason)
+	if u := tb.playerSays(glareAt(ids)); u.Reason != "Choose targets on the map." {
+		t.Fatalf("%q", u.Reason)
 	}
-	tb.w.hub.Submit(tb.dm, glare)
-	if u := next(t, tb.dm); u.Reason != "Goblin: Choose a creature you can see." {
-		t.Fatalf("the DM picks for a caster who cannot see = %+v", u.Reason)
+}
+
+func TestTheDMCannotTargetForACasterACreatureItCannotSee(t *testing.T) {
+	t.Parallel()
+	for name, hide := range map[string]live.Command{
+		"invisible": {Kind: live.CmdSetVisibility, Qualities: []string{"invisible"}},
+		"hidden":    {Kind: live.CmdSetHidden, Hidden: true},
+	} {
+		t.Run(name, func(t *testing.T) {
+			_, tb, ids := activationTable(t)
+			hide.TokenID = ids["Goblin"]
+			tb.dmSays(hide)
+			tb.w.hub.Submit(tb.dm, glareAt(ids))
+			if u := next(t, tb.dm); u.Reason != "Goblin: Choose a creature you can see." {
+				t.Fatalf("%q", u.Reason)
+			}
+		})
 	}
-	tb.dmSays(live.Command{Kind: live.CmdSetVisibility, TokenID: ids["Goblin"], Qualities: []string{}})
-	tb.dmSays(live.Command{Kind: live.CmdSetHidden, TokenID: ids["Goblin"], Hidden: true})
-	tb.w.hub.Submit(tb.dm, glare)
-	if u := next(t, tb.dm); u.Reason != "Goblin: Choose a creature you can see." {
-		t.Fatalf("the DM picks a hidden creature = %+v", u.Reason)
-	}
-	tb.dmSays(live.Command{Kind: live.CmdSetHidden, TokenID: ids["Goblin"], Hidden: false})
+}
+
+func TestAnActivationOutsideItsRulesIsRefused(t *testing.T) {
+	t.Parallel()
+	_, tb, ids := activationTable(t)
 	for _, c := range []struct {
 		cmd  live.Command
 		want string
@@ -127,28 +142,45 @@ func TestActivationChecks(t *testing.T) {
 		{live.Command{Kind: live.CmdActivate, TokenID: ids["Aria"], Effect: "twin-ward"}, "Choose Fast or Slow."},
 		{live.Command{Kind: live.CmdActivate, TokenID: uuid.NewString(), Effect: "ward"}, "No such caster."},
 	} {
-		if u := tb.playerSays(c.cmd); u.Reason != c.want {
-			t.Errorf("%s: %q", c.cmd.Effect, u.Reason)
-		}
+		t.Run(c.want, func(t *testing.T) {
+			if u := tb.playerSays(c.cmd); u.Reason != c.want {
+				t.Fatalf("%q", u.Reason)
+			}
+		})
 	}
+}
+
+func TestAWardGoesOnlyOnAWillingCreatureNamedAsEachSideSeesIt(t *testing.T) {
+	t.Parallel()
+	_, tb, ids := activationTable(t)
 	tb.dmSays(live.Command{Kind: live.CmdMove, TokenID: ids["Goblin"], Q: 1, R: 0})
 	tb.dmSays(live.Command{Kind: live.CmdSetVisibility, TokenID: ids["Goblin"], Qualities: []string{"disguised"}, Disguise: "Merchant"})
 	ward := live.Command{Kind: live.CmdActivate, TokenID: ids["Aria"], Effect: "ward", Targets: []string{ids["Goblin"]}}
 	if u := tb.playerSays(ward); u.Reason != "Merchant: Choose a willing creature." {
-		t.Fatalf("a disguised foe is not willing = %+v", u.Reason)
+		t.Fatalf("the party = %q", u.Reason)
 	}
 	tb.w.hub.Submit(tb.dm, ward)
 	if u := next(t, tb.dm); u.Reason != "Goblin: Choose a willing creature." {
-		t.Fatalf("the DM sees the goblin = %+v", u.Reason)
+		t.Fatalf("the DM = %q", u.Reason)
 	}
-	tb.dmSays(live.Command{Kind: live.CmdSetVisibility, TokenID: ids["Goblin"], Qualities: []string{}})
+}
+
+func TestAnActivationTakesTheModeChosen(t *testing.T) {
+	t.Parallel()
+	_, tb, ids := activationTable(t)
 	tb.dmSays(live.Command{Kind: live.CmdMove, TokenID: ids["Goblin"], Q: 3, R: 0})
 	u := tb.playerSays(live.Command{Kind: live.CmdActivate, TokenID: ids["Aria"], Effect: "twin-ward", EffectMode: "Slow"})
 	if e := effect(token(u.View, "Aria"), "Twin Ward"); u.View == nil || e == nil || e.Mode != "Slow" {
 		t.Fatalf("twin ward = %+v", u)
 	}
-	tb.playerSays(live.Command{Kind: live.CmdActivate, TokenID: ids["Aria"], Effect: "blessing", Targets: []string{ids["Aria"]}})
-	u = tb.playerSays(live.Command{Kind: live.CmdActivate, TokenID: ids["Aria"], Effect: "blessing", Targets: []string{ids["Aria"]}})
+}
+
+func TestANewConcentrationEffectEndsTheLast(t *testing.T) {
+	t.Parallel()
+	_, tb, ids := activationTable(t)
+	bless := live.Command{Kind: live.CmdActivate, TokenID: ids["Aria"], Effect: "blessing", Targets: []string{ids["Aria"]}}
+	tb.playerSays(bless)
+	u := tb.playerSays(bless)
 	blessed := 0
 	for _, e := range token(u.View, "Aria").Effects {
 		if e.Name == "Blessing" {
@@ -156,17 +188,27 @@ func TestActivationChecks(t *testing.T) {
 		}
 	}
 	if blessed != 1 {
-		t.Fatalf("a new concentration Effect ends the last = %+v", token(u.View, "Aria").Effects)
+		t.Fatalf("effects = %+v", token(u.View, "Aria").Effects)
 	}
-	tb.dmSays(live.Command{Kind: live.CmdSetVisibility, TokenID: ids["Goblin"], Qualities: []string{}})
+}
+
+func TestInAFightOnlyTheCreatureWhoseTurnItIsActivates(t *testing.T) {
+	t.Parallel()
+	_, tb, ids := activationTable(t)
 	tb.fight(ids, "Goblin", "Aria")
 	if u := tb.playerSays(live.Command{Kind: live.CmdActivate, TokenID: ids["Aria"], Effect: "ward", Targets: []string{ids["Aria"]}}); u.Reason != "It is not Aria's turn." {
-		t.Fatalf("out of turn = %+v", u.Reason)
+		t.Fatalf("%q", u.Reason)
 	}
+}
+
+func TestAnIncapacitatedCasterCannotActivate(t *testing.T) {
+	t.Parallel()
+	_, tb, ids := activationTable(t)
+	tb.fight(ids, "Goblin", "Aria")
 	tb.dmSays(live.Command{Kind: live.CmdApplyEffect, TargetID: ids["Goblin"], Effect: "stunned"})
 	tb.w.hub.Submit(tb.dm, live.Command{Kind: live.CmdActivate, TokenID: ids["Goblin"], Effect: "ward", Targets: []string{ids["Goblin"]}})
 	if u := next(t, tb.dm); u.Reason != "Goblin can't act while Incapacitated." {
-		t.Fatalf("an incapacitated caster = %+v", u.Reason)
+		t.Fatalf("%q", u.Reason)
 	}
 }
 
