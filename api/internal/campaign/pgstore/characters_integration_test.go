@@ -751,34 +751,55 @@ func TestPicturesAreRefused(t *testing.T) {
 }
 
 // A draft is the caller's alone, sized and stepped within limits, and a story too long is refused.
-func TestDraftLimits(t *testing.T) {
+func TestADraftOutsideItsLimitsIsRefused(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
-	db := open(t)
-	chars, _, d := party(t, pgstore.New(db.Pool()))
-	if _, err := chars.SaveDraft(ctx, playerCaller, d.ID, 9, []byte(`{}`)); !errors.Is(err, domain.ErrInvalid) {
-		t.Fatalf("a step past the review = %v", err)
+	chars, _, d := party(t, pgstore.New(open(t).Pool()))
+	for name, c := range map[string]struct {
+		step  int
+		draft []byte
+	}{"a step past the review": {9, []byte(`{}`)}, "a draft of over 16,000 bytes": {1, make([]byte, 16_001)}} {
+		t.Run(name, func(t *testing.T) {
+			if _, err := chars.SaveDraft(ctx, playerCaller, d.ID, c.step, c.draft); !errors.Is(err, domain.ErrInvalid) {
+				t.Fatalf("err = %v", err)
+			}
+		})
 	}
-	if _, err := chars.SaveDraft(ctx, playerCaller, d.ID, 1, make([]byte, 16_001)); !errors.Is(err, domain.ErrInvalid) {
-		t.Fatalf("a huge draft = %v", err)
-	}
+}
+
+func TestAStrangerFindsNoDraftToReadDiscardOrRollFor(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	chars, _, d := party(t, pgstore.New(open(t).Pool()))
 	stranger := caller.UI("nobody")
-	if _, err := chars.Draft(ctx, stranger, d.ID); !errors.Is(err, domain.ErrNotFound) {
-		t.Fatalf("a stranger's draft = %v", err)
+	for name, try := range map[string]func() error{
+		"read":    func() error { _, err := chars.Draft(ctx, stranger, d.ID); return err },
+		"discard": func() error { return chars.DiscardDraft(ctx, stranger, d.ID) },
+		"roll":    func() error { _, err := chars.RollScores(ctx, stranger, d.ID); return err },
+	} {
+		t.Run(name, func(t *testing.T) {
+			if err := try(); !errors.Is(err, domain.ErrNotFound) {
+				t.Fatalf("err = %v", err)
+			}
+		})
 	}
-	if err := chars.DiscardDraft(ctx, stranger, d.ID); !errors.Is(err, domain.ErrNotFound) {
-		t.Fatalf("a stranger discards = %v", err)
+}
+
+func TestScoresAreNotRolledWithoutARoller(t *testing.T) {
+	t.Parallel()
+	chars, _, d := party(t, pgstore.New(open(t).Pool()))
+	if _, err := chars.RollScores(context.Background(), playerCaller, d.ID); err == nil {
+		t.Fatal("rolled")
 	}
-	if _, err := chars.RollScores(ctx, stranger, d.ID); !errors.Is(err, domain.ErrNotFound) {
-		t.Fatalf("a stranger rolls = %v", err)
-	}
-	if _, err := chars.RollScores(ctx, playerCaller, d.ID); err == nil {
-		t.Fatal("rolling without a roller")
-	}
+}
+
+func TestABackstoryOfOver4000CharactersIsRefused(t *testing.T) {
+	t.Parallel()
+	chars, _, d := party(t, pgstore.New(open(t).Pool()))
 	long := fighter()
 	long.Backstory = strings.Repeat("x", 4001)
-	if _, err := chars.Preview(ctx, playerCaller, d.ID, long); !errors.Is(err, domain.ErrInvalid) {
-		t.Fatalf("a backstory too long = %v", err)
+	if _, err := chars.Preview(context.Background(), playerCaller, d.ID, long); !errors.Is(err, domain.ErrInvalid) {
+		t.Fatalf("err = %v", err)
 	}
 }
 

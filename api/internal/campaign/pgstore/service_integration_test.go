@@ -305,7 +305,7 @@ func TestInvitesExpireAndRevoke(t *testing.T) {
 	}
 }
 
-func TestInvitesExpire(t *testing.T) {
+func TestAnExpiredInviteCannotBePreviewed(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 	s, clk := service(t, pgstore.New(open(t).Pool()))
@@ -315,6 +315,15 @@ func TestInvitesExpire(t *testing.T) {
 	if _, err := s.PreviewInvite(ctx, fresh.Token); !errors.Is(err, domain.ErrNotFound) {
 		t.Fatalf("expired invite previewed: %v", err)
 	}
+}
+
+func TestAnExpiredInviteIsNotListed(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	s, clk := service(t, pgstore.New(open(t).Pool()))
+	d := table(t, s)
+	_, _ = s.CreateInvite(ctx, dmCaller, d.ID)
+	clk.now = clk.now.Add(2 * time.Hour)
 	if open, _ := s.Invites(ctx, dmCaller, d.ID); len(open) != 0 {
 		t.Fatalf("expired invites listed: %+v", open)
 	}

@@ -92,8 +92,10 @@ func TestEveryFriendsDatabaseFaultSurfaces(t *testing.T) {
 }
 
 // A Location shows only to its Campaign's DMs, who may also mention it; anything else is no Mention.
-func TestLocationMentions(t *testing.T) {
-	t.Parallel()
+// saltmarsh is a Campaign where Aria is the DM and Bram a player, with Saltmarsh on its world map;
+// it returns the store, Aria, Bram, a mention of Saltmarsh and the world map.
+func saltmarsh(t *testing.T) (*pgstore.Store, uuid.UUID, uuid.UUID, domain.Mention, uuid.UUID) {
+	t.Helper()
 	ctx := context.Background()
 	db, err := pg.Open(ctx, pgtest.URL(t))
 	if err != nil {
@@ -117,23 +119,47 @@ func TestLocationMentions(t *testing.T) {
 			t.Fatalf("%s: %v", q.sql, err)
 		}
 	}
-	s := pgstore.New(pool)
-	m := domain.Mention{Kind: domain.MentionLocation, CampaignID: campaign, TargetID: node}
-	if r, err := s.Resolve(ctx, aria, m); err != nil || !r.Open || r.Label != "Saltmarsh" || r.MapID != world {
-		t.Fatalf("the DM sees = %+v %v", r, err)
+	return pgstore.New(pool), aria, bram, domain.Mention{Kind: domain.MentionLocation, CampaignID: campaign, TargetID: node}, world
+}
+
+func TestTheDMOpensAMentionOfALocationOnItsMap(t *testing.T) {
+	t.Parallel()
+	s, aria, _, m, world := saltmarsh(t)
+	if r, err := s.Resolve(context.Background(), aria, m); err != nil || !r.Open || r.Label != "Saltmarsh" || r.MapID != world {
+		t.Fatalf("the DM sees %+v %v", r, err)
 	}
-	if r, err := s.Resolve(ctx, bram, m); err != nil || r.Open || r.Label != "" {
-		t.Fatalf("a player sees = %+v %v", r, err)
+}
+
+func TestAPlayerFindsAMentionOfALocationClosed(t *testing.T) {
+	t.Parallel()
+	s, _, bram, m, _ := saltmarsh(t)
+	if r, err := s.Resolve(context.Background(), bram, m); err != nil || r.Open || r.Label != "" {
+		t.Fatalf("a player sees %+v %v", r, err)
 	}
-	if _, err := s.Resolve(ctx, aria, domain.Mention{Kind: "proposal", CampaignID: campaign, TargetID: node}); !errors.Is(err, domain.ErrInvalid) {
-		t.Fatalf("an unknown kind = %v", err)
+}
+
+func TestAMentionOfAnUnknownKindIsRefused(t *testing.T) {
+	t.Parallel()
+	s, aria, _, m, _ := saltmarsh(t)
+	m.Kind = "proposal"
+	if _, err := s.Resolve(context.Background(), aria, m); !errors.Is(err, domain.ErrInvalid) {
+		t.Fatalf("err = %v", err)
 	}
-	found, err := s.Mentionable(ctx, aria, "salt")
-	if err != nil || len(found) != 1 || found[0].Kind != domain.MentionLocation || found[0].CampaignName != "Morvain" {
+}
+
+func TestTheDMFindsALocationToMentionByPartOfItsName(t *testing.T) {
+	t.Parallel()
+	s, aria, _, _, _ := saltmarsh(t)
+	if found, err := s.Mentionable(context.Background(), aria, "salt"); err != nil || len(found) != 1 || found[0].Kind != domain.MentionLocation || found[0].CampaignName != "Morvain" {
 		t.Fatalf("mentionable = %+v %v", found, err)
 	}
-	if found, _ := s.Mentionable(ctx, bram, "salt"); len(found) != 0 {
-		t.Fatalf("a player may mention = %+v", found)
+}
+
+func TestAPlayerFindsNoLocationToMention(t *testing.T) {
+	t.Parallel()
+	s, _, bram, _, _ := saltmarsh(t)
+	if found, _ := s.Mentionable(context.Background(), bram, "salt"); len(found) != 0 {
+		t.Fatalf("mentionable = %+v", found)
 	}
 }
 
