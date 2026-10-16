@@ -1,0 +1,257 @@
+//go:build integration
+
+package httpapi_test
+
+import (
+	"context"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/coder/websocket"
+	"github.com/coder/websocket/wsjson"
+	"github.com/google/uuid"
+
+	"github.com/JorisJonkers-dev/grimoire/api/internal/play/live"
+)
+
+func TestLiveSessionOverWebSockets(t *testing.T) {
+	t.Parallel()
+	h := realCampaigns(t)
+	srv := httptest.NewServer(h)
+	t.Cleanup(srv.Close)
+	id, _ := campaignWithPlayer(t, h)
+	if rec := call(h, http.MethodPost, "/api/v1/campaigns/"+id+"/sessions", "player", ""); rec.Code != http.StatusForbidden {
+		t.Fatalf("player starts: %d", rec.Code)
+	}
+	rec := call(h, http.MethodPost, "/api/v1/campaigns/"+id+"/sessions", "dm", "")
+	sid, _ := decode(t, rec)["id"].(string)
+	if rec.Code != http.StatusCreated || sid == "" {
+		t.Fatalf("start: %d %s", rec.Code, rec.Body.String())
+	}
+	base := "/api/v1/campaigns/" + id + "/sessions/" + sid
+	dm, _, err := dial(t, srv, base+"/live?audience=dm", "dm")
+	if err != nil {
+		t.Fatal(err)
+	}
+	player, _, _ := dial(t, srv, base+"/live?audience=party", "player")
+	table, _, _ := dial(t, srv, base+"/live?audience=table", "player")
+	for _, s := range []*socket{dm, player, table} {
+		if u := s.next(); u.Kind != live.UpdSnapshot {
+			t.Fatalf("snapshot = %+v", u)
+		}
+	}
+	hiddenStaysHidden(t, dm, player, table)
+	endSessionClosesSockets(t, h, srv, id, base, dm)
+}
+
+func hiddenStaysHidden(t *testing.T, dm, player, table *socket) {
+	t.Helper()
+	if err := player.conn.Write(context.Background(), websocket.MessageText, []byte("not json")); err != nil {
+		t.Fatal(err)
+	}
+	dm.send(live.Command{Nonce: "1", Kind: live.CmdPlace, Label: "Lurker", TokenKind: "enemy", Q: 1, R: 1, Hidden: true})
+	placed := dm.next()
+	if placed.View == nil || len(placed.View.Tokens) != 1 || !placed.View.Tokens[0].Hidden {
+		t.Fatalf("dm place = %+v", placed)
+	}
+	id := placed.View.Tokens[0].ID
+	for _, s := range []*socket{player, table} {
+		if u := s.next(); u.Kind != live.UpdView || len(u.View.Tokens) != 0 {
+			t.Fatalf("party or table saw %+v", u)
+		}
+		joined := strings.Join(s.raw, "\n")
+		if strings.Contains(joined, "Lurker") || strings.Contains(joined, id) {
+			t.Fatalf("hidden token crossed the wire: %s", joined)
+		}
+	}
+	dm.send(live.Command{Nonce: "2", Kind: live.CmdSetHidden, TokenID: id, Hidden: false})
+	dm.next()
+	if u := player.next(); len(u.View.Tokens) != 1 || u.View.Tokens[0].Label != "Lurker" {
+		t.Fatalf("reveal = %+v", u)
+	}
+}
+
+func endSessionClosesSockets(t *testing.T, h http.Handler, srv *httptest.Server, id, base string, dm *socket) {
+	t.Helper()
+	for _, path := range []string{"", "/end"} {
+		method := http.MethodGet
+		if path != "" {
+			method = http.MethodPost
+		}
+		if rec := call(h, method, base+path, "dm", ""); rec.Code != 200 {
+			t.Fatalf("%s %s: %d", method, path, rec.Code)
+		}
+	}
+	if u := dm.next(); u.Kind != live.UpdEnded {
+		t.Fatalf("end = %+v", u)
+	}
+	if _, _, err := dm.conn.Read(context.Background()); websocket.CloseStatus(err) != websocket.StatusNormalClosure {
+		t.Fatalf("close = %v", err)
+	}
+	rec := call(h, http.MethodGet, "/api/v1/campaigns/"+id+"/sessions", "player", "")
+	if rec.Code != 200 || !strings.Contains(rec.Body.String(), `"status":"ended"`) || !strings.Contains(rec.Body.String(), `"endedAt"`) {
+		t.Fatalf("list: %d %s", rec.Code, rec.Body.String())
+	}
+	late, _, err := dial(t, srv, base+"/live?audience=party", "player")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := late.conn.Read(context.Background()); websocket.CloseStatus(err) != websocket.StatusTryAgainLater {
+		t.Fatalf("ended session join = %v", err)
+	}
+}
+
+func TestLiveSocketRefusals(t *testing.T) {
+	t.Parallel()
+	h := realCampaigns(t)
+	srv := httptest.NewServer(h)
+	t.Cleanup(srv.Close)
+	id, _ := campaignWithPlayer(t, h)
+	sid, _ := decode(t, call(h, http.MethodPost, "/api/v1/campaigns/"+id+"/sessions", "dm", ""))["id"].(string)
+	base := "/api/v1/campaigns/" + id + "/sessions/" + sid + "/live"
+	cases := []struct {
+		path, subject string
+		code          int
+	}{
+		{base + "?audience=party", "", http.StatusUnauthorized},
+		{base + "?audience=party", "stranger", http.StatusNotFound},
+		{base + "?audience=dm", "player", http.StatusForbidden},
+		{base + "?audience=everyone", "player", http.StatusBadRequest},
+		{"/api/v1/campaigns/" + id + "/sessions/nope/live?audience=party", "player", http.StatusNotFound},
+		{"/api/v1/campaigns/" + id + "/sessions/" + uuid.NewString() + "/live?audience=party", "player", http.StatusNotFound},
+	}
+	if rec := call(h, http.MethodGet, base+"?audience=party", "player", ""); rec.Code != http.StatusUpgradeRequired {
+		t.Errorf("plain GET: %d", rec.Code)
+	}
+	for _, c := range cases {
+		if _, code, err := dial(t, srv, c.path, c.subject); err == nil || code != c.code {
+			t.Errorf("%s as %q: %d %v, want %d", c.path, c.subject, code, err, c.code)
+		}
+	}
+}
+
+// When the party splits, a screen that belongs with another group is told where over the socket and
+// let go; one that knocks at the wrong group later is told the same before it is shown anything.
+func TestASplitPartyOverWebSockets(t *testing.T) {
+	t.Parallel()
+	h := realCampaigns(t)
+	srv := httptest.NewServer(h)
+	t.Cleanup(srv.Close)
+	id, _ := campaignWithPlayer(t, h)
+	sid, _ := decode(t, call(h, http.MethodPost, "/api/v1/campaigns/"+id+"/sessions", "dm", ""))["id"].(string)
+	tower, _ := decode(t, postBinary(h, "/api/v1/campaigns/"+id+"/maps?name=Tower", "dm", mapPNG(t)))["id"].(string)
+	var tamsin string
+	members, _ := decode(t, call(h, http.MethodGet, "/api/v1/campaigns/"+id, "dm", ""))["members"].([]any)
+	for _, m := range members {
+		if member, _ := m.(map[string]any); member["displayName"] == "Tamsin" {
+			tamsin, _ = member["id"].(string)
+		}
+	}
+	base := "/api/v1/campaigns/" + id + "/sessions/"
+	dm, _, err := dial(t, srv, base+sid+"/live?audience=dm", "dm")
+	if err != nil || tower == "" || tamsin == "" {
+		t.Fatalf("set up: %v, map %q, member %q", err, tower, tamsin)
+	}
+	player, _, _ := dial(t, srv, base+sid+"/live?audience=party", "player")
+	dm.next()
+	player.next()
+	dm.send(live.Command{Nonce: "1", Kind: live.CmdPlace, Label: "Aria", TokenKind: "party", ControllerID: tamsin})
+	aria := dm.next().View.Tokens[0].ID
+	player.next()
+
+	dm.send(live.Command{Nonce: "2", Kind: live.CmdSplitParty, Name: "The tower", TokenIDs: []string{aria}, MapID: tower})
+	split := dm.next()
+	if split.Kind != live.UpdSnapshot || len(split.View.Groups) != 2 || len(split.View.Tokens) != 0 {
+		t.Fatalf("split = %+v", split)
+	}
+	away := split.View.Groups[1].SessionID
+	// The player's screen is sent after the group, and that is the last it hears.
+	if u := player.next(); u.Kind != live.UpdRegroup || u.Group == nil || u.Group.SessionID != away {
+		t.Fatalf("the player after the split = %+v", u)
+	}
+	if _, _, err := player.conn.Read(context.Background()); err == nil {
+		t.Fatal("the player's socket stayed open")
+	}
+	// Knocking at the Session the party split from again: told where to go, shown nothing.
+	again, _, err := dial(t, srv, base+sid+"/live?audience=party", "player")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if u := again.next(); u.Kind != live.UpdRegroup || u.Group.SessionID != away || u.View != nil {
+		t.Fatalf("knocking at the wrong group = %+v", u)
+	}
+	if _, _, err := again.conn.Read(context.Background()); err == nil {
+		t.Fatal("the socket at the wrong group stayed open")
+	}
+	if joined := strings.Join(again.raw, "\n"); strings.Contains(joined, `"view"`) || strings.Contains(joined, "Aria") {
+		t.Fatalf("the wrong group was shown: %s", joined)
+	}
+	// With their own group they are let in, on its map.
+	there, _, err := dial(t, srv, base+away+"/live?audience=party", "player")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if u := there.next(); u.Kind != live.UpdSnapshot || len(u.View.Tokens) != 1 || u.View.Map == nil || u.View.Map.Name != "Tower" {
+		t.Fatalf("the player with their group = %+v", u)
+	}
+	// The same goes for the tools an agent uses in the player's name.
+	if rec := call(h, http.MethodGet, base+sid+"/view", "player", ""); rec.Code != http.StatusConflict || !strings.Contains(rec.Body.String(), away) {
+		t.Fatalf("an agent's look at the wrong group: %d %s", rec.Code, rec.Body.String())
+	}
+}
+
+type socket struct {
+	t    *testing.T
+	conn *websocket.Conn
+	raw  []string
+}
+
+// dial opens a socket; on refusal it returns the HTTP status the server answered with.
+func dial(t *testing.T, srv *httptest.Server, path, subject string) (*socket, int, error) {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	h := http.Header{}
+	if subject != "" {
+		h.Set("X-User-Id", subject)
+	}
+	conn, res, err := websocket.Dial(ctx, "ws"+strings.TrimPrefix(srv.URL, "http")+path, &websocket.DialOptions{HTTPHeader: h}) //nolint:bodyclose // the library owns the handshake body
+	status := 0
+	if res != nil {
+		status = res.StatusCode
+	}
+	if err != nil {
+		return nil, status, err
+	}
+	t.Cleanup(func() { _ = conn.CloseNow() })
+	return &socket{t: t, conn: conn}, status, nil
+}
+
+func (s *socket) next() live.Update {
+	s.t.Helper()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	_, data, err := s.conn.Read(ctx)
+	if err != nil {
+		s.t.Fatalf("read: %v", err)
+	}
+	s.raw = append(s.raw, string(data))
+	var u live.Update
+	if err := jsonUnmarshal(data, &u); err != nil {
+		s.t.Fatal(err)
+	}
+	return u
+}
+
+func (s *socket) send(cmd live.Command) {
+	s.t.Helper()
+	if err := wsjson.Write(context.Background(), s.conn, cmd); err != nil {
+		s.t.Fatal(err)
+	}
+}
+
+func jsonUnmarshal(data []byte, v any) error { return json.Unmarshal(data, v) }
