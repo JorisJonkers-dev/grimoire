@@ -130,59 +130,100 @@ func TestTrapsDetectTriggerAndDisarm(t *testing.T) {
 }
 
 // A locked door holds until its key, picked or forced lock, or Knock opens it.
-func TestLocks(t *testing.T) {
-	t.Parallel()
+// lockedDoors is a dungeon with three doors locked at DC 15: the Vault, opened by the iron key Aria
+// carries; the Cell, by a brass key she does not; and the Gate, by no key.
+type lockedDoors struct {
+	w                 world
+	tb                *table
+	ids               map[string]string
+	vault, cell, gate string
+}
+
+func newLockedDoors(t *testing.T) *lockedDoors {
+	t.Helper()
 	w, tb, ids := dungeonTable(t)
 	door := func(name string, q, r int, key string) string {
 		d, _ := tb.dmSays(live.Command{Kind: live.CmdPlaceObject, ObjectKind: "door", ObjectName: name, Q: q, R: r, LockDC: 15, Key: key})
 		return object(d.View, name).ID
 	}
-	vault := door("Vault", 1, 0, "iron-key")
-	cell := door("Cell", 0, 1, "brass-key")
-	gate := door("Gate", 1, 1, "")
-	unlock := func(id, method string) live.Command {
-		return live.Command{Kind: live.CmdUnlock, TokenID: ids["Aria"], ObjectID: id, Method: method}
-	}
+	return &lockedDoors{w: w, tb: tb, ids: ids, vault: door("Vault", 1, 0, "iron-key"), cell: door("Cell", 0, 1, "brass-key"), gate: door("Gate", 1, 1, "")}
+}
+
+func (l *lockedDoors) unlock(id, method string) live.Command {
+	return live.Command{Kind: live.CmdUnlock, TokenID: l.ids["Aria"], ObjectID: id, Method: method}
+}
+
+func TestALockRefusesWhatCannotOpenIt(t *testing.T) {
+	t.Parallel()
+	l := newLockedDoors(t)
 	for want, cmd := range map[string]live.Command{
-		"is locked":           {Kind: live.CmdUseObject, TokenID: ids["Aria"], ObjectID: vault},
-		"carries no key":      unlock(cell, "key"),
-		"Unlock with the key": unlock(cell, "spell"),
-		"not yours to play":   {Kind: live.CmdUnlock, TokenID: ids["Goblin"], ObjectID: cell, Method: "key"},
-		"No such creature":    {Kind: live.CmdUnlock, TokenID: "nope", ObjectID: cell, Method: "key"},
-		"no armed trap":       {Kind: live.CmdDisarm, TokenID: ids["Aria"], ObjectID: cell},
-		"No such object":      {Kind: live.CmdUnlock, TokenID: ids["Aria"], ObjectID: uuid.NewString(), Method: "key"},
+		"is locked":           {Kind: live.CmdUseObject, TokenID: l.ids["Aria"], ObjectID: l.vault},
+		"carries no key":      l.unlock(l.cell, "key"),
+		"Unlock with the key": l.unlock(l.cell, "spell"),
+		"not yours to play":   {Kind: live.CmdUnlock, TokenID: l.ids["Goblin"], ObjectID: l.cell, Method: "key"},
+		"No such creature":    {Kind: live.CmdUnlock, TokenID: "nope", ObjectID: l.cell, Method: "key"},
+		"no armed trap":       {Kind: live.CmdDisarm, TokenID: l.ids["Aria"], ObjectID: l.cell},
+		"No such object":      {Kind: live.CmdUnlock, TokenID: l.ids["Aria"], ObjectID: uuid.NewString(), Method: "key"},
 	} {
-		if u := tb.playerSays(cmd); u.Kind != live.UpdRejected || !strings.Contains(u.Reason, want) {
-			t.Errorf("%s = %+v", want, u)
-		}
+		t.Run(want, func(t *testing.T) {
+			if u := l.tb.playerSays(cmd); u.Kind != live.UpdRejected || !strings.Contains(u.Reason, want) {
+				t.Fatalf("%+v", u)
+			}
+		})
 	}
-	if u := tb.playerSays(unlock(vault, "key")); object(u.View, "Vault").Locked {
-		t.Fatal("the iron key opens the vault")
+}
+
+func TestTheRightKeyUnlocksADoor(t *testing.T) {
+	t.Parallel()
+	l := newLockedDoors(t)
+	if u := l.tb.playerSays(l.unlock(l.vault, "key")); object(u.View, "Vault").Locked {
+		t.Fatal("still locked")
 	}
-	if u := tb.playerSays(unlock(vault, "key")); !strings.Contains(u.Reason, "not locked") {
-		t.Fatalf("unlocked twice = %+v", u)
+}
+
+func TestAnUnlockedDoorIsNotUnlockedTwice(t *testing.T) {
+	t.Parallel()
+	l := newLockedDoors(t)
+	l.tb.playerSays(l.unlock(l.vault, "key"))
+	if u := l.tb.playerSays(l.unlock(l.vault, "key")); !strings.Contains(u.Reason, "not locked") {
+		t.Fatalf("%+v", u)
 	}
-	tb.playerSays(unlock(cell, "tools"))
-	tb.fill(uuid.UUID(lastRoll(t, w, "Pick the lock of the cell").ID).String(), w.player, 13)
+}
+
+func TestAGoodRollWithThievesToolsPicksALock(t *testing.T) {
+	t.Parallel()
+	l := newLockedDoors(t)
+	l.tb.playerSays(l.unlock(l.cell, "tools"))
+	l.tb.fill(uuid.UUID(lastRoll(t, l.w, "Pick the lock of the cell").ID).String(), l.w.player, 13)
 	for range 2 {
-		next(t, tb.player)
-		next(t, tb.dm)
+		next(t, l.tb.player)
+		next(t, l.tb.dm)
 	}
-	if object(look(t, w, tb.player), "Cell").Locked {
-		t.Fatal("13 + 2 picks the cell")
+	if object(look(t, l.w, l.tb.player), "Cell").Locked {
+		t.Fatal("13 + 2 did not pick the cell")
 	}
-	tb.dmSays(live.Command{Kind: live.CmdMove, TokenID: ids["Aria"], Q: 0, R: 2})
-	if u := tb.playerSays(unlock(gate, "force")); u.Kind != live.UpdView {
+}
+
+func TestAWeakShoveLeavesTheDoorLocked(t *testing.T) {
+	t.Parallel()
+	l := newLockedDoors(t)
+	l.tb.dmSays(live.Command{Kind: live.CmdMove, TokenID: l.ids["Aria"], Q: 0, R: 2})
+	if u := l.tb.playerSays(l.unlock(l.gate, "force")); u.Kind != live.UpdView {
 		t.Fatalf("force the gate = %+v", u)
 	}
-	tb.fill(uuid.UUID(lastRoll(t, w, "Force the gate").ID).String(), w.player, 2)
-	next(t, tb.player)
-	next(t, tb.dm)
-	if !object(look(t, w, tb.player), "Gate").Locked {
-		t.Fatal("a weak shove leaves the gate locked")
+	l.tb.fill(uuid.UUID(lastRoll(t, l.w, "Force the gate").ID).String(), l.w.player, 2)
+	next(t, l.tb.player)
+	next(t, l.tb.dm)
+	if !object(look(t, l.w, l.tb.player), "Gate").Locked {
+		t.Fatal("unlocked")
 	}
-	tb.dmSays(live.Command{Kind: live.CmdMove, TokenID: ids["Aria"], Q: 4, R: 0})
-	if u := tb.playerSays(unlock(gate, "knock")); u.View == nil || object(u.View, "Gate").Locked {
-		t.Fatalf("Knock opens the gate = %+v", u)
+}
+
+func TestKnockOpensADoorFromAfar(t *testing.T) {
+	t.Parallel()
+	l := newLockedDoors(t)
+	l.tb.dmSays(live.Command{Kind: live.CmdMove, TokenID: l.ids["Aria"], Q: 4, R: 0})
+	if u := l.tb.playerSays(l.unlock(l.gate, "knock")); u.View == nil || object(u.View, "Gate").Locked {
+		t.Fatalf("%+v", u)
 	}
 }

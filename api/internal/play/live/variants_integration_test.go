@@ -177,114 +177,203 @@ func TestFlankingAndTheCriticalHitVariant(t *testing.T) {
 
 // Rest variants: how long a rest takes, how many Short Rests fit between two Long Rests, and whether
 // a Long Rest heals. Each is read when it matters, so a Session under way follows the DM's switches.
-func TestRestVariants(t *testing.T) {
-	t.Parallel()
-	ctx := context.Background()
+// restTable is a resting party and the time its rests take on the Game Clock.
+type restTable struct {
+	t     *testing.T
+	w     world
+	tb    *table
+	ids   map[string]string
+	start int
+}
+
+func newRestTable(t *testing.T) *restTable {
+	t.Helper()
 	w, tb, ids := restingParty(t)
-	// clock is the minutes on the Game Clock and the Short Rests taken since the last Long Rest.
-	clock := func() (int, int) {
-		t.Helper()
-		var day, minute, short int
-		if err := w.pool.QueryRow(ctx, "SELECT game_day, game_minute, short_rests FROM campaign.campaigns WHERE id = $1", w.session.CampaignID).Scan(&day, &minute, &short); err != nil {
-			t.Fatal(err)
-		}
-		return day*1440 + minute, short
-	}
-	rest := func(kind string) {
-		t.Helper()
-		if p := tb.playerSays(live.Command{Kind: live.CmdProposeRest, Rest: kind}); p.View == nil {
-			t.Fatalf("a %s rest was refused: %+v", kind, p)
-		}
-		tb.dmSays(live.Command{Kind: live.CmdAgreeRest})
-	}
-	refused := func(want string, sub *live.Subscriber, cmd live.Command) {
-		t.Helper()
-		w.hub.Submit(sub, cmd)
-		if u := next(t, sub); u.Kind != live.UpdRejected || !strings.Contains(u.Reason, want) {
-			t.Fatalf("%q = %+v", want, u)
-		}
-	}
-	hp := func() int {
-		t.Helper()
-		return *tokenByID(t, look(t, w, tb.dm), ids["aria-token"]).HP
-	}
-	start, _ := clock()
+	r := &restTable{t: t, w: w, tb: tb, ids: ids}
+	r.start, _ = r.clock()
+	return r
+}
 
-	// A Short Rest under the standard rules takes an hour, and counts.
-	rest(live.RestShort)
-	tb.dmSays(live.Command{Kind: live.CmdFinishRest})
-	if now, short := clock(); now-start != 60 || short != 1 {
-		t.Fatalf("a Short Rest: %d minutes on, %d taken", now-start, short)
+// clock is the minutes since the start on the Game Clock, and the Short Rests taken since the last
+// Long Rest.
+func (r *restTable) clock() (int, int) {
+	r.t.Helper()
+	var day, minute, short int
+	if err := r.w.pool.QueryRow(context.Background(), "SELECT game_day, game_minute, short_rests FROM campaign.campaigns WHERE id = $1", r.w.session.CampaignID).Scan(&day, &minute, &short); err != nil {
+		r.t.Fatal(err)
 	}
-	// Capped at one, a second is refused until a Long Rest; the DM lifts the cap to two and it is allowed.
-	switched(t, w, variants.ShortRestCap, "1")
-	refused("Long Rest first", tb.player, live.Command{Kind: live.CmdProposeRest, Rest: live.RestShort})
-	switched(t, w, variants.ShortRestCap, "2")
-	switched(t, w, variants.Rests, variants.RestsGritty)
-	rest(live.RestShort)
-	tb.dmSays(live.Command{Kind: live.CmdFinishRest})
-	if now, short := clock(); now-start != 60+480 || short != 2 {
-		t.Fatalf("a gritty Short Rest: %d minutes on, %d taken", now-start, short)
-	}
-	refused("Long Rest first", tb.dm, live.Command{Kind: live.CmdProposeRest, Rest: live.RestShort})
+	return day*1440 + minute - r.start, short
+}
 
-	// A gritty Long Rest takes a week. With slow natural healing it heals nobody, and Hit Dice are
-	// spent in it instead; it gives every Hit Die back, and the count of Short Rests starts again.
-	switched(t, w, variants.SlowNaturalHealing, variants.On)
-	hurt := hp()
-	rest(live.RestLong)
-	p := tb.playerSays(live.Command{Kind: live.CmdSpendHitDie, TokenID: ids["aria-token"]})
+func (r *restTable) rest(kind string) {
+	r.t.Helper()
+	if p := r.tb.playerSays(live.Command{Kind: live.CmdProposeRest, Rest: kind}); p.View == nil {
+		r.t.Fatalf("a %s rest was refused: %+v", kind, p)
+	}
+	r.tb.dmSays(live.Command{Kind: live.CmdAgreeRest})
+}
+
+func (r *restTable) restAndFinish(kind string) {
+	r.t.Helper()
+	r.rest(kind)
+	r.tb.dmSays(live.Command{Kind: live.CmdFinishRest})
+}
+
+func (r *restTable) refused(want string, sub *live.Subscriber, cmd live.Command) {
+	r.t.Helper()
+	r.w.hub.Submit(sub, cmd)
+	if u := next(r.t, sub); u.Kind != live.UpdRejected || !strings.Contains(u.Reason, want) {
+		r.t.Fatalf("%q = %+v", want, u)
+	}
+}
+
+func (r *restTable) hp() int {
+	r.t.Helper()
+	return *tokenByID(r.t, look(r.t, r.w, r.tb.dm), r.ids["aria-token"]).HP
+}
+
+var proposeShort = live.Command{Kind: live.CmdProposeRest, Rest: live.RestShort}
+
+func TestAStandardShortRestTakesAnHourAndCounts(t *testing.T) {
+	t.Parallel()
+	r := newRestTable(t)
+	r.restAndFinish(live.RestShort)
+	if now, short := r.clock(); now != 60 || short != 1 {
+		t.Fatalf("%d minutes on, %d taken", now, short)
+	}
+}
+
+func TestAShortRestPastTheCapWaitsForALongRest(t *testing.T) {
+	t.Parallel()
+	r := newRestTable(t)
+	r.restAndFinish(live.RestShort)
+	switched(t, r.w, variants.ShortRestCap, "1")
+	r.refused("Long Rest first", r.tb.player, proposeShort)
+}
+
+// grittyTwice is two Short Rests taken under a cap of two, the second one gritty.
+func (r *restTable) grittyTwice() {
+	r.t.Helper()
+	r.restAndFinish(live.RestShort)
+	switched(r.t, r.w, variants.ShortRestCap, "2")
+	switched(r.t, r.w, variants.Rests, variants.RestsGritty)
+	r.restAndFinish(live.RestShort)
+}
+
+func TestAGrittyShortRestTakesEightHours(t *testing.T) {
+	t.Parallel()
+	r := newRestTable(t)
+	r.grittyTwice()
+	if now, short := r.clock(); now != 60+480 || short != 2 {
+		t.Fatalf("%d minutes on, %d taken", now, short)
+	}
+}
+
+func TestPastTheCapNotEvenTheDMProposesAShortRest(t *testing.T) {
+	t.Parallel()
+	r := newRestTable(t)
+	r.grittyTwice()
+	r.refused("Long Rest first", r.tb.dm, proposeShort)
+}
+
+// slowLongRest is a gritty Long Rest with slow natural healing, in which Aria spends a Hit Die and
+// rolls a 1; it returns her hit points before it.
+func (r *restTable) slowLongRest() int {
+	r.t.Helper()
+	switched(r.t, r.w, variants.Rests, variants.RestsGritty)
+	switched(r.t, r.w, variants.SlowNaturalHealing, variants.On)
+	hurt := r.hp()
+	r.rest(live.RestLong)
+	p := r.tb.playerSays(live.Command{Kind: live.CmdSpendHitDie, TokenID: r.ids["aria-token"]})
 	if p.View == nil {
-		t.Fatalf("a Hit Die in a Long Rest with slow natural healing: %+v", p)
+		r.t.Fatalf("a Hit Die in the Long Rest: %+v", p)
 	}
-	tb.fill(resterNamed(t, p.View.Rest, ids["Aria"]).RollID, w.player, 1)
-	next(t, tb.dm)
-	next(t, tb.player)
-	tb.dmSays(live.Command{Kind: live.CmdFinishRest})
-	if got := hp(); got != hurt+1+2 {
-		t.Fatalf("after a slow Long Rest Aria is on %d, from %d and a Hit Die of 1 + 2", got, hurt)
+	r.tb.fill(resterNamed(r.t, p.View.Rest, r.ids["Aria"]).RollID, r.w.player, 1)
+	next(r.t, r.tb.dm)
+	next(r.t, r.tb.player)
+	r.tb.dmSays(live.Command{Kind: live.CmdFinishRest})
+	return hurt
+}
+
+func TestWithSlowNaturalHealingALongRestHealsOnlyByTheHitDiceSpent(t *testing.T) {
+	t.Parallel()
+	r := newRestTable(t)
+	hurt := r.slowLongRest()
+	if got := r.hp(); got != hurt+1+2 {
+		t.Fatalf("Aria is on %d, from %d and a Hit Die of 1 + 2", got, hurt)
 	}
+}
+
+func TestAGrittyLongRestTakesAWeekGivesTheHitDiceBackAndStartsTheCountAgain(t *testing.T) {
+	t.Parallel()
+	r := newRestTable(t)
+	r.restAndFinish(live.RestShort)
+	hurt := r.slowLongRest()
 	var spent, kept int
-	if err := w.pool.QueryRow(ctx, "SELECT hit_dice_spent, hp_current FROM campaign.characters WHERE id = $1", ids["Aria"]).Scan(&spent, &kept); err != nil {
+	if err := r.w.pool.QueryRow(context.Background(), "SELECT hit_dice_spent, hp_current FROM campaign.characters WHERE id = $1", r.ids["Aria"]).Scan(&spent, &kept); err != nil {
 		t.Fatal(err)
 	}
-	if now, short := clock(); now-start != 60+480+7*1440 || short != 0 || spent != 0 || kept != hurt+3 {
-		t.Fatalf("a gritty Long Rest: %d minutes on, %d Short Rests taken, %d Hit Dice spent, %d hit points kept", now-start, short, spent, kept)
+	if now, short := r.clock(); now != 60+7*1440 || short != 0 || spent != 0 || kept != hurt+3 {
+		t.Fatalf("%d minutes on, %d Short Rests, %d Hit Dice spent, %d hit points kept", now, short, spent, kept)
 	}
+}
 
-	// Without slow natural healing no Hit Die is spent in a Long Rest; epic, it takes an hour and heals.
-	switched(t, w, variants.SlowNaturalHealing, variants.Off)
-	switched(t, w, variants.Rests, variants.RestsEpic)
-	rest(live.RestLong)
-	refused("in a Short Rest", tb.player, live.Command{Kind: live.CmdSpendHitDie, TokenID: ids["aria-token"]})
-	tb.dmSays(live.Command{Kind: live.CmdFinishRest})
-	if now, _ := clock(); now-start != 60+480+7*1440+60 || hp() <= hurt+3 {
-		t.Fatalf("an epic Long Rest: %d minutes on, Aria on %d", now-start, hp())
-	}
-	rest(live.RestShort)
-	tb.dmSays(live.Command{Kind: live.CmdFinishRest})
-	if now, short := clock(); now-start != 60+480+7*1440+60+5 || short != 1 {
-		t.Fatalf("an epic Short Rest: %d minutes on, %d taken", now-start, short)
-	}
+func TestWithoutSlowNaturalHealingNoHitDieIsSpentInALongRest(t *testing.T) {
+	t.Parallel()
+	r := newRestTable(t)
+	r.rest(live.RestLong)
+	r.refused("in a Short Rest", r.tb.player, live.Command{Kind: live.CmdSpendHitDie, TokenID: r.ids["aria-token"]})
+}
 
-	// When the variants cannot be read no rest is proposed or finished: a cap that may be there is kept.
-	rest(live.RestLong)
-	w.hub.Close(w.session.ID)
-	whole := w.hub.Store
-	w.hub.Store = unreadableVariants{Store: whole}
-	tb.dm, tb.player = join(t, w, w.dm, dmCaller, live.AudienceDM), join(t, w, w.player, playerCaller, live.AudienceParty)
-	refused("could not be read", tb.dm, live.Command{Kind: live.CmdFinishRest})
-	refused("could not be read", tb.player, live.Command{Kind: live.CmdSpendHitDie, TokenID: ids["aria-token"]})
-	tb.dmSays(live.Command{Kind: live.CmdInterruptRest})
-	refused("could not be read", tb.player, live.Command{Kind: live.CmdProposeRest, Rest: live.RestShort})
-	if now, short := clock(); now-start != 60+480+7*1440+60+5 || short != 1 {
-		t.Fatalf("after the refusals: %d minutes on, %d taken", now-start, short)
+func TestAnEpicLongRestTakesAnHourAndHeals(t *testing.T) {
+	t.Parallel()
+	r := newRestTable(t)
+	switched(t, r.w, variants.Rests, variants.RestsEpic)
+	hurt := r.hp()
+	r.restAndFinish(live.RestLong)
+	if now, _ := r.clock(); now != 60 || r.hp() <= hurt {
+		t.Fatalf("%d minutes on, Aria on %d from %d", now, r.hp(), hurt)
 	}
-	// Nor when the count of Short Rests cannot be read.
-	w.hub.Close(w.session.ID)
-	w.hub.Store = uncountedRests{Store: whole}
-	tb.dm, tb.player = join(t, w, w.dm, dmCaller, live.AudienceDM), join(t, w, w.player, playerCaller, live.AudienceParty)
-	refused("could not be read", tb.player, live.Command{Kind: live.CmdProposeRest, Rest: live.RestShort})
-	rest(live.RestLong)
-	refused("could not be read", tb.dm, live.Command{Kind: live.CmdFinishRest})
+}
+
+func TestAnEpicShortRestTakesFiveMinutes(t *testing.T) {
+	t.Parallel()
+	r := newRestTable(t)
+	switched(t, r.w, variants.Rests, variants.RestsEpic)
+	r.restAndFinish(live.RestShort)
+	if now, short := r.clock(); now != 5 || short != 1 {
+		t.Fatalf("%d minutes on, %d taken", now, short)
+	}
+}
+
+// rejoinOver restarts the Session over store.
+func (r *restTable) rejoinOver(store func(whole live.Store) live.Store) {
+	r.t.Helper()
+	r.w.hub.Close(r.w.session.ID)
+	r.w.hub.Store = store(r.w.hub.Store)
+	r.tb.dm, r.tb.player = join(r.t, r.w, r.w.dm, dmCaller, live.AudienceDM), join(r.t, r.w, r.w.player, playerCaller, live.AudienceParty)
+}
+
+func TestWhenTheVariantsCannotBeReadNoRestIsProposedOrFinished(t *testing.T) {
+	t.Parallel()
+	r := newRestTable(t)
+	r.restAndFinish(live.RestShort)
+	r.rest(live.RestLong)
+	r.rejoinOver(func(whole live.Store) live.Store { return unreadableVariants{Store: whole} })
+	r.refused("could not be read", r.tb.dm, live.Command{Kind: live.CmdFinishRest})
+	r.refused("could not be read", r.tb.player, live.Command{Kind: live.CmdSpendHitDie, TokenID: r.ids["aria-token"]})
+	r.tb.dmSays(live.Command{Kind: live.CmdInterruptRest})
+	r.refused("could not be read", r.tb.player, proposeShort)
+	if now, short := r.clock(); now != 60 || short != 1 {
+		t.Fatalf("%d minutes on, %d taken", now, short)
+	}
+}
+
+func TestWhenTheCountOfShortRestsCannotBeReadNoRestIsProposedOrFinished(t *testing.T) {
+	t.Parallel()
+	r := newRestTable(t)
+	r.rejoinOver(func(whole live.Store) live.Store { return uncountedRests{Store: whole} })
+	r.refused("could not be read", r.tb.player, proposeShort)
+	r.rest(live.RestLong)
+	r.refused("could not be read", r.tb.dm, live.Command{Kind: live.CmdFinishRest})
 }
