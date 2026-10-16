@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.4.0](https://github.com/JorisJonkers-dev/grimoire/compare/v1.3.0...v1.4.0) (2026-10-16)
+
+
+### Features
+
+* **api:** activate an Effect on the targets its Targeting allows in a live Session ([#366](https://github.com/JorisJonkers-dev/grimoire/issues/366)) ([6a8fc7b](https://github.com/JorisJonkers-dev/grimoire/commit/6a8fc7b3fd622128384ba1d016122aec1ccd1204))
+* **api:** an Activation's initial save decides which targets the Effect lands on ([#367](https://github.com/JorisJonkers-dev/grimoire/issues/367)) ([1dfd135](https://github.com/JorisJonkers-dev/grimoire/commit/1dfd135055f8bec3c1901b75f3a7f387df325fcf))
+* **api:** read the SRD Design files and load their Effects at start ([#362](https://github.com/JorisJonkers-dev/grimoire/issues/362)) ([7620060](https://github.com/JorisJonkers-dev/grimoire/commit/76200606f70c91d14443ee6f61430e1c2142aba6))
+* **api:** Targeting states what an Activation may pick, and refuses each illegal pick ([#364](https://github.com/JorisJonkers-dev/grimoire/issues/364)) ([97a468e](https://github.com/JorisJonkers-dev/grimoire/commit/97a468e63157d09253d8a9c3feed98f7309dbfae))
+* author Scaling in the builders, on each Part and on the spell ([#361](https://github.com/JorisJonkers-dev/grimoire/issues/361)) ([23cb8a2](https://github.com/JorisJonkers-dev/grimoire/commit/23cb8a2e72a6a628c048adcf646d08535a873b42))
+* **compendium:** read usage limits, legendary cost and casting options; apply correction files ([#347](https://github.com/JorisJonkers-dev/grimoire/issues/347)) ([49c644c](https://github.com/JorisJonkers-dev/grimoire/commit/49c644c8c5e922dabcad9ca33f89f7464aa8edb4))
+* publish an Intent Fragment as the Project grimoire ([#369](https://github.com/JorisJonkers-dev/grimoire/issues/369)) ([92f8e4c](https://github.com/JorisJonkers-dev/grimoire/commit/92f8e4c5818e1dc4a9a589658ccb07f617604910))
+
+
+### Bug Fixes
+
+* **ci:** make the mutation gate fail when a mutant lives ([#363](https://github.com/JorisJonkers-dev/grimoire/issues/363)) ([cff703b](https://github.com/JorisJonkers-dev/grimoire/commit/cff703ba5d0df7fa7d0bf3a5de0bb0359c1f97e8))
+
 ## [1.3.0](https://github.com/JorisJonkers-dev/grimoire/compare/v1.2.1...v1.3.0) (2026-10-06)
 
 
