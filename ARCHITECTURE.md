@@ -39,7 +39,7 @@ marked *(later)*; everything else is in scope for the milestone named next to it
 | Runtime | **Single replica** + Postgres advisory lock; ports ready for multi-replica | §11.7 |
 | AI | MCP server **inside the Go API** at `/mcp`, authenticated with Grimoire **Access Tokens** ([ADR-0009](docs/adr/0009-grimoire-issues-its-own-access-tokens.md)); writes apply **immediately**, undone via Revisions/Action Log | §14 |
 | Generation | Deterministic seeded generators in Go; Go-native OSS embeds; Watabou/Azgaar exports imported; FMG and ComfyUI sidecars *(later)* | §13 |
-| Hosting | Estate k3s/Flux via `platform/deployment.yml`, shared Postgres, Garage S3; Grimoire handles its own sign-in | §19 |
+| Hosting | Estate k3s/Flux via the Intent Fragment `deploy/grimoire.project.yml`, shared Postgres, Garage S3; Grimoire handles its own sign-in | §19 |
 | Tooling | Monorepo with **mise + Taskfile** | §5 |
 | Gates | **Tiered**: contract, types, lint, tests, fog negatives and device matrix block every PR; full mutation nightly | §17 |
 | License | Public repo under the **Attribution Assurance License**; forks must credit the author visibly in their UI | §21 |
@@ -297,7 +297,7 @@ grimoire/
 │   ├── src/{app,shared,features/<feature>,infrastructure/api(GENERATED),render,realtime}/
 │   └── tests/{unit,component,e2e}/
 ├── design/                        # Claude Design exports, tokens.json, component inventory
-├── platform/                      # deployment.yml, images.lock.json, production.env, render-local.sh
+├── deploy/                        # grimoire.project.yml, env/grimoire/base.env
 ├── docs/{adr,runbooks}/
 └── .github/workflows/
 ```
@@ -1236,9 +1236,8 @@ Imperative use-case names (`MoveToken`, `RunEncounterCheck`); ports named `…Re
 
 - One image, `grimoire`: a distroless static Go binary that also serves the built SPA (embedded at
   build time, SPA fallback, immutable hashed assets, strict CSP). Built and pushed by `publish.yml`
-  on every release tag; deployed via `platform/deployment.yml`
-  (v2) with pinned digests in `images.lock.json`, through the estate's publish → `deploy/production`
-  → Flux flow.
+  on every release tag. The same run publishes the Intent Fragment `deploy/grimoire.project.yml`
+  with the image's pinned digest; the estate composes it and Flux delivers the render.
 - Route: `grimoire.jorisjonkers.dev`. Until Grimoire Accounts ship the route stays behind the
   estate's forward-auth; afterwards Grimoire handles sign-in itself (ADR-0008), `/mcp` takes Access
   Tokens (ADR-0009), and `/healthz`, `/readyz` and the Public Compendium are anonymous.
@@ -1246,8 +1245,8 @@ Imperative use-case names (`MoveToken`, `RunEncounterCheck`); ports named `…Re
   native login redirect) happens in the estate's private infrastructure repositories. The checklist
   lives there, not in this public repo. Each step is verified by reading the state back, not by exit
   codes.
-- Migrations run as a one-shot `grimoire-api migrate` job before rollout (manifest
-  `migrationPolicy`), with `rollbackTargetRetention` set.
+- Migrations run in the app at start (`migration: self`, `GRIMOIRE_AUTO_MIGRATE`), signed in with
+  the rotating owner login the estate derives for its Postgres edge.
 
 ### 19.2 CI (GitHub Actions)
 

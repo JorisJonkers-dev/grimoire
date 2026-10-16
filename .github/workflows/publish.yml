@@ -1,7 +1,7 @@
-# Tag-triggered publish flow for deploy-platform service repos.
+# Tag-triggered publish flow.
 #
 # push of a v*.*.* tag (authored by release.yml via the App token) drives:
-#   publish-image -> resolve-image-lock -> publish-deploy-artifact -> notify-fleet-infra
+#   publish-image -> resolve-image-lock -> fragment
 #
 # The image lock crosses the reusable-workflow boundary as an UPLOADED ARTIFACT, never a
 # runner-local path.
@@ -32,7 +32,7 @@ jobs:
       contents: read
       packages: write
 
-  # -- 2. Resolve the image lock (upload artifact, never path) --------------
+  # -- 2. Resolve the images lock (upload artifact, never path) -------------
   resolve-image-lock:
     needs: [publish-image]
     runs-on: ubuntu-latest
@@ -41,7 +41,6 @@ jobs:
       contents: read
       packages: read
     outputs:
-      images-lock-artifact: images-lock-${{ github.run_id }}
       fragment-images-lock-artifact: fragment-images-lock-${{ github.run_id }}
       source-sha: ${{ steps.source.outputs.sha }}
     steps:
@@ -75,8 +74,11 @@ jobs:
           esac
           echo "image-digest=$digest" >> "$GITHUB_OUTPUT"
 
-      - name: lock-image
+      # The images lock: the digest, under the alias the project file names, with
+      # the user the image runs as, read from what was pushed.
+      - name: lock-fragment-image
         env:
+          IMAGE: ghcr.io/jorisjonkers-dev/grimoire
           IMAGE_DIGEST: ${{ steps.digest.outputs.image-digest }}
         run: |
           set -euo pipefail
@@ -84,33 +86,6 @@ jobs:
             sha256:*) ;;
             *) echo "E_FLOATING_IMAGE: IMAGE_DIGEST is not a digest ref (got: $IMAGE_DIGEST)" >&2; exit 1 ;;
           esac
-          printf '{"grimoire":"ghcr.io/jorisjonkers-dev/grimoire@%s"}\n' "$IMAGE_DIGEST" > platform/images.lock.json
-          echo "Locked image: ghcr.io/jorisjonkers-dev/grimoire@${IMAGE_DIGEST}"
-
-      - name: verify-lock
-        run: |
-          set -euo pipefail
-          lock_ref=$(jq -r '.["grimoire"]' platform/images.lock.json)
-          case "$lock_ref" in
-            *@sha256:*) echo "Digest pin verified: $lock_ref" ;;
-            *) echo "E_FLOATING_IMAGE: lock ref is not digest-pinned: $lock_ref" >&2; exit 1 ;;
-          esac
-
-      - name: upload-image-lock
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: images-lock-${{ github.run_id }}
-          path: platform/images.lock.json
-          retention-days: 1
-
-      # The estate path's images lock share: the same digest, under the alias the
-      # project file names, with the user the image runs as, read from what was pushed.
-      - name: lock-fragment-image
-        env:
-          IMAGE: ghcr.io/jorisjonkers-dev/grimoire
-          IMAGE_DIGEST: ${{ steps.digest.outputs.image-digest }}
-        run: |
-          set -euo pipefail
           user="$(docker buildx imagetools inspect "${IMAGE}@${IMAGE_DIGEST}" --format '{{ json .Image }}' \
             | jq -r 'if has("linux/amd64") then .["linux/amd64"] else . end | .config.User')"
           case "$user" in
@@ -137,74 +112,7 @@ jobs:
           path: images.lock.yml
           retention-days: 1
 
-  # -- 3. Render and publish the deploy artifact ----------------------------
-  publish-deploy-artifact:
-    needs: [resolve-image-lock]
-    uses: JorisJonkers-dev/github-workflows/.github/workflows/deploy-artifact.yml@0f5974ffd5223be12d505fac6d97670f4d3bc890 # v0.19.0
-    with:
-      ref: ${{ github.event_name == 'workflow_dispatch' && format('refs/tags/{0}', inputs.tag) || github.ref }}
-      artifact-name: grimoire
-      artifact-version: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
-      schema-version: 0.22.0
-      apply-bundle: true
-      context-ref: ghcr.io/jorisjonkers-dev/cluster-deploy-context-public@sha256:95dc39fc695694c8fb4b0c538d7fe13038d407c7302c3725c98f0496c6a83499
-      deploy-dir: platform
-      image-lock-artifact: ${{ needs.resolve-image-lock.outputs.images-lock-artifact }}
-      environments: production
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
-      attestations: write
-
-  # -- 4. Tell fleet-infra the image exists ---------------------------------
-  # Skips the auto-bump cron's hours of delay. Runs only after the image and deploy
-  # artifact are out; if it fails, the cron still picks the release up.
-  notify-fleet-infra:
-    name: Notify fleet-infra
-    needs: [publish-deploy-artifact]
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions: {}
-    steps:
-      - name: mint-app-token
-        id: app-token
-        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
-        with:
-          app-id: ${{ secrets.RELEASE_APP_ID }}
-          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
-          # GITHUB_TOKEN cannot dispatch to another repository.
-          owner: JorisJonkers-dev
-          repositories: fleet-infra
-
-      - name: assert-token-minted
-        env:
-          APP_TOKEN: ${{ steps.app-token.outputs.token }}
-        run: |
-          if [ -z "$APP_TOKEN" ]; then
-            echo "E_APP_TOKEN_MISSING: Release App token was not minted." >&2
-            echo "Secrets RELEASE_APP_ID and RELEASE_APP_PRIVATE_KEY must be configured," >&2
-            echo "and the App must be installed on JorisJonkers-dev/fleet-infra." >&2
-            echo "GITHUB_TOKEN fallback is intentionally forbidden." >&2
-            exit 1
-          fi
-          echo "App token minted successfully (token prefix: ${APP_TOKEN:0:4}...)"
-
-      - name: dispatch-image-published
-        env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
-        run: |
-          set -euo pipefail
-          gh api \
-            --method POST \
-            repos/JorisJonkers-dev/fleet-infra/dispatches \
-            -f event_type=image-published \
-            -f "client_payload[service]=grimoire" \
-            -f "client_payload[version]=$TAG"
-          echo "Dispatched image-published to fleet-infra for grimoire $TAG"
-
-  # -- 5. Publish the Intent Fragment the estate path composes ---------------
+  # -- 3. Publish the Intent Fragment the estate path composes ---------------
   fragment:
     needs: [resolve-image-lock]
     permissions:
