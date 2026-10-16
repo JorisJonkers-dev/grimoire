@@ -1,13 +1,14 @@
 package attack_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/attack"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/dice"
 )
 
-func TestModes(t *testing.T) {
+func TestAdvantageAndDisadvantageCancelIntoOneMode(t *testing.T) {
 	t.Parallel()
 	cases := []struct {
 		adv, dis int
@@ -29,7 +30,7 @@ func TestModes(t *testing.T) {
 	}
 }
 
-func TestModeNames(t *testing.T) {
+func TestEachModeIsNamed(t *testing.T) {
 	t.Parallel()
 	for m, want := range map[attack.Mode]string{attack.Normal: "normal", attack.Advantage: "advantage", attack.Disadvantage: "disadvantage"} {
 		if m.String() != want {
@@ -38,7 +39,7 @@ func TestModeNames(t *testing.T) {
 	}
 }
 
-func TestHitChance(t *testing.T) {
+func TestTheChanceToHitFollowsBonusArmourAndMode(t *testing.T) {
 	t.Parallel()
 	cases := []struct {
 		bonus, ac int
@@ -87,7 +88,7 @@ func TestHitChanceWithExtraDice(t *testing.T) {
 	}
 }
 
-func TestOutcome(t *testing.T) {
+func TestANaturalTwentyCritsANaturalOneMissesAndOtherwiseTheTotalDecides(t *testing.T) {
 	t.Parallel()
 	cases := []struct {
 		natural, bonus, ac int
@@ -108,7 +109,7 @@ func TestOutcome(t *testing.T) {
 	}
 }
 
-func TestBands(t *testing.T) {
+func TestADistanceFallsInReachRangeLongRangeOrOutOfRange(t *testing.T) {
 	t.Parallel()
 	cases := []struct {
 		dist, reach, rng, long int
@@ -131,7 +132,7 @@ func TestBands(t *testing.T) {
 	}
 }
 
-func TestDamage(t *testing.T) {
+func TestACriticalHitDoublesTheDiceWithoutChangingThem(t *testing.T) {
 	t.Parallel()
 	spec, _ := dice.Parse("2d6+1d4")
 	if got := attack.CriticalDice(spec).String(); got != "4d6+2d4" {
@@ -140,22 +141,32 @@ func TestDamage(t *testing.T) {
 	if spec.String() != "2d6+1d4" {
 		t.Fatal("critical changed its input")
 	}
+}
+
+func TestDamageRunsFromItsLeastToItsMostAndNeverBelowZero(t *testing.T) {
+	t.Parallel()
 	for _, c := range []struct {
 		notation    string
 		bonus       int
 		least, most int
 	}{{"2d6+1d4", 3, 6, 19}, {"1d4", -3, 0, 1}, {"1d6-1d4", 0, 0, 5}, {"1d8", 0, 1, 8}} {
-		s, _ := dice.Parse(c.notation)
-		if l, m := attack.DamageRange(s, c.bonus); l != c.least || m != c.most {
-			t.Errorf("%s%+d = %d–%d, want %d–%d", c.notation, c.bonus, l, m, c.least, c.most)
-		}
+		t.Run(fmt.Sprintf("%s%+d", c.notation, c.bonus), func(t *testing.T) {
+			s, _ := dice.Parse(c.notation)
+			if l, m := attack.DamageRange(s, c.bonus); l != c.least || m != c.most {
+				t.Fatalf("%d–%d, want %d–%d", l, m, c.least, c.most)
+			}
+		})
 	}
+}
+
+func TestFlatDamageIsItsBonus(t *testing.T) {
+	t.Parallel()
 	if l, m := attack.DamageRange(dice.Spec{}, 4); l != 4 || m != 4 {
 		t.Fatalf("flat = %d–%d", l, m)
 	}
 }
 
-func TestWeaponAttack(t *testing.T) {
+func TestAWeaponAttacksWithTheAbilityItsPropertiesAllow(t *testing.T) {
 	t.Parallel()
 	cases := []struct {
 		w                    attack.Weapon

@@ -19,7 +19,7 @@ func TestEveryClassHasPrimaryAbilities(t *testing.T) {
 	}
 }
 
-func TestPrimaryAbilities(t *testing.T) {
+func TestEachClassHasItsPrimaryAbilities(t *testing.T) {
 	t.Parallel()
 	for class, want := range map[string][]rules.Ability{
 		"barbarian": {rules.Strength}, "bard": {rules.Charisma}, "sorcerer": {rules.Charisma}, "warlock": {rules.Charisma},
@@ -74,7 +74,7 @@ func TestRollAbilityScores(t *testing.T) {
 	}
 }
 
-func TestValidateRolled(t *testing.T) {
+func TestOnlyTheSixRolledScoresMayBePlaced(t *testing.T) {
 	t.Parallel()
 	rolled := []int{15, 12, 9, 14, 8, 17}
 	ok := map[rules.Ability]int{rules.Strength: 17, rules.Dexterity: 15, rules.Constitution: 14, rules.Intelligence: 12, rules.Wisdom: 9, rules.Charisma: 8}
@@ -85,8 +85,14 @@ func TestValidateRolled(t *testing.T) {
 	if err := rules.ValidateRolled(bad, rolled); err == nil || err.Error() != "rules: place the six scores you rolled" {
 		t.Fatalf("a score not rolled = %v", err)
 	}
+}
+
+func TestCheckingRolledScoresLeavesThemAsTheyWere(t *testing.T) {
+	t.Parallel()
+	rolled := []int{15, 12, 9, 14, 8, 17}
+	_ = rules.ValidateRolled(map[rules.Ability]int{rules.Strength: 17, rules.Dexterity: 15, rules.Constitution: 14, rules.Intelligence: 12, rules.Wisdom: 9, rules.Charisma: 8}, rolled)
 	if !slices.Equal(rolled, []int{15, 12, 9, 14, 8, 17}) {
-		t.Fatal("the rolled scores are left as they were")
+		t.Fatalf("rolled = %v", rolled)
 	}
 }
 

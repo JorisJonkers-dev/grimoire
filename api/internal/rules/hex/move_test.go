@@ -125,7 +125,7 @@ func TestHighGroundBeatsAClimb(t *testing.T) {
 	}
 }
 
-func TestCostMultipliers(t *testing.T) {
+func TestAStepCostsFiveFeetTimesTheHexsMultiplierAndDifficultyDoubles(t *testing.T) {
 	t.Parallel()
 	from, to := hex.Coord{Q: 0, R: 0}, hex.Coord{Q: 1, R: 0}
 	for _, c := range []struct {

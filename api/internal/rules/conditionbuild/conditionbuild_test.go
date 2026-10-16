@@ -151,7 +151,7 @@ func TestALingeringInjuryLastsUntilItsCure(t *testing.T) {
 	}
 }
 
-func TestExhaustionVariants(t *testing.T) {
+func TestEachExhaustionVariantHasItsPenaltiesAndDeath(t *testing.T) {
 	t.Parallel()
 	for variant, want := range map[string]effects.Exhausting{
 		"srd-2024": {D20PerLevel: 2, SpeedFtPerLevel: 5, DeathAt: 6, MaxLevel: 6},
@@ -164,9 +164,17 @@ func TestExhaustionVariants(t *testing.T) {
 			t.Errorf("%s = %+v %v", variant, got, ok)
 		}
 	}
+}
+
+func TestAnUnknownExhaustionVariantIsNotFound(t *testing.T) {
+	t.Parallel()
 	if _, ok := conditionbuild.Exhaustion("brutal"); ok {
-		t.Fatal("an unknown variant")
+		t.Fatal("found")
 	}
+}
+
+func TestThereAreFourExhaustionVariantsTheSRDFirst(t *testing.T) {
+	t.Parallel()
 	if v := conditionbuild.Variants(); len(v) != 4 || v[0] != "srd-2024" {
 		t.Fatalf("variants = %v", v)
 	}

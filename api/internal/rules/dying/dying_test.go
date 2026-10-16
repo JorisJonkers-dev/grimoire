@@ -6,7 +6,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/dying"
 )
 
-func TestMassiveDamage(t *testing.T) {
+func TestDamageLeftOverAtLeastTheMaximumKillsOutright(t *testing.T) {
 	t.Parallel()
 	for _, c := range []struct {
 		before, damage, max int
@@ -18,31 +18,50 @@ func TestMassiveDamage(t *testing.T) {
 	}
 }
 
-func TestDeathSaves(t *testing.T) {
+func TestADyingCreatureRollsDeathSaves(t *testing.T) {
+	t.Parallel()
+	if !(dying.State{}).Rolls() {
+		t.Fatal("no roll")
+	}
+}
+
+func TestATenOrMoreSucceedsAndLessFails(t *testing.T) {
 	t.Parallel()
 	var s dying.State
-	if !s.Rolls() {
-		t.Fatal("a dying creature rolls")
-	}
 	s, _ = s.Save(10, 10)
 	s, _ = s.Save(9, 9)
 	s, _ = s.Save(7, 10)
 	if s != (dying.State{Successes: 2, Failures: 1}) {
 		t.Fatalf("after 10, 9 and a blessed 7 = %+v", s)
 	}
-	s, _ = s.Save(12, 12)
+}
+
+func TestThreeSuccessesStabilise(t *testing.T) {
+	t.Parallel()
+	s, _ := (dying.State{Successes: 2, Failures: 1}).Save(12, 12)
 	if !s.Stable || s.Successes != 0 || s.Failures != 0 || s.Rolls() {
-		t.Fatalf("three successes stabilise = %+v", s)
+		t.Fatalf("state = %+v", s)
 	}
-	down := dying.State{Successes: 1, Failures: 1}
-	if got, _ := down.Save(1, 5); !got.Dead || got.Failures != 3 {
-		t.Fatalf("a 1 is two failures = %+v", got)
+}
+
+func TestANaturalOneIsTwoFailures(t *testing.T) {
+	t.Parallel()
+	if got, _ := (dying.State{Successes: 1, Failures: 1}).Save(1, 5); !got.Dead || got.Failures != 3 {
+		t.Fatalf("state = %+v", got)
 	}
-	if got, woke := down.Save(20, 20); !woke || got != (dying.State{}) {
-		t.Fatalf("a 20 wakes = %+v %v", got, woke)
+}
+
+func TestANaturalTwentyWakesTheCreature(t *testing.T) {
+	t.Parallel()
+	if got, woke := (dying.State{Successes: 1, Failures: 1}).Save(20, 20); !woke || got != (dying.State{}) {
+		t.Fatalf("state = %+v %v", got, woke)
 	}
+}
+
+func TestAThirdFailureKills(t *testing.T) {
+	t.Parallel()
 	if got, woke := (dying.State{Failures: 2}).Save(5, 9); woke || !got.Dead || got.Rolls() {
-		t.Fatalf("a third failure kills = %+v", got)
+		t.Fatalf("state = %+v", got)
 	}
 }
 
@@ -72,7 +91,7 @@ func TestDamageWhileDown(t *testing.T) {
 	}
 }
 
-func TestRevivalWindows(t *testing.T) {
+func TestEachRevivalSpellWorksWithinItsWindow(t *testing.T) {
 	t.Parallel()
 	died := dying.Died{Fight: "a", Round: 2, Day: 5}
 	for _, c := range []struct {

@@ -36,7 +36,7 @@ func TestTheReferenceTable(t *testing.T) {
 	}
 }
 
-func TestPerceiving(t *testing.T) {
+func TestACreatureSeesWhatItsSensesReach(t *testing.T) {
 	t.Parallel()
 	eyes := []vision.Perceiver{{Sense: vision.Sight}}
 	bat := []vision.Perceiver{{Sense: vision.Sight}, {Sense: vision.Blindsight, RangeFt: 30}}
@@ -73,7 +73,7 @@ func TestPerceiving(t *testing.T) {
 	}
 }
 
-func TestPierces(t *testing.T) {
+func TestEachSenseNamesWhatItSeesThrough(t *testing.T) {
 	t.Parallel()
 	for s, want := range map[vision.Sense]string{
 		vision.Blindsight:  "Blindsight 30 ft: Hidden, Invisible, Illusory, Darkness, Heavy obscurement",
@@ -88,7 +88,7 @@ func TestPierces(t *testing.T) {
 	}
 }
 
-func TestDescribe(t *testing.T) {
+func TestEachSenseIsDescribedWithWhatItPierces(t *testing.T) {
 	t.Parallel()
 	got := vision.Describe(map[vision.Sense]int{vision.Truesight: 120, vision.Darkvision: 60, vision.Sight: 10})
 	want := []string{
@@ -104,7 +104,11 @@ func TestDescribe(t *testing.T) {
 			t.Errorf("line %d = %q", i, got[i])
 		}
 	}
+}
+
+func TestACreatureWithOnlyEyesIsDescribedByItsSight(t *testing.T) {
+	t.Parallel()
 	if got := vision.Describe(nil); len(got) != 1 {
-		t.Errorf("eyes only = %v", got)
+		t.Fatalf("eyes only = %v", got)
 	}
 }

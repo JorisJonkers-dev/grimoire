@@ -39,7 +39,7 @@ func TestTheClockMovesOn(t *testing.T) {
 }
 
 // Dawn is at six. Every dawn after one time, up to and including another, has passed between them.
-func TestCountingDawns(t *testing.T) {
+func TestTimePassingCountsEachDawnItReaches(t *testing.T) {
 	t.Parallel()
 	for _, c := range []struct {
 		name     string

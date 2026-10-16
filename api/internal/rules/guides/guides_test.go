@@ -8,7 +8,7 @@ import (
 )
 
 // The loot guide has four tiers of play; each opens one more rarity, and none offers an artifact.
-func TestLootTiers(t *testing.T) {
+func TestThereAreFourLootTiersEachAddingARarity(t *testing.T) {
 	t.Parallel()
 	want := []guides.Tier{
 		{No: 1, From: 1, To: 4, Rarities: []string{"common", "uncommon"}},
@@ -25,20 +25,29 @@ func TestLootTiers(t *testing.T) {
 			t.Errorf("tier %d = %+v, want %+v", i+1, got[i], want[i])
 		}
 	}
-	// Each call gives its own copy: changing one does not change the guide.
-	got[0].Rarities[0] = "artifact"
+}
+
+func TestChangingTheTiersGivenChangesNobodyElses(t *testing.T) {
+	t.Parallel()
+	guides.Tiers()[0].Rarities[0] = "artifact"
 	if guides.Tiers()[0].Rarities[0] != "common" {
-		t.Errorf("the tiers were changed from outside")
+		t.Fatal("the tiers were changed from outside")
 	}
+}
+
+func TestARarityFirstSuitsItsLowestTier(t *testing.T) {
+	t.Parallel()
 	for rarity, tier := range map[string]int{"common": 1, "uncommon": 1, "rare": 2, "very-rare": 3, "legendary": 4, "artifact": 0, "": 0, "mythic": 0} {
-		if got := guides.FirstTier(rarity); got != tier {
-			t.Errorf("%q first suits tier %d, want %d", rarity, got, tier)
-		}
+		t.Run(rarity, func(t *testing.T) {
+			if got := guides.FirstTier(rarity); got != tier {
+				t.Fatalf("tier %d, want %d", got, tier)
+			}
+		})
 	}
 }
 
 // A Challenge Rating reads as the books write it.
-func TestChallenge(t *testing.T) {
+func TestAChallengeRatingReadsAsAFractionBelowOne(t *testing.T) {
 	t.Parallel()
 	for cr, want := range map[float64]string{0: "0", 0.125: "1/8", 0.25: "1/4", 0.5: "1/2", 1: "1", 2: "2", 10: "10", 30: "30", 0.75: "0.75"} {
 		if got := guides.Challenge(cr); got != want {
@@ -49,7 +58,7 @@ func TestChallenge(t *testing.T) {
 
 // A hit deals its dice at their average, plus its bonus, plus any extra dice; an attack with no dice
 // deals its flat damage, and dice that cannot be read count for nothing.
-func TestAverageDamage(t *testing.T) {
+func TestAnAttacksAverageDamageIsItsDiceAverageAndBonusNeverBelowZero(t *testing.T) {
 	t.Parallel()
 	for _, c := range []struct {
 		a    guides.Attack
@@ -73,7 +82,7 @@ func TestAverageDamage(t *testing.T) {
 
 // The attacks of one Challenge Rating are summed up by the lowest, the middle and the highest bonus to
 // hit and the middle damage of a hit.
-func TestSummarise(t *testing.T) {
+func TestAttacksSummariseAsTheirSpreadMiddleAndDamageWithoutReordering(t *testing.T) {
 	t.Parallel()
 	hit := func(toHit int, dice string, bonus int) guides.Attack {
 		return guides.Attack{ToHit: toHit, Dice: dice, Bonus: bonus}

@@ -21,7 +21,7 @@ func TestAScoreStaysWithinItsTrack(t *testing.T) {
 
 // A threshold is crossed when the score reaches or passes it going its way: a rising one on the way up,
 // a falling one on the way down. A score that starts on a threshold has already crossed it.
-func TestCrossingThresholds(t *testing.T) {
+func TestAMoveCrossesEachThresholdInItsDirectionNearestFirst(t *testing.T) {
 	t.Parallel()
 	// Broken at 8 rising, calm again at 2 falling, shaken at 4 rising.
 	const broken, calm, shaken = 0, 1, 2
@@ -43,19 +43,31 @@ func TestCrossingThresholds(t *testing.T) {
 		{"down, past the falling one", 3, 0, []int{calm}},
 		{"down, from the falling one", 2, 0, nil},
 	} {
-		if got := tracks.Crossed(all, c.from, c.to); !slices.Equal(got, c.want) {
-			t.Errorf("%s (%d to %d) = %v", c.name, c.from, c.to, got)
-		}
+		t.Run(c.name, func(t *testing.T) {
+			if got := tracks.Crossed(all, c.from, c.to); !slices.Equal(got, c.want) {
+				t.Fatalf("%d to %d = %v", c.from, c.to, got)
+			}
+		})
 	}
-	// On the way down the nearest is still first.
+}
+
+func TestOnTheWayDownTheNearestThresholdIsStillFirst(t *testing.T) {
+	t.Parallel()
 	if got := tracks.Crossed([]tracks.Threshold{{At: 1, Rising: false}, {At: 2, Rising: false}}, 5, 0); !slices.Equal(got, []int{1, 0}) {
-		t.Errorf("down past two = %v", got)
+		t.Fatalf("down past two = %v", got)
 	}
-	// Two at one score keep the order they were given in.
+}
+
+func TestTwoThresholdsAtOneScoreKeepTheirOrder(t *testing.T) {
+	t.Parallel()
 	if got := tracks.Crossed([]tracks.Threshold{{At: 4, Rising: true}, {At: 4, Rising: true}}, 0, 4); !slices.Equal(got, []int{0, 1}) {
-		t.Errorf("two at one score = %v", got)
+		t.Fatalf("two at one score = %v", got)
 	}
+}
+
+func TestWithoutThresholdsNoneIsCrossed(t *testing.T) {
+	t.Parallel()
 	if got := tracks.Crossed(nil, 0, 10); got != nil {
-		t.Errorf("no thresholds = %v", got)
+		t.Fatalf("crossed = %v", got)
 	}
 }

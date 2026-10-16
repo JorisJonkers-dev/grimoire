@@ -80,11 +80,12 @@ func TestCheckingARecipe(t *testing.T) {
 
 // Crafting takes the Recipe's days, coin and ingredients, needs its tool at hand and leaves it there,
 // and gives what the Recipe makes. Whatever is short, nothing is taken.
-func TestCrafting(t *testing.T) {
+func bench() downtime.Bench {
+	return downtime.Bench{Days: 5, Coins: map[string]int{"gp": 30, "sp": 4}, Items: map[string]int{"healing-herb": 3, "vial": 1, "herbalism-kit": 1, "potion-of-healing": 1, "rope": 2}}
+}
+
+func TestCraftingSpendsDaysIngredientsAndCoinAndAddsWhatItMakes(t *testing.T) {
 	t.Parallel()
-	bench := func() downtime.Bench {
-		return downtime.Bench{Days: 5, Coins: map[string]int{"gp": 30, "sp": 4}, Items: map[string]int{"healing-herb": 3, "vial": 1, "herbalism-kit": 1, "potion-of-healing": 1, "rope": 2}}
-	}
 	got, err := downtime.Craft(potion(), bench())
 	if err != nil {
 		t.Fatal(err)
@@ -96,6 +97,10 @@ func TestCrafting(t *testing.T) {
 	if !maps.Equal(got.Coins, map[string]int{"gp": 5, "sp": 4}) {
 		t.Fatalf("coins left = %v", got.Coins)
 	}
+}
+
+func TestCraftingIsRefusedForWhatIsMissing(t *testing.T) {
+	t.Parallel()
 	with := func(f func(b *downtime.Bench)) downtime.Bench {
 		b := bench()
 		f(&b)
@@ -108,34 +113,50 @@ func TestCrafting(t *testing.T) {
 		"It needs 1 × vial; you have 0.":         with(func(b *downtime.Bench) { delete(b.Items, "vial") }),
 		"It costs 25 gp, which you cannot pay.":  with(func(b *downtime.Bench) { b.Coins = map[string]int{"gp": 24, "sp": 9, "cp": 9} }),
 	} {
-		var refused downtime.RefusedError
-		if _, err := downtime.Craft(potion(), b); !errors.As(err, &refused) || err.Error() != want {
-			t.Errorf("want %q, got %v", want, err)
-		}
+		t.Run(want, func(t *testing.T) {
+			var refused downtime.RefusedError
+			if _, err := downtime.Craft(potion(), b); !errors.As(err, &refused) || err.Error() != want {
+				t.Fatalf("err = %v", err)
+			}
+		})
 	}
-	// Exactly enough of everything is enough, and what was given is not changed.
+}
+
+func TestExactlyEnoughOfEverythingIsEnoughAndTheBenchIsLeftAlone(t *testing.T) {
+	t.Parallel()
 	exact := downtime.Bench{Days: 3, Coins: map[string]int{"gp": 25}, Items: map[string]int{"healing-herb": 2, "vial": 1, "herbalism-kit": 1}}
-	got, err = downtime.Craft(potion(), exact)
+	got, err := downtime.Craft(potion(), exact)
 	if err != nil || got.DaysLeft != 0 || got.Items["potion-of-healing"] != 2 || got.Items["healing-herb"] != 0 || len(got.Coins) != 0 {
 		t.Fatalf("with exactly enough = %+v %v", got, err)
 	}
 	if exact.Items["healing-herb"] != 2 || exact.Coins["gp"] != 25 {
 		t.Fatalf("the bench was changed: %+v", exact)
 	}
-	// A Recipe of time alone asks for no tool, no ingredient and no coin; a price in odd coppers is named so.
-	plain := downtime.Recipe{Name: "Whittling", Makes: "wooden-spoon", Quantity: 1, Days: 1}
-	if got, err := downtime.Craft(plain, downtime.Bench{Days: 1}); err != nil || got.Items["wooden-spoon"] != 1 || got.DaysLeft != 0 {
-		t.Fatalf("a Recipe of time alone = %+v %v", got, err)
+}
+
+var whittling = downtime.Recipe{Name: "Whittling", Makes: "wooden-spoon", Quantity: 1, Days: 1}
+
+func TestARecipeOfTimeAloneAsksForNothingElse(t *testing.T) {
+	t.Parallel()
+	if got, err := downtime.Craft(whittling, downtime.Bench{Days: 1}); err != nil || got.Items["wooden-spoon"] != 1 || got.DaysLeft != 0 {
+		t.Fatalf("crafted = %+v %v", got, err)
 	}
-	// What a Recipe makes may be one of its ingredients: a starter feeds itself.
+}
+
+func TestARecipeMayMakeOneOfItsIngredients(t *testing.T) {
+	t.Parallel()
 	starter := downtime.Recipe{Name: "Feed the starter", Makes: "starter", Quantity: 3, Days: 1, Ingredients: []downtime.Ingredient{{Item: "starter", Count: 1}}}
 	if got, err := downtime.Craft(starter, downtime.Bench{Days: 1, Items: map[string]int{"starter": 2}}); err != nil || got.Items["starter"] != 4 {
-		t.Fatalf("a Recipe that feeds itself = %+v %v", got, err)
+		t.Fatalf("crafted = %+v %v", got, err)
 	}
-	odd := plain
+}
+
+func TestAPriceInOddCoppersIsNamedInEveryCoin(t *testing.T) {
+	t.Parallel()
+	odd := whittling
 	odd.CostCP = 1234
 	if _, err := downtime.Craft(odd, downtime.Bench{Days: 1}); err == nil || err.Error() != "It costs 12 gp 3 sp 4 cp, which you cannot pay." {
-		t.Fatalf("an odd price = %v", err)
+		t.Fatalf("err = %v", err)
 	}
 }
 

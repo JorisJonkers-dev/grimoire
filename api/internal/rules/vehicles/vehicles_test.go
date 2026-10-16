@@ -103,7 +103,7 @@ func TestDamageAndRepair(t *testing.T) {
 
 // A vehicle goes at its speed with a whole hull, working drives and a full crew: a wreck goes nowhere,
 // each broken drive takes its share, and a short crew halves what is left.
-func TestSpeed(t *testing.T) {
+func TestAVehicleSlowsWithItsDrivesAndCrewAndStopsWhenWrecked(t *testing.T) {
 	t.Parallel()
 	for _, c := range []struct {
 		why  string
@@ -125,8 +125,12 @@ func TestSpeed(t *testing.T) {
 			t.Errorf("%s: %d miles a day, want %d", c.why, got, c.want)
 		}
 	}
+}
+
+func TestAShortCrewOnTheSlowestVehicleGoesNowhere(t *testing.T) {
+	t.Parallel()
 	if got := vehicles.Speed(1, vehicles.State{Hull: 5, ShortHanded: true}); got != 0 {
-		t.Errorf("a short crew on the slowest vehicle: %d", got)
+		t.Fatalf("speed = %d", got)
 	}
 }
 

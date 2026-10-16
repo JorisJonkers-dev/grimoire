@@ -50,7 +50,7 @@ func TestGrappleAndShove(t *testing.T) {
 	}
 }
 
-func TestReadiedTriggers(t *testing.T) {
+func TestAReadiedActionFiresWhenAMoverEntersReach(t *testing.T) {
 	t.Parallel()
 	anyone := actions.Trigger{Kind: actions.EntersReach, Who: ""}
 	for _, c := range []struct {
@@ -68,11 +68,19 @@ func TestReadiedTriggers(t *testing.T) {
 			t.Errorf("%+v at reach %d = %v", c.step, c.reach, got)
 		}
 	}
+}
+
+func TestATriggerOnOneCreatureIgnoresTheRest(t *testing.T) {
+	t.Parallel()
 	only := actions.Trigger{Kind: actions.EntersReach, Who: "boss"}
 	if only.Fires(actions.Step{Mover: "goblin", BeforeFt: 10, AfterFt: 5}, 5) || !only.Fires(actions.Step{Mover: "boss", BeforeFt: 10, AfterFt: 5}, 5) {
-		t.Error("a trigger on one creature ignores the rest")
+		t.Fatal("fired for another creature, or not for its own")
 	}
+}
+
+func TestAnUnknownTriggerNeverFires(t *testing.T) {
+	t.Parallel()
 	if (actions.Trigger{Kind: "sneezes", Who: ""}).Fires(actions.Step{Mover: "goblin", BeforeFt: 10, AfterFt: 5}, 5) {
-		t.Error("an unknown trigger never fires")
+		t.Fatal("fired")
 	}
 }

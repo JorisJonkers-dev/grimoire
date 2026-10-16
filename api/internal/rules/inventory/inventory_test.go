@@ -69,7 +69,7 @@ func TestCarryingCapacityAndSpeed(t *testing.T) {
 	}
 }
 
-func TestHealingPotions(t *testing.T) {
+func TestEachHealingPotionHealsItsDice(t *testing.T) {
 	t.Parallel()
 	for slug, want := range map[string]inventory.Potion{
 		"potion-of-healing": {Dice: 2, Faces: 4, Bonus: 2}, "potion-of-greater-healing": {Dice: 4, Faces: 4, Bonus: 4},
@@ -79,12 +79,16 @@ func TestHealingPotions(t *testing.T) {
 			t.Errorf("%s = %+v %v", slug, got, ok)
 		}
 	}
+}
+
+func TestAPotionThatIsNotHealingHealsNothing(t *testing.T) {
+	t.Parallel()
 	if _, ok := inventory.Healing("potion-of-heroism"); ok {
-		t.Fatal("heroism heals")
+		t.Fatal("heals")
 	}
 }
 
-func TestAttunementRequirements(t *testing.T) {
+func TestAnItemIsAttunedOnlyByTheClassesOrCastersItNames(t *testing.T) {
 	t.Parallel()
 	cases := []struct {
 		detail  string
@@ -105,8 +109,12 @@ func TestAttunementRequirements(t *testing.T) {
 			t.Errorf("%q for %v = %v", c.detail, c.classes, got)
 		}
 	}
+}
+
+func TestACharacterAttunesToAtMostThreeItems(t *testing.T) {
+	t.Parallel()
 	if inventory.MaxAttuned != 3 {
-		t.Fatal("attunement slots")
+		t.Fatalf("slots = %d", inventory.MaxAttuned)
 	}
 }
 
@@ -153,11 +161,15 @@ func TestChargesComeBackOnTheirSchedule(t *testing.T) {
 	}
 }
 
-func TestWeaponSets(t *testing.T) {
+func TestEachWeaponSetHasItsTwoSlots(t *testing.T) {
 	t.Parallel()
 	if inventory.SetSlots(inventory.Melee) != [2]string{inventory.MainHand, inventory.OffHand} || inventory.SetSlots(inventory.RangedSet) != [2]string{inventory.Ranged, inventory.RangedOff} {
 		t.Fatal("set slots")
 	}
+}
+
+func TestTheOtherWeaponSetIsTheOneNotInHand(t *testing.T) {
+	t.Parallel()
 	if inventory.OtherSet(inventory.Melee) != inventory.RangedSet || inventory.OtherSet(inventory.RangedSet) != inventory.Melee {
 		t.Fatal("other set")
 	}

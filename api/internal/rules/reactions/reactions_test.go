@@ -6,7 +6,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/reactions"
 )
 
-func TestDecide(t *testing.T) {
+func TestAReactionIsOfferedOrTakenAsItsSettingSays(t *testing.T) {
 	t.Parallel()
 	fresh, hurt, half := reactions.Situation{TargetHP: 10, TargetHPMax: 10}, reactions.Situation{TargetHP: 4, TargetHPMax: 10}, reactions.Situation{TargetHP: 5, TargetHPMax: 10}
 	for _, c := range []struct {
@@ -30,7 +30,7 @@ func TestDecide(t *testing.T) {
 	}
 }
 
-func TestValid(t *testing.T) {
+func TestOnlyAKnownModeAndConditionMakeAValidSetting(t *testing.T) {
 	t.Parallel()
 	for s, want := range map[reactions.Setting]bool{
 		{Mode: reactions.Ask}: true, {Mode: reactions.Always, Condition: reactions.TargetBloodied}: true, {Mode: reactions.Never}: true,

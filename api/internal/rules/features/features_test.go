@@ -1,6 +1,7 @@
 package features_test
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -54,26 +55,40 @@ func focus() features.Resource {
 	}
 }
 
-func TestRageUses(t *testing.T) {
+func TestRageUsesGrowWithBarbarianLevel(t *testing.T) {
 	t.Parallel()
-	r := rage()
 	for level, want := range map[int]int{1: 2, 2: 2, 3: 3, 5: 3, 6: 4, 11: 4, 12: 5, 16: 5, 17: 6, 20: 6} {
-		if got := r.Max(features.Stats{Level: level, AbilityMod: 0, Proficiency: 2}); got != want {
-			t.Errorf("Rage uses at %d = %d, want %d", level, got, want)
-		}
+		t.Run(fmt.Sprint(level), func(t *testing.T) {
+			if got := rage().Max(features.Stats{Level: level, AbilityMod: 0, Proficiency: 2}); got != want {
+				t.Fatalf("uses = %d, want %d", got, want)
+			}
+		})
 	}
-	at6 := features.Stats{Level: 6, AbilityMod: 0, Proficiency: 3}
-	if got := r.Regain(features.ShortRest, at6, 0, 0); got != 1 {
-		t.Errorf("a Short Rest gives back one Rage = %d", got)
+}
+
+var level6 = features.Stats{Level: 6, AbilityMod: 0, Proficiency: 3}
+
+func TestAShortRestGivesBackOneRageButNeverAboveTheMaximum(t *testing.T) {
+	t.Parallel()
+	if got := rage().Regain(features.ShortRest, level6, 0, 0); got != 1 {
+		t.Errorf("from none = %d", got)
 	}
-	if got := r.Regain(features.ShortRest, at6, 0, 4); got != 4 {
-		t.Errorf("never above the maximum = %d", got)
+	if got := rage().Regain(features.ShortRest, level6, 0, 4); got != 4 {
+		t.Errorf("from the maximum = %d", got)
 	}
-	if got := r.Regain(features.LongRest, at6, 0, 1); got != 4 {
-		t.Errorf("a Long Rest gives back every Rage = %d", got)
+}
+
+func TestALongRestGivesBackEveryRage(t *testing.T) {
+	t.Parallel()
+	if got := rage().Regain(features.LongRest, level6, 0, 1); got != 4 {
+		t.Fatalf("uses = %d", got)
 	}
-	if got := r.Regain(features.Initiative, at6, 0, 1); got != 1 {
-		t.Errorf("rolling initiative gives nothing back = %d", got)
+}
+
+func TestRollingInitiativeGivesNoRageBack(t *testing.T) {
+	t.Parallel()
+	if got := rage().Regain(features.Initiative, level6, 0, 1); got != 1 {
+		t.Fatalf("uses = %d", got)
 	}
 }
 
@@ -155,7 +170,7 @@ func TestChoicesArriveAtTheirLevel(t *testing.T) {
 	}
 }
 
-func TestPrerequisites(t *testing.T) {
+func TestUnmetPrerequisitesAreNamedAndAnyOneInAGroupIsEnough(t *testing.T) {
 	t.Parallel()
 	grappler := []features.Requirement{
 		{Kind: features.MinLevel, Ability: "", Minimum: 4, Slug: "", Group: 0},

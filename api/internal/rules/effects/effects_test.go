@@ -56,7 +56,7 @@ func TestSavesAndMovement(t *testing.T) {
 	}
 }
 
-func TestManualFallback(t *testing.T) {
+func TestWhatIsNotModelledIsLeftToTheDMAsAnInstruction(t *testing.T) {
 	t.Parallel()
 	if got := srd().Instructions("poisoned", "Poisoned", ""); !reflect.DeepEqual(got, []string{"Poisoned: ability checks are made with disadvantage."}) {
 		t.Fatalf("partly modelled = %v", got)
@@ -67,6 +67,10 @@ func TestManualFallback(t *testing.T) {
 	if got := srd().Instructions("bless", "Bless", ""); got != nil {
 		t.Fatalf("fully modelled = %v", got)
 	}
+}
+
+func TestTheCatalogListsWhatItAutomatesAndWhatOnlyPartly(t *testing.T) {
+	t.Parallel()
 	want := []string{"bless", "burning-hands", "cone-of-cold", "exhaustion", "faerie-fire", "fireball", "grease", "hunters-mark", "invisible", "lightning-bolt", "paralyzed", "prone", "restrained", "sapped", "shatter", "slowed", "stunned", "vexed"}
 	if got := srd().Automated(); !reflect.DeepEqual(got, want) {
 		t.Fatalf("automated = %v", got)
@@ -74,19 +78,26 @@ func TestManualFallback(t *testing.T) {
 	if got := srd().Partial(); !reflect.DeepEqual(got, []string{"blinded", "charmed", "deafened", "frightened", "grappled", "incapacitated", "petrified", "poisoned", "thunderwave", "unconscious"}) {
 		t.Fatalf("partial = %v", got)
 	}
-	d, ok := srd().Lookup("bless")
-	if !ok || !d.Concentration || d.Name != "Bless" || !d.Automated() {
+}
+
+func TestAModelledEffectIsLookedUpWithItsConcentrationAndAutomation(t *testing.T) {
+	t.Parallel()
+	if d, ok := srd().Lookup("bless"); !ok || !d.Concentration || d.Name != "Bless" || !d.Automated() {
 		t.Fatalf("bless = %+v", d)
-	}
-	if _, ok := srd().Lookup("wish"); ok {
-		t.Fatal("wish is not modelled")
 	}
 	if d, _ := srd().Lookup("poisoned"); d.Automated() || d.Concentration {
 		t.Fatalf("poisoned = %+v", d)
 	}
 }
 
-func TestAreaSpells(t *testing.T) {
+func TestAnUnmodelledEffectIsNotFound(t *testing.T) {
+	t.Parallel()
+	if _, ok := srd().Lookup("wish"); ok {
+		t.Fatal("found")
+	}
+}
+
+func TestAnAreaSpellCarriesItsShapeSaveDamageConditionAndSurface(t *testing.T) {
 	t.Parallel()
 	fb, ok := srd().AreaOf("fireball")
 	if !ok || fb.Name != "Fireball" || fb.Area.Shape != hex.SphereArea || fb.Area.SizeFt != 20 || fb.Area.RangeFt != 150 || fb.Save != "dexterity" ||
@@ -100,13 +111,23 @@ func TestAreaSpells(t *testing.T) {
 	if tw, _ := srd().AreaOf("thunderwave"); len(tw.Instructions) != 1 || tw.Save != "constitution" {
 		t.Fatalf("thunderwave = %+v", tw)
 	}
+}
+
+func TestASpellWithoutAnAreaHasNone(t *testing.T) {
+	t.Parallel()
 	for _, slug := range []string{"bless", "wish"} {
-		if _, ok := srd().AreaOf(slug); ok {
-			t.Errorf("%s is not an area spell", slug)
-		}
+		t.Run(slug, func(t *testing.T) {
+			if _, ok := srd().AreaOf(slug); ok {
+				t.Fatal("an area")
+			}
+		})
 	}
+}
+
+func TestAnAreaSpellDoesNothingToAttacks(t *testing.T) {
+	t.Parallel()
 	if p := srd().ForAttack([]effects.Active{{Slug: "fireball"}}, []effects.Active{{Slug: "grease"}}, "", true); !reflect.DeepEqual(p, effects.AttackProfile{}) {
-		t.Fatalf("areas do nothing to attacks = %+v", p)
+		t.Fatalf("profile = %+v", p)
 	}
 }
 
@@ -296,22 +317,29 @@ func TestEffectsThatReact(t *testing.T) {
 	}
 }
 
-func TestMasteryEffects(t *testing.T) {
+func TestOnlyTheVexerHasAdvantageOnTheVexedTarget(t *testing.T) {
 	t.Parallel()
-	cat := srd()
 	vexed := []effects.Active{{Slug: "vexed", Source: "aria"}}
-	if p := cat.ForAttack(nil, vexed, "aria", true); len(p.Advantages) != 1 {
-		t.Errorf("the vexer has advantage = %+v", p)
+	if p := srd().ForAttack(nil, vexed, "aria", true); len(p.Advantages) != 1 {
+		t.Errorf("the vexer = %+v", p)
 	}
-	if p := cat.ForAttack(nil, vexed, "brom", true); len(p.Advantages) != 0 {
-		t.Errorf("nobody else does = %+v", p)
+	if p := srd().ForAttack(nil, vexed, "brom", true); len(p.Advantages) != 0 {
+		t.Errorf("someone else = %+v", p)
 	}
-	if p := cat.ForAttack([]effects.Active{{Slug: "sapped"}}, nil, "x", true); len(p.Disadvantages) != 1 {
-		t.Errorf("a sapped attacker = %+v", p)
+}
+
+func TestASappedAttackerHasDisadvantage(t *testing.T) {
+	t.Parallel()
+	if p := srd().ForAttack([]effects.Active{{Slug: "sapped"}}, nil, "x", true); len(p.Disadvantages) != 1 {
+		t.Fatalf("profile = %+v", p)
 	}
+}
+
+func TestTwoSlowsCountOnceAndExhaustionAddsToTheSpeedPenalty(t *testing.T) {
+	t.Parallel()
 	slowed := []effects.Active{{Slug: "slowed"}, {Slug: "slowed"}, {Slug: "exhaustion", Level: 1}}
-	if got := cat.SpeedPenaltyFt(slowed); got != 15 {
-		t.Errorf("two Slows count once, exhaustion adds = %d", got)
+	if got := srd().SpeedPenaltyFt(slowed); got != 15 {
+		t.Fatalf("penalty = %d", got)
 	}
 }
 

@@ -6,7 +6,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/surface"
 )
 
-func TestBuiltinSurfaces(t *testing.T) {
+func TestThereAreFourteenNamedBuiltinSurfaces(t *testing.T) {
 	t.Parallel()
 	cat := surface.Builtin()
 	if len(cat.Kinds()) != 14 || cat.Kinds()[0] != surface.Consecrated || cat.Valid(surface.None) || cat.Valid("lava-lamp") {
@@ -14,43 +14,73 @@ func TestBuiltinSurfaces(t *testing.T) {
 	}
 	for _, k := range cat.Kinds() {
 		if !cat.Valid(k) || cat[k].Name == "" {
-			t.Errorf("%s is a named surface", k)
-		}
-	}
-	for k, want := range map[surface.Kind]int{
-		surface.Grease: 2, surface.Ice: 2, surface.Web: 2, surface.Spikes: 2, surface.Mud: 2, surface.PlantGrowth: 4, surface.Fire: 1, surface.None: 1, "unknown": 1,
-	} {
-		if got := cat.Cost(k); got != want {
-			t.Errorf("%s costs %d per foot", k, got)
-		}
-	}
-	for k, want := range map[surface.Kind]string{
-		surface.Fire: "1d4 fire false", surface.Electrified: "1d4 lightning false", surface.Lava: "10d10 fire false", surface.Spikes: "2d4 piercing true",
-	} {
-		if dice, kind, every, ok := cat.Hazard(k); !ok || dice+" "+kind+" "+map[bool]string{true: "true", false: "false"}[every] != want {
-			t.Errorf("%s hazard = %s %s %v", k, dice, kind, every)
-		}
-	}
-	for _, k := range []surface.Kind{surface.None, surface.Grease, surface.Water, surface.Fog, surface.Mud} {
-		if _, _, _, ok := cat.Hazard(k); ok {
-			t.Errorf("%s is harmless", k)
-		}
-	}
-	for k, want := range map[surface.Kind]surface.Obscurement{
-		surface.Fog: surface.ObscuredHeavy, surface.StinkingCloud: surface.ObscuredHeavy, surface.Darkness: surface.ObscuredDark, surface.Fire: surface.Clear,
-	} {
-		if got := cat.Obscures(k); got != want {
-			t.Errorf("%s obscures %q", k, got)
-		}
-	}
-	for k, want := range map[surface.Kind]string{surface.StinkingCloud: "poisoned", surface.Consecrated: "bless", surface.Fog: ""} {
-		if got := cat.Effect(k); got != want {
-			t.Errorf("%s puts on %q", k, got)
+			t.Errorf("%s is not a named surface", k)
 		}
 	}
 }
 
-func TestInteractions(t *testing.T) {
+func TestASurfaceCostsItsMovementMultiplier(t *testing.T) {
+	t.Parallel()
+	for k, want := range map[surface.Kind]int{
+		surface.Grease: 2, surface.Ice: 2, surface.Web: 2, surface.Spikes: 2, surface.Mud: 2, surface.PlantGrowth: 4, surface.Fire: 1, surface.None: 1, "unknown": 1,
+	} {
+		t.Run(string(k), func(t *testing.T) {
+			if got := surface.Builtin().Cost(k); got != want {
+				t.Fatalf("costs %d per foot", got)
+			}
+		})
+	}
+}
+
+func TestAHazardousSurfaceDealsItsDamage(t *testing.T) {
+	t.Parallel()
+	for k, want := range map[surface.Kind]string{
+		surface.Fire: "1d4 fire false", surface.Electrified: "1d4 lightning false", surface.Lava: "10d10 fire false", surface.Spikes: "2d4 piercing true",
+	} {
+		t.Run(string(k), func(t *testing.T) {
+			if dice, kind, every, ok := surface.Builtin().Hazard(k); !ok || dice+" "+kind+" "+map[bool]string{true: "true", false: "false"}[every] != want {
+				t.Fatalf("hazard = %s %s %v", dice, kind, every)
+			}
+		})
+	}
+}
+
+func TestAHarmlessSurfaceDealsNoDamage(t *testing.T) {
+	t.Parallel()
+	for _, k := range []surface.Kind{surface.None, surface.Grease, surface.Water, surface.Fog, surface.Mud} {
+		t.Run(string(k), func(t *testing.T) {
+			if _, _, _, ok := surface.Builtin().Hazard(k); ok {
+				t.Fatal("harmful")
+			}
+		})
+	}
+}
+
+func TestASurfaceObscuresAsItsKindDoes(t *testing.T) {
+	t.Parallel()
+	for k, want := range map[surface.Kind]surface.Obscurement{
+		surface.Fog: surface.ObscuredHeavy, surface.StinkingCloud: surface.ObscuredHeavy, surface.Darkness: surface.ObscuredDark, surface.Fire: surface.Clear,
+	} {
+		t.Run(string(k), func(t *testing.T) {
+			if got := surface.Builtin().Obscures(k); got != want {
+				t.Fatalf("obscures %q", got)
+			}
+		})
+	}
+}
+
+func TestASurfacePutsOnItsEffect(t *testing.T) {
+	t.Parallel()
+	for k, want := range map[surface.Kind]string{surface.StinkingCloud: "poisoned", surface.Consecrated: "bless", surface.Fog: ""} {
+		t.Run(string(k), func(t *testing.T) {
+			if got := surface.Builtin().Effect(k); got != want {
+				t.Fatalf("puts on %q", got)
+			}
+		})
+	}
+}
+
+func TestDamageChangesASurfaceAsTheElementsDo(t *testing.T) {
 	t.Parallel()
 	cat := surface.Builtin()
 	for _, c := range []struct {
