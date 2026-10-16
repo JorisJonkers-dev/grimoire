@@ -156,7 +156,6 @@ type edges struct {
 	ids   map[string]string
 	start live.View
 	q, r  int
-	last  live.Update
 }
 
 func newEdges(t *testing.T) *edges {

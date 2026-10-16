@@ -6,6 +6,8 @@ github.com/Azure/go-ansiterm v0.0.0-20250102033503-faa5f7b0171c h1:udKWzYgxTojEK
 github.com/Azure/go-ansiterm v0.0.0-20250102033503-faa5f7b0171c/go.mod h1:xomTg63KZ2rFqZQzSB4Vz2SUXa1BpHTVz9L5PTmPC4E=
 github.com/JorisJonkers-dev/go-commons v0.2.1 h1:KY46n9pyrsOi9YEEmaI/6iX/Ni+RkPLzlvWIb0hvpHU=
 github.com/JorisJonkers-dev/go-commons v0.2.1/go.mod h1:HW1WjblTsDzTbJR9ZzmlltbU4Yk8+ZyTwS4JxQtWWjk=
+github.com/JorisJonkers-dev/go-commons v0.2.2 h1:1QBGzX9fE75QtLMzlJ8L7jAUIoIbHlQrhWI1X4uczvM=
+github.com/JorisJonkers-dev/go-commons v0.2.2/go.mod h1:HW1WjblTsDzTbJR9ZzmlltbU4Yk8+ZyTwS4JxQtWWjk=
 github.com/MakeNowJust/heredoc v1.0.0 h1:cXCdzVdstXyiTqTvfqk9SDHpKNjxuom+DOlyEeQ4pzQ=
 github.com/MakeNowJust/heredoc v1.0.0/go.mod h1:mG5amYoWBHf8vpLOuehzbGGw0EHxpZZ6lCpQ4fNJ8LE=
 github.com/Microsoft/go-winio v0.6.2 h1:F2VQgta7ecxGYO8k3ZZz3RS8fVIXVxONVUPlNERoyfY=
