@@ -423,7 +423,7 @@ func TestProposalsEveryOutcome(t *testing.T) {
 
 // Refusals across the Library: blank names, players changing a Campaign's links, and Proposals read or
 // sent by someone who may not.
-func TestLibraryRefusals(t *testing.T) {
+func TestALibraryRequestOutsideTheRulesIsRefused(t *testing.T) {
 	t.Parallel()
 	h := libraryStack(t)
 	campaign, _ := campaignWithPlayer(t, h)
@@ -451,9 +451,11 @@ func TestLibraryRefusals(t *testing.T) {
 		{"resending with a blank name", http.MethodPut, base + "/proposals/" + theirs, "player", `{"name":" ","fields":[]}`, http.StatusUnprocessableEntity},
 		{"approving with a blank name", http.MethodPost, base + "/proposals/" + other + "/review", "dm", `{"action":"approve","name":" "}`, http.StatusUnprocessableEntity},
 	} {
-		if rec := call(h, c.method, c.path, c.who, c.body); rec.Code != c.want {
-			t.Errorf("%s: %d, want %d", c.name, rec.Code, c.want)
-		}
+		t.Run(c.name, func(t *testing.T) {
+			if rec := call(h, c.method, c.path, c.who, c.body); rec.Code != c.want {
+				t.Fatalf("%d, want %d", rec.Code, c.want)
+			}
+		})
 	}
 }
 
