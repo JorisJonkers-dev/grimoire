@@ -218,10 +218,12 @@ func TestDesignsAreChecked(t *testing.T) {
 		"two lights":      {func(d *spellbuild.Design) { d.Parts = append(d.Parts, light) }, "one light"},
 		"surface":         {only(part("create_surface", effects.Values{"surface": text("lava"), "rounds": number(2)})), "choose a surface"},
 	} {
-		_, err := spellbuild.Build("hb-x", "X", with(c.change), surfaces)
-		if err == nil || !strings.Contains(err.Error(), c.want) {
-			t.Errorf("%s: %v, want %q", name, err, c.want)
-		}
+		t.Run(name, func(t *testing.T) {
+			_, err := spellbuild.Build("hb-x", "X", with(c.change), surfaces)
+			if err == nil || !strings.Contains(err.Error(), c.want) {
+				t.Errorf("%s: %v, want %q", name, err, c.want)
+			}
+		})
 	}
 	for name, change := range map[string]func(*spellbuild.Design){
 		"edges": func(d *spellbuild.Design) {
@@ -252,9 +254,11 @@ func TestDesignsAreChecked(t *testing.T) {
 			d.TurnDamage, d.Parts = nil, []effects.Authored{first(first(part("manual", effects.Values{"instruction": text("Ring.")})))}
 		},
 	} {
-		if _, err := spellbuild.Build("hb-x", "X", with(change), surfaces); err != nil {
-			t.Errorf("%s: %v", name, err)
-		}
+		t.Run(name, func(t *testing.T) {
+			if _, err := spellbuild.Build("hb-x", "X", with(change), surfaces); err != nil {
+				t.Errorf("%s: %v", name, err)
+			}
+		})
 	}
 }
 
@@ -352,13 +356,15 @@ func TestASpellScales(t *testing.T) {
 		},
 		"part 1: scaling 1: field: choose a field that scales": func(d *spellbuild.Design) { d.Parts[0].Scaling[0].Field = "when" },
 	} {
-		bad := d
-		bad.Parts = []effects.Authored{saving}
-		bad.Parts[0].Scaling = append([]effects.AuthoredScaling{}, saving.Scaling...)
-		change(&bad)
-		if _, err := spellbuild.Build("hb-bad", "Bad", bad, surfaces); err == nil || err.Error() != want {
-			t.Errorf("want %q, got %v", want, err)
-		}
+		t.Run(want, func(t *testing.T) {
+			bad := d
+			bad.Parts = []effects.Authored{saving}
+			bad.Parts[0].Scaling = append([]effects.AuthoredScaling{}, saving.Scaling...)
+			change(&bad)
+			if _, err := spellbuild.Build("hb-bad", "Bad", bad, surfaces); err == nil || err.Error() != want {
+				t.Errorf("want %q, got %v", want, err)
+			}
+		})
 	}
 	targets := d
 	targets.Scaling = []effects.AuthoredScaling{{Field: "targets", Axis: "slot_level", Rule: "linear", Base: 1, Per: &effects.Value{Number: 1}}}

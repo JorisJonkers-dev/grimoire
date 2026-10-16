@@ -105,12 +105,14 @@ func TestNPCsAreDMPrep(t *testing.T) {
 		"restore": func(c caller.Caller) error { _, err := n.Restore(ctx, c, d.ID, a.ID, 1); return err },
 	}
 	for name, check := range checks {
-		if err := check(playerCaller); !errors.Is(err, domain.ErrForbidden) {
-			t.Errorf("player %s: %v", name, err)
-		}
-		if err := check(stranger); !errors.Is(err, domain.ErrNotFound) {
-			t.Errorf("stranger %s: %v", name, err)
-		}
+		t.Run(name, func(t *testing.T) {
+			if err := check(playerCaller); !errors.Is(err, domain.ErrForbidden) {
+				t.Errorf("player %s: %v", name, err)
+			}
+			if err := check(stranger); !errors.Is(err, domain.ErrNotFound) {
+				t.Errorf("stranger %s: %v", name, err)
+			}
+		})
 	}
 }
 
@@ -179,12 +181,14 @@ func TestEveryNPCDatabaseFaultSurfaces(t *testing.T) {
 		"diff":     func(n *app.NPCs) error { _, err := n.Diff(ctx, dmCaller, d.ID, a.ID, 1, 1); return err },
 	}
 	for name, op := range ops {
-		pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
-			err := op(&app.NPCs{Repo: pgstore.NewFaulty(db.Pool(), f), Now: time.Now})
-			if err != nil && !errors.Is(err, pgtest.ErrInjected) {
-				t.Fatalf("%s: %v", name, err)
-			}
-			return err
+		t.Run(name, func(t *testing.T) {
+			pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
+				err := op(&app.NPCs{Repo: pgstore.NewFaulty(db.Pool(), f), Now: time.Now})
+				if err != nil && !errors.Is(err, pgtest.ErrInjected) {
+					t.Fatalf("%s: %v", name, err)
+				}
+				return err
+			})
 		})
 	}
 }

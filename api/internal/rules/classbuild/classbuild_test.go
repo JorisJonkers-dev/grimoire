@@ -187,11 +187,13 @@ func TestClassDesignsThatDoNotBuild(t *testing.T) {
 		"0 to 9 slots":                   func(d *classbuild.Design) { d.Casting.Slots[0][0] = 10 },
 		"at least one slot by level 20":  func(d *classbuild.Design) { d.Casting.Slots = make([][]int, 20); fill(d.Casting.Slots) },
 	} {
-		d := lamplighter()
-		change(&d)
-		if err := classbuild.Check(d, lists); err == nil || !strings.Contains(err.Error(), want) {
-			t.Errorf("%s: %v", want, err)
-		}
+		t.Run(want, func(t *testing.T) {
+			d := lamplighter()
+			change(&d)
+			if err := classbuild.Check(d, lists); err == nil || !strings.Contains(err.Error(), want) {
+				t.Errorf("%s: %v", want, err)
+			}
+		})
 	}
 	for want, change := range map[string]func(*classbuild.Design){
 		"points for each of 20 levels":         func(d *classbuild.Design) { d.Casting.Points = nil },
@@ -200,11 +202,13 @@ func TestClassDesignsThatDoNotBuild(t *testing.T) {
 		"the highest spell level for each":     func(d *classbuild.Design) { d.Casting.MaxSpell[0] = 10 },
 		"reach a spell of level 1 by level 20": func(d *classbuild.Design) { d.Casting.MaxSpell = make([]int, 20) },
 	} {
-		d := runeweaver()
-		change(&d)
-		if err := classbuild.Check(d, lists); err == nil || !strings.Contains(err.Error(), want) {
-			t.Errorf("%s: %v", want, err)
-		}
+		t.Run(want, func(t *testing.T) {
+			d := runeweaver()
+			change(&d)
+			if err := classbuild.Check(d, lists); err == nil || !strings.Contains(err.Error(), want) {
+				t.Errorf("%s: %v", want, err)
+			}
+		})
 	}
 }
 

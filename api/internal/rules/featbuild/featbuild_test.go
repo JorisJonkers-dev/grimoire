@@ -126,11 +126,13 @@ func TestFeatsAndBackgroundsThatDoNotBuild(t *testing.T) {
 		"name the feat it needs":       func(f *featbuild.Feat) { f.Prerequisites[4].Feat = "Alert!" },
 		"group of 0 to 9":              func(f *featbuild.Feat) { f.Prerequisites[0].Group = 10 },
 	} {
-		f := lampwright()
-		change(&f)
-		if err := featbuild.CheckFeat(f); err == nil || !strings.Contains(err.Error(), want) {
-			t.Errorf("%s: %v", want, err)
-		}
+		t.Run(want, func(t *testing.T) {
+			f := lampwright()
+			change(&f)
+			if err := featbuild.CheckFeat(f); err == nil || !strings.Contains(err.Error(), want) {
+				t.Errorf("%s: %v", want, err)
+			}
+		})
 	}
 	for want, change := range map[string]func(*featbuild.Background){
 		"three different abilities":   func(b *featbuild.Background) { b.Abilities = []string{"strength", "strength", "wisdom"} },
@@ -144,11 +146,13 @@ func TestFeatsAndBackgroundsThatDoNotBuild(t *testing.T) {
 		"0 to 1000 GP":                func(b *featbuild.Background) { b.Gold = -1 },
 		"in up to 2000 characters":    func(b *featbuild.Background) { b.Text = strings.Repeat("x", 2001) },
 	} {
-		b := bogwarden()
-		change(&b)
-		if err := featbuild.CheckBackground(b); err == nil || !strings.Contains(err.Error(), want) {
-			t.Errorf("%s: %v", want, err)
-		}
+		t.Run(want, func(t *testing.T) {
+			b := bogwarden()
+			change(&b)
+			if err := featbuild.CheckBackground(b); err == nil || !strings.Contains(err.Error(), want) {
+				t.Errorf("%s: %v", want, err)
+			}
+		})
 	}
 	at := lampwright()
 	at.Text, at.Prerequisites = strings.Repeat("x", 4000), make([]featbuild.Prerequisite, 10)

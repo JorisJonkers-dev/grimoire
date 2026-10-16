@@ -3,6 +3,7 @@ package httpapi
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
@@ -40,11 +41,13 @@ func diceCalls(ctx context.Context, h *Handler, picture io.Reader) map[string]fu
 func TestDiceSetHandlersNeedAnIdentity(t *testing.T) {
 	t.Parallel()
 	for name, call := range diceCalls(context.Background(), &Handler{}, bytes.NewReader(nil)) {
-		res, err := call()
-		p, ok := res.(*oas.ProblemStatusCodeWithHeaders)
-		if err != nil || !ok || p.StatusCode != http.StatusUnauthorized {
-			t.Errorf("%s = %#v, %v", name, res, err)
-		}
+		t.Run(fmt.Sprint(name), func(t *testing.T) {
+			res, err := call()
+			p, ok := res.(*oas.ProblemStatusCodeWithHeaders)
+			if err != nil || !ok || p.StatusCode != http.StatusUnauthorized {
+				t.Errorf("%s = %#v, %v", name, res, err)
+			}
+		})
 	}
 }
 
@@ -104,11 +107,13 @@ func TestDiceSetsWhenTheStoreFails(t *testing.T) {
 	ctx := auth.WithIdentity(context.Background(), auth.Identity{Subject: "root"})
 	h := &Handler{DiceSets: brokenDice{}, Accounts: admitAll{}, Log: slog.New(slog.NewTextHandler(io.Discard, nil))}
 	for name, call := range diceCalls(ctx, h, bytes.NewReader([]byte("\x89PNG\r\n\x1a\n"))) {
-		res, err := call()
-		p, ok := res.(*oas.ProblemStatusCodeWithHeaders)
-		if err != nil || !ok || p.StatusCode != http.StatusServiceUnavailable {
-			t.Errorf("%s = %#v, %v", name, res, err)
-		}
+		t.Run(fmt.Sprint(name), func(t *testing.T) {
+			res, err := call()
+			p, ok := res.(*oas.ProblemStatusCodeWithHeaders)
+			if err != nil || !ok || p.StatusCode != http.StatusServiceUnavailable {
+				t.Errorf("%s = %#v, %v", name, res, err)
+			}
+		})
 	}
 	huge := io.LimitReader(zeroes{}, 11<<20)
 	res, err := h.SetDiceSetImage(ctx, oas.SetDiceSetImageReq{Data: huge}, oas.SetDiceSetImageParams{})

@@ -335,12 +335,14 @@ func TestEveryJournalDatabaseFaultSurfaces(t *testing.T) {
 		},
 	}
 	for name, op := range ops {
-		pgtest.EveryFault(t, func(fault *pgtest.Faulty) error {
-			err := op(svc(pgstore.NewFaulty(db.Pool(), fault)))
-			if err != nil && !errors.Is(err, pgtest.ErrInjected) {
-				t.Fatalf("%s: %v", name, err)
-			}
-			return err
+		t.Run(name, func(t *testing.T) {
+			pgtest.EveryFault(t, func(fault *pgtest.Faulty) error {
+				err := op(svc(pgstore.NewFaulty(db.Pool(), fault)))
+				if err != nil && !errors.Is(err, pgtest.ErrInjected) {
+					t.Fatalf("%s: %v", name, err)
+				}
+				return err
+			})
 		})
 	}
 	// No Quest was left with half its steps.

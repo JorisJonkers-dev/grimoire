@@ -31,20 +31,22 @@ func TestAdminErrorPaths(t *testing.T) {
 		"two-step": func(s *Service) error { return s.ResetTwoStep(ctx, "root", id) },
 	}
 	for name, run := range controls {
-		if err := run(service(&fakeRepo{})); name != "link" && err != nil {
-			t.Errorf("%s = %v", name, err)
-		}
-		if err := run(service(&fakeRepo{fail: "by id"})); !errors.Is(err, errBoom) {
-			t.Errorf("%s without the Account = %v", name, err)
-		}
-		if err := run(service(&fakeRepo{fail: "insert event"})); !errors.Is(err, errBoom) && name != "link" {
-			t.Errorf("%s failing to record = %v", name, err)
-		}
-		s := service(&fakeRepo{})
-		s.Admins = map[string]bool{}
-		if err := run(s); !errors.Is(err, domain.ErrForbidden) {
-			t.Errorf("%s by a non-Admin = %v", name, err)
-		}
+		t.Run(name, func(t *testing.T) {
+			if err := run(service(&fakeRepo{})); name != "link" && err != nil {
+				t.Errorf("%s = %v", name, err)
+			}
+			if err := run(service(&fakeRepo{fail: "by id"})); !errors.Is(err, errBoom) {
+				t.Errorf("%s without the Account = %v", name, err)
+			}
+			if err := run(service(&fakeRepo{fail: "insert event"})); !errors.Is(err, errBoom) && name != "link" {
+				t.Errorf("%s failing to record = %v", name, err)
+			}
+			s := service(&fakeRepo{})
+			s.Admins = map[string]bool{}
+			if err := run(s); !errors.Is(err, domain.ErrForbidden) {
+				t.Errorf("%s by a non-Admin = %v", name, err)
+			}
+		})
 	}
 	for call, r := range map[string]*fakeRepo{"set disabled": {fail: "set disabled"}, "revoke everything": {fail: "revoke everything"}} {
 		if err := service(r).SetDisabled(ctx, "root", id, true); !errors.Is(err, errBoom) {

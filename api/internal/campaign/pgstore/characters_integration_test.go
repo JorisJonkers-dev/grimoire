@@ -155,11 +155,13 @@ func TestBuildsAreValidated(t *testing.T) {
 		"name":        func(b *domain.Build) { b.Name = "  " },
 	}
 	for name, mutate := range cases {
-		b := fighter()
-		mutate(&b)
-		if _, err := chars.Create(ctx, playerCaller, d.ID, b); !errors.Is(err, domain.ErrInvalid) {
-			t.Errorf("%s: %v", name, err)
-		}
+		t.Run(name, func(t *testing.T) {
+			b := fighter()
+			mutate(&b)
+			if _, err := chars.Create(ctx, playerCaller, d.ID, b); !errors.Is(err, domain.ErrInvalid) {
+				t.Errorf("%s: %v", name, err)
+			}
+		})
 	}
 	var rule *app.RuleError
 	b := fighter()
@@ -650,13 +652,15 @@ func TestEveryCharacterDatabaseFaultSurfaces(t *testing.T) {
 		},
 	}
 	for name, op := range ops {
-		pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
-			c := &app.Characters{Repo: pgstore.NewFaulty(db.Pool(), f), Compendium: fakeOptions{}, Combat: app.NoCombat{}, Blobs: chars.Blobs, Now: time.Now, Roll: func() []int { return []int{16, 15, 12, 11, 9, 8} }}
-			err := op(c)
-			if err != nil && !errors.Is(err, pgtest.ErrInjected) {
-				t.Fatalf("%s: %v", name, err)
-			}
-			return err
+		t.Run(name, func(t *testing.T) {
+			pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
+				c := &app.Characters{Repo: pgstore.NewFaulty(db.Pool(), f), Compendium: fakeOptions{}, Combat: app.NoCombat{}, Blobs: chars.Blobs, Now: time.Now, Roll: func() []int { return []int{16, 15, 12, 11, 9, 8} }}
+				err := op(c)
+				if err != nil && !errors.Is(err, pgtest.ErrInjected) {
+					t.Fatalf("%s: %v", name, err)
+				}
+				return err
+			})
 		})
 	}
 }

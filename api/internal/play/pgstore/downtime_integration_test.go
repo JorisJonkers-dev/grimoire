@@ -349,12 +349,14 @@ func TestDowntimeCraftingAndTheClock(t *testing.T) {
 			return err
 		},
 	} {
-		pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
-			err := op(f)
-			if err != nil && !errors.Is(err, pgtest.ErrInjected) {
-				t.Fatalf("%s: %v", name, err)
-			}
-			return err
+		t.Run(name, func(t *testing.T) {
+			pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
+				err := op(f)
+				if err != nil && !errors.Is(err, pgtest.ErrInjected) {
+					t.Fatalf("%s: %v", name, err)
+				}
+				return err
+			})
 		})
 	}
 	for _, r := range mustRecipes(t, s, elsewhere) {

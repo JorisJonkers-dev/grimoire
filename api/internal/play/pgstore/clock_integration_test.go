@@ -100,12 +100,14 @@ func TestTheClockAndTheMarchingOrderAreKept(t *testing.T) {
 		"read the clock": func(repo *pgstore.Store) error { _, err := repo.GameClock(ctx, tb.campaign); return err },
 		"read the order": func(repo *pgstore.Store) error { _, err := repo.MarchingOrder(ctx, tb.campaign); return err },
 	} {
-		pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
-			err := read(pgstore.NewFaulty(tb.pool, f))
-			if err != nil && !errors.Is(err, pgtest.ErrInjected) {
-				t.Fatalf("%s: %v", name, err)
-			}
-			return err
+		t.Run(name, func(t *testing.T) {
+			pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
+				err := read(pgstore.NewFaulty(tb.pool, f))
+				if err != nil && !errors.Is(err, pgtest.ErrInjected) {
+					t.Fatalf("%s: %v", name, err)
+				}
+				return err
+			})
 		})
 	}
 }

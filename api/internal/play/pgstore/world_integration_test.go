@@ -92,12 +92,14 @@ func TestWorldMapsKeepTheirLocationsRoutesAndParty(t *testing.T) {
 		}
 	}
 	for name, op := range ops {
-		pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
-			err := op(pgstore.NewFaulty(tb.pool, f))
-			if err != nil && !errors.Is(err, pgtest.ErrInjected) {
-				t.Fatalf("%s: %v", name, err)
-			}
-			return err
+		t.Run(name, func(t *testing.T) {
+			pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
+				err := op(pgstore.NewFaulty(tb.pool, f))
+				if err != nil && !errors.Is(err, pgtest.ErrInjected) {
+					t.Fatalf("%s: %v", name, err)
+				}
+				return err
+			})
 		})
 	}
 }

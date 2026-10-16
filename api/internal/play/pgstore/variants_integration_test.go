@@ -75,12 +75,14 @@ func TestRuleVariantsAndShortRestsAreKept(t *testing.T) {
 		"short rests": func(repo *pgstore.Store) error { _, err := repo.ShortRests(ctx, tb.campaign); return err },
 		"rested":      func(repo *pgstore.Store) error { return commit(repo, rested) },
 	} {
-		pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
-			err := op(pgstore.NewFaulty(tb.pool, f))
-			if err != nil && !errors.Is(err, pgtest.ErrInjected) {
-				t.Fatalf("%s: %v", name, err)
-			}
-			return err
+		t.Run(name, func(t *testing.T) {
+			pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
+				err := op(pgstore.NewFaulty(tb.pool, f))
+				if err != nil && !errors.Is(err, pgtest.ErrInjected) {
+					t.Fatalf("%s: %v", name, err)
+				}
+				return err
+			})
 		})
 	}
 }
@@ -207,12 +209,14 @@ func TestRuleHooksRollTablesAndOpenTableRollsAreKept(t *testing.T) {
 			return commit(repo, w)
 		},
 	} {
-		pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
-			err := op(pgstore.NewFaulty(tb.pool, f))
-			if err != nil && !errors.Is(err, pgtest.ErrInjected) {
-				t.Fatalf("%s: %v", name, err)
-			}
-			return err
+		t.Run(name, func(t *testing.T) {
+			pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
+				err := op(pgstore.NewFaulty(tb.pool, f))
+				if err != nil && !errors.Is(err, pgtest.ErrInjected) {
+					t.Fatalf("%s: %v", name, err)
+				}
+				return err
+			})
 		})
 	}
 }

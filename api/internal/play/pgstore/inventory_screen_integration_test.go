@@ -91,13 +91,15 @@ func TestEveryInventoryScreenFaultSurfaces(t *testing.T) {
 		},
 	}
 	for name, op := range ops {
-		pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
-			r := &app.Inventories{Store: pgstore.NewFaulty(tb.pool, f), Members: pgstore.CampaignMembers{Store: campaignpg.New(tb.pool)}, Roll: func(n, _ int) int { return n }}
-			err := op(r)
-			if err != nil && !errors.Is(err, pgtest.ErrInjected) {
-				t.Fatalf("%s: %v", name, err)
-			}
-			return err
+		t.Run(name, func(t *testing.T) {
+			pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
+				r := &app.Inventories{Store: pgstore.NewFaulty(tb.pool, f), Members: pgstore.CampaignMembers{Store: campaignpg.New(tb.pool)}, Roll: func(n, _ int) int { return n }}
+				err := op(r)
+				if err != nil && !errors.Is(err, pgtest.ErrInjected) {
+					t.Fatalf("%s: %v", name, err)
+				}
+				return err
+			})
 		})
 	}
 }

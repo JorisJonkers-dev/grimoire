@@ -305,12 +305,14 @@ func TestTheDashboardAndTheSearchShowOnlyWhatIsTheCallers(t *testing.T) {
 		"dashboard": func(h *app.Home) error { _, err := h.Dashboard(ctx, "aria"); return err },
 		"search":    func(h *app.Home) error { _, err := h.Search(ctx, "aria", "fire"); return err },
 	} {
-		pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
-			err := op(&app.Home{Repo: pgstore.NewFaulty(pool, f)})
-			if err != nil && !errors.Is(err, pgtest.ErrInjected) {
-				t.Fatalf("%s: %v", name, err)
-			}
-			return err
+		t.Run(name, func(t *testing.T) {
+			pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
+				err := op(&app.Home{Repo: pgstore.NewFaulty(pool, f)})
+				if err != nil && !errors.Is(err, pgtest.ErrInjected) {
+					t.Fatalf("%s: %v", name, err)
+				}
+				return err
+			})
 		})
 	}
 }

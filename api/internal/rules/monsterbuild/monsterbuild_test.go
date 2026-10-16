@@ -157,12 +157,14 @@ func TestMonsterDesignsThatDoNotBuild(t *testing.T) {
 		"each phase 1 to 1000 hit points":     func(d *monsterbuild.Design) { d.Phases[0].HP = 0 },
 		"name each phase":                     func(d *monsterbuild.Design) { d.Phases[0].Name = "" },
 	} {
-		d := bogKing()
-		d.Abilities = map[string]int{"strength": 20, "dexterity": 12, "constitution": 18, "intelligence": 8, "wisdom": 14, "charisma": 16}
-		change(&d)
-		if err := monsterbuild.Check(d); err == nil || !strings.Contains(err.Error(), want) {
-			t.Errorf("%s: %v", want, err)
-		}
+		t.Run(want, func(t *testing.T) {
+			d := bogKing()
+			d.Abilities = map[string]int{"strength": 20, "dexterity": 12, "constitution": 18, "intelligence": 8, "wisdom": 14, "charisma": 16}
+			change(&d)
+			if err := monsterbuild.Check(d); err == nil || !strings.Contains(err.Error(), want) {
+				t.Errorf("%s: %v", want, err)
+			}
+		})
 	}
 }
 

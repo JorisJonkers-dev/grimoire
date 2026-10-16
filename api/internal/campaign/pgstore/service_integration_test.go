@@ -129,15 +129,17 @@ func TestNonMembersAndPlayersAreRefused(t *testing.T) {
 		"revoke":  func(c caller.Caller) error { return s.RevokeInvite(ctx, c, d.ID, domain.InviteID{}) },
 	}
 	for name, check := range checks {
-		if err := check(stranger); !errors.Is(err, domain.ErrNotFound) {
-			t.Errorf("stranger %s: %v", name, err)
-		}
-		if name == "get" {
-			continue
-		}
-		if err := check(playerCaller); !errors.Is(err, domain.ErrForbidden) {
-			t.Errorf("player %s: %v", name, err)
-		}
+		t.Run(name, func(t *testing.T) {
+			if err := check(stranger); !errors.Is(err, domain.ErrNotFound) {
+				t.Errorf("stranger: %v", err)
+			}
+			if name == "get" {
+				return
+			}
+			if err := check(playerCaller); !errors.Is(err, domain.ErrForbidden) {
+				t.Errorf("player: %v", err)
+			}
+		})
 	}
 }
 
@@ -376,14 +378,16 @@ func TestEveryDatabaseFaultSurfaces(t *testing.T) {
 		"revoke": func(s *app.Service) error { return s.RevokeInvite(ctx, dmCaller, d.ID, doomed.ID) },
 	}
 	for name, op := range ops {
-		pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
-			s, _ := service(t, pgstore.NewFaulty(db.Pool(), f))
-			s.Token = app.RandomToken
-			err := op(s)
-			if err != nil && !errors.Is(err, pgtest.ErrInjected) {
-				t.Fatalf("%s: %v", name, err)
-			}
-			return err
+		t.Run(name, func(t *testing.T) {
+			pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
+				s, _ := service(t, pgstore.NewFaulty(db.Pool(), f))
+				s.Token = app.RandomToken
+				err := op(s)
+				if err != nil && !errors.Is(err, pgtest.ErrInjected) {
+					t.Fatalf("%s: %v", name, err)
+				}
+				return err
+			})
 		})
 	}
 	extra, _ := base.Create(ctx, dmCaller, app.CreateInput{Name: "Two DMs", DisplayName: "A"})

@@ -144,10 +144,12 @@ func TestPoolsAreValidatedRevisionedAndRestorable(t *testing.T) {
 		"levels run from 1 to 2": func(p *domain.Pool) { p.LevelMax = 21 },
 	}
 	for want, change := range bad {
-		x := goblins()
-		change(&x)
-		_, err := s.SavePool(ctx, dm, w.campaign, x)
-		refused(t, err, want)
+		t.Run(want, func(t *testing.T) {
+			x := goblins()
+			change(&x)
+			_, err := s.SavePool(ctx, dm, w.campaign, x)
+			refused(t, err, want)
+		})
 	}
 	if _, err := s.SavePool(ctx, dm, w.campaign, domain.Pool{ID: domain.PoolID(uuid.New()), Name: "Ghost"}); !errors.Is(err, apperr.ErrNotFound) {
 		t.Errorf("update unknown = %v", err)
@@ -178,14 +180,16 @@ func TestPoolsAreValidatedRevisionedAndRestorable(t *testing.T) {
 	if _, err := s.PoolRevisions(ctx, dm, w.campaign, domain.PoolID(uuid.New())); !errors.Is(err, apperr.ErrNotFound) {
 		t.Errorf("revisions of nothing = %v", err)
 	}
-	for _, op := range []func() error{
-		func() error { _, err := s.PoolRevisions(ctx, player, w.campaign, p.ID); return err },
-		func() error { _, err := s.RestorePool(ctx, player, w.campaign, p.ID, 1); return err },
-		func() error { return s.DeletePool(ctx, player, w.campaign, p.ID) },
+	for name, op := range map[string]func() error{
+		"revisions": func() error { _, err := s.PoolRevisions(ctx, player, w.campaign, p.ID); return err },
+		"restore":   func() error { _, err := s.RestorePool(ctx, player, w.campaign, p.ID, 1); return err },
+		"delete":    func() error { return s.DeletePool(ctx, player, w.campaign, p.ID) },
 	} {
-		if err := op(); !errors.Is(err, apperr.ErrForbidden) {
-			t.Errorf("player = %v", err)
-		}
+		t.Run(name, func(t *testing.T) {
+			if err := op(); !errors.Is(err, apperr.ErrForbidden) {
+				t.Errorf("player = %v", err)
+			}
+		})
 	}
 }
 
@@ -228,10 +232,12 @@ func TestTablesHoldEncountersPoolDrawsAndNothing(t *testing.T) {
 		"name of up to 80":       func(t *domain.Table) { t.Name = "" },
 	}
 	for want, change := range bad {
-		x := table()
-		change(&x)
-		_, err := s.SaveTable(ctx, dm, w.campaign, x)
-		refused(t, err, want)
+		t.Run(want, func(t *testing.T) {
+			x := table()
+			change(&x)
+			_, err := s.SaveTable(ctx, dm, w.campaign, x)
+			refused(t, err, want)
+		})
 	}
 	refused(t, s.DeletePool(ctx, dm, w.campaign, pool.ID), "a table still draws")
 	tb.ChancePct, tb.RegionID = 50, nil
@@ -269,16 +275,18 @@ func TestTablesHoldEncountersPoolDrawsAndNothing(t *testing.T) {
 	if err != nil || len(checks) != 0 {
 		t.Fatalf("checks = %+v %v", checks, err)
 	}
-	for _, op := range []func() error{
-		func() error { _, err := s.Tables(ctx, player, w.campaign); return err },
-		func() error { _, err := s.Locations(ctx, player, w.campaign); return err },
-		func() error { _, err := s.Checks(ctx, player, w.campaign); return err },
-		func() error { _, err := s.TableRevisions(ctx, player, w.campaign, tb.ID); return err },
-		func() error { _, err := s.SaveTable(ctx, player, w.campaign, table()); return err },
+	for name, op := range map[string]func() error{
+		"tables":    func() error { _, err := s.Tables(ctx, player, w.campaign); return err },
+		"locations": func() error { _, err := s.Locations(ctx, player, w.campaign); return err },
+		"checks":    func() error { _, err := s.Checks(ctx, player, w.campaign); return err },
+		"revisions": func() error { _, err := s.TableRevisions(ctx, player, w.campaign, tb.ID); return err },
+		"save":      func() error { _, err := s.SaveTable(ctx, player, w.campaign, table()); return err },
 	} {
-		if err := op(); !errors.Is(err, apperr.ErrForbidden) {
-			t.Errorf("player = %v", err)
-		}
+		t.Run(name, func(t *testing.T) {
+			if err := op(); !errors.Is(err, apperr.ErrForbidden) {
+				t.Errorf("player = %v", err)
+			}
+		})
 	}
 }
 
@@ -327,12 +335,14 @@ func TestEveryPrepDatabaseFaultSurfaces(t *testing.T) {
 		"checks":        func(s *app.Service) error { _, err := s.Checks(ctx, dm, w.campaign); return err },
 	}
 	for name, op := range ops {
-		pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
-			err := op(service(w, pgstore.NewFaulty(w.pool, f)))
-			if err != nil && !errors.Is(err, pgtest.ErrInjected) {
-				t.Fatalf("%s: %v", name, err)
-			}
-			return err
+		t.Run(name, func(t *testing.T) {
+			pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
+				err := op(service(w, pgstore.NewFaulty(w.pool, f)))
+				if err != nil && !errors.Is(err, pgtest.ErrInjected) {
+					t.Fatalf("%s: %v", name, err)
+				}
+				return err
+			})
 		})
 	}
 }
@@ -371,11 +381,13 @@ func TestLootTablesNestWithoutLoopsAndKeepTheirHistory(t *testing.T) {
 		"cannot roll on itself":   func(t *domain.LootTable) { t.Entries[0].Table = &t.ID },
 	}
 	for want, change := range bad {
-		x := hoard
-		x.Entries = append([]domain.LootEntry(nil), hoard.Entries...)
-		change(&x)
-		_, err := s.SaveLootTable(ctx, dm, w.campaign, x)
-		refused(t, err, want)
+		t.Run(want, func(t *testing.T) {
+			x := hoard
+			x.Entries = append([]domain.LootEntry(nil), hoard.Entries...)
+			change(&x)
+			_, err := s.SaveLootTable(ctx, dm, w.campaign, x)
+			refused(t, err, want)
+		})
 	}
 	loop := coins
 	loop.Entries = []domain.LootEntry{{Weight: 1, Kind: "table", Table: &hoard.ID}}
@@ -413,14 +425,16 @@ func TestLootTablesNestWithoutLoopsAndKeepTheirHistory(t *testing.T) {
 	if err != nil || len(list) != 2 {
 		t.Fatalf("list = %+v %v", list, err)
 	}
-	for _, op := range []func() error{
-		func() error { _, err := s.LootTables(ctx, player, w.campaign); return err },
-		func() error { _, err := s.LootTableRevisions(ctx, player, w.campaign, hoard.ID); return err },
-		func() error { return s.DeleteLootTable(ctx, player, w.campaign, hoard.ID) },
+	for name, op := range map[string]func() error{
+		"loot tables": func() error { _, err := s.LootTables(ctx, player, w.campaign); return err },
+		"revisions":   func() error { _, err := s.LootTableRevisions(ctx, player, w.campaign, hoard.ID); return err },
+		"delete":      func() error { return s.DeleteLootTable(ctx, player, w.campaign, hoard.ID) },
 	} {
-		if err := op(); !errors.Is(err, apperr.ErrForbidden) {
-			t.Errorf("player = %v", err)
-		}
+		t.Run(name, func(t *testing.T) {
+			if err := op(); !errors.Is(err, apperr.ErrForbidden) {
+				t.Errorf("player = %v", err)
+			}
+		})
 	}
 	ops := map[string]func(s *app.Service) error{
 		"loot tables": func(s *app.Service) error { _, err := s.LootTables(ctx, dm, w.campaign); return err },
@@ -437,12 +451,14 @@ func TestLootTablesNestWithoutLoopsAndKeepTheirHistory(t *testing.T) {
 		"restore loot": func(s *app.Service) error { _, err := s.RestoreLootTable(ctx, dm, w.campaign, hoard.ID, 1); return err },
 	}
 	for name, op := range ops {
-		pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
-			err := op(service(w, pgstore.NewFaulty(w.pool, f)))
-			if err != nil && !errors.Is(err, pgtest.ErrInjected) {
-				t.Fatalf("%s: %v", name, err)
-			}
-			return err
+		t.Run(name, func(t *testing.T) {
+			pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
+				err := op(service(w, pgstore.NewFaulty(w.pool, f)))
+				if err != nil && !errors.Is(err, pgtest.ErrInjected) {
+					t.Fatalf("%s: %v", name, err)
+				}
+				return err
+			})
 		})
 	}
 }
@@ -526,10 +542,12 @@ func TestSettlementsAndShopsStockFromLootAndKeepTheirHistory(t *testing.T) {
 		"loot tables for":        func(x *domain.Shop) { x.LootTable = &missingTable },
 		"name of up to 80":       func(x *domain.Shop) { x.Name = "" },
 	} {
-		x := shop
-		change(&x)
-		_, err := s.SaveShop(ctx, dm, w.campaign, x)
-		refused(t, err, want)
+		t.Run(want, func(t *testing.T) {
+			x := shop
+			change(&x)
+			_, err := s.SaveShop(ctx, dm, w.campaign, x)
+			refused(t, err, want)
+		})
 	}
 	stocked, err := s.RerollStock(ctx, dm, w.campaign, store.ID)
 	if err != nil || len(stocked.Stock) != 1 || stocked.Stock[0] != (domain.StockItem{Slug: "rope", Quantity: 6, PriceCP: 150}) {
@@ -626,12 +644,14 @@ func TestSettlementsAndShopsStockFromLootAndKeepTheirHistory(t *testing.T) {
 		},
 	}
 	for name, op := range ops {
-		pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
-			err := op(service(w, pgstore.NewFaulty(w.pool, f)))
-			if err != nil && !errors.Is(err, pgtest.ErrInjected) {
-				t.Fatalf("%s: %v", name, err)
-			}
-			return err
+		t.Run(name, func(t *testing.T) {
+			pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
+				err := op(service(w, pgstore.NewFaulty(w.pool, f)))
+				if err != nil && !errors.Is(err, pgtest.ErrInjected) {
+					t.Fatalf("%s: %v", name, err)
+				}
+				return err
+			})
 		})
 	}
 }

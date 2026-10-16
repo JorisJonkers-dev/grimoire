@@ -53,9 +53,11 @@ func TestEditsFeedTheActivityAndPlanUndos(t *testing.T) {
 		},
 		"undo": func() error { _, _, err := s.UndoPlan(ctx, playerCaller, d.ID, feed[0].RevisionID); return err },
 	} {
-		if err := op(); !errors.Is(err, domain.ErrForbidden) {
-			t.Fatalf("%s for a player: %v", name, err)
-		}
+		t.Run(name, func(t *testing.T) {
+			if err := op(); !errors.Is(err, domain.ErrForbidden) {
+				t.Fatalf("%s for a player: %v", name, err)
+			}
+		})
 	}
 	for name, op := range map[string]func(s *app.Service) error{
 		"activity": func(s *app.Service) error { _, err := s.Activity(ctx, dmCaller, d.ID); return err },
@@ -64,12 +66,14 @@ func TestEditsFeedTheActivityAndPlanUndos(t *testing.T) {
 			return err
 		},
 	} {
-		pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
-			err := op(app.NewService(pgstore.NewFaulty(db.Pool(), f)))
-			if err != nil && !errors.Is(err, pgtest.ErrInjected) {
-				t.Fatalf("%s: %v", name, err)
-			}
-			return err
+		t.Run(name, func(t *testing.T) {
+			pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
+				err := op(app.NewService(pgstore.NewFaulty(db.Pool(), f)))
+				if err != nil && !errors.Is(err, pgtest.ErrInjected) {
+					t.Fatalf("%s: %v", name, err)
+				}
+				return err
+			})
 		})
 	}
 }

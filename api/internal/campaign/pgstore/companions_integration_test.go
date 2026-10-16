@@ -104,12 +104,14 @@ func TestEveryCompanionDatabaseFaultSurfaces(t *testing.T) {
 		"list":   func(s *app.Companions) error { _, err := s.List(ctx, dmCaller, d.ID); return err },
 	}
 	for name, op := range ops {
-		pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
-			err := op(svc(pgstore.NewFaulty(db.Pool(), f)))
-			if err != nil && !errors.Is(err, pgtest.ErrInjected) {
-				t.Fatalf("%s: %v", name, err)
-			}
-			return err
+		t.Run(name, func(t *testing.T) {
+			pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
+				err := op(svc(pgstore.NewFaulty(db.Pool(), f)))
+				if err != nil && !errors.Is(err, pgtest.ErrInjected) {
+					t.Fatalf("%s: %v", name, err)
+				}
+				return err
+			})
 		})
 	}
 }

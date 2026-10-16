@@ -136,11 +136,13 @@ func TestALingeringInjuryLastsUntilItsCure(t *testing.T) {
 		"in up to 80 characters":      func(d *conditionbuild.Design) { d.Cure = strings.Repeat("x", 81) },
 		"only a condition that lasts": func(d *conditionbuild.Design) { d.Ends = "rest" },
 	} {
-		bad := d
-		change(&bad)
-		if err := conditionbuild.Check(bad); err == nil || !strings.Contains(err.Error(), want) {
-			t.Errorf("%s: %v", want, err)
-		}
+		t.Run(want, func(t *testing.T) {
+			bad := d
+			change(&bad)
+			if err := conditionbuild.Check(bad); err == nil || !strings.Contains(err.Error(), want) {
+				t.Errorf("%s: %v", want, err)
+			}
+		})
 	}
 	longest := d
 	longest.Cure = strings.Repeat("x", 80)
@@ -194,11 +196,13 @@ func TestConditionDesignsThatDoNotBuild(t *testing.T) {
 			d.Parts[8].Groups = []effects.AuthoredGroup{{Name: "then", Parts: nil}}
 		},
 	} {
-		d := frostbite()
-		change(&d)
-		if err := conditionbuild.Check(d); err == nil || !strings.Contains(err.Error(), want) {
-			t.Errorf("%s: %v", want, err)
-		}
+		t.Run(want, func(t *testing.T) {
+			d := frostbite()
+			change(&d)
+			if err := conditionbuild.Check(d); err == nil || !strings.Contains(err.Error(), want) {
+				t.Errorf("%s: %v", want, err)
+			}
+		})
 	}
 	d := frostbite()
 	d.Text, d.MaxLevel, d.PerLevel = strings.Repeat("x", 2000), 10, conditionbuild.Penalty{D20: 5, SpeedFt: 30, DeathAt: 10}

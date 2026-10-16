@@ -48,13 +48,11 @@ func TestEveryFriendsDatabaseFaultSurfaces(t *testing.T) {
 	bram := account(t, pool, "bram")
 	cara := account(t, pool, "cara")
 	base := &app.Service{Repo: pgstore.New(pool), Now: time.Now}
-	for _, step := range []func() error{
-		func() error { return base.Request(ctx, "bram", "aria") },
-		func() error { return base.Request(ctx, "cara", "aria") },
-	} {
-		if err := step(); err != nil {
-			t.Fatal(err)
-		}
+	if err := base.Request(ctx, "bram", "aria"); err != nil {
+		t.Fatal(err)
+	}
+	if err := base.Request(ctx, "cara", "aria"); err != nil {
+		t.Fatal(err)
 	}
 	page, _ := base.Friends(ctx, "aria")
 	fromBram, fromCara := page.Incoming[0].ID, page.Incoming[1].ID
@@ -548,14 +546,14 @@ func TestTheDiceSetARollIsMadeWith(t *testing.T) {
 		t.Fatalf("the dice of someone without an Account = %v", err)
 	}
 	set, _ := svc.CreateDiceSet(ctx, "aria", "Embers", design)
-	for _, step := range []func() error{
-		func() error { _, err := svc.SetDiceSetPicture(ctx, "aria", set.ID, picture.Bytes()); return err },
-		func() error { _, err := svc.ShareDiceSet(ctx, "aria", set.ID, domain.SharingEveryone); return err },
-		func() error { return svc.ChooseDiceSet(ctx, "aria", &set.ID) },
-	} {
-		if err := step(); err != nil {
-			t.Fatal(err)
-		}
+	if _, err := svc.SetDiceSetPicture(ctx, "aria", set.ID, picture.Bytes()); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := svc.ShareDiceSet(ctx, "aria", set.ID, domain.SharingEveryone); err != nil {
+		t.Fatal(err)
+	}
+	if err := svc.ChooseDiceSet(ctx, "aria", &set.ID); err != nil {
+		t.Fatal(err)
 	}
 	// It waits for an Admin: Aria rolls with it, and nobody else may see its picture.
 	if got, err := svc.ChosenDiceSet(ctx, "aria"); err != nil || got == nil || got.ID != set.ID || got.Cleared() {
@@ -686,12 +684,17 @@ func TestTheReviewOfADiceSetFollowsTheSetItself(t *testing.T) {
 			return repo.SetDiceSetImage(ctx, set.ID, crest, time.Now())
 		}, "private none"},
 	}
+	// Each step builds on the one before, so a failed step stops the rest.
 	for _, step := range steps {
-		if err := step.do(); err != nil {
-			t.Fatalf("%s: %v", step.what, err)
-		}
-		if got := review(); got != step.want {
-			t.Fatalf("%s = %s, want %s", step.what, got, step.want)
+		if !t.Run(step.what, func(t *testing.T) {
+			if err := step.do(); err != nil {
+				t.Fatal(err)
+			}
+			if got := review(); got != step.want {
+				t.Fatalf("review = %s, want %s", got, step.want)
+			}
+		}) {
+			t.FailNow()
 		}
 	}
 	if crest.Digest() != "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" {

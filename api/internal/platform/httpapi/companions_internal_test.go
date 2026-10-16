@@ -22,11 +22,13 @@ func TestCompanionHandlersNeedAnIdentity(t *testing.T) {
 		"delete": func() (any, error) { return h.DeleteCompanion(ctx, oas.DeleteCompanionParams{}) },
 	}
 	for name, call := range calls {
-		res, err := call()
-		p, ok := res.(*oas.ProblemStatusCodeWithHeaders)
-		if err != nil || !ok || p.StatusCode != http.StatusUnauthorized {
-			t.Errorf("%s = %#v, %v", name, res, err)
-		}
+		t.Run(name, func(t *testing.T) {
+			res, err := call()
+			p, ok := res.(*oas.ProblemStatusCodeWithHeaders)
+			if err != nil || !ok || p.StatusCode != http.StatusUnauthorized {
+				t.Errorf("%s = %#v, %v", name, res, err)
+			}
+		})
 	}
 }
 

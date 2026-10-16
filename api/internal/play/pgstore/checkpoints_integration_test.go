@@ -145,12 +145,14 @@ func TestACheckpointKeepsTheSessionAndARewindPutsItBack(t *testing.T) {
 		},
 		"undo": func(s *pgstore.Store) error { _, err := s.NoUndo(ctx, tb.campaign); return err },
 	} {
-		pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
-			err := op(pgstore.NewFaulty(tb.pool, f))
-			if err != nil && !errors.Is(err, pgtest.ErrInjected) {
-				t.Fatalf("%s: %v", name, err)
-			}
-			return err
+		t.Run(name, func(t *testing.T) {
+			pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
+				err := op(pgstore.NewFaulty(tb.pool, f))
+				if err != nil && !errors.Is(err, pgtest.ErrInjected) {
+					t.Fatalf("%s: %v", name, err)
+				}
+				return err
+			})
 		})
 	}
 	if _, tokens, _, err := store.Load(ctx, sess.ID); err != nil || len(tokens) != 1 {

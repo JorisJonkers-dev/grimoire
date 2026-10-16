@@ -72,12 +72,14 @@ func TestAVehicleIsChecked(t *testing.T) {
 		"A crew station takes 0 to 200 crew.":  func(d *vehicles.Design) { d.Stations[0].Crew = -1 },
 		"A crew station takes 0 to 200 crew. ": func(d *vehicles.Design) { d.Stations[1].Crew = vehicles.MaxCrew + 1 },
 	} {
-		d := ship()
-		change(&d)
-		var bad vehicles.DesignError
-		if err := d.Check(); !errors.As(err, &bad) || err.Error() != strings.TrimSpace(want) {
-			t.Errorf("want %q, got %v", strings.TrimSpace(want), err)
-		}
+		t.Run(want, func(t *testing.T) {
+			d := ship()
+			change(&d)
+			var bad vehicles.DesignError
+			if err := d.Check(); !errors.As(err, &bad) || err.Error() != strings.TrimSpace(want) {
+				t.Errorf("want %q, got %v", strings.TrimSpace(want), err)
+			}
+		})
 	}
 }
 

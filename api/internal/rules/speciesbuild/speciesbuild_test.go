@@ -98,11 +98,13 @@ func TestSpeciesDesignsThatDoNotBuild(t *testing.T) {
 		"describe the Bog lineage":       func(d *speciesbuild.Design) { d.Lineages[0].Text = strings.Repeat("x", 2001) },
 		"lineage spell":                  func(d *speciesbuild.Design) { d.Lineages[0].Spells[0].Uses = "never" },
 	} {
-		d := marshkin()
-		change(&d)
-		if err := speciesbuild.Check(d); err == nil || !strings.Contains(err.Error(), want) {
-			t.Errorf("%s: %v", want, err)
-		}
+		t.Run(want, func(t *testing.T) {
+			d := marshkin()
+			change(&d)
+			if err := speciesbuild.Check(d); err == nil || !strings.Contains(err.Error(), want) {
+				t.Errorf("%s: %v", want, err)
+			}
+		})
 	}
 	d := marshkin()
 	d.Sizes, d.SpeedFt, d.Speeds[0].Feet, d.Senses[0].Feet = []string{"tiny", "huge"}, 60, 120, 300

@@ -44,8 +44,10 @@ func TestEveryDatabaseFaultSurfaces(t *testing.T) {
 		"in tx": func() error { return s.InTx(ctx, func(app.Repository) error { return nil }) },
 	}
 	for name, op := range ops {
-		if op() == nil {
-			t.Errorf("%s answered without a database", name)
-		}
+		t.Run(name, func(t *testing.T) {
+			if op() == nil {
+				t.Errorf("%s answered without a database", name)
+			}
+		})
 	}
 }

@@ -174,12 +174,14 @@ func TestTheDMAuthorsRuleVariantsFromHookPoints(t *testing.T) {
 			return err
 		},
 	} {
-		pgtest.EveryFault(t, func(fault *pgtest.Faulty) error {
-			err := op(&app.RuleHooks{Repo: pgstore.NewFaulty(db.Pool(), fault), Now: time.Now})
-			if err != nil && !errors.Is(err, pgtest.ErrInjected) {
-				t.Fatalf("%s: %v", name, err)
-			}
-			return err
+		t.Run(name, func(t *testing.T) {
+			pgtest.EveryFault(t, func(fault *pgtest.Faulty) error {
+				err := op(&app.RuleHooks{Repo: pgstore.NewFaulty(db.Pool(), fault), Now: time.Now})
+				if err != nil && !errors.Is(err, pgtest.ErrInjected) {
+					t.Fatalf("%s: %v", name, err)
+				}
+				return err
+			})
 		})
 	}
 }

@@ -48,10 +48,12 @@ func TestSetupIsCleaned(t *testing.T) {
 		"short password": func(s *domain.Setup) { s.Password = "012345678" },
 		"long password":  func(s *domain.Setup) { s.Password = strings.Repeat("p", 201) },
 	} {
-		s := good
-		change(&s)
-		if _, err := clean(s); err == nil {
-			t.Errorf("%s accepted", name)
-		}
+		t.Run(name, func(t *testing.T) {
+			s := good
+			change(&s)
+			if _, err := clean(s); err == nil {
+				t.Errorf("%s accepted", name)
+			}
+		})
 	}
 }
