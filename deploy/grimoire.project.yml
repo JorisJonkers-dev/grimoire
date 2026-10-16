@@ -1,0 +1,71 @@
+# deploy-kit Project Intent for grimoire: one Go Process serving the API and the
+# SPA, with its own database on the platform's Postgres, assets in Garage, and
+# sign-in through auth.
+
+apiVersion: intent.jorisjonkers.dev/v1
+kind: Project
+schemaVersion: 1.0.0
+
+project: grimoire # the namespace derives: grimoire-system
+owner: joris
+
+applications:
+  - id: grimoire
+    migration: self # GRIMOIRE_AUTO_MIGRATE applies the migrations on start
+
+    exposure:
+      - name: public
+        host: grimoire.jorisjonkers.dev
+        # forward-auth sets X-User-Id; auth-api's GRIMOIRE service permission is the per-user gate.
+        audience: authenticated
+        routes:
+          - { path: /, match: prefix, process: grimoire, surface: http }
+
+    processes:
+      - name: grimoire
+        lifecycle: application
+        image: grimoire # an alias; the lock resolves digest, uid and gid
+        runtime: none # a static Go binary needs no Runtime Profile
+
+        provides:
+          http: 8080
+
+        dependsOn:
+          # The login the edge derives: the owner role's, since grimoire migrates itself,
+          # issued by the Secret Store and rotated with a restart.
+          - application: platform-postgres
+            surface: postgres
+            credentials: { delivery: env, rotation: { tolerates: restart } }
+          - { application: auth, surface: http }
+
+        secrets:
+          # The S3 pair garage-bootstrap imports into Garage, the VAPID pair every push
+          # subscription is bound to, and the OIDC client secret auth-api holds the other
+          # copy of. All three are shared with the old path's readers, so they stay where
+          # it keeps them.
+          - path: secret/data/platform/grimoire
+            keys:
+              - s3.access_key_id
+              - s3.secret_access_key
+              - vapid.public_key
+              - vapid.private_key
+              - oidc.client_secret
+            access: read
+            delivery: env
+            rotation: { tolerates: restart }
+
+        placement:
+          memory: 512Mi
+          cpu: 50m
+
+        writablePaths: [/tmp]
+
+        probes:
+          readiness: { path: /readyz, port: 8080 }
+          liveness: { path: /healthz, port: 8080 }
+
+        startupBudget: 180s # the first start imports the SRD compendium and runs every migration
+
+        # One replica owns every live Session (a Postgres advisory lock per Session), so a new
+        # version starts only once the old one has stopped and released them.
+        cutover: interrupted
