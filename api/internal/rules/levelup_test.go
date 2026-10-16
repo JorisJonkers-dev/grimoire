@@ -96,45 +96,58 @@ func TestAbilityScoreImprovement(t *testing.T) {
 	}
 }
 
-func TestSpellcastingTables(t *testing.T) {
+func TestEachClassKnowsItsCantripsByLevel(t *testing.T) {
 	t.Parallel()
-	cantrips := map[string][3]int{"bard": {2, 3, 4}, "cleric": {3, 4, 5}, "druid": {2, 3, 4}, "sorcerer": {4, 5, 6}, "warlock": {2, 3, 4}, "wizard": {3, 4, 5}, "paladin": {}, "fighter": {}}
-	for class, want := range cantrips {
-		got := [3]int{rules.SRD(class).CantripsAt(3), rules.SRD(class).CantripsAt(4), rules.SRD(class).CantripsAt(10)}
-		if got != want || rules.SRD(class).CantripsAt(9) != want[1] || rules.SRD(class).CantripsAt(20) != want[2] {
-			t.Errorf("%s cantrips = %v, want %v", class, got, want)
-		}
-	}
-	prepared := map[string][4]int{
-		"bard": {4, 5, 16, 22}, "cleric": {4, 5, 16, 22}, "druid": {4, 5, 16, 22}, "sorcerer": {2, 4, 16, 22},
-		"wizard": {4, 5, 16, 25}, "warlock": {2, 3, 11, 15}, "paladin": {2, 3, 10, 15}, "ranger": {2, 3, 10, 15}, "rogue": {},
-	}
-	for class, want := range prepared {
-		got := [4]int{rules.SRD(class).PreparedAt(1), rules.SRD(class).PreparedAt(2), rules.SRD(class).PreparedAt(12), rules.SRD(class).PreparedAt(20)}
-		if got != want || rules.SRD(class).PreparedAt(0) != want[0] || rules.SRD(class).PreparedAt(25) != want[3] {
-			t.Errorf("%s prepared = %v, want %v", class, got, want)
-		}
-	}
-	levels := map[string][6]int{
-		"wizard": {1, 1, 2, 3, 5, 9}, "paladin": {1, 1, 1, 2, 3, 5}, "warlock": {1, 1, 2, 3, 5, 5}, "fighter": {},
-	}
-	for class, want := range levels {
-		var got [6]int
-		for i, lvl := range []int{1, 2, 3, 5, 9, 20} {
-			got[i] = rules.SRD(class).MaxSpellLevel(lvl)
-		}
-		if got != want {
-			t.Errorf("%s max spell level = %v, want %v", class, got, want)
-		}
+	for class, want := range map[string][3]int{"bard": {2, 3, 4}, "cleric": {3, 4, 5}, "druid": {2, 3, 4}, "sorcerer": {4, 5, 6}, "warlock": {2, 3, 4}, "wizard": {3, 4, 5}, "paladin": {}, "fighter": {}} {
+		t.Run(class, func(t *testing.T) {
+			got := [3]int{rules.SRD(class).CantripsAt(3), rules.SRD(class).CantripsAt(4), rules.SRD(class).CantripsAt(10)}
+			if got != want || rules.SRD(class).CantripsAt(9) != want[1] || rules.SRD(class).CantripsAt(20) != want[2] {
+				t.Fatalf("cantrips = %v, want %v", got, want)
+			}
+		})
 	}
 }
 
-func TestMulticlassResources(t *testing.T) {
+func TestEachClassPreparesItsSpellsByLevel(t *testing.T) {
+	t.Parallel()
+	for class, want := range map[string][4]int{
+		"bard": {4, 5, 16, 22}, "cleric": {4, 5, 16, 22}, "druid": {4, 5, 16, 22}, "sorcerer": {2, 4, 16, 22},
+		"wizard": {4, 5, 16, 25}, "warlock": {2, 3, 11, 15}, "paladin": {2, 3, 10, 15}, "ranger": {2, 3, 10, 15}, "rogue": {},
+	} {
+		t.Run(class, func(t *testing.T) {
+			got := [4]int{rules.SRD(class).PreparedAt(1), rules.SRD(class).PreparedAt(2), rules.SRD(class).PreparedAt(12), rules.SRD(class).PreparedAt(20)}
+			if got != want || rules.SRD(class).PreparedAt(0) != want[0] || rules.SRD(class).PreparedAt(25) != want[3] {
+				t.Fatalf("prepared = %v, want %v", got, want)
+			}
+		})
+	}
+}
+
+func TestEachClassReachesItsHighestSpellLevelByLevel(t *testing.T) {
+	t.Parallel()
+	for class, want := range map[string][6]int{"wizard": {1, 1, 2, 3, 5, 9}, "paladin": {1, 1, 1, 2, 3, 5}, "warlock": {1, 1, 2, 3, 5, 5}, "fighter": {}} {
+		t.Run(class, func(t *testing.T) {
+			var got [6]int
+			for i, lvl := range []int{1, 2, 3, 5, 9, 20} {
+				got[i] = rules.SRD(class).MaxSpellLevel(lvl)
+			}
+			if got != want {
+				t.Fatalf("max spell level = %v, want %v", got, want)
+			}
+		})
+	}
+}
+
+func TestASingleClassHasItsOwnResources(t *testing.T) {
 	t.Parallel()
 	single := rules.MulticlassResources([]rules.ClassLevel{{Class: rules.SRD("wizard"), Level: 3, HitDie: 6}})
 	if !reflect.DeepEqual(single, rules.ResourcesAt(rules.SRD("wizard"), 6, 3)) {
-		t.Fatalf("single class = %v", single)
+		t.Fatalf("resources = %v", single)
 	}
+}
+
+func TestMulticlassSpellSlotsComeFromTheCombinedCasterLevel(t *testing.T) {
+	t.Parallel()
 	mixed := rules.MulticlassResources([]rules.ClassLevel{
 		{Class: rules.SRD("fighter"), Level: 2, HitDie: 10}, {Class: rules.SRD("wizard"), Level: 3, HitDie: 6}, {Class: rules.SRD("paladin"), Level: 3, HitDie: 10},
 	})
@@ -145,23 +158,35 @@ func TestMulticlassResources(t *testing.T) {
 		{Key: "spell-slots-3", Label: "Level 3 spell slots", Current: 2, Max: 2},
 	}
 	if !reflect.DeepEqual(mixed, want) {
-		t.Fatalf("mixed = %v", mixed)
+		t.Fatalf("resources = %v", mixed)
 	}
+}
+
+func TestPactSlotsStayApartFromSpellSlots(t *testing.T) {
+	t.Parallel()
 	pact := rules.MulticlassResources([]rules.ClassLevel{{Class: rules.SRD("warlock"), Level: 3, HitDie: 8}, {Class: rules.SRD("sorcerer"), Level: 1, HitDie: 6}})
 	labels := []string{}
 	for _, r := range pact {
 		labels = append(labels, r.Key+"="+strings.Repeat("|", r.Max))
 	}
 	if strings.Join(labels, " ") != "hit-dice=|||| spell-slots-1=|| pact-slots-2=||" {
-		t.Fatalf("pact = %v", labels)
+		t.Fatalf("resources = %v", labels)
 	}
+}
+
+func TestPactMagicAloneIsShownAsSpellSlots(t *testing.T) {
+	t.Parallel()
 	pactOnly := rules.MulticlassResources([]rules.ClassLevel{{Class: rules.SRD("warlock"), Level: 2, HitDie: 8}, {Class: rules.SRD("fighter"), Level: 1, HitDie: 10}})
 	if len(pactOnly) != 2 || pactOnly[1].Key != "spell-slots-1" || pactOnly[1].Label != "Level 1 spell slots" || pactOnly[1].Max != 2 {
-		t.Fatalf("pact magic alone = %v", pactOnly)
+		t.Fatalf("resources = %v", pactOnly)
 	}
+}
+
+func TestMartialClassesHaveOnlyTheirHitDice(t *testing.T) {
+	t.Parallel()
 	martial := rules.MulticlassResources([]rules.ClassLevel{{Class: rules.SRD("fighter"), Level: 1, HitDie: 10}, {Class: rules.SRD("rogue"), Level: 1, HitDie: 8}})
 	if len(martial) != 1 || martial[0].Label != "Hit Dice (1d10, 1d8)" {
-		t.Fatalf("martial = %v", martial)
+		t.Fatalf("resources = %v", martial)
 	}
 }
 

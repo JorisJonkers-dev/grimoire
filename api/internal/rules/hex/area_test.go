@@ -16,54 +16,82 @@ func has(cs []hex.Coord, c hex.Coord) bool {
 	return false
 }
 
-func TestRoundAreas(t *testing.T) {
+func TestASphereReachesItsRadiusInEveryDirection(t *testing.T) {
 	t.Parallel()
-	o := hex.Coord{Q: 0, R: 0}
-	if got := hex.Area(hex.SphereArea, o, o, 20); len(got) != 61 || !has(got, o) || !has(got, hex.Coord{Q: 4, R: 0}) || has(got, hex.Coord{Q: 5, R: 0}) {
+	if got := hex.Area(hex.SphereArea, origin, origin, 20); len(got) != 61 || !has(got, origin) || !has(got, hex.Coord{Q: 4, R: 0}) || has(got, hex.Coord{Q: 5, R: 0}) {
 		t.Fatalf("20 ft sphere = %d hexes", len(got))
 	}
-	if got := hex.Area(hex.CylinderArea, o, o, 5); len(got) != 7 {
+}
+
+func TestACylinderCoversItsCentreAndRing(t *testing.T) {
+	t.Parallel()
+	if got := hex.Area(hex.CylinderArea, origin, origin, 5); len(got) != 7 {
 		t.Fatalf("5 ft cylinder = %v", got)
 	}
-	if got := hex.Area(hex.EmanationArea, o, o, 5); len(got) != 6 || has(got, o) {
-		t.Fatalf("5 ft emanation leaves the origin out = %v", got)
+}
+
+func TestAnEmanationLeavesItsOriginOut(t *testing.T) {
+	t.Parallel()
+	if got := hex.Area(hex.EmanationArea, origin, origin, 5); len(got) != 6 || has(got, origin) {
+		t.Fatalf("5 ft emanation = %v", got)
 	}
-	if got := hex.Area(hex.SphereArea, o, o, 0); !reflect.DeepEqual(got, []hex.Coord{o}) {
+}
+
+func TestAZeroRadiusAreaIsAPoint(t *testing.T) {
+	t.Parallel()
+	if got := hex.Area(hex.SphereArea, origin, origin, 0); !reflect.DeepEqual(got, []hex.Coord{origin}) {
 		t.Fatalf("a point = %v", got)
 	}
 }
 
-func TestDirectionalAreas(t *testing.T) {
+var origin, east = hex.Coord{Q: 0, R: 0}, hex.Coord{Q: 1, R: 0}
+
+func TestALineRunsFromBesideItsOriginTowardItsAim(t *testing.T) {
 	t.Parallel()
-	o, east := hex.Coord{Q: 0, R: 0}, hex.Coord{Q: 1, R: 0}
-	line := hex.Area(hex.LineArea, o, east, 20)
-	if !reflect.DeepEqual(line, []hex.Coord{{Q: 1, R: 0}, {Q: 2, R: 0}, {Q: 3, R: 0}, {Q: 4, R: 0}}) {
+	if line := hex.Area(hex.LineArea, origin, east, 20); !reflect.DeepEqual(line, []hex.Coord{{Q: 1, R: 0}, {Q: 2, R: 0}, {Q: 3, R: 0}, {Q: 4, R: 0}}) {
 		t.Fatalf("20 ft line east = %v", line)
 	}
-	cone := hex.Area(hex.ConeArea, o, east, 15)
-	want := []hex.Coord{{Q: 1, R: 0}, {Q: 2, R: 0}, {Q: 2, R: 1}, {Q: 3, R: -1}, {Q: 3, R: 0}}
-	if !reflect.DeepEqual(cone, want) {
+}
+
+func TestAConeWidensForwardFromPastItsOrigin(t *testing.T) {
+	t.Parallel()
+	cone := hex.Area(hex.ConeArea, origin, east, 15)
+	if !reflect.DeepEqual(cone, []hex.Coord{{Q: 1, R: 0}, {Q: 2, R: 0}, {Q: 2, R: 1}, {Q: 3, R: -1}, {Q: 3, R: 0}}) {
 		t.Fatalf("15 ft cone east = %v", cone)
 	}
-	if has(cone, o) || has(cone, hex.Coord{Q: -1, R: 0}) {
-		t.Fatal("a cone starts past its origin and only goes forward")
+	if has(cone, origin) || has(cone, hex.Coord{Q: -1, R: 0}) {
+		t.Fatal("the cone reaches its origin or behind it")
 	}
-	cube := hex.Area(hex.CubeArea, o, east, 10)
-	if !has(cube, hex.Coord{Q: 1, R: 0}) || !has(cube, hex.Coord{Q: 2, R: 0}) || has(cube, hex.Coord{Q: 3, R: 0}) || has(cube, o) {
+}
+
+func TestACubeIsAsWideAsItIsLong(t *testing.T) {
+	t.Parallel()
+	cube := hex.Area(hex.CubeArea, origin, east, 10)
+	if !has(cube, hex.Coord{Q: 1, R: 0}) || !has(cube, hex.Coord{Q: 2, R: 0}) || has(cube, hex.Coord{Q: 3, R: 0}) || has(cube, origin) {
 		t.Fatalf("10 ft cube east = %v", cube)
 	}
 	if !has(cube, hex.Coord{Q: 1, R: -1}) || !has(cube, hex.Coord{Q: 0, R: 1}) {
-		t.Fatalf("a cube is as wide as it is long = %v", cube)
+		t.Fatalf("10 ft cube east = %v", cube)
 	}
-	if got := hex.Area(hex.LineArea, o, o, 30); got != nil {
+}
+
+func TestAnAreaAimedAtItsOwnOriginHasNoDirection(t *testing.T) {
+	t.Parallel()
+	if got := hex.Area(hex.LineArea, origin, origin, 30); got != nil {
 		t.Fatalf("aimed at itself = %v", got)
 	}
-	far := hex.Area(hex.LineArea, o, hex.Coord{Q: 10, R: 0}, 10)
-	if !reflect.DeepEqual(far, []hex.Coord{{Q: 1, R: 0}, {Q: 2, R: 0}}) {
-		t.Fatalf("a line stops at its length, not its aim = %v", far)
+}
+
+func TestALineStopsAtItsLengthNotItsAim(t *testing.T) {
+	t.Parallel()
+	if far := hex.Area(hex.LineArea, origin, hex.Coord{Q: 10, R: 0}, 10); !reflect.DeepEqual(far, []hex.Coord{{Q: 1, R: 0}, {Q: 2, R: 0}}) {
+		t.Fatalf("line = %v", far)
 	}
-	diagonal := hex.Area(hex.LineArea, o, hex.Coord{Q: 0, R: 2}, 10)
-	if !reflect.DeepEqual(diagonal, []hex.Coord{{Q: 0, R: 1}, {Q: 0, R: 2}}) {
+}
+
+func TestALineRunsDiagonally(t *testing.T) {
+	t.Parallel()
+	if diagonal := hex.Area(hex.LineArea, origin, hex.Coord{Q: 0, R: 2}, 10); !reflect.DeepEqual(diagonal, []hex.Coord{{Q: 0, R: 1}, {Q: 0, R: 2}}) {
 		t.Fatalf("a line south-east = %v", diagonal)
 	}
 }

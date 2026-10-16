@@ -44,7 +44,7 @@ func TestRitualsTakeTenMinutesMore(t *testing.T) {
 	}
 }
 
-func TestPreparationLimits(t *testing.T) {
+func TestAPreparationKeepsToItsLimitAndASwapAtATime(t *testing.T) {
 	t.Parallel()
 	ok := []struct {
 		class          string

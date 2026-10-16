@@ -74,7 +74,7 @@ func build() golden {
 
 // TestGoldenGeometry pins the Go geometry to the fixture the web client is tested against. It compares
 // values rather than bytes, because floating point differs in the last digits between CPUs.
-func TestGoldenGeometry(t *testing.T) {
+func TestLayoutsAndLinesMatchTheGoldenGeometry(t *testing.T) {
 	if *update {
 		got, err := json.MarshalIndent(build(), "", "  ")
 		if err != nil {

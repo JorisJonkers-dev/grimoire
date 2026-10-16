@@ -29,10 +29,14 @@ func exercise(t *testing.T, b storage.Blobs) {
 	}
 }
 
-func TestDir(t *testing.T) {
+func TestADirectoryStoresAndReadsAssets(t *testing.T) {
+	t.Parallel()
+	exercise(t, storage.Dir{Path: t.TempDir()})
+}
+
+func TestADirectoryRefusesKeysThatLeaveIt(t *testing.T) {
 	t.Parallel()
 	dir := storage.Dir{Path: t.TempDir()}
-	exercise(t, dir)
 	ctx := context.Background()
 	for _, bad := range []string{"../escape", "/abs", "a/../b"} {
 		if err := dir.Put(ctx, bad, "", nil); err == nil {
@@ -42,6 +46,11 @@ func TestDir(t *testing.T) {
 			t.Errorf("get %q accepted", bad)
 		}
 	}
+}
+
+func TestADirectoryUnderAFileCannotStore(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
 	blocked := filepath.Join(t.TempDir(), "file")
 	if err := os.WriteFile(blocked, nil, 0o600); err != nil {
 		t.Fatal(err)
@@ -49,6 +58,12 @@ func TestDir(t *testing.T) {
 	if err := (storage.Dir{Path: blocked}).Put(ctx, "x/y", "", nil); err == nil {
 		t.Error("put under a file accepted")
 	}
+}
+
+func TestReadingADirectoryAsAnAssetFails(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	dir := storage.Dir{Path: t.TempDir()}
 	if err := os.MkdirAll(filepath.Join(dir.Path, "folder"), 0o750); err != nil {
 		t.Fatal(err)
 	}
@@ -57,7 +72,7 @@ func TestDir(t *testing.T) {
 	}
 }
 
-func TestS3(t *testing.T) {
+func TestAnS3BucketStoresAndReadsAssets(t *testing.T) {
 	t.Parallel()
 	backend := s3mem.New()
 	if err := backend.CreateBucket("grimoire-assets"); err != nil {
@@ -67,6 +82,14 @@ func TestS3(t *testing.T) {
 	t.Cleanup(srv.Close)
 	cfg := storage.S3Config{Endpoint: srv.URL, Region: "garage", Bucket: "grimoire-assets", AccessKey: "k", SecretKey: "s"}
 	exercise(t, storage.NewS3(cfg))
+}
+
+func TestAMissingBucketRefusesToStoreOrRead(t *testing.T) {
+	t.Parallel()
+	backend := s3mem.New()
+	srv := httptest.NewServer(gofakes3.New(backend).Server())
+	t.Cleanup(srv.Close)
+	cfg := storage.S3Config{Endpoint: srv.URL, Region: "garage", Bucket: "grimoire-assets", AccessKey: "k", SecretKey: "s"}
 	cfg.Bucket = "nope"
 	broken := storage.NewS3(cfg)
 	if err := broken.Put(context.Background(), "a", "image/png", []byte("x")); err == nil {

@@ -1,6 +1,7 @@
 package variants_test
 
 import (
+	"fmt"
 	"reflect"
 	"slices"
 	"testing"
@@ -97,7 +98,7 @@ func TestASetOfRuleVariants(t *testing.T) {
 
 // Flanking: an attacker next to its target has it flanked when an ally stands on the hex straight
 // across the target.
-func TestFlanking(t *testing.T) {
+func TestAnAttackerFlanksWithAnAllyDirectlyAcross(t *testing.T) {
 	t.Parallel()
 	target := hex.Coord{Q: 2, R: 2}
 	for _, c := range []struct {
@@ -124,7 +125,7 @@ func TestFlanking(t *testing.T) {
 }
 
 // A critical fumble is a natural 1 on the attack's d20, and nothing else.
-func TestCriticalFumble(t *testing.T) {
+func TestOnlyANaturalOneFumbles(t *testing.T) {
 	t.Parallel()
 	for natural, want := range map[int]bool{0: false, 1: true, 2: false, 19: false, 20: false} {
 		if got := variants.Fumbles(natural); got != want {
@@ -159,7 +160,7 @@ func TestCriticalHitDice(t *testing.T) {
 }
 
 // How long a rest takes: an hour and eight; gritty, eight hours and a week; epic, five minutes and an hour.
-func TestRestLengths(t *testing.T) {
+func TestEachRestRuleSetsItsShortAndLongRest(t *testing.T) {
 	t.Parallel()
 	for _, c := range []struct {
 		mode        string
@@ -200,7 +201,7 @@ func TestTheShortRestCap(t *testing.T) {
 }
 
 // Massive damage: one blow of half a creature's hit point maximum or more, when it has one.
-func TestMassiveDamage(t *testing.T) {
+func TestDamageOfHalfTheHitPointsOrMoreIsASystemShock(t *testing.T) {
 	t.Parallel()
 	for _, c := range []struct {
 		damage, hpMax int
@@ -212,8 +213,12 @@ func TestMassiveDamage(t *testing.T) {
 			t.Errorf("%d damage against %d hit points: %v", c.damage, c.hpMax, got)
 		}
 	}
+}
+
+func TestTheSystemShockSaveIsDC15(t *testing.T) {
+	t.Parallel()
 	if variants.SystemShockDC != 15 {
-		t.Errorf("the save is DC %d", variants.SystemShockDC)
+		t.Fatalf("DC %d", variants.SystemShockDC)
 	}
 }
 
@@ -227,7 +232,7 @@ func TestHiddenDeathSaves(t *testing.T) {
 }
 
 // A healing surge spends up to half a Character's Hit Dice, never fewer than one and never more than it has left.
-func TestHealingSurge(t *testing.T) {
+func TestASurgeSpendsHalfTheLevelInDiceAtMostWhatIsLeft(t *testing.T) {
 	t.Parallel()
 	for _, c := range []struct{ level, left, want int }{
 		{1, 1, 1}, {2, 2, 1}, {3, 3, 1}, {4, 4, 2}, {11, 11, 5}, {20, 20, 10}, {20, 3, 3}, {1, 0, 0}, {8, 0, 0}, {0, 0, 0}, {6, -1, 0},
@@ -250,7 +255,7 @@ func TestSlowNaturalHealing(t *testing.T) {
 }
 
 // Morale is checked when a creature is down to half its hit points or fewer, or half its side has fallen.
-func TestMorale(t *testing.T) {
+func TestACreatureChecksMoraleAtHalfItsHitPointsOrHalfItsSideFallen(t *testing.T) {
 	t.Parallel()
 	for _, c := range []struct {
 		name                    string
@@ -275,14 +280,18 @@ func TestMorale(t *testing.T) {
 			t.Errorf("%s: %v", c.name, got)
 		}
 	}
+}
+
+func TestTheMoraleSaveIsDC10(t *testing.T) {
+	t.Parallel()
 	if variants.MoraleDC != 10 {
-		t.Errorf("the save is DC %d", variants.MoraleDC)
+		t.Fatalf("DC %d", variants.MoraleDC)
 	}
 }
 
 // Encumbrance: the standard rule slows a creature to 5 feet past 15 pounds a point of Strength; the
 // variant takes 10 feet off past 5 a point and 20 past 10; off, a load never slows anyone.
-func TestEncumbrance(t *testing.T) {
+func TestALoadSlowsACreatureAsItsEncumbranceRuleSays(t *testing.T) {
 	t.Parallel()
 	for _, c := range []struct {
 		mode   string
@@ -310,7 +319,10 @@ func TestEncumbrance(t *testing.T) {
 			t.Errorf("%q carrying %.1f lb at Strength 10: %d ft", c.mode, c.weight, got)
 		}
 	}
-	// A slow creature is never sped up by a load, nor slowed below nothing.
+}
+
+func TestALoadNeverSpeedsUpASlowCreatureNorSlowsItBelowNothing(t *testing.T) {
+	t.Parallel()
 	if got := variants.BurdenedSpeed(variants.EncumbranceStandard, 0, 200, 10); got != 0 {
 		t.Errorf("a creature with no speed, encumbered: %d ft", got)
 	}
@@ -326,11 +338,10 @@ func TestEncumbrance(t *testing.T) {
 }
 
 // A Rule Variant a DM authors hangs on one of five hook points, each named for the table.
-func TestHookPoints(t *testing.T) {
+func TestEachHookPointIsNamedAndValidInItsOrder(t *testing.T) {
 	t.Parallel()
-	points := variants.HookPoints()
 	slugs := []string{}
-	for _, p := range points {
+	for _, p := range variants.HookPoints() {
 		slugs = append(slugs, p.Slug)
 		if p.Label == "" || !variants.ValidHook(p.Slug) {
 			t.Errorf("%q is not a named, valid hook point: %+v", p.Slug, p)
@@ -339,20 +350,35 @@ func TestHookPoints(t *testing.T) {
 	if !slices.Equal(slugs, []string{variants.HookNatural1, variants.HookCritical, variants.HookDropTo0, variants.HookRest, variants.HookCast}) {
 		t.Fatalf("hook points = %v", slugs)
 	}
+}
+
+func TestAnUnknownHookIsNotValid(t *testing.T) {
+	t.Parallel()
 	for _, slug := range []string{"", "natural-2", "Natural-1", "on-hit"} {
-		if variants.ValidHook(slug) {
-			t.Errorf("%q is taken for a hook point", slug)
-		}
+		t.Run(slug, func(t *testing.T) {
+			if variants.ValidHook(slug) {
+				t.Fatal("valid")
+			}
+		})
 	}
-	// Changing the list a caller was given changes nobody else's.
+}
+
+func TestChangingTheHookPointsGivenChangesNobodyElses(t *testing.T) {
+	t.Parallel()
+	points := variants.HookPoints()
 	points[0].Slug = "x"
 	if again := variants.HookPoints(); again[0].Slug != variants.HookNatural1 || again[0].Label != "On a natural 1 on an attack roll" {
 		t.Fatalf("the hook points are shared: %+v", again[0])
 	}
-	// An attack's d20 fires the natural 1 hook or the critical hook, never both, and mostly neither.
+}
+
+func TestAnAttacksD20FiresTheNaturalOneOrCriticalHookOrNeither(t *testing.T) {
+	t.Parallel()
 	for natural, want := range map[int]string{1: variants.HookNatural1, 20: variants.HookCritical, 2: "", 19: "", 0: "", 21: ""} {
-		if got := variants.AttackHook(natural); got != want {
-			t.Errorf("a natural %d fires %q, want %q", natural, got, want)
-		}
+		t.Run(fmt.Sprint(natural), func(t *testing.T) {
+			if got := variants.AttackHook(natural); got != want {
+				t.Fatalf("fires %q, want %q", got, want)
+			}
+		})
 	}
 }

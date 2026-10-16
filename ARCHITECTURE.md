@@ -1133,7 +1133,8 @@ motion. Grimoire has its **own theme**; vue-web-commons provides plumbing only.
   `internal/rules/...`; **gremlins** mutation testing.
 - **Use case tests** with in-memory fakes of ports.
 - **Adapter tests**: sqlc repositories against **testcontainers Postgres** with goose migrations
-  applied; query-count assertions on list endpoints; S3 against a MinIO/Garage container;
+  applied, behind the `integration` build tag (`*_integration_test.go`), so plain `go test ./...`
+  needs no Docker; query-count assertions on list endpoints; S3 against a MinIO/Garage container;
   `httptest` for Open5e/5e-bits (recorded fixtures, no network).
 - **Contract tests**: ogen server in-process; every operation's examples validate against the spec;
   golden fixtures for hex geometry and WS message samples shared with the web tests.
@@ -1154,8 +1155,10 @@ motion. Grimoire has its **own theme**; vue-web-commons provides plumbing only.
 **Every PR (blocking):**
 
 - the contract chain from §7.2 (spec lint, generate, drift, oasdiff, compile)
-- `golangci-lint` (incl. nilaway, exhaustive, gochecksumtype, exhaustruct, depguard, gosec)
-- `go test -race ./...`, with coverage 100% on `rules` and a global floor of 98% (web: 98% lines, 95% branches)
+- `golangci-lint` (incl. nilaway, exhaustive, gochecksumtype, exhaustruct, depguard, gosec) under both build tags,
+  and `testlint`: every test named as the behaviour it checks, every table row a named `t.Run`
+  ([testing standard](https://github.com/JorisJonkers-dev/workspace/blob/main/docs/testing-standards.md))
+- `go test -race -tags integration ./...`, with coverage 100% on `rules` and a global floor of 98% (web: 98% lines, 95% branches)
 - gremlins on **changed** `rules` packages
 - `squawk` on migrations and `migration-guard`
 - `govulncheck`
@@ -1194,7 +1197,7 @@ line in `rules/effects/kinds.go` →
 `db/migrations/<yyyymmddhhmmss>_effect_kind_<slug>.sql` creating its table and its row in
 `compendium.effect_kinds` (a kind that is the whole of its Part, like `dispel`, has no table or query
 file: its store reads its rows through `bare`) → decode, text, capability and round-trip tests →
-gremlins clean → refresh `fixtures/part-kinds.json` (`go test ./internal/platform/httpapi -run
+gremlins clean → refresh `fixtures/part-kinds.json` (`go test -tags integration ./internal/platform/httpapi -run
 TestBuildersServeWhatTheyHold -update`). No switch names a kind and the OpenAPI document names none,
 so nothing else changes: the API takes the new kind as a generic Part and serves its definition, and a
 builder offers it once its `Holds()` lists it.

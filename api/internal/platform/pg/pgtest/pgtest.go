@@ -34,9 +34,6 @@ var (
 // URL returns the connection string of a new database migrated to the latest schema.
 func URL(t testing.TB) string {
 	t.Helper()
-	if testing.Short() {
-		t.Skip("needs Docker; skipped with -short")
-	}
 	once.Do(start)
 	if errStart != nil {
 		t.Fatalf("pgtest: %v", errStart)
@@ -50,9 +47,6 @@ func URL(t testing.TB) string {
 // EmptyURL returns the connection string of a new database with no schema, for migration tests.
 func EmptyURL(t testing.TB) string {
 	t.Helper()
-	if testing.Short() {
-		t.Skip("needs Docker; skipped with -short")
-	}
 	once.Do(start)
 	if errStart != nil {
 		t.Fatalf("pgtest: %v", errStart)

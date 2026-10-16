@@ -54,7 +54,7 @@ func TestPointBuyCost(t *testing.T) {
 	}
 }
 
-func TestValidateBase(t *testing.T) {
+func TestBaseScoresMustFitTheirMethod(t *testing.T) {
 	t.Parallel()
 	ok := map[rules.Method]map[rules.Ability]int{
 		rules.StandardArray: scores(8, 15, 14, 10, 13, 12),
@@ -81,11 +81,13 @@ func TestValidateBase(t *testing.T) {
 		{"dream", scores(10, 10, 10, 10, 10, 10), "unknown method"},
 	}
 	for _, b := range bad {
-		isViolation(t, rules.ValidateBase(b.method, b.scores), b.want)
+		t.Run(b.want, func(t *testing.T) {
+			isViolation(t, rules.ValidateBase(b.method, b.scores), b.want)
+		})
 	}
 }
 
-func TestOriginBonuses(t *testing.T) {
+func TestOriginIncreasesAreTwoAndOneOrThreeOnesOnTheAbilitiesAllowed(t *testing.T) {
 	t.Parallel()
 	allowed := []rules.Ability{rules.Intelligence, rules.Wisdom, rules.Charisma}
 	for _, ok := range []map[rules.Ability]int{
@@ -111,7 +113,7 @@ func TestOriginBonuses(t *testing.T) {
 	}
 }
 
-func TestFinalScores(t *testing.T) {
+func TestOriginIncreasesRaiseScoresToTwentyAtMost(t *testing.T) {
 	t.Parallel()
 	got, err := rules.FinalScores(scores(15, 14, 13, 12, 10, 8), map[rules.Ability]int{rules.Strength: 2, rules.Constitution: 1})
 	if err != nil || got[rules.Strength] != 17 || got[rules.Constitution] != 14 || got[rules.Charisma] != 8 {
@@ -124,16 +126,26 @@ func TestFinalScores(t *testing.T) {
 	isViolation(t, err, "cannot exceed 20")
 }
 
-func TestSkills(t *testing.T) {
+func TestThereAreEighteenSkills(t *testing.T) {
 	t.Parallel()
 	if len(rules.Skills()) != 18 || !rules.Skill("stealth").Valid() || rules.Skill("cooking").Valid() {
 		t.Fatal("skills")
 	}
+}
+
+func TestEachClassChoosesItsNumberOfSkills(t *testing.T) {
+	t.Parallel()
 	for class, want := range map[string]int{"rogue": 4, "bard": 3, "ranger": 3, "fighter": 2} {
-		if got := rules.SRD(class).Skills; got != want {
-			t.Errorf("%s: %d", class, got)
-		}
+		t.Run(class, func(t *testing.T) {
+			if got := rules.SRD(class).Skills; got != want {
+				t.Fatalf("skills = %d", got)
+			}
+		})
 	}
+}
+
+func TestSkillChoicesMustBeTheRightNumberOfDistinctSkillsTheBackgroundDoesNotGrant(t *testing.T) {
+	t.Parallel()
 	bg := []rules.Skill{"insight", "religion"}
 	if err := rules.ValidateSkills(rules.SRD("fighter"), []rules.Skill{"athletics", "perception"}, bg); err != nil {
 		t.Fatal(err)
@@ -195,7 +207,7 @@ func TestResourcesByCaster(t *testing.T) {
 	}
 }
 
-func TestBuildSheet(t *testing.T) {
+func TestASheetIsBuiltFromScoresProficienciesAndArmour(t *testing.T) {
 	t.Parallel()
 	in := rules.SheetInput{
 		Class: rules.SRD("fighter"), Level: 1, HitDie: 10, Scores: scores(13, 14, 15, 8, 12, 10),
@@ -212,13 +224,29 @@ func TestBuildSheet(t *testing.T) {
 	if len(s.Skills) != 18 || s.Skills[3].Skill != "athletics" || s.Skills[3].Bonus != 3 || len(s.Warnings) != 2 {
 		t.Fatalf("skills/warnings = %+v %v", s.Skills[3], s.Warnings)
 	}
+}
+
+func fighterSheet() rules.SheetInput {
+	return rules.SheetInput{
+		Class: rules.SRD("fighter"), Level: 1, HitDie: 10, Scores: scores(13, 14, 15, 8, 12, 10),
+		SaveProfs: []rules.Ability{rules.Strength, rules.Constitution}, SkillProfs: []rules.Skill{"perception", "athletics"},
+		ShieldBonus: 2, SpeedFeet: 30,
+	}
+}
+
+func TestArmourWithExactlyTheStrengthItNeedsDoesNotSlow(t *testing.T) {
+	t.Parallel()
+	in := fighterSheet()
 	in.Armor = &rules.Armor{Base: 16, StrengthRequired: 13}
 	if exact := rules.BuildSheet(in); exact.SpeedFeet != 30 || len(exact.Warnings) != 0 {
-		t.Fatalf("strength exactly enough = %+v", exact)
+		t.Fatalf("sheet = %+v", exact)
 	}
-	in.Armor = nil
-	if light := rules.BuildSheet(in); light.SpeedFeet != 30 || len(light.Warnings) != 0 || light.ArmorClass != 14 {
-		t.Fatalf("unarmoured = %+v", light)
+}
+
+func TestWithoutArmourTheArmourClassIsTenPlusDexterityAndShield(t *testing.T) {
+	t.Parallel()
+	if light := rules.BuildSheet(fighterSheet()); light.SpeedFeet != 30 || len(light.Warnings) != 0 || light.ArmorClass != 14 {
+		t.Fatalf("sheet = %+v", light)
 	}
 }
 
@@ -231,7 +259,7 @@ func TestProficiencyByChallenge(t *testing.T) {
 	}
 }
 
-func TestGroupChecks(t *testing.T) {
+func TestAGroupCheckSucceedsWhenHalfTheGroupDoes(t *testing.T) {
 	t.Parallel()
 	for _, c := range []struct {
 		totals []int
@@ -248,7 +276,11 @@ func TestGroupChecks(t *testing.T) {
 			t.Errorf("%v against %d = %v", c.totals, c.dc, got)
 		}
 	}
+}
+
+func TestPassivePerceptionIsTenPlusTheBonus(t *testing.T) {
+	t.Parallel()
 	if rules.PassivePerception(3) != 13 {
-		t.Error("passive Perception")
+		t.Fatal(rules.PassivePerception(3))
 	}
 }

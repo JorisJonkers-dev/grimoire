@@ -47,13 +47,15 @@ func TestTargetingRefusesIllegalPicks(t *testing.T) {
 		{"spread from the first", func(t effects.Targeting) effects.Targeting { t.SpreadFt = 10; return t }, []effects.Candidate{friend("a", 1), friend("b", 3), friend("c", 4)}, []effects.Refusal{{Pick: 2, Reason: "Choose a target within 10 feet of the first."}}},
 	}
 	for _, c := range cases {
-		tg := bless
-		if c.t != nil {
-			tg = c.t(tg)
-		}
-		if got := tg.Refusals(caster, c.picks); !reflect.DeepEqual(got, c.want) {
-			t.Errorf("%s: %+v", c.name, got)
-		}
+		t.Run(c.name, func(t *testing.T) {
+			tg := bless
+			if c.t != nil {
+				tg = c.t(tg)
+			}
+			if got := tg.Refusals(caster, c.picks); !reflect.DeepEqual(got, c.want) {
+				t.Errorf("%s: %+v", c.name, got)
+			}
+		})
 	}
 }
 
@@ -177,11 +179,13 @@ func TestTargetingIsChecked(t *testing.T) {
 		"spread_ft: runs from 0 to 5280":       func(t *effects.Targeting) { t.SpreadFt = 5281 },
 		"spread_ft: runs from 0 to 5280 ":      func(t *effects.Targeting) { t.SpreadFt = -1 },
 	} {
-		bad := ok
-		bad.Types = append([]string{}, ok.Types...)
-		change(&bad)
-		if err := bad.Check(); err == nil || err.Error() != strings.TrimSpace(want) {
-			t.Errorf("want %q, got %v", want, err)
-		}
+		t.Run(want, func(t *testing.T) {
+			bad := ok
+			bad.Types = append([]string{}, ok.Types...)
+			change(&bad)
+			if err := bad.Check(); err == nil || err.Error() != strings.TrimSpace(want) {
+				t.Errorf("want %q, got %v", want, err)
+			}
+		})
 	}
 }

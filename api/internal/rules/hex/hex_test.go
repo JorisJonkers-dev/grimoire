@@ -1,6 +1,7 @@
 package hex_test
 
 import (
+	"fmt"
 	"math"
 	"testing"
 
@@ -55,15 +56,22 @@ func TestPixelRoundTrip(t *testing.T) {
 	}
 }
 
-func TestLines(t *testing.T) {
+func TestAStraightLineCoversEveryHexBetween(t *testing.T) {
 	t.Parallel()
-	line := hex.Line(c(0, 0), c(3, 0))
-	if len(line) != 4 || line[1] != c(1, 0) || line[3] != c(3, 0) {
+	if line := hex.Line(c(0, 0), c(3, 0)); len(line) != 4 || line[1] != c(1, 0) || line[3] != c(3, 0) {
 		t.Fatalf("straight line = %v", line)
 	}
+}
+
+func TestALineToItselfIsOneHex(t *testing.T) {
+	t.Parallel()
 	if one := hex.Line(c(2, 2), c(2, 2)); len(one) != 1 || one[0] != c(2, 2) {
 		t.Fatalf("point line = %v", one)
 	}
+}
+
+func TestADiagonalLineNeverSkipsAHex(t *testing.T) {
+	t.Parallel()
 	diag := hex.Line(c(0, 0), c(2, -4))
 	for i := 1; i < len(diag); i++ {
 		if hex.Distance(diag[i-1], diag[i]) != 1 {
@@ -72,15 +80,14 @@ func TestLines(t *testing.T) {
 	}
 }
 
-func TestCover(t *testing.T) {
+func TestCoverAddsItsArmourBonus(t *testing.T) {
 	t.Parallel()
-	for cover, want := range map[hex.Cover]int{hex.NoCover: 0, hex.HalfCover: 2, hex.ThreeQuartersCover: 5, hex.TotalCover: 0} {
-		if got := cover.ACBonus(); got != want {
-			t.Errorf("%d: %d", cover, got)
-		}
-	}
-	if hex.Cover(9).ACBonus() != 0 {
-		t.Fatal("unknown cover")
+	for cover, want := range map[hex.Cover]int{hex.NoCover: 0, hex.HalfCover: 2, hex.ThreeQuartersCover: 5, hex.TotalCover: 0, hex.Cover(9): 0} {
+		t.Run(fmt.Sprint(cover), func(t *testing.T) {
+			if got := cover.ACBonus(); got != want {
+				t.Fatalf("bonus = %d", got)
+			}
+		})
 	}
 }
 

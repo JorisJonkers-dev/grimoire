@@ -232,10 +232,12 @@ func TestDesignsAreChecked(t *testing.T) {
 		"lonely set":   {prop(itembuild.Property{Type: "set_bonus", Text: "x", Set: "S", Pieces: 1}), "set bonus"},
 		"crowded set":  {prop(itembuild.Property{Type: "set_bonus", Text: "x", Set: "S", Pieces: 11}), "set bonus"},
 	} {
-		err := itembuild.Check(with(c.change))
-		if err == nil || !strings.Contains(err.Error(), c.want) {
-			t.Errorf("%s: %v, want %q", name, err, c.want)
-		}
+		t.Run(name, func(t *testing.T) {
+			err := itembuild.Check(with(c.change))
+			if err == nil || !strings.Contains(err.Error(), c.want) {
+				t.Errorf("%s: %v, want %q", name, err, c.want)
+			}
+		})
 	}
 	for name, change := range map[string]func(*itembuild.Design){
 		"edges": func(d *itembuild.Design) {
@@ -274,9 +276,11 @@ func TestDesignsAreChecked(t *testing.T) {
 			}
 		},
 	} {
-		if err := itembuild.Check(with(change)); err != nil {
-			t.Errorf("%s: %v", name, err)
-		}
+		t.Run(name, func(t *testing.T) {
+			if err := itembuild.Check(with(change)); err != nil {
+				t.Errorf("%s: %v", name, err)
+			}
+		})
 	}
 }
 

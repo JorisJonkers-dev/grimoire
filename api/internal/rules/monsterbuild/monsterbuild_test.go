@@ -1,6 +1,7 @@
 package monsterbuild_test
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 	"testing"
@@ -75,43 +76,63 @@ func TestTheBogKingCompiles(t *testing.T) {
 	}
 }
 
-func TestEstimatedChallenges(t *testing.T) {
-	t.Parallel()
-	weak := monsterbuild.Design{
+func scimitarGoblin() monsterbuild.Design {
+	return monsterbuild.Design{
 		Size: "small", CreatureType: "humanoid", AC: 12, HP: 7, SpeedFt: 30, Challenge: 0.25,
 		Abilities: map[string]int{"strength": 8, "dexterity": 14, "constitution": 10, "intelligence": 10, "wisdom": 8, "charisma": 8},
 		Actions:   []monsterbuild.Action{{Name: "Scimitar", Kind: "melee", ToHit: 4, ReachFt: 5, Damage: "1d6", DamageBonus: 2, DamageType: "slashing"}},
 	}
+}
+
+func TestAMonsterIsEstimatedFromItsDefenceAndOffence(t *testing.T) {
+	t.Parallel()
+	weak := scimitarGoblin()
 	if err := monsterbuild.Check(weak); err != nil {
 		t.Fatal(err)
 	}
 	if got := monsterbuild.Estimate(monsterbuild.Compile("x", "X", weak)); got != "1/2" {
-		t.Errorf("a scimitar goblin = %s", got)
+		t.Fatalf("estimate = %s", got)
 	}
-	unarmed := weak
-	unarmed.Actions = []monsterbuild.Action{{Name: "Shriek", Kind: "special", Text: "It shrieks."}}
+}
+
+func TestAMonsterWithoutAttacksIsEstimatedFromItsHitPoints(t *testing.T) {
+	t.Parallel()
 	for hp, want := range map[int]string{1: "0", 7: "1/8", 14: "1/4", 20: "1/2", 60: "2"} {
-		w := unarmed
-		w.HP = hp
-		if got := monsterbuild.Estimate(monsterbuild.Compile("x", "X", w)); got != want {
-			t.Errorf("HP %d = %s, want %s", hp, got, want)
-		}
+		t.Run(fmt.Sprint(hp), func(t *testing.T) {
+			w := scimitarGoblin()
+			w.Actions = []monsterbuild.Action{{Name: "Shriek", Kind: "special", Text: "It shrieks."}}
+			w.HP = hp
+			if got := monsterbuild.Estimate(monsterbuild.Compile("x", "X", w)); got != want {
+				t.Fatalf("estimate = %s, want %s", got, want)
+			}
+		})
 	}
+}
+
+func TestAnEstimateTopsOutAtThirty(t *testing.T) {
+	t.Parallel()
 	huge := bogKing()
 	huge.HP, huge.AC = 1000, 30
 	if got := monsterbuild.Estimate(monsterbuild.Compile("x", "X", huge)); got != "30" {
-		t.Errorf("a towering monster = %s", got)
+		t.Fatalf("estimate = %s", got)
 	}
-	plain := weak
+}
+
+func TestAStatBlockShowsTheChallengeBesideItsEstimate(t *testing.T) {
+	t.Parallel()
+	plain := scimitarGoblin()
 	plain.Actions = nil
-	m := monsterbuild.Compile("x", "Plain", plain)
-	if lines := monsterbuild.Lines(m); lines[len(lines)-1] != "Challenge 1/4 (estimated 1/8) · Proficiency Bonus +2" {
-		t.Fatalf("a monster with no actions = %v", lines)
+	if lines := monsterbuild.Lines(monsterbuild.Compile("x", "Plain", plain)); lines[len(lines)-1] != "Challenge 1/4 (estimated 1/8) · Proficiency Bonus +2" {
+		t.Fatalf("lines = %v", lines)
 	}
-	swarm := weak
+}
+
+func TestASwarmsStatBlockSaysItSharesSpaces(t *testing.T) {
+	t.Parallel()
+	swarm := scimitarGoblin()
 	swarm.Swarm, swarm.Size = true, "medium"
 	if lines := strings.Join(monsterbuild.Lines(monsterbuild.Compile("x", "Rats", swarm)), "\n"); !strings.Contains(lines, "Swarm. It can occupy another creature's space") {
-		t.Fatalf("a swarm = %s", lines)
+		t.Fatalf("lines = %s", lines)
 	}
 }
 
@@ -157,12 +178,14 @@ func TestMonsterDesignsThatDoNotBuild(t *testing.T) {
 		"each phase 1 to 1000 hit points":     func(d *monsterbuild.Design) { d.Phases[0].HP = 0 },
 		"name each phase":                     func(d *monsterbuild.Design) { d.Phases[0].Name = "" },
 	} {
-		d := bogKing()
-		d.Abilities = map[string]int{"strength": 20, "dexterity": 12, "constitution": 18, "intelligence": 8, "wisdom": 14, "charisma": 16}
-		change(&d)
-		if err := monsterbuild.Check(d); err == nil || !strings.Contains(err.Error(), want) {
-			t.Errorf("%s: %v", want, err)
-		}
+		t.Run(want, func(t *testing.T) {
+			d := bogKing()
+			d.Abilities = map[string]int{"strength": 20, "dexterity": 12, "constitution": 18, "intelligence": 8, "wisdom": 14, "charisma": 16}
+			change(&d)
+			if err := monsterbuild.Check(d); err == nil || !strings.Contains(err.Error(), want) {
+				t.Errorf("%s: %v", want, err)
+			}
+		})
 	}
 }
 

@@ -32,7 +32,7 @@ const sample = `# Changelog
 `
 
 // A release's features read as plain lines, scoped, without links; fixes and other releases stay out.
-func TestFeatures(t *testing.T) {
+func TestAVersionsFeaturesAreReadFromItsChangelogSection(t *testing.T) {
 	t.Parallel()
 	got := changelog.Features(sample, "1.1.0")
 	if strings.Join(got, "|") != "Social: Friends with requests|One image for everything" {
@@ -41,8 +41,12 @@ func TestFeatures(t *testing.T) {
 	if got := changelog.Features(sample, "1.0.0"); len(got) != 1 || got[0] != "Apps: installable PWA" {
 		t.Fatalf("1.0.0 = %q", got)
 	}
+}
+
+func TestAnUnknownVersionHasNoFeatures(t *testing.T) {
+	t.Parallel()
 	if got := changelog.Features(sample, "9.9.9"); got != nil {
-		t.Fatalf("an unknown version = %q", got)
+		t.Fatalf("features = %q", got)
 	}
 }
 

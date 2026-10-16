@@ -147,12 +147,14 @@ func TestDesignsThatDoNotBuild(t *testing.T) {
 		"name each option once":        func(d *subclassbuild.Design) { d.Choices[0].Options = []string{"Bog Glass", "bog glass"} },
 		"pick 1 to 2 options":          func(d *subclassbuild.Design) { d.Choices[0].Count = 3 },
 	} {
-		d := warden()
-		change(&d)
-		err := subclassbuild.Check(d, classes)
-		if err == nil || !strings.Contains(err.Error(), want) {
-			t.Errorf("%s: %v", want, err)
-		}
+		t.Run(want, func(t *testing.T) {
+			d := warden()
+			change(&d)
+			err := subclassbuild.Check(d, classes)
+			if err == nil || !strings.Contains(err.Error(), want) {
+				t.Errorf("%s: %v", want, err)
+			}
+		})
 	}
 	d := warden()
 	d.Features = make([]subclassbuild.Feature, 41)

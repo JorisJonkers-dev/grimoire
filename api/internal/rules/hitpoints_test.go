@@ -31,7 +31,7 @@ func TestHitPointChanges(t *testing.T) {
 	}
 }
 
-func TestClassProficiencies(t *testing.T) {
+func TestEachClassIsProficientInItsArmourAndWeapons(t *testing.T) {
 	t.Parallel()
 	heavy := []string{"Light armor", "Medium armor", "Heavy armor", "Shields"}
 	medium := []string{"Light armor", "Medium armor", "Shields"}

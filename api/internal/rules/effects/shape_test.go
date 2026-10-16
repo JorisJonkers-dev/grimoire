@@ -65,15 +65,20 @@ func TestChoicesAndBranches(t *testing.T) {
 	}
 }
 
-func TestSummons(t *testing.T) {
+func TestASummoningEffectNamesWhatItSummons(t *testing.T) {
 	t.Parallel()
 	owl := effects.Summon{Monster: "owl", Count: 1, Shares: true}
-	cat := effects.Catalog{"find-familiar": {Slug: "find-familiar", Parts: []effects.Part{effects.Manual{}, owl}}, "bless": {Slug: "bless"}}
+	cat := effects.Catalog{"find-familiar": {Slug: "find-familiar", Parts: []effects.Part{effects.Manual{}, owl}}}
 	if got, ok := cat.SummonOf("find-familiar"); !ok || got != owl {
 		t.Fatalf("summon = %+v %v", got, ok)
 	}
+}
+
+func TestAnEffectWithoutASummonSummonsNothing(t *testing.T) {
+	t.Parallel()
+	cat := effects.Catalog{"bless": {Slug: "bless"}}
 	if got, ok := cat.SummonOf("bless"); ok || got != (effects.Summon{}) {
-		t.Fatalf("bless summons = %+v", got)
+		t.Fatalf("summon = %+v", got)
 	}
 }
 
@@ -87,22 +92,30 @@ func TestRevealsInAreas(t *testing.T) {
 	}
 }
 
-func TestFormsLand(t *testing.T) {
+func TestAFormLandsOnTheTarget(t *testing.T) {
 	t.Parallel()
 	cat := effects.Catalog{"polymorph": {Slug: "polymorph", Parts: []effects.Part{effects.Form{Monster: "", TempHP: 0}}}}
 	if l := cat.LandingOf("polymorph", ""); l.Form == nil || *l.Form != (effects.Form{}) {
-		t.Fatalf("polymorph lands a form = %+v", l)
-	}
-	cat["outline"] = effects.Definition{Parts: []effects.Part{effects.Reveal{Qualities: []string{"invisible"}}}}
-	if l := cat.LandingOf("outline", ""); !reflect.DeepEqual(l.Reveals, []string{"invisible"}) {
-		t.Fatalf("outline reveals = %+v", l)
-	}
-	if l := cat.LandingOf("bless", ""); l.Form != nil {
-		t.Fatalf("bless lands no form = %+v", l)
+		t.Fatalf("landing = %+v", l)
 	}
 }
 
-func TestConditionsHold(t *testing.T) {
+func TestARevealLandsItsQualities(t *testing.T) {
+	t.Parallel()
+	cat := effects.Catalog{"outline": {Parts: []effects.Part{effects.Reveal{Qualities: []string{"invisible"}}}}}
+	if l := cat.LandingOf("outline", ""); !reflect.DeepEqual(l.Reveals, []string{"invisible"}) {
+		t.Fatalf("landing = %+v", l)
+	}
+}
+
+func TestAnEffectWithoutAFormLandsNone(t *testing.T) {
+	t.Parallel()
+	if l := (effects.Catalog{}).LandingOf("bless", ""); l.Form != nil {
+		t.Fatalf("landing = %+v", l)
+	}
+}
+
+func TestABranchConditionHoldsInTheSituationItNames(t *testing.T) {
 	t.Parallel()
 	for _, c := range []struct {
 		when effects.Condition
@@ -125,7 +138,7 @@ func TestConditionsHold(t *testing.T) {
 	}
 }
 
-func TestDurations(t *testing.T) {
+func TestADurationLastsItsRoundsReadsItsTextAndEndsAsItsKindSays(t *testing.T) {
 	t.Parallel()
 	for _, c := range []struct {
 		d      effects.Duration
@@ -157,13 +170,17 @@ func TestDurations(t *testing.T) {
 			t.Errorf("%+v lingers = %v", c.d, c.d.Lingers())
 		}
 	}
+}
+
+func TestAConcentrationDurationSaysSo(t *testing.T) {
+	t.Parallel()
 	if got := (effects.Duration{Kind: effects.Minutes, Amount: 10}).Text(true); got != "Duration: Concentration, up to 10 minutes." {
-		t.Errorf("concentration = %q", got)
+		t.Fatalf("text = %q", got)
 	}
 }
 
 // Rules text reads every Part, the duration, the repeat save and the scaling.
-func TestRulesText(t *testing.T) {
+func TestEveryPartOfAnEffectReadsAsRulesText(t *testing.T) {
 	t.Parallel()
 	every := effects.Definition{
 		Concentration: true, Duration: effects.Duration{Kind: effects.Minutes, Amount: 1, RepeatSave: "wisdom"},
@@ -281,11 +298,19 @@ func TestRulesText(t *testing.T) {
 			t.Errorf("line %d = %q, want %q", i, got[i], want[i])
 		}
 	}
+}
+
+func TestAResourceChangeOfNothingReadsAsSpendingNone(t *testing.T) {
+	t.Parallel()
 	if got := (effects.Definition{Parts: []effects.Part{effects.ResourceChange{Resource: "ki", Delta: 0}}}).Text(); got[0] != "The target expends 0 uses of Ki." {
-		t.Errorf("no change reads %q", got[0])
+		t.Fatalf("text = %q", got[0])
 	}
+}
+
+func TestAnEmptyEffectReadsAsNothing(t *testing.T) {
+	t.Parallel()
 	if got := (effects.Definition{}).Text(); len(got) != 0 {
-		t.Errorf("an empty Effect reads %v", got)
+		t.Fatalf("text = %v", got)
 	}
 }
 

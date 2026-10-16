@@ -43,12 +43,16 @@ func TestEachMasteryOnAHitOrAMiss(t *testing.T) {
 	}
 }
 
-func TestMasteredWeapons(t *testing.T) {
+func TestTheFirstDistinctWeaponsUpToTheLimitAreMastered(t *testing.T) {
 	t.Parallel()
 	if got := mastery.Mastered([]string{"longsword", "longsword", "shortbow", "dagger"}, 2); !reflect.DeepEqual(got, []string{"longsword", "shortbow"}) {
-		t.Errorf("mastered = %v", got)
+		t.Fatalf("mastered = %v", got)
 	}
+}
+
+func TestWithoutMasteriesNoWeaponIsMastered(t *testing.T) {
+	t.Parallel()
 	if got := mastery.Mastered([]string{"club"}, 0); got != nil {
-		t.Errorf("no masteries = %v", got)
+		t.Fatalf("mastered = %v", got)
 	}
 }

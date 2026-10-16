@@ -1,73 +1,120 @@
 package combat_test
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/combat"
 )
 
-func TestEconomy(t *testing.T) {
+func TestATurnStartsWithEveryActionAndFullMovement(t *testing.T) {
 	t.Parallel()
-	e := combat.Fresh(30)
-	if e != (combat.Economy{Action: true, BonusAction: true, Reaction: true, MovementFt: 30, Interaction: true}) {
+	if e := combat.Fresh(30); e != (combat.Economy{Action: true, BonusAction: true, Reaction: true, MovementFt: 30, Interaction: true}) {
 		t.Fatalf("fresh = %+v", e)
 	}
+}
+
+func TestEachActionIsSpentOnce(t *testing.T) {
+	t.Parallel()
 	for _, r := range []combat.Resource{combat.Action, combat.BonusAction, combat.Reaction} {
-		var ok bool
-		if e, ok = e.Spend(r); !ok {
-			t.Fatalf("first spend of %d refused", r)
-		}
-		if _, ok = e.Spend(r); ok {
-			t.Fatalf("second spend of %d allowed", r)
-		}
+		t.Run(fmt.Sprint(r), func(t *testing.T) {
+			e, ok := combat.Fresh(30).Spend(r)
+			if !ok {
+				t.Fatal("first spend refused")
+			}
+			if _, ok = e.Spend(r); ok {
+				t.Fatal("second spend allowed")
+			}
+		})
+	}
+}
+
+func TestSpendingTheActionsLeavesMovementAndTheInteraction(t *testing.T) {
+	t.Parallel()
+	e := combat.Fresh(30)
+	for _, r := range []combat.Resource{combat.Action, combat.BonusAction, combat.Reaction} {
+		e, _ = e.Spend(r)
 	}
 	if e != (combat.Economy{MovementFt: 30, Interaction: true}) {
 		t.Fatalf("spent = %+v", e)
 	}
-	if _, ok := e.Spend(combat.Resource(9)); ok {
-		t.Fatal("unknown resource spent")
+}
+
+func TestAnUnknownResourceCannotBeSpent(t *testing.T) {
+	t.Parallel()
+	if _, ok := combat.Fresh(30).Spend(combat.Resource(9)); ok {
+		t.Fatal("spent")
 	}
-	moved, ok := e.Move(30)
-	if !ok || moved.MovementFt != 0 {
+}
+
+func TestMovementIsSpentUpToWhatIsLeft(t *testing.T) {
+	t.Parallel()
+	e := combat.Fresh(30)
+	if moved, ok := e.Move(30); !ok || moved.MovementFt != 0 {
 		t.Fatalf("move all = %+v %v", moved, ok)
-	}
-	if left, ok := e.Move(31); ok || left.MovementFt != 30 {
-		t.Fatalf("move too far = %+v %v", left, ok)
-	}
-	if left, ok := e.Move(-5); ok || left.MovementFt != 30 {
-		t.Fatalf("move backwards = %+v %v", left, ok)
 	}
 	if left, ok := e.Move(0); !ok || left.MovementFt != 30 {
 		t.Fatalf("move nothing = %+v %v", left, ok)
 	}
 }
 
-func TestInitiative(t *testing.T) {
+func TestMovingTooFarOrBackwardsIsRefused(t *testing.T) {
 	t.Parallel()
-	totals := []int{12, 18, 12, 7, 18, 3}
-	if got := combat.Counts(totals); !reflect.DeepEqual(got, []int{18, 12, 7, 3}) {
+	for _, ft := range []int{31, -5} {
+		t.Run(fmt.Sprint(ft), func(t *testing.T) {
+			if left, ok := combat.Fresh(30).Move(ft); ok || left.MovementFt != 30 {
+				t.Fatalf("move = %+v %v", left, ok)
+			}
+		})
+	}
+}
+
+var initiatives = []int{12, 18, 12, 7, 18, 3}
+
+func TestInitiativeCountsRunHighestFirstWithoutRepeats(t *testing.T) {
+	t.Parallel()
+	if got := combat.Counts(initiatives); !reflect.DeepEqual(got, []int{18, 12, 7, 3}) {
 		t.Fatalf("counts = %v", got)
 	}
-	for total, rank := range map[int]int{18: 1, 12: 2, 7: 3, 3: 4, 20: 1, 1: 5} {
-		if got := combat.Rank(totals, total); got != rank {
-			t.Errorf("rank of %d = %d, want %d", total, got, rank)
-		}
+}
+
+func TestNoInitiativesMakeNoCounts(t *testing.T) {
+	t.Parallel()
+	if combat.Counts(nil) != nil {
+		t.Fatal("counts")
 	}
-	steps := []struct {
+}
+
+func TestAnInitiativeRanksByTheCountsAboveIt(t *testing.T) {
+	t.Parallel()
+	for total, rank := range map[int]int{18: 1, 12: 2, 7: 3, 3: 4, 20: 1, 1: 5} {
+		t.Run(fmt.Sprint(total), func(t *testing.T) {
+			if got := combat.Rank(initiatives, total); got != rank {
+				t.Fatalf("rank = %d, want %d", got, rank)
+			}
+		})
+	}
+}
+
+func TestTheNextCountFollowsAndWrapsIntoANewRound(t *testing.T) {
+	t.Parallel()
+	for _, s := range []struct {
 		current, next int
 		round         bool
-	}{{18, 12, false}, {12, 7, false}, {7, 3, false}, {3, 18, true}, {99, 18, false}, {13, 12, false}, {1, 18, true}}
-	for _, s := range steps {
-		if n, r := combat.Next(totals, s.current); n != s.next || r != s.round {
-			t.Errorf("after %d = %d %v, want %d %v", s.current, n, r, s.next, s.round)
-		}
+	}{{18, 12, false}, {12, 7, false}, {7, 3, false}, {3, 18, true}, {99, 18, false}, {13, 12, false}, {1, 18, true}} {
+		t.Run(fmt.Sprint(s.current), func(t *testing.T) {
+			if n, r := combat.Next(initiatives, s.current); n != s.next || r != s.round {
+				t.Fatalf("next = %d %v, want %d %v", n, r, s.next, s.round)
+			}
+		})
 	}
+}
+
+func TestWithoutInitiativesTheCountStays(t *testing.T) {
+	t.Parallel()
 	if n, r := combat.Next(nil, 5); n != 5 || r {
-		t.Fatalf("empty = %d %v", n, r)
-	}
-	if combat.Counts(nil) != nil {
-		t.Fatal("no totals, no counts")
+		t.Fatalf("next = %d %v", n, r)
 	}
 }
 

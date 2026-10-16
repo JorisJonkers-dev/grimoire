@@ -56,11 +56,13 @@ func TestAccountHandlersNeedAnIdentity(t *testing.T) {
 		"seen":          func() (any, error) { return h.SeeReleaseNote(ctx, oas.SeeReleaseNoteParams{}) },
 	}
 	for name, call := range calls {
-		res, err := call()
-		p, ok := res.(*oas.ProblemStatusCodeWithHeaders)
-		if err != nil || !ok || p.StatusCode != http.StatusUnauthorized {
-			t.Errorf("%s = %#v, %v", name, res, err)
-		}
+		t.Run(name, func(t *testing.T) {
+			res, err := call()
+			p, ok := res.(*oas.ProblemStatusCodeWithHeaders)
+			if err != nil || !ok || p.StatusCode != http.StatusUnauthorized {
+				t.Errorf("%s = %#v, %v", name, res, err)
+			}
+		})
 	}
 }
 
@@ -145,11 +147,13 @@ func TestFriendsWhenTheStoreFails(t *testing.T) {
 		},
 	}
 	for name, call := range calls {
-		res, err := call()
-		p, ok := res.(*oas.ProblemStatusCodeWithHeaders)
-		if err != nil || !ok || p.StatusCode != http.StatusServiceUnavailable {
-			t.Errorf("%s = %#v, %v", name, res, err)
-		}
+		t.Run(name, func(t *testing.T) {
+			res, err := call()
+			p, ok := res.(*oas.ProblemStatusCodeWithHeaders)
+			if err != nil || !ok || p.StatusCode != http.StatusServiceUnavailable {
+				t.Errorf("%s = %#v, %v", name, res, err)
+			}
+		})
 	}
 }
 
@@ -194,11 +198,13 @@ func TestReleasesWhenTheStoreFails(t *testing.T) {
 		"seen":   func() (any, error) { return h.SeeReleaseNote(ctx, oas.SeeReleaseNoteParams{}) },
 	}
 	for name, call := range calls {
-		res, err := call()
-		p, ok := res.(*oas.ProblemStatusCodeWithHeaders)
-		if err != nil || !ok || p.StatusCode != http.StatusServiceUnavailable {
-			t.Errorf("%s = %#v, %v", name, res, err)
-		}
+		t.Run(name, func(t *testing.T) {
+			res, err := call()
+			p, ok := res.(*oas.ProblemStatusCodeWithHeaders)
+			if err != nil || !ok || p.StatusCode != http.StatusServiceUnavailable {
+				t.Errorf("%s = %#v, %v", name, res, err)
+			}
+		})
 	}
 	if res, _ := (&Handler{}).DraftReleaseNote(context.Background(), &oas.ReleaseNoteDraft{}); res.(*oas.ProblemStatusCodeWithHeaders).StatusCode != http.StatusUnauthorized {
 		t.Error("drafting without an identity")

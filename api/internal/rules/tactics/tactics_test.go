@@ -1,6 +1,7 @@
 package tactics_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/tactics"
@@ -85,10 +86,10 @@ func TestCunningShootsWhoeverItSawShootingHardest(t *testing.T) {
 	}
 }
 
-func TestRangeEdges(t *testing.T) {
+func TestAnAttackReachesUpToItsLongRange(t *testing.T) {
 	t.Parallel()
 	short := tactics.Attack{RangeFt: 30, LongRangeFt: 120}
-	cases := []struct {
+	for _, c := range []struct {
 		attacks []tactics.Attack
 		dist    int
 		want    int
@@ -96,19 +97,24 @@ func TestRangeEdges(t *testing.T) {
 		{[]tactics.Attack{short, bow}, 30, 0},
 		{[]tactics.Attack{{RangeFt: 10, LongRangeFt: 40}}, 40, 0},
 		{[]tactics.Attack{{RangeFt: 10, LongRangeFt: 40}}, 45, -1},
-	}
-	for _, c := range cases {
-		if s, _ := tactics.Suggest(tactics.Simple, c.attacks, []tactics.Target{{ID: "x", DistanceFt: c.dist}}); s.Attack != c.want {
-			t.Errorf("%+v at %d ft = %d, want %d", c.attacks, c.dist, s.Attack, c.want)
-		}
-	}
-	s, _ := tactics.Suggest(tactics.Cunning, []tactics.Attack{sword}, []tactics.Target{{ID: "x", DistanceFt: 0, RangedDamageSeen: 5}})
-	if s.Reason != tactics.Nearest || s.Attack != 0 {
-		t.Fatalf("a sword is not a ranged attack even at 0 ft = %+v", s)
+	} {
+		t.Run(fmt.Sprint(c.dist), func(t *testing.T) {
+			if s, _ := tactics.Suggest(tactics.Simple, c.attacks, []tactics.Target{{ID: "x", DistanceFt: c.dist}}); s.Attack != c.want {
+				t.Fatalf("attack %d, want %d", s.Attack, c.want)
+			}
+		})
 	}
 }
 
-func TestNoSuggestion(t *testing.T) {
+func TestASwordIsNotARangedAttackEvenAtNoDistance(t *testing.T) {
+	t.Parallel()
+	s, _ := tactics.Suggest(tactics.Cunning, []tactics.Attack{sword}, []tactics.Target{{ID: "x", DistanceFt: 0, RangedDamageSeen: 5}})
+	if s.Reason != tactics.Nearest || s.Attack != 0 {
+		t.Fatalf("suggestion = %+v", s)
+	}
+}
+
+func TestThereIsNoSuggestionWhenOffOrWithNothingToDo(t *testing.T) {
 	t.Parallel()
 	for name, c := range map[string]struct {
 		s       tactics.Style

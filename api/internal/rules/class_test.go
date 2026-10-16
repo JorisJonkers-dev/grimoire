@@ -1,6 +1,7 @@
 package rules_test
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 	"testing"
@@ -88,39 +89,62 @@ func TestACustomSlotTable(t *testing.T) {
 	}
 }
 
-func TestSpellPoints(t *testing.T) {
+func TestASpellPointCasterHasNoSlotsButSpellsUpToItsMaxLevel(t *testing.T) {
 	t.Parallel()
-	c := runeweaver()
-	if c.MaxSpellLevel(5) != 3 || c.SlotsAt(5) != [9]int{} {
-		t.Fatalf("runeweaver at 5: max %d slots %v", c.MaxSpellLevel(5), c.SlotsAt(5))
+	if c := runeweaver(); c.MaxSpellLevel(5) != 3 || c.SlotsAt(5) != [9]int{} {
+		t.Fatalf("max %d slots %v", c.MaxSpellLevel(5), c.SlotsAt(5))
 	}
-	got := rules.ResourcesAt(c, 6, 5)
-	if len(got) != 2 || got[1] != (rules.Resource{Key: "spell-points", Label: "Spell points", Current: 12, Max: 12}) {
+}
+
+func TestASpellPointCasterHasItsPointsAsAResource(t *testing.T) {
+	t.Parallel()
+	if got := rules.ResourcesAt(runeweaver(), 6, 5); len(got) != 2 || got[1] != (rules.Resource{Key: "spell-points", Label: "Spell points", Current: 12, Max: 12}) {
 		t.Fatalf("resources = %+v", got)
 	}
-	if cost, err := rules.PointCost(c, 5, 3); err != nil || cost != 4 {
-		t.Fatalf("a 3rd-level spell at level 5 = %d %v", cost, err)
+}
+
+func TestASpellCostsThePointsItsLevelDoes(t *testing.T) {
+	t.Parallel()
+	if cost, err := rules.PointCost(runeweaver(), 5, 3); err != nil || cost != 4 {
+		t.Fatalf("cost = %d %v", cost, err)
 	}
+}
+
+func TestACantripOrASpellAboveTheMaxLevelHasNoPointCost(t *testing.T) {
+	t.Parallel()
 	for _, spell := range []int{0, 4} {
-		if _, err := rules.PointCost(c, 5, spell); err == nil {
-			t.Errorf("a level %d spell at class level 5 casts", spell)
-		}
+		t.Run(fmt.Sprint(spell), func(t *testing.T) {
+			if _, err := rules.PointCost(runeweaver(), 5, spell); err == nil {
+				t.Fatal("costed")
+			}
+		})
 	}
+}
+
+func TestASlotCasterHasNoSpellPoints(t *testing.T) {
+	t.Parallel()
 	if _, err := rules.PointCost(lamplighter(), 5, 1); err == nil || !strings.Contains(err.Error(), "spell points") {
-		t.Fatalf("a slot caster spending points: %v", err)
+		t.Fatalf("err = %v", err)
 	}
-	left, err := rules.SpendPoints(c, 5, 12, 3)
-	if err != nil || left != 8 {
+}
+
+func TestCastingSpendsItsPointsDownToNone(t *testing.T) {
+	t.Parallel()
+	if left, err := rules.SpendPoints(runeweaver(), 5, 12, 3); err != nil || left != 8 {
 		t.Fatalf("spending 4 of 12 = %d %v", left, err)
 	}
-	if left, err := rules.SpendPoints(c, 5, 4, 3); err != nil || left != 0 {
+	if left, err := rules.SpendPoints(runeweaver(), 5, 4, 3); err != nil || left != 0 {
 		t.Fatalf("spending the last 4 = %d %v", left, err)
 	}
-	if _, err := rules.SpendPoints(c, 5, 3, 3); err == nil || !strings.Contains(err.Error(), "needs 4 spell points") {
-		t.Fatalf("spending more than is left: %v", err)
+}
+
+func TestASpellIsNotCastWithoutEnoughPointsOrAboveTheMaxLevel(t *testing.T) {
+	t.Parallel()
+	if _, err := rules.SpendPoints(runeweaver(), 5, 3, 3); err == nil || !strings.Contains(err.Error(), "needs 4 spell points") {
+		t.Fatalf("too few points: %v", err)
 	}
-	if _, err := rules.SpendPoints(c, 5, 12, 9); err == nil {
-		t.Fatal("a spell too high casts")
+	if _, err := rules.SpendPoints(runeweaver(), 5, 12, 9); err == nil {
+		t.Fatal("a spell too high cast")
 	}
 }
 

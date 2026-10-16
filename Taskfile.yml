@@ -41,10 +41,13 @@ tasks:
       - task: lint:actions
 
   lint:go:
-    desc: golangci-lint (incl. depguard, exhaustive, gochecksumtype, exhaustruct) and format check
+    desc: golangci-lint (incl. depguard, exhaustive, gochecksumtype, exhaustruct) under both build tags, the estate test lints, and the format check
     dir: api
     cmds:
       - golangci-lint run ./...
+      - golangci-lint run --build-tags integration ./...
+      - go tool testlint ./...
+      - go tool testlint -tags integration ./...
       - golangci-lint fmt --diff ./...
 
   lint:spec:
@@ -77,8 +80,14 @@ tasks:
       - task: test:web
 
   test:go:
+    desc: Go unit and integration tests (race; the integration build tag brings Postgres through testcontainers)
     dir: api
-    cmd: go test -race -count=1 -covermode=atomic -coverpkg=./... -coverprofile=coverage.out ./...
+    cmd: go test -race -count=1 -tags integration -covermode=atomic -coverpkg=./... -coverprofile=coverage.out ./...
+
+  test:go:unit:
+    desc: Go unit tests only; no Docker needed
+    dir: api
+    cmd: go test -race -count=1 ./...
 
   test:web:
     deps: [install]

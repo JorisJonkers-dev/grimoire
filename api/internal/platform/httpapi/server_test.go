@@ -61,22 +61,30 @@ func decode(t *testing.T, rec *httptest.ResponseRecorder) map[string]any {
 	return m
 }
 
-func TestProbes(t *testing.T) {
+func TestAHealthyServiceIsAliveAndReady(t *testing.T) {
 	t.Parallel()
 	up := newServer(t, fakeStore{}, "")
 	for _, p := range []string{"/healthz", "/readyz"} {
-		rec := get(up, p, "")
-		if rec.Code != 200 || decode(t, rec)["status"] != "ok" {
-			t.Fatalf("%s: %d %s", p, rec.Code, rec.Body.String())
-		}
+		t.Run(p, func(t *testing.T) {
+			if rec := get(up, p, ""); rec.Code != 200 || decode(t, rec)["status"] != "ok" {
+				t.Fatalf("%d %s", rec.Code, rec.Body.String())
+			}
+		})
 	}
-	down := newServer(t, fakeStore{pingErr: errors.New("boom")}, "")
-	if rec := get(down, "/healthz", ""); rec.Code != 200 {
-		t.Fatalf("liveness must not depend on the database: %d", rec.Code)
+}
+
+func TestLivenessDoesNotDependOnTheDatabase(t *testing.T) {
+	t.Parallel()
+	if rec := get(newServer(t, fakeStore{pingErr: errors.New("boom")}, ""), "/healthz", ""); rec.Code != 200 {
+		t.Fatalf("healthz = %d", rec.Code)
 	}
-	rec := get(down, "/readyz", "")
+}
+
+func TestWithoutTheDatabaseTheServiceIsNotReadyAndSaysToTryAgain(t *testing.T) {
+	t.Parallel()
+	rec := get(newServer(t, fakeStore{pingErr: errors.New("boom")}, ""), "/readyz", "")
 	if rec.Code != 503 || decode(t, rec)["detail"] != "Try again shortly." {
-		t.Fatalf("readyz down: %d %s", rec.Code, rec.Body.String())
+		t.Fatalf("readyz = %d %s", rec.Code, rec.Body.String())
 	}
 }
 
