@@ -40,7 +40,7 @@ func (b brokenDowntime) Spend(context.Context, caller.Caller, uuid.UUID, uuid.UU
 }
 
 // A fault in the downtime service is a fault, and nobody signed out gets anywhere.
-func TestDowntimeErrors(t *testing.T) {
+func TestAFailingDowntimeServiceAnswers503WithoutItsCause(t *testing.T) {
 	t.Parallel()
 	base := "/api/v1/campaigns/0190c7a8-0000-7000-8000-000000000001"
 	h := campaignServer(t, brokenCampaigns{}, httpapi.DowntimeService(brokenDowntime{err: errors.New("disk")}))
@@ -51,10 +51,16 @@ func TestDowntimeErrors(t *testing.T) {
 		{http.MethodPost, base + "/recipes", `{"name":"A","makes":"a","quantity":1,"days":1}`},
 		{http.MethodDelete, base + "/recipes/0190c7a8-0000-7000-8000-000000000003", ""},
 	} {
-		if rec := call(h, o.method, o.path, "u", o.body); rec.Code != http.StatusServiceUnavailable || strings.Contains(rec.Body.String(), "disk") {
-			t.Errorf("%s %s: %d %s", o.method, o.path, rec.Code, rec.Body.String())
-		}
+		t.Run(o.method+" "+o.path, func(t *testing.T) {
+			if rec := call(h, o.method, o.path, "u", o.body); rec.Code != http.StatusServiceUnavailable || strings.Contains(rec.Body.String(), "disk") {
+				t.Errorf("%s %s: %d %s", o.method, o.path, rec.Code, rec.Body.String())
+			}
+		})
 	}
+}
+
+func TestDowntimeOperationsWithoutAnIdentityAnswer401(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 	hh := &httpapi.Handler{Log: quiet}
 	results := []any{}

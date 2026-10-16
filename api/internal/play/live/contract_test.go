@@ -280,7 +280,7 @@ func samples() contract {
 }
 
 // TestContractFixture pins the Go wire format to the fixture the web client validates.
-func TestContractFixture(t *testing.T) {
+func TestTheLiveMessagesMatchTheContractFixture(t *testing.T) {
 	got := samples()
 	if *update {
 		raw, err := json.MarshalIndent(got, "", "  ")

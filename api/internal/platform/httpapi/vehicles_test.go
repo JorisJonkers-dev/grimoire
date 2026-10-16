@@ -40,7 +40,7 @@ func (b brokenVehicles) Post(context.Context, caller.Caller, uuid.UUID, uuid.UUI
 }
 
 // A fault in the vehicle service is a fault, and nobody signed out gets anywhere.
-func TestVehicleErrors(t *testing.T) {
+func TestAFailingVehicleServiceAnswers503WithoutItsCause(t *testing.T) {
 	t.Parallel()
 	base := "/api/v1/campaigns/0190c7a8-0000-7000-8000-000000000001/vehicles"
 	one := base + "/0190c7a8-0000-7000-8000-000000000002"
@@ -52,10 +52,16 @@ func TestVehicleErrors(t *testing.T) {
 		{http.MethodPost, one + "/damage", `{"amount":1}`},
 		{http.MethodPut, one + "/stations/0190c7a8-0000-7000-8000-000000000003", `{"posted":1}`},
 	} {
-		if rec := call(h, o.method, o.path, "u", o.body); rec.Code != http.StatusServiceUnavailable || strings.Contains(rec.Body.String(), "disk") {
-			t.Errorf("%s %s: %d %s", o.method, o.path, rec.Code, rec.Body.String())
-		}
+		t.Run(o.method+" "+o.path, func(t *testing.T) {
+			if rec := call(h, o.method, o.path, "u", o.body); rec.Code != http.StatusServiceUnavailable || strings.Contains(rec.Body.String(), "disk") {
+				t.Errorf("%s %s: %d %s", o.method, o.path, rec.Code, rec.Body.String())
+			}
+		})
 	}
+}
+
+func TestVehicleOperationsWithoutAnIdentityAnswer401(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 	hh := &httpapi.Handler{Log: quiet}
 	results := []any{}

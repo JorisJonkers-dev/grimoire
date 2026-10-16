@@ -49,7 +49,7 @@ func (b brokenJournal) ReadItem(context.Context, caller.Caller, domain.CampaignI
 }
 
 // A fault in the Journal service is a fault, and nobody signed out gets anywhere.
-func TestJournalErrors(t *testing.T) {
+func TestAFailingJournalServiceAnswers503WithoutItsCause(t *testing.T) {
 	t.Parallel()
 	c := "/api/v1/campaigns/0190c7a8-0000-7000-8000-000000000001"
 	quest, lore := c+"/quests/0190c7a8-0000-7000-8000-000000000002", c+"/lore/0190c7a8-0000-7000-8000-000000000003"
@@ -64,10 +64,16 @@ func TestJournalErrors(t *testing.T) {
 		{http.MethodPut, lore, `{"title":"A"}`},
 		{http.MethodDelete, lore, ""},
 	} {
-		if rec := call(h, o.method, o.path, "u", o.body); rec.Code != http.StatusServiceUnavailable || strings.Contains(rec.Body.String(), "disk") {
-			t.Errorf("%s %s: %d %s", o.method, o.path, rec.Code, rec.Body.String())
-		}
+		t.Run(o.method+" "+o.path, func(t *testing.T) {
+			if rec := call(h, o.method, o.path, "u", o.body); rec.Code != http.StatusServiceUnavailable || strings.Contains(rec.Body.String(), "disk") {
+				t.Errorf("%s %s: %d %s", o.method, o.path, rec.Code, rec.Body.String())
+			}
+		})
 	}
+}
+
+func TestJournalOperationsWithoutAnIdentityAnswer401(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 	hh := &httpapi.Handler{Log: quiet}
 	results := []any{}

@@ -90,7 +90,7 @@ func TestPersonalStandingOverHTTP(t *testing.T) {
 }
 
 // A fault in the Faction service is a fault, and nobody signed out gets anywhere.
-func TestFactionErrors(t *testing.T) {
+func TestAFailingFactionServiceAnswers503WithoutItsCause(t *testing.T) {
 	t.Parallel()
 	c := "/api/v1/campaigns/0190c7a8-0000-7000-8000-000000000001"
 	one := c + "/factions/0190c7a8-0000-7000-8000-000000000002"
@@ -103,10 +103,16 @@ func TestFactionErrors(t *testing.T) {
 		{http.MethodPost, one + "/standing-changes", `{"delta":5,"reason":"A"}`},
 		{http.MethodPost, c + "/standing-changes/0190c7a8-0000-7000-8000-000000000003/decision", `{"confirm":true,"delta":5,"reason":"A","shareReason":true}`},
 	} {
-		if rec := call(h, o.method, o.path, "u", o.body); rec.Code != http.StatusServiceUnavailable {
-			t.Errorf("%s %s: %d", o.method, o.path, rec.Code)
-		}
+		t.Run(o.method+" "+o.path, func(t *testing.T) {
+			if rec := call(h, o.method, o.path, "u", o.body); rec.Code != http.StatusServiceUnavailable {
+				t.Errorf("%s %s: %d", o.method, o.path, rec.Code)
+			}
+		})
 	}
+}
+
+func TestFactionOperationsWithoutAnIdentityAnswer401(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 	hh := &httpapi.Handler{Log: quiet}
 	results := []any{}

@@ -45,7 +45,7 @@ func TestProviderRoundTrip(t *testing.T) {
 
 // A provider that is down fails each call without stopping Grimoire; a token response without an ID
 // token, or with one the issuer did not sign, vouches for nobody.
-func TestProviderFailures(t *testing.T) {
+func TestAProviderThatIsDownNeitherSignsInNorExchanges(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 	down := oidc.New(oidc.Config{Issuer: "http://127.0.0.1:1", ClientID: "c", ClientSecret: "", RedirectURL: "", RolesClaim: "roles", HTTP: nil})
@@ -55,6 +55,11 @@ func TestProviderFailures(t *testing.T) {
 	if _, err := down.Exchange(ctx, "c", "v"); err == nil {
 		t.Error("a provider that is down exchanges")
 	}
+}
+
+func TestATokenAnswerWithoutAGenuineIDTokenVouchesForNobody(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
 	for name, idToken := range map[string]string{"no id token": "", "a forged id token": "eyJhbGciOiJSUzI1NiJ9.e30.c2ln"} { //nolint:gosec // a fake token
 		var srv *httptest.Server
 		srv = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -69,9 +74,11 @@ func TestProviderFailures(t *testing.T) {
 			}
 			_, _ = w.Write([]byte(`{"issuer":"` + srv.URL + `","authorization_endpoint":"` + srv.URL + `/authorize","token_endpoint":"` + srv.URL + `/token","jwks_uri":"` + srv.URL + `/jwks"}`))
 		}))
-		if _, err := provider(srv.URL, srv.Client()).Exchange(ctx, "c", "v"); err == nil {
-			t.Errorf("%s vouches", name)
-		}
+		t.Run(name, func(t *testing.T) {
+			if _, err := provider(srv.URL, srv.Client()).Exchange(ctx, "c", "v"); err == nil {
+				t.Fatal("vouches")
+			}
+		})
 		srv.Close()
 	}
 }

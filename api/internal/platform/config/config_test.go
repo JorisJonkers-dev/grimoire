@@ -12,7 +12,7 @@ func env(m map[string]string) func(string) string {
 	return func(k string) string { return m[k] }
 }
 
-func TestLoadDefaults(t *testing.T) {
+func TestWithOnlyADatabaseTheServiceRunsWithItsDefaults(t *testing.T) {
 	t.Parallel()
 	c, err := config.Load(env(map[string]string{"GRIMOIRE_DATABASE_URL": "postgres://x"}))
 	if err != nil {
@@ -23,7 +23,7 @@ func TestLoadDefaults(t *testing.T) {
 	}
 }
 
-func TestLoadOverrides(t *testing.T) {
+func TestEverySettingIsReadFromTheEnvironment(t *testing.T) {
 	t.Parallel()
 	c, err := config.Load(env(map[string]string{
 		"GRIMOIRE_DATABASE_URL":          "postgres://x",
@@ -124,28 +124,42 @@ func TestLoadProxyHops(t *testing.T) {
 	}
 }
 
-func TestLoadStorage(t *testing.T) {
+func TestWithoutS3AssetsAreKeptOnDisk(t *testing.T) {
 	t.Parallel()
-	base := map[string]string{"GRIMOIRE_DATABASE_URL": "postgres://x"}
-	c, err := config.Load(env(base))
-	if err != nil || c.AssetDir != "/tmp/grimoire-assets" || c.S3 != nil {
-		t.Fatalf("default storage = %+v %v", c, err)
+	if c, err := config.Load(env(map[string]string{"GRIMOIRE_DATABASE_URL": "postgres://x"})); err != nil || c.AssetDir != "/tmp/grimoire-assets" || c.S3 != nil {
+		t.Fatalf("storage = %+v %v", c, err)
 	}
-	s3 := map[string]string{
+}
+
+func s3Env() map[string]string {
+	return map[string]string{
 		"GRIMOIRE_DATABASE_URL": "postgres://x", "GRIMOIRE_ASSET_DIR": "/tmp/a", "GRIMOIRE_S3_ENDPOINT": "http://garage:3900",
 		"GRIMOIRE_S3_BUCKET": "grimoire-assets", "GRIMOIRE_S3_ACCESS_KEY_ID": "k", "GRIMOIRE_S3_SECRET_ACCESS_KEY": "s",
 	}
-	c, err = config.Load(env(s3))
-	if err != nil || c.AssetDir != "/tmp/a" || c.S3.Region != "garage" || c.S3.Bucket != "grimoire-assets" {
+}
+
+func TestAFullS3SettingStoresAssetsThereInTheGarageRegion(t *testing.T) {
+	t.Parallel()
+	if c, err := config.Load(env(s3Env())); err != nil || c.AssetDir != "/tmp/a" || c.S3.Region != "garage" || c.S3.Bucket != "grimoire-assets" {
 		t.Fatalf("s3 = %+v %v", c.S3, err)
 	}
-	s3["GRIMOIRE_S3_REGION"] = "eu"
-	if c, _ = config.Load(env(s3)); c.S3.Region != "eu" {
+}
+
+func TestAnS3RegionIsReadWhenGiven(t *testing.T) {
+	t.Parallel()
+	e := s3Env()
+	e["GRIMOIRE_S3_REGION"] = "eu"
+	if c, _ := config.Load(env(e)); c.S3.Region != "eu" {
 		t.Fatalf("region = %q", c.S3.Region)
 	}
-	delete(s3, "GRIMOIRE_S3_BUCKET")
-	if _, err := config.Load(env(s3)); !errors.Is(err, config.ErrIncompleteS3) {
-		t.Fatalf("incomplete s3 = %v", err)
+}
+
+func TestAnIncompleteS3SettingIsRefused(t *testing.T) {
+	t.Parallel()
+	e := s3Env()
+	delete(e, "GRIMOIRE_S3_BUCKET")
+	if _, err := config.Load(env(e)); !errors.Is(err, config.ErrIncompleteS3) {
+		t.Fatalf("err = %v", err)
 	}
 }
 
