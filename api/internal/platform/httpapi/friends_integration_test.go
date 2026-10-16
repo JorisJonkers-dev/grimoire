@@ -4,6 +4,7 @@ package httpapi_test
 
 import (
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 )
@@ -33,79 +34,154 @@ func firstRequestID(page map[string]any, key string) string {
 
 // A Friend request by Username becomes a mutual friendship only once accepted; declining keeps the two
 // apart, and a request crossing one already sent is accepted at once.
-func TestFriendRequests(t *testing.T) {
-	t.Parallel()
+// friendTable is three Accounts: Aria, Bram and Cara.
+type friendTable struct {
+	trusted, public  http.Handler
+	aria, bram, cara string
+}
+
+func newFriendTable(t *testing.T) *friendTable {
+	t.Helper()
 	trusted, public, _, _ := accountServers(t)
-	aria, bram, cara := setUp(t, trusted, public, "aria"), setUp(t, trusted, public, "bram"), setUp(t, trusted, public, "cara")
-	if rec := send(public, http.MethodPost, "/api/v1/friend-requests", aria, "", `{"username":" BRAM "}`); rec.Code != http.StatusAccepted {
-		t.Fatalf("request: %d %s", rec.Code, rec.Body.String())
-	}
-	send(public, http.MethodPost, "/api/v1/friend-requests", aria, "", `{"username":"bram"}`)
-	if got := usernames(friendsOf(t, public, aria), "outgoing"); strings.Join(got, ",") != "bram" {
-		t.Fatalf("outgoing = %v", got)
-	}
-	if got := usernames(friendsOf(t, public, aria), "friends"); len(got) != 0 {
-		t.Fatalf("friends before accepting = %v", got)
-	}
-	page := friendsOf(t, public, bram)
-	if got := usernames(page, "incoming"); strings.Join(got, ",") != "aria" {
-		t.Fatalf("incoming = %v", got)
-	}
-	request := firstRequestID(page, "incoming")
-	if rec := send(public, http.MethodPost, "/api/v1/friend-requests/"+request+"/accept", aria, "", ""); rec.Code != http.StatusNotFound {
-		t.Fatalf("the sender accepts their own request: %d", rec.Code)
-	}
-	if rec := send(public, http.MethodPost, "/api/v1/friend-requests/"+request+"/accept", bram, "", ""); rec.Code != http.StatusNoContent {
+	return &friendTable{trusted: trusted, public: public, aria: setUp(t, trusted, public, "aria"), bram: setUp(t, trusted, public, "bram"), cara: setUp(t, trusted, public, "cara")}
+}
+
+func (f *friendTable) request(from, to string) *httptest.ResponseRecorder {
+	return send(f.public, http.MethodPost, "/api/v1/friend-requests", from, "", `{"username":"`+to+`"}`)
+}
+
+// friends has Bram accept Aria's request.
+func (f *friendTable) friends(t *testing.T) {
+	t.Helper()
+	f.request(f.aria, "bram")
+	if rec := send(f.public, http.MethodPost, "/api/v1/friend-requests/"+firstRequestID(friendsOf(t, f.public, f.bram), "incoming")+"/accept", f.bram, "", ""); rec.Code != http.StatusNoContent {
 		t.Fatalf("accept: %d", rec.Code)
 	}
-	for _, s := range []string{aria, bram} {
-		page := friendsOf(t, public, s)
-		if len(page["friends"].([]any)) != 1 || len(page["incoming"].([]any))+len(page["outgoing"].([]any)) != 0 {
-			t.Fatalf("after accepting = %v", page)
-		}
-	}
-	if rec := send(public, http.MethodPost, "/api/v1/friend-requests", bram, "", `{"username":"aria"}`); rec.Code != http.StatusConflict {
-		t.Fatalf("already Friends: %d", rec.Code)
-	}
+}
 
-	send(public, http.MethodPost, "/api/v1/friend-requests", cara, "", `{"username":"aria"}`)
-	declined := firstRequestID(friendsOf(t, public, aria), "incoming")
-	if rec := send(public, http.MethodPost, "/api/v1/friend-requests/"+declined+"/decline", aria, "", `{}`); rec.Code != http.StatusNoContent {
+func TestAFriendRequestGoesOutOnceByAnyCaseOfTheUsername(t *testing.T) {
+	t.Parallel()
+	f := newFriendTable(t)
+	if rec := send(f.public, http.MethodPost, "/api/v1/friend-requests", f.aria, "", `{"username":" BRAM "}`); rec.Code != http.StatusAccepted {
+		t.Fatalf("request: %d %s", rec.Code, rec.Body.String())
+	}
+	f.request(f.aria, "bram")
+	if got := usernames(friendsOf(t, f.public, f.aria), "outgoing"); strings.Join(got, ",") != "bram" {
+		t.Fatalf("outgoing = %v", got)
+	}
+	if got := usernames(friendsOf(t, f.public, f.aria), "friends"); len(got) != 0 {
+		t.Fatalf("friends before accepting = %v", got)
+	}
+}
+
+func TestTheReceiverSeesTheIncomingRequest(t *testing.T) {
+	t.Parallel()
+	f := newFriendTable(t)
+	f.request(f.aria, "bram")
+	if got := usernames(friendsOf(t, f.public, f.bram), "incoming"); strings.Join(got, ",") != "aria" {
+		t.Fatalf("incoming = %v", got)
+	}
+}
+
+func TestTheSenderCannotAcceptTheirOwnRequest(t *testing.T) {
+	t.Parallel()
+	f := newFriendTable(t)
+	f.request(f.aria, "bram")
+	if rec := send(f.public, http.MethodPost, "/api/v1/friend-requests/"+firstRequestID(friendsOf(t, f.public, f.bram), "incoming")+"/accept", f.aria, "", ""); rec.Code != http.StatusNotFound {
+		t.Fatalf("%d", rec.Code)
+	}
+}
+
+func TestAnAcceptedRequestMakesBothFriends(t *testing.T) {
+	t.Parallel()
+	f := newFriendTable(t)
+	f.friends(t)
+	for name, s := range map[string]string{"aria": f.aria, "bram": f.bram} {
+		t.Run(name, func(t *testing.T) {
+			page := friendsOf(t, f.public, s)
+			if len(page["friends"].([]any)) != 1 || len(page["incoming"].([]any))+len(page["outgoing"].([]any)) != 0 {
+				t.Fatalf("page = %v", page)
+			}
+		})
+	}
+}
+
+func TestFriendsCannotBeRequestedAgain(t *testing.T) {
+	t.Parallel()
+	f := newFriendTable(t)
+	f.friends(t)
+	if rec := f.request(f.bram, "aria"); rec.Code != http.StatusConflict {
+		t.Fatalf("%d", rec.Code)
+	}
+}
+
+func TestADeclinedRequestBefriendsNobody(t *testing.T) {
+	t.Parallel()
+	f := newFriendTable(t)
+	f.request(f.cara, "aria")
+	if rec := send(f.public, http.MethodPost, "/api/v1/friend-requests/"+firstRequestID(friendsOf(t, f.public, f.aria), "incoming")+"/decline", f.aria, "", `{}`); rec.Code != http.StatusNoContent {
 		t.Fatalf("decline: %d", rec.Code)
 	}
-	if got := usernames(friendsOf(t, public, cara), "friends"); len(got) != 0 {
-		t.Fatalf("a declined request befriends = %v", got)
+	if got := usernames(friendsOf(t, f.public, f.cara), "friends"); len(got) != 0 {
+		t.Fatalf("friends = %v", got)
 	}
-	send(public, http.MethodPost, "/api/v1/friend-requests", cara, "", `{"username":"aria"}`)
-	if rec := send(public, http.MethodPost, "/api/v1/friend-requests", aria, "", `{"username":"cara"}`); rec.Code != http.StatusAccepted {
-		t.Fatalf("a crossing request: %d", rec.Code)
-	}
-	if got := usernames(friendsOf(t, public, cara), "friends"); strings.Join(got, ",") != "aria" {
-		t.Fatalf("a crossing request accepts = %v", got)
-	}
+}
 
-	ariaID := accountID(t, public, aria)
-	if rec := send(public, http.MethodDelete, "/api/v1/friends/"+ariaID, bram, "", ""); rec.Code != http.StatusNoContent {
+func TestACrossingRequestIsTakenAsAccepting(t *testing.T) {
+	t.Parallel()
+	f := newFriendTable(t)
+	f.request(f.cara, "aria")
+	if rec := f.request(f.aria, "cara"); rec.Code != http.StatusAccepted {
+		t.Fatalf("%d", rec.Code)
+	}
+	if got := usernames(friendsOf(t, f.public, f.cara), "friends"); strings.Join(got, ",") != "aria" {
+		t.Fatalf("friends = %v", got)
+	}
+}
+
+func TestAFriendIsUnfriendedOnce(t *testing.T) {
+	t.Parallel()
+	f := newFriendTable(t)
+	f.friends(t)
+	ariaID := accountID(t, f.public, f.aria)
+	if rec := send(f.public, http.MethodDelete, "/api/v1/friends/"+ariaID, f.bram, "", ""); rec.Code != http.StatusNoContent {
 		t.Fatalf("unfriend: %d", rec.Code)
 	}
-	if rec := send(public, http.MethodDelete, "/api/v1/friends/"+ariaID, bram, "", ""); rec.Code != http.StatusNotFound {
-		t.Fatalf("unfriend twice: %d", rec.Code)
+	if rec := send(f.public, http.MethodDelete, "/api/v1/friends/"+ariaID, f.bram, "", ""); rec.Code != http.StatusNotFound {
+		t.Fatalf("twice: %d", rec.Code)
 	}
-	send(public, http.MethodPost, "/api/v1/friend-requests", bram, "", `{"username":"aria"}`)
-	mine := firstRequestID(friendsOf(t, public, bram), "outgoing")
-	if rec := send(public, http.MethodDelete, "/api/v1/friend-requests/"+mine, aria, "", ""); rec.Code != http.StatusNotFound {
-		t.Fatalf("withdrawing someone else's request: %d", rec.Code)
+}
+
+func TestOnlyTheSenderWithdrawsARequest(t *testing.T) {
+	t.Parallel()
+	f := newFriendTable(t)
+	f.request(f.bram, "aria")
+	mine := firstRequestID(friendsOf(t, f.public, f.bram), "outgoing")
+	if rec := send(f.public, http.MethodDelete, "/api/v1/friend-requests/"+mine, f.aria, "", ""); rec.Code != http.StatusNotFound {
+		t.Fatalf("someone else: %d", rec.Code)
 	}
-	if rec := send(public, http.MethodDelete, "/api/v1/friend-requests/"+mine, bram, "", ""); rec.Code != http.StatusNoContent {
+	if rec := send(f.public, http.MethodDelete, "/api/v1/friend-requests/"+mine, f.bram, "", ""); rec.Code != http.StatusNoContent {
 		t.Fatalf("withdraw: %d", rec.Code)
 	}
-	for body, want := range map[string]int{`{"username":"aria"}`: http.StatusUnprocessableEntity, `{"username":"nobody"}`: http.StatusNotFound} {
-		if rec := send(public, http.MethodPost, "/api/v1/friend-requests", aria, "", body); rec.Code != want {
-			t.Errorf("request %s = %d", body, rec.Code)
-		}
+}
+
+func TestNobodyRequestsThemselfOrAnAccountThatIsNotThere(t *testing.T) {
+	t.Parallel()
+	f := newFriendTable(t)
+	for to, want := range map[string]int{"aria": http.StatusUnprocessableEntity, "nobody": http.StatusNotFound} {
+		t.Run(to, func(t *testing.T) {
+			if rec := f.request(f.aria, to); rec.Code != want {
+				t.Fatalf("%d", rec.Code)
+			}
+		})
 	}
-	if rec := send(trusted, http.MethodGet, "/api/v1/friends", "", "estate-without-account", ""); rec.Code != http.StatusForbidden {
-		t.Fatalf("no Account: %d", rec.Code)
+}
+
+func TestWithoutAnAccountThereAreNoFriends(t *testing.T) {
+	t.Parallel()
+	f := newFriendTable(t)
+	if rec := send(f.trusted, http.MethodGet, "/api/v1/friends", "", "estate-without-account", ""); rec.Code != http.StatusForbidden {
+		t.Fatalf("%d", rec.Code)
 	}
 }
 

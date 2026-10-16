@@ -3,6 +3,7 @@
 package httpapi_test
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -73,83 +74,156 @@ func TestAdminListsEveryone(t *testing.T) {
 
 // Each Admin control works, lands in the Account's history, and is closed to non-Admins and to the
 // Admin's own Account where it would lock them out.
-func TestAdminControls(t *testing.T) {
-	t.Parallel()
+// adminDesk is Aria's Account, seen from the Admin controls that root uses.
+type adminDesk struct {
+	trusted, public http.Handler
+	mail            *outbox
+	now             *clock
+	aria, base      string
+}
+
+func newAdminDesk(t *testing.T) *adminDesk {
+	t.Helper()
 	trusted, public, mail, now := accountServers(t)
 	aria := setUp(t, trusted, public, "aria")
-	id := accountID(t, public, aria)
-	base := "/api/v1/admin/accounts/" + id
+	return &adminDesk{trusted: trusted, public: public, mail: mail, now: now, aria: aria, base: "/api/v1/admin/accounts/" + accountID(t, public, aria)}
+}
+
+func (a *adminDesk) root(method, path, body string) *httptest.ResponseRecorder {
+	return send(a.trusted, method, a.base+path, "", "root", body)
+}
+
+func (a *adminDesk) disabled(t *testing.T, value bool) {
+	t.Helper()
+	if rec := a.root(http.MethodPut, "/disabled", fmt.Sprintf(`{"value":%v}`, value)); rec.Code != http.StatusNoContent {
+		t.Fatalf("disabled = %v: %d", value, rec.Code)
+	}
+}
+
+func TestOnlyAnAdminUsesTheAdminControls(t *testing.T) {
+	t.Parallel()
+	a := newAdminDesk(t)
 	for _, c := range []struct{ method, path, body string }{
-		{http.MethodPost, base + "/sign-in-link", ""},
-		{http.MethodPut, base + "/admin", `{"value":true}`},
-		{http.MethodPut, base + "/disabled", `{"value":true}`},
-		{http.MethodPost, base + "/two-step/reset", ""},
+		{http.MethodPost, "/sign-in-link", ""},
+		{http.MethodPut, "/admin", `{"value":true}`},
+		{http.MethodPut, "/disabled", `{"value":true}`},
+		{http.MethodPost, "/two-step/reset", ""},
 	} {
-		if rec := send(public, c.method, c.path, aria, "", c.body); rec.Code != http.StatusForbidden {
-			t.Errorf("a non-Admin %s %s: %d", c.method, c.path, rec.Code)
-		}
+		t.Run(c.method+" "+c.path, func(t *testing.T) {
+			if rec := send(a.public, c.method, a.base+c.path, a.aria, "", c.body); rec.Code != http.StatusForbidden {
+				t.Fatalf("%d", rec.Code)
+			}
+		})
 	}
+}
 
-	if rec := send(trusted, http.MethodPost, base+"/sign-in-link", "", "root", ""); rec.Code != http.StatusAccepted || !strings.Contains(mail.last(), "aria@example.org") {
-		t.Fatalf("sign-in link: %d %q", rec.Code, mail.last())
+func TestAnAdminSendsASignInLink(t *testing.T) {
+	t.Parallel()
+	a := newAdminDesk(t)
+	if rec := a.root(http.MethodPost, "/sign-in-link", ""); rec.Code != http.StatusAccepted || !strings.Contains(a.mail.last(), "aria@example.org") {
+		t.Fatalf("%d %q", rec.Code, a.mail.last())
 	}
-	enableTwoStep(t, public, now, aria)
-	if rec := send(trusted, http.MethodPost, base+"/two-step/reset", "", "root", ""); rec.Code != http.StatusNoContent {
-		t.Fatalf("reset two-step: %d", rec.Code)
-	}
-	if rec := send(public, http.MethodPost, "/api/v1/sign-in", "", "", `{"username":"aria","password":"0123456789ab"}`); rec.Code != http.StatusOK {
-		t.Fatalf("after the reset, a password alone: %d", rec.Code)
-	}
+}
 
-	if rec := send(trusted, http.MethodPut, base+"/admin", "", "root", `{"value":true}`); rec.Code != http.StatusNoContent {
+func TestAfterAnAdminResetsTwoStepAPasswordAloneSignsIn(t *testing.T) {
+	t.Parallel()
+	a := newAdminDesk(t)
+	enableTwoStep(t, a.public, a.now, a.aria)
+	if rec := a.root(http.MethodPost, "/two-step/reset", ""); rec.Code != http.StatusNoContent {
+		t.Fatalf("reset: %d", rec.Code)
+	}
+	if rec := send(a.public, http.MethodPost, "/api/v1/sign-in", "", "", `{"username":"aria","password":"0123456789ab"}`); rec.Code != http.StatusOK {
+		t.Fatalf("sign in: %d", rec.Code)
+	}
+}
+
+func TestAnAccountMadeAdminSeesItIsOne(t *testing.T) {
+	t.Parallel()
+	a := newAdminDesk(t)
+	if rec := a.root(http.MethodPut, "/admin", `{"value":true}`); rec.Code != http.StatusNoContent {
 		t.Fatalf("make Admin: %d", rec.Code)
 	}
-	if body := decode(t, send(public, http.MethodGet, "/api/v1/account", aria, "", "")); body["admin"] != true {
+	if body := decode(t, send(a.public, http.MethodGet, "/api/v1/account", a.aria, "", "")); body["admin"] != true {
 		t.Fatalf("aria = %v", body)
 	}
-	secret, _ := enableTwoStep(t, public, now, aria)
-	if rec := send(public, http.MethodPut, base+"/admin", aria, "", `{"value":false}`); rec.Code != http.StatusConflict {
-		t.Fatalf("an Admin removes their own role: %d", rec.Code)
-	}
-	if rec := send(public, http.MethodPut, base+"/disabled", aria, "", `{"value":true}`); rec.Code != http.StatusConflict {
-		t.Fatalf("an Admin disables themselves: %d", rec.Code)
-	}
-	if rec := send(trusted, http.MethodPut, base+"/admin", "", "root", `{"value":false}`); rec.Code != http.StatusNoContent {
-		t.Fatalf("revoke Admin: %d", rec.Code)
-	}
+}
 
-	token, _ := mint(t, public, aria, `{"name":"Agent","scopes":["read"],"days":7}`)
-	if rec := send(trusted, http.MethodPut, base+"/disabled", "", "root", `{"value":true}`); rec.Code != http.StatusNoContent {
-		t.Fatalf("disable: %d", rec.Code)
+func TestAnAdminCannotRemoveTheirOwnRoleOrDisableThemselves(t *testing.T) {
+	t.Parallel()
+	a := newAdminDesk(t)
+	a.root(http.MethodPut, "/admin", `{"value":true}`)
+	enableTwoStep(t, a.public, a.now, a.aria)
+	for path, body := range map[string]string{"/admin": `{"value":false}`, "/disabled": `{"value":true}`} {
+		t.Run(path, func(t *testing.T) {
+			if rec := send(a.public, http.MethodPut, a.base+path, a.aria, "", body); rec.Code != http.StatusConflict {
+				t.Fatalf("%d", rec.Code)
+			}
+		})
 	}
-	if rec := send(public, http.MethodGet, "/api/v1/account", aria, "", ""); rec.Code != http.StatusUnauthorized {
-		t.Fatalf("a disabled Account's session: %d", rec.Code)
+}
+
+func TestADisabledAccountsSessionsAndTokensStopWorking(t *testing.T) {
+	t.Parallel()
+	a := newAdminDesk(t)
+	token, _ := mint(t, a.public, a.aria, `{"name":"Agent","scopes":["read"],"days":7}`)
+	a.disabled(t, true)
+	if rec := send(a.public, http.MethodGet, "/api/v1/account", a.aria, "", ""); rec.Code != http.StatusUnauthorized {
+		t.Fatalf("session: %d", rec.Code)
 	}
-	if rec := bearer(public, http.MethodGet, "/api/v1/campaigns", token, ""); rec.Code != http.StatusUnauthorized {
-		t.Fatalf("a disabled Account's token: %d", rec.Code)
+	if rec := bearer(a.public, http.MethodGet, "/api/v1/campaigns", token, ""); rec.Code != http.StatusUnauthorized {
+		t.Fatalf("token: %d", rec.Code)
 	}
-	if rec := send(trusted, http.MethodPost, base+"/sign-in-link", "", "root", ""); rec.Code != http.StatusConflict {
-		t.Fatalf("a link for a disabled Account: %d", rec.Code)
+}
+
+func TestNoSignInLinkIsSentToADisabledAccount(t *testing.T) {
+	t.Parallel()
+	a := newAdminDesk(t)
+	a.disabled(t, true)
+	if rec := a.root(http.MethodPost, "/sign-in-link", ""); rec.Code != http.StatusConflict {
+		t.Fatalf("%d", rec.Code)
 	}
-	rec := send(trusted, http.MethodGet, base, "", "root", "")
-	if d := decode(t, rec); d["status"] != "disabled" || d["sessions"] != float64(0) || d["tokens"] != float64(0) {
-		t.Fatalf("disabled detail = %v", d)
+}
+
+func TestADisabledAccountIsShownWithNoSessionsOrTokens(t *testing.T) {
+	t.Parallel()
+	a := newAdminDesk(t)
+	mint(t, a.public, a.aria, `{"name":"Agent","scopes":["read"],"days":7}`)
+	a.disabled(t, true)
+	if d := decode(t, a.root(http.MethodGet, "", "")); d["status"] != "disabled" || d["sessions"] != float64(0) || d["tokens"] != float64(0) {
+		t.Fatalf("detail = %v", d)
 	}
-	if rec := send(trusted, http.MethodPut, base+"/disabled", "", "root", `{"value":false}`); rec.Code != http.StatusNoContent {
-		t.Fatalf("enable: %d", rec.Code)
+}
+
+func TestEnablingAnAccountDoesNotReviveItsOldSessions(t *testing.T) {
+	t.Parallel()
+	a := newAdminDesk(t)
+	a.disabled(t, true)
+	a.disabled(t, false)
+	if rec := send(a.public, http.MethodGet, "/api/v1/account", a.aria, "", ""); rec.Code != http.StatusUnauthorized {
+		t.Fatalf("%d", rec.Code)
 	}
-	if rec := send(public, http.MethodGet, "/api/v1/account", aria, "", ""); rec.Code != http.StatusUnauthorized {
-		t.Fatalf("enabling does not revive old sessions: %d", rec.Code)
-	}
-	now.pass(30 * time.Second)
-	again := session(t, secondStep(public, challenge(t, public, "aria"), identityapp.TOTP(secret, now.Now())))
-	got := strings.Join(actions(t, send(trusted, http.MethodGet, base, "", "root", "")), " ")
+}
+
+func TestTheAccountHistoryRecordsEveryAdminActionAndTheOwnerSeesTheSame(t *testing.T) {
+	t.Parallel()
+	a := newAdminDesk(t)
+	a.root(http.MethodPost, "/sign-in-link", "")
+	enableTwoStep(t, a.public, a.now, a.aria)
+	a.root(http.MethodPost, "/two-step/reset", "")
+	a.root(http.MethodPut, "/admin", `{"value":true}`)
+	secret, _ := enableTwoStep(t, a.public, a.now, a.aria)
+	a.root(http.MethodPut, "/admin", `{"value":false}`)
+	a.disabled(t, true)
+	a.disabled(t, false)
+	a.now.pass(30 * time.Second)
+	again := session(t, secondStep(a.public, challenge(t, a.public, "aria"), identityapp.TOTP(secret, a.now.Now())))
+	got := strings.Join(actions(t, a.root(http.MethodGet, "", "")), " ")
 	for _, want := range []string{"aria:created", "root:sign_in_link_sent", "aria:two_step_on", "root:two_step_reset", "root:admin_granted", "root:admin_revoked", "root:disabled", "root:enabled"} {
 		if !strings.Contains(got, want) {
 			t.Errorf("history lacks %s: %s", want, got)
 		}
 	}
-	if own := strings.Join(actions(t, send(public, http.MethodGet, "/api/v1/account/history", again, "", "")), " "); own != got {
+	if own := strings.Join(actions(t, send(a.public, http.MethodGet, "/api/v1/account/history", again, "", "")), " "); own != got {
 		t.Errorf("own history = %s, want %s", own, got)
 	}
 }
