@@ -14,53 +14,82 @@ import (
 // The party sneaks with a group Stealth check: a 15 slips past the goblin's passive Perception of 9, a 2
 // does not, and the goblin notices the party, which ends the sneaking. The party only sees the reach of
 // creatures it can see.
-func TestSneaking(t *testing.T) {
-	t.Parallel()
+func sneak(on bool) live.Command { return live.Command{Kind: live.CmdSneak, On: on} }
+
+// sneakingWith is a table where Aria sneaks and rolled total for Stealth.
+func sneakingWith(t *testing.T, total int) (world, *table, map[string]string) {
+	t.Helper()
 	w, tb, ids := magicTable(t)
-	sneak := func(on bool) live.Command { return live.Command{Kind: live.CmdSneak, On: on} }
+	tb.playerSays(sneak(true))
+	tb.fill(uuid.UUID(lastRoll(t, w, "Stealth while sneaking").ID).String(), w.player, total)
+	next(t, tb.player)
+	next(t, tb.dm)
+	return w, tb, ids
+}
+
+func TestStoppingSneakingBeforeStartingIsRefused(t *testing.T) {
+	t.Parallel()
+	_, tb, _ := magicTable(t)
 	if u := tb.playerSays(sneak(false)); !strings.Contains(u.Reason, "not sneaking") {
-		t.Fatalf("stop before starting = %+v", u)
+		t.Fatalf("%+v", u)
 	}
-	u := tb.playerSays(sneak(true))
-	if s := u.View.Sneak; s == nil || !s.Waiting || len(s.Reach) == 0 || s.Totals != nil {
+}
+
+func TestSneakingWaitsForAStealthRollAndShowsWhatCanNotice(t *testing.T) {
+	t.Parallel()
+	_, tb, _ := magicTable(t)
+	if s := tb.playerSays(sneak(true)).View.Sneak; s == nil || !s.Waiting || len(s.Reach) == 0 || s.Totals != nil {
 		t.Fatalf("sneaking = %+v", s)
 	}
 	if u := tb.playerSays(sneak(true)); !strings.Contains(u.Reason, "already sneaking") {
 		t.Fatalf("twice = %+v", u)
 	}
-	tb.fill(uuid.UUID(lastRoll(t, w, "Stealth while sneaking").ID).String(), w.player, 15)
-	next(t, tb.player)
-	next(t, tb.dm)
+}
+
+func TestAfterARestartTheDMStillSeesTheStealthTotal(t *testing.T) {
+	t.Parallel()
+	w, tb, ids := sneakingWith(t, 15)
 	w.hub.Close(w.session.ID)
 	tb.dm = join(t, w, w.dm, dmCaller, live.AudienceDM)
-	tb.player = join(t, w, w.player, playerCaller, live.AudienceParty)
 	if s := look(t, w, tb.dm).Sneak; s == nil || s.Waiting || s.Totals[ids["Aria"]] != 15 {
-		t.Fatalf("after a restart the DM sees the 15 = %+v", s)
+		t.Fatalf("the DM sees %+v", s)
 	}
+}
+
+func TestAHighStealthSlipsPast(t *testing.T) {
+	t.Parallel()
+	_, tb, ids := sneakingWith(t, 15)
 	if u := tb.playerSays(live.Command{Kind: live.CmdWalk, TokenID: ids["Aria"], Q: 1, R: 0}); u.View.Sneak == nil {
-		t.Fatalf("15 slips past the goblin = %+v", u.View)
+		t.Fatalf("noticed: %+v", u.View)
 	}
-	_, p := tb.dmSays(live.Command{Kind: live.CmdSetVisibility, TokenID: ids["Goblin"], Qualities: []string{"invisible"}})
-	if s := p.View.Sneak; len(s.Reach) != 0 {
-		t.Fatalf("the party sees no reach of a goblin it cannot see = %+v", s.Reach)
+}
+
+func TestThePartySeesNoReachOfACreatureItCannotSee(t *testing.T) {
+	t.Parallel()
+	_, tb, ids := sneakingWith(t, 15)
+	if _, p := tb.dmSays(live.Command{Kind: live.CmdSetVisibility, TokenID: ids["Goblin"], Qualities: []string{"invisible"}}); len(p.View.Sneak.Reach) != 0 {
+		t.Fatalf("reach = %+v", p.View.Sneak.Reach)
 	}
-	tb.dmSays(live.Command{Kind: live.CmdSetVisibility, TokenID: ids["Goblin"]})
-	tb.playerSays(sneak(false))
-	tb.playerSays(sneak(true))
-	tb.fill(uuid.UUID(lastRoll(t, w, "Stealth while sneaking").ID).String(), w.player, 2)
+}
+
+func TestALowStealthIsNoticed(t *testing.T) {
+	t.Parallel()
+	w, tb, ids := sneakingWith(t, 2)
+	tb.playerSays(live.Command{Kind: live.CmdWalk, TokenID: ids["Aria"], Q: 1, R: 0})
 	next(t, tb.player)
 	next(t, tb.dm)
-	tb.playerSays(live.Command{Kind: live.CmdWalk, TokenID: ids["Aria"], Q: 0, R: 0})
-	next(t, tb.player)
-	next(t, tb.dm)
-	v := look(t, w, tb.dm)
-	if v.Sneak != nil || !strings.Contains(manuals(v), "Goblin notices the party.") {
-		t.Fatalf("a 2 is noticed = %+v %s", v.Sneak, manuals(v))
+	if v := look(t, w, tb.dm); v.Sneak != nil || !strings.Contains(manuals(v), "Goblin notices the party.") {
+		t.Fatalf("sneak %+v, %s", v.Sneak, manuals(v))
 	}
+}
+
+func TestAFightEndsSneakingAndThereIsNoSneakingInOne(t *testing.T) {
+	t.Parallel()
+	w, tb, ids := magicTable(t)
 	tb.playerSays(sneak(true))
 	tb.fight(ids, "Aria", "Goblin")
 	if v := look(t, w, tb.player); v.Sneak != nil {
-		t.Fatalf("a fight ends the sneaking = %+v", v.Sneak)
+		t.Fatalf("still sneaking: %+v", v.Sneak)
 	}
 	if u := tb.playerSays(sneak(true)); !strings.Contains(u.Reason, "not a fight") {
 		t.Fatalf("sneaking in a fight = %+v", u)
