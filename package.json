@@ -1,8 +1,8 @@
 {
   "name": "grimoire",
   "private": true,
-  "packageManager": "pnpm@12.8.1",
+  "packageManager": "pnpm@12.11.2",
   "engines": {
-    "node": "v26.10.0"
+    "node": "26.11.1"
   }
 }
