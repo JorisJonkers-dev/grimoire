@@ -46,7 +46,7 @@ jobs:
       - uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
         with:
           cache: true
-          install_args: go node pnpm task sqlc actionlint go:github.com/daveshanley/vacuum
+          install_args: go node pnpm task sqlc actionlint aqua:daveshanley/vacuum
       - name: Install JS tooling
         run: task install
       - name: Lint OpenAPI contract
