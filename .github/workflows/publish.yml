@@ -23,7 +23,7 @@ permissions: {}
 jobs:
   # -- 1. Build and push the multi-arch container image ----------------------
   publish-image:
-    uses: JorisJonkers-dev/github-workflows/.github/workflows/container-publish.yml@d381be9f4e6f86d62899ffefa415746a42f67e94 # v0.28.0
+    uses: JorisJonkers-dev/github-workflows/.github/workflows/container-publish.yml@583993e5865cd5b8761fe52db5843130fb107c51 # v0.34.2
     with:
       image-name: grimoire
       version: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
@@ -119,7 +119,7 @@ jobs:
       contents: read
       packages: write
       id-token: write
-    uses: JorisJonkers-dev/github-workflows/.github/workflows/publish-fragment.yml@d381be9f4e6f86d62899ffefa415746a42f67e94 # v0.28.0
+    uses: JorisJonkers-dev/github-workflows/.github/workflows/publish-fragment.yml@583993e5865cd5b8761fe52db5843130fb107c51 # v0.34.2
     with:
       project-file: deploy/grimoire.project.yml
       version: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
