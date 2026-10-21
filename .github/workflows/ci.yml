@@ -27,6 +27,7 @@ jobs:
       - uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
         with:
           cache: true
+          cache_save: ${{ github.event_name == 'push' }}
           install_args: go task golangci-lint github:sbdchd/squawk gitleaks
       - name: Lint Go
         run: task lint:go
@@ -46,6 +47,7 @@ jobs:
       - uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
         with:
           cache: true
+          cache_save: ${{ github.event_name == 'push' }}
           install_args: go node pnpm task sqlc actionlint aqua:daveshanley/vacuum
       - name: Install JS tooling
         run: task install
@@ -68,6 +70,7 @@ jobs:
       - uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
         with:
           cache: true
+          cache_save: ${{ github.event_name == 'push' }}
           install_args: node pnpm task
       - name: Install JS tooling
         run: task install
@@ -83,6 +86,7 @@ jobs:
       - uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
         with:
           cache: true
+          cache_save: ${{ github.event_name == 'push' }}
           install_args: go task go:github.com/vladopajic/go-test-coverage/v2
       - name: Go tests and coverage
         run: task coverage
@@ -103,6 +107,7 @@ jobs:
       - uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
         with:
           cache: true
+          cache_save: ${{ github.event_name == 'push' }}
           install_args: go task
       - name: Mutation testing (rules engine)
         run: task mutation:${{ matrix.shard }}
@@ -116,6 +121,7 @@ jobs:
       - uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
         with:
           cache: true
+          cache_save: ${{ github.event_name == 'push' }}
           install_args: node pnpm task
       - name: Web unit tests and coverage
         run: task test:web
@@ -129,6 +135,7 @@ jobs:
       - uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
         with:
           cache: true
+          cache_save: ${{ github.event_name == 'push' }}
           install_args: node pnpm task
       - name: Install JS tooling
         run: task install
@@ -155,7 +162,8 @@ jobs:
           target: ${{ matrix.target }}
           push: false
           cache-from: type=gha,scope=image-${{ matrix.target }}
-          cache-to: type=gha,mode=max,scope=image-${{ matrix.target }}
+          # Only main saves caches; pull requests restore main's and never evict it from the 10 GB.
+          cache-to: ${{ github.event_name == 'push' && format('type=gha,mode=max,scope=image-{0}', matrix.target) || '' }}
 
   image:
     name: Container image builds
@@ -210,6 +218,7 @@ jobs:
       - uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
         with:
           cache: true
+          cache_save: ${{ github.event_name == 'push' }}
           install_args: go node pnpm task
       - name: Install JS tooling
         run: task install
