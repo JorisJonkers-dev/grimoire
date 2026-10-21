@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.5.0](https://github.com/JorisJonkers-dev/grimoire/compare/v1.4.0...v1.5.0) (2026-10-21)
+
+
+### Features
+
+* the images lock records the image's software version, through the shared lock step ([#381](https://github.com/JorisJonkers-dev/grimoire/issues/381)) ([59a3923](https://github.com/JorisJonkers-dev/grimoire/commit/59a392363ef8ea554653ccce968c50115ea82d0e))
+
+
+### Bug Fixes
+
+* CI installs vacuum as a release binary, not a build from source ([#376](https://github.com/JorisJonkers-dev/grimoire/issues/376)) ([e0a0df7](https://github.com/JorisJonkers-dev/grimoire/commit/e0a0df768e8011c029fc703dea6a532d3dc8a2b1))
+
 ## [1.4.0](https://github.com/JorisJonkers-dev/grimoire/compare/v1.3.0...v1.4.0) (2026-10-16)
 
 
