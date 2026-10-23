@@ -12,7 +12,8 @@ export default defineConfig({
   // A flaky test is a bug to fix, not to retry.
   retries: 0,
   expect: { timeout: process.env.CI ? 10_000 : 5_000 },
-  reporter: process.env.CI ? [['github'], ['list']] : 'list',
+  // CI shards each write a blob report, which one job merges into a single HTML report.
+  reporter: process.env.CI ? [['blob'], ['github'], ['list']] : 'list',
   use: { baseURL: 'http://localhost:4173', trace: 'retain-on-failure' },
   projects: [
     { name: 'phone', use: { ...devices['Pixel 7'] } },

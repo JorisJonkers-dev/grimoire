@@ -77,6 +77,8 @@ web/dist/
 web/coverage/
 web/playwright-report/
 web/test-results/
+web/blob-report/
+all-blob-reports/
 
 # The embed placeholder must exist for the Go build before the web app is copied in.
 !api/internal/platform/webui/dist/
