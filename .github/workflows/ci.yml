@@ -184,10 +184,54 @@ jobs:
             type=gha,scope=image-web
             type=gha,scope=image-api
 
+  # The API binary and the web build the e2e shards run, built once, and the Playwright version the
+  # lockfile resolves, so the shards' image always carries the browsers that version expects, also
+  # after Renovate bumps it.
+  e2e-build:
+    name: End-to-end build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      playwright: ${{ steps.playwright.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Read the Playwright version
+        id: playwright
+        run: |
+          set -euo pipefail
+          version="$(grep -m1 -E "^  '@playwright/test@[0-9]" pnpm-lock.yaml | sed -E "s/^  '@playwright\/test@([0-9][^']*)':.*/\1/")"
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "no @playwright/test version in pnpm-lock.yaml" >&2; exit 1; }
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - uses: jdx/mise-action@08ae2a091c038e1e05ec6f5115dc5c69d5a2a6b8 # v5.1.2
+        with:
+          cache: true
+          cache_save: ${{ github.event_name == 'push' }}
+          install_args: go node pnpm task
+      - name: Install JS tooling
+        run: task install
+      # Static, so the binary runs in the Playwright image whatever its libc.
+      - name: Build
+        env:
+          CGO_ENABLED: "0"
+        run: task build
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: e2e-build
+          path: |
+            api/bin/grimoire
+            web/dist
+          retention-days: 1
+
+  # The official Playwright image already holds the browsers and every system package they need, so
+  # no shard waits on an apt mirror; Postgres is a service container, reached by its name.
   e2e:
     name: End-to-end (${{ matrix.device }}${{ matrix.shard && format(' {0}', matrix.shard) || '' }})
+    needs: e2e-build
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
+    container:
+      image: mcr.microsoft.com/playwright:v${{ needs.e2e-build.outputs.playwright }}-noble
+      options: --ipc=host
     strategy:
       fail-fast: false
       matrix:
@@ -199,7 +243,9 @@ jobs:
           - device: desktop
             shard: 2/2
     env:
-      GRIMOIRE_DATABASE_URL: postgres://grimoire:grimoire@localhost:5432/grimoire?sslmode=disable
+      # Firefox refuses a HOME the container's root user does not own; mise installs under it too.
+      HOME: /root
+      GRIMOIRE_DATABASE_URL: postgres://grimoire:grimoire@postgres:5432/grimoire?sslmode=disable
     services:
       postgres:
         image: postgres:16-alpine@sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea
@@ -207,29 +253,34 @@ jobs:
           POSTGRES_USER: grimoire
           POSTGRES_PASSWORD: grimoire
           POSTGRES_DB: grimoire
-        ports:
-          - 5432:5432
         options: >-
           --health-cmd "pg_isready -U grimoire"
           --health-interval 2s
           --health-retries 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # Only what the suite needs; the image brings the browsers.
       - uses: jdx/mise-action@08ae2a091c038e1e05ec6f5115dc5c69d5a2a6b8 # v5.1.2
         with:
           cache: true
           cache_save: ${{ github.event_name == 'push' }}
-          install_args: go node pnpm task
+          install_args: node pnpm task
       - name: Install JS tooling
         run: task install
-      - name: Build
-        run: task build
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: e2e-build
+      # An artifact does not keep the file mode.
+      - run: chmod +x api/bin/grimoire
+      # The image has no curl, so node asks whether a server answers. In the container `localhost` is
+      # ::1 to Vite and 127.0.0.1 to node, so the preview listens on, and is asked at, 127.0.0.1.
       - name: Start API and web preview
         run: |
           GRIMOIRE_ADDR=:18765 GRIMOIRE_AUTO_MIGRATE=true GRIMOIRE_AUTO_IMPORT=true GRIMOIRE_DEV_SUBJECT=e2e-player GRIMOIRE_RATE_LIMIT_PER_MINUTE=100000 GRIMOIRE_ADMIN_SUBJECTS=e2e-admin api/bin/grimoire serve > /tmp/api.log 2>&1 &
-          GRIMOIRE_API_ORIGIN=http://localhost:18765 pnpm --filter @grimoire/web preview > /tmp/web.log 2>&1 &
+          GRIMOIRE_API_ORIGIN=http://localhost:18765 pnpm --filter @grimoire/web preview --host 127.0.0.1 > /tmp/web.log 2>&1 &
+          up() { node -e 'fetch(process.argv[1]).then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))' "$1"; }
           for _ in $(seq 1 60); do
-            if curl -sf http://localhost:18765/readyz >/dev/null && curl -sf http://localhost:4173 >/dev/null; then exit 0; fi
+            if up http://127.0.0.1:18765/readyz && up http://127.0.0.1:4173; then exit 0; fi
             sleep 1
           done
           cat /tmp/api.log /tmp/web.log
@@ -237,22 +288,52 @@ jobs:
       - name: End-to-end on ${{ matrix.device }}
         env:
           E2E_EXTERNAL_SERVERS: "1"
+          DEVICE: ${{ matrix.device }}
+          SHARD: ${{ matrix.shard && format('--shard={0}', matrix.shard) || '' }}
         run: |
-          pnpm --filter @grimoire/web exec playwright install --with-deps chromium
-          pnpm --filter @grimoire/web e2e --project=${{ matrix.device }} ${{ matrix.shard && format('--shard={0}', matrix.shard) || '' }}
-      - name: Keep the traces of failed tests
-        if: ${{ failure() }}
+          # shellcheck disable=SC2086 # SHARD is empty or one option
+          pnpm --filter @grimoire/web e2e "--project=$DEVICE" $SHARD
+      - name: Keep the shard's report
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: e2e-traces-${{ matrix.device }}${{ matrix.shard && format('-{0}', strategy.job-index) || '' }}
-          path: web/test-results
+          name: blob-report-${{ matrix.device }}-${{ strategy.job-index }}
+          path: web/blob-report
           retention-days: 7
-          if-no-files-found: ignore
+
+  # One HTML report from every shard, traces of failed tests included. Not part of Pipeline Complete.
+  e2e-report:
+    name: End-to-end report
+    if: ${{ !cancelled() && needs.e2e.result != 'skipped' }}
+    needs: e2e
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: jdx/mise-action@08ae2a091c038e1e05ec6f5115dc5c69d5a2a6b8 # v5.1.2
+        with:
+          cache: true
+          cache_save: ${{ github.event_name == 'push' }}
+          install_args: node pnpm task
+      - name: Install JS tooling
+        run: task install
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          path: all-blob-reports
+          pattern: blob-report-*
+          merge-multiple: true
+      - name: Merge the reports
+        run: pnpm --filter @grimoire/web exec playwright merge-reports --reporter html ../all-blob-reports
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: playwright-report
+          path: web/playwright-report
+          retention-days: 7
 
   pipeline-complete:
     name: Pipeline Complete
     if: ${{ always() }}
-    needs: [lint-go, contract, lint-web, test-go, mutation, test-web, android, image-stage, image, e2e]
+    needs: [lint-go, contract, lint-web, test-go, mutation, test-web, android, image-stage, image, e2e-build, e2e]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
