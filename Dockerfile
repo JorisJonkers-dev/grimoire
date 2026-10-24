@@ -1,9 +1,9 @@
-# syntax=docker/dockerfile:1.26
+# syntax=docker/dockerfile:1.28
 # One image: the Go API serves the built web app (ARCHITECTURE.md §19.1).
 
 # Both build stages run on the build platform; only the Go binary is cross-compiled, so a
 # multi-arch build needs no emulation.
-FROM --platform=$BUILDPLATFORM node:24.21.0-alpine AS web
+FROM --platform=$BUILDPLATFORM node:24.22.0-alpine AS web
 RUN npm install -g pnpm@12.6.0
 WORKDIR /src
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
