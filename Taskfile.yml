@@ -109,25 +109,55 @@ tasks:
 
   # Shards 1 to 3 name their packages, about 700 mutants each; shard 4 takes the root package and every
   # package the others do not name, so a new package is never skipped.
+  #
+  # With MUTATION_BASE set (CI sets it on a pull request to the merge base's branch), a package whose
+  # directory holds no change since that base is skipped: its code and its tests are what it was on main,
+  # where the full run already held it. Unset, as on main and locally, every package runs.
   mutation:1:
     desc: Mutation testing, shard 1 of 4 (CI runs the shards in parallel)
     dir: api
-    cmd: for p in {{.MUTATION_SHARD_1}}; do go tool gremlins unleash --config .gremlins.yaml --timeout-coefficient 40 --workers 4 ./internal/rules/$p || exit 1; done
+    cmd: |
+      for p in {{.MUTATION_SHARD_1}}; do
+        if [ -n "${MUTATION_BASE:-}" ] && git diff --quiet --merge-base "$MUTATION_BASE" -- "internal/rules/$p"; then
+          echo "internal/rules/$p: unchanged since $MUTATION_BASE, skipped"
+          continue
+        fi
+        go tool gremlins unleash --config .gremlins.yaml --timeout-coefficient 40 --workers 4 ./internal/rules/$p || exit 1
+      done
 
   mutation:2:
     desc: Mutation testing, shard 2 of 4 (CI runs the shards in parallel)
     dir: api
-    cmd: for p in {{.MUTATION_SHARD_2}}; do go tool gremlins unleash --config .gremlins.yaml --timeout-coefficient 40 --workers 4 ./internal/rules/$p || exit 1; done
+    cmd: |
+      for p in {{.MUTATION_SHARD_2}}; do
+        if [ -n "${MUTATION_BASE:-}" ] && git diff --quiet --merge-base "$MUTATION_BASE" -- "internal/rules/$p"; then
+          echo "internal/rules/$p: unchanged since $MUTATION_BASE, skipped"
+          continue
+        fi
+        go tool gremlins unleash --config .gremlins.yaml --timeout-coefficient 40 --workers 4 ./internal/rules/$p || exit 1
+      done
 
   mutation:3:
     desc: Mutation testing, shard 3 of 4 (CI runs the shards in parallel)
     dir: api
-    cmd: for p in {{.MUTATION_SHARD_3}}; do go tool gremlins unleash --config .gremlins.yaml --timeout-coefficient 40 --workers 4 ./internal/rules/$p || exit 1; done
+    cmd: |
+      for p in {{.MUTATION_SHARD_3}}; do
+        if [ -n "${MUTATION_BASE:-}" ] && git diff --quiet --merge-base "$MUTATION_BASE" -- "internal/rules/$p"; then
+          echo "internal/rules/$p: unchanged since $MUTATION_BASE, skipped"
+          continue
+        fi
+        go tool gremlins unleash --config .gremlins.yaml --timeout-coefficient 40 --workers 4 ./internal/rules/$p || exit 1
+      done
 
   mutation:4:
     desc: Mutation testing, shard 4 of 4 (CI runs the shards in parallel)
     dir: api
-    cmd: go tool gremlins unleash --config .gremlins.yaml --timeout-coefficient 40 --workers 4 --exclude-files '^({{.MUTATION_NAMED | trim | splitList " " | join "|"}})/' ./internal/rules
+    cmd: |
+      if [ -n "${MUTATION_BASE:-}" ] && git diff --quiet --merge-base "$MUTATION_BASE" -- internal/rules {{range (.MUTATION_NAMED | trim | splitList " ")}} ':(exclude)internal/rules/{{.}}'{{end}}; then
+        echo "internal/rules outside shards 1 to 3: unchanged since $MUTATION_BASE, skipped"
+        exit 0
+      fi
+      go tool gremlins unleash --config .gremlins.yaml --timeout-coefficient 40 --workers 4 --exclude-files '^({{.MUTATION_NAMED | trim | splitList " " | join "|"}})/' ./internal/rules
 
   android:
     desc: Build the Capacitor Android shell as a debug APK from the web build (needs Java 21 and the Android SDK)

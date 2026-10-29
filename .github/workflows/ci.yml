@@ -104,11 +104,27 @@ jobs:
         shard: [1, 2, 3, 4]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # A pull request needs its merge base to tell which packages it changed.
+          fetch-depth: ${{ github.event_name == 'pull_request' && '0' || '1' }}
       - uses: jdx/mise-action@8418fedb1110381a0d3ba51a7a415d7c1b884550 # v5.2.2
         with:
           cache: true
           cache_save: ${{ github.event_name == 'push' }}
           install_args: go task
+      # A pull request mutates only the rules packages it changed, code or tests; a push to main mutates
+      # every package, so a weakened test that reaches another package's mutants is still caught there.
+      # A change to what every package runs under (the module, the gremlins config, the Taskfile) runs all.
+      - name: Choose what a pull request mutates
+        if: github.event_name == 'pull_request'
+        env:
+          BASE: origin/${{ github.base_ref }}
+        run: |
+          if git diff --quiet --merge-base "$BASE" -- api/go.mod api/go.sum api/.gremlins.yaml Taskfile.yml mise.toml; then
+            echo "MUTATION_BASE=$BASE" >> "$GITHUB_ENV"
+          else
+            echo "The module, the gremlins config or the Taskfile changed: every package runs."
+          fi
       - name: Mutation testing (rules engine)
         run: task mutation:${{ matrix.shard }}
 
