@@ -51,3 +51,32 @@ jobs:
     steps:
       # Image publishing (grimoire-api, grimoire-web) and the deploy artifact land with M0's first deploy.
       - run: echo 'Released grimoire at ${{ needs.release-please.outputs.tag_name }}'
+
+  # The demo build, the web app on its in-browser mock, rides along with every release as a zip anyone
+  # can unpack and serve from any static file server: it needs no API and sends nothing.
+  demo:
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name }}
+      - uses: jdx/mise-action@8418fedb1110381a0d3ba51a7a415d7c1b884550 # v5.2.2
+        with:
+          install_args: node pnpm task
+      - name: Install JS tooling
+        run: task install
+      - name: Build the demo
+        run: task build:demo
+      - name: Attach the demo to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.release-please.outputs.tag_name }}
+        run: |
+          set -euo pipefail
+          (cd web/dist-demo && zip -qr "../../grimoire-demo-${TAG}.zip" .)
+          gh release upload "$TAG" "grimoire-demo-${TAG}.zip" --clobber

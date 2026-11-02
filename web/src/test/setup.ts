@@ -3,6 +3,7 @@ import { config } from '@vue/test-utils'
 import { afterEach, vi } from 'vitest'
 import { FakeSocket } from './fakeSocket'
 import { unmountAll } from './mountApp'
+import { unmountDemos } from './mountDemo'
 
 // jsdom lays nothing out, so it has no scrollIntoView; the roster strip calls it to keep a face in view.
 Element.prototype.scrollIntoView = function scrollIntoView() {}
@@ -19,6 +20,7 @@ notifyManager.setScheduler(queueMicrotask)
 afterEach(() => {
   vi.useRealTimers()
   unmountAll()
+  unmountDemos()
   FakeSocket.all = []
   document.body.innerHTML = ''
 })

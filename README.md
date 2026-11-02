@@ -44,6 +44,7 @@ task dev            # Postgres (Docker), API with a dev identity, Vite
 task                # list targets
 task check          # everything CI runs on a pull request
 task test           # unit tests
+task build:demo     # the web app on an in-browser mock, no API needed (web/dist-demo)
 ```
 
 ## Connecting an AI agent

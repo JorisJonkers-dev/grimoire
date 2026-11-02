@@ -74,6 +74,7 @@ coverage.out
 
 # Web
 web/dist/
+web/dist-demo/
 web/coverage/
 web/playwright-report/
 web/test-results/

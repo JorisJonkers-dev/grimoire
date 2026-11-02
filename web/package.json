@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vue-tsc --noEmit -p src/sw && vite build",
+    "build:demo": "vue-tsc --noEmit && vite build --mode demo",
     "preview": "vite preview --port 4173 --strictPort",
     "typecheck": "vue-tsc --noEmit",
     "lint": "eslint . --max-warnings 0",

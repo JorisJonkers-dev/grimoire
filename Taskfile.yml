@@ -167,10 +167,16 @@ tasks:
       - cd android && ./gradlew assembleDebug --no-daemon --quiet
 
   build:
-    desc: Build the API binary and the web app
+    desc: Build the API binary, the web app and the demo
     cmds:
       - cd api && go build -trimpath -o bin/grimoire ./cmd/grimoire
       - pnpm --filter @grimoire/web build
+      - task: build:demo
+
+  build:demo:
+    desc: Build the web app on its in-browser mock (web/dist-demo); it needs no API and sends nothing
+    deps: [install]
+    cmd: pnpm --filter @grimoire/web build:demo
 
   e2e:
     desc: Playwright device matrix against a local stack (starts Postgres with Docker Compose)
