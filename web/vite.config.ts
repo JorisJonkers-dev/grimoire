@@ -35,8 +35,11 @@ const pwa = VitePWA({
   },
 })
 
-export default defineConfig({
-  plugins: [vue(), ...(process.env.VITEST ? [] : [pwa])],
+// `--mode demo` builds the same app on the in-browser mock (src/demo): relative paths so it opens from
+// any folder or page, its own output folder, and no service worker, which would outlive the demo.
+export default defineConfig(({ mode }) => ({
+  plugins: [vue(), ...(process.env.VITEST || mode === 'demo' ? [] : [pwa])],
+  ...(mode === 'demo' ? { base: './', build: { outDir: 'dist-demo' } } : {}),
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
   css: { postcss: { plugins: [accessibleCss()] } },
   server: { proxy },
@@ -56,4 +59,4 @@ export default defineConfig({
       thresholds: { lines: 98, branches: 95, functions: 98, statements: 98 },
     },
   },
-})
+}))

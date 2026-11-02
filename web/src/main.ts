@@ -6,7 +6,12 @@ import { createAppRouter } from './app/router'
 import { configureApi, signInOnUnauthorized } from './infrastructure/http'
 import './shared/base.css'
 
-configureApi()
-const router = createAppRouter()
-signInOnUnauthorized(router)
-createApp(App).use(createPinia()).use(router).use(VueQueryPlugin).mount('#app')
+// `vite build --mode demo` builds the same app on an in-browser mock; a normal build leaves it out.
+if (import.meta.env.MODE === 'demo') {
+  void import('./demo/start').then(({ startDemo }) => { startDemo() })
+} else {
+  configureApi()
+  const router = createAppRouter()
+  signInOnUnauthorized(router)
+  createApp(App).use(createPinia()).use(router).use(VueQueryPlugin).mount('#app')
+}

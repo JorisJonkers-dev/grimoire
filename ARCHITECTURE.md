@@ -294,7 +294,7 @@ grimoire/
 │   └── db/{schema,migrations,queries,seeds}/
 ├── web/                           # Vue 3 SPA (pnpm)
 │   ├── package.json  pnpm-lock.yaml  vite.config.ts  eslint.config.ts  capacitor.config.ts
-│   ├── src/{app,shared,features/<feature>,infrastructure/api(GENERATED),render,realtime}/
+│   ├── src/{app,shared,features/<feature>,infrastructure/api(GENERATED),render,realtime,demo}/
 │   └── tests/{unit,component,e2e}/
 ├── design/                        # Claude Design exports, tokens.json, component inventory
 ├── deploy/                        # grimoire.project.yml, env/grimoire/base.env
@@ -312,8 +312,21 @@ grimoire/
 | `task test` | Go unit + adapter tests, Vitest |
 | `task e2e` | Playwright device matrix + multi-client scenarios against a local stack |
 | `task fix` | gofumpt, golangci-lint --fix, eslint --fix, prettier |
+| `task build:demo` | the web app on its in-browser mock (`web/dist-demo`); part of `task build` |
 
 `mise install` is the only setup step. No Nx/Turbo; Go and pnpm caches do the work.
+
+**Demo mode.** `vite build --mode demo` builds the real web app with every API call answered by an
+in-browser mock (`web/src/demo`): one seeded world (a Campaign, a DM, four Players with Characters, a
+pending Campaign Invite and a pending Join Request) and a role switcher (signed out, Player, DM,
+Admin). Handlers are keyed by operationId and typed from the generated SDK, so a mock that no longer
+matches the contract fails `vue-tsc`; the generated client's response validators check the seed at
+runtime. Handlers apply the same audience rules as the API. State lives in memory and resets on
+reload; nothing leaves the browser. `src/demo/pages.ts` lists every route with the roles it serves, and
+the demo test opens each one, so a new page brings its demo slice with it. Each release attaches the
+build as `grimoire-demo-<tag>.zip`; a production build carries none of it. The demo is not a second rules
+implementation (ADR-0004): its seed holds results as the server would compute them, and nothing outside
+the demo bundle reads them.
 
 ---
 
