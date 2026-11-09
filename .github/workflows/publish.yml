@@ -23,7 +23,7 @@ permissions: {}
 jobs:
   # -- 1. Build and push the multi-arch container image ----------------------
   publish-image:
-    uses: JorisJonkers-dev/github-workflows/.github/workflows/container-publish.yml@f8f0a5ae583913de18143bbbbe0db9ecab970435 # v0.45.0
+    uses: JorisJonkers-dev/github-workflows/.github/workflows/container-publish.yml@8b5462a796f022647dfc44123ddb3655cc3c2f28 # v0.45.3
     with:
       image-name: grimoire
       version: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
@@ -81,7 +81,7 @@ jobs:
       # runs as and the version it ships, read back from what was pushed.
       - name: lock-fragment-image
         id: lock
-        uses: JorisJonkers-dev/github-workflows/actions/resolve-image-lock@f8f0a5ae583913de18143bbbbe0db9ecab970435 # v0.45.0
+        uses: JorisJonkers-dev/github-workflows/actions/resolve-image-lock@8b5462a796f022647dfc44123ddb3655cc3c2f28 # v0.45.3
         with:
           name: grimoire
           images: grimoire
@@ -95,7 +95,7 @@ jobs:
       contents: read
       packages: write
       id-token: write
-    uses: JorisJonkers-dev/github-workflows/.github/workflows/publish-fragment.yml@f8f0a5ae583913de18143bbbbe0db9ecab970435 # v0.45.0
+    uses: JorisJonkers-dev/github-workflows/.github/workflows/publish-fragment.yml@8b5462a796f022647dfc44123ddb3655cc3c2f28 # v0.45.3
     with:
       project-file: deploy/grimoire.project.yml
       version: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
