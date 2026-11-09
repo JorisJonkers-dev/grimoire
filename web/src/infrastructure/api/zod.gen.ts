@@ -77,6 +77,7 @@ export const zAccountEventList = z.object({
 export const zAdminInviteRow = z.object({
     id: zId,
     admin: z.boolean(),
+    email: z.email().max(254).optional(),
     status: z.enum(['invited', 'expired']),
     createdAt: z.iso.datetime().max(40),
     expiresAt: z.iso.datetime().max(40)
@@ -613,11 +614,12 @@ export const zPasswordChange = z.object({
 });
 
 /**
- * How long an Account Invite stays open, and whether it sets up an Admin.
+ * How long an Account Invite stays open, whether it sets up an Admin, and where to email its link, if anywhere. It never names a Campaign.
  */
 export const zAccountInviteRequest = z.object({
     hours: z.int().gte(1).lte(720),
-    admin: z.boolean().optional()
+    admin: z.boolean().optional(),
+    email: z.email().max(254).optional()
 });
 
 /**

@@ -8,7 +8,7 @@ import { personalId } from './ids'
 
 export type AccountMeta = { createdAt: string; lastSeenAt?: string; disabled: boolean; sessions: number }
 export type DemoToken = AccessToken & { accountId: string }
-export type AccountInviteRecord = { id: string; admin: boolean; createdAt: string; expiresAt: string; open: boolean }
+export type AccountInviteRecord = { id: string; admin: boolean; email?: string; createdAt: string; expiresAt: string; open: boolean }
 
 export function seedAccounts() {
   const [ash, brook, cedar, dune] = ids.players
@@ -62,7 +62,7 @@ export function seedAccounts() {
   /** The Release Notes each Account has dismissed. */
   const seenNotes: Record<string, string[]> = { [dm]: [personalId(0x701)], [admin]: [personalId(0x701)] }
   const accountInvites: AccountInviteRecord[] = [
-    { id: personalId(0x801), admin: false, createdAt: '2026-10-30T12:00:00Z', expiresAt: '2026-11-02T12:00:00Z', open: true },
+    { id: personalId(0x801), admin: false, email: 'wren@example.com', createdAt: '2026-10-30T12:00:00Z', expiresAt: '2026-11-02T12:00:00Z', open: true },
     { id: personalId(0x802), admin: false, createdAt: '2026-09-01T12:00:00Z', expiresAt: '2026-09-04T12:00:00Z', open: false },
   ]
   /** Account Invite and sign-in link tokens that were used up; they never work again. */

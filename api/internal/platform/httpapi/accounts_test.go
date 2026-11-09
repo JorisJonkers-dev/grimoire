@@ -39,7 +39,7 @@ type brokenAccounts struct{}
 
 var errAccounts = errors.New("database gone")
 
-func (brokenAccounts) CreateInvite(context.Context, string, int, bool) (string, domain.Invite, error) {
+func (brokenAccounts) CreateInvite(context.Context, string, int, bool, string) (string, domain.Invite, error) {
 	return "", domain.Invite{}, errAccounts
 }
 

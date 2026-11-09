@@ -17,7 +17,7 @@ import (
 
 // AccountService is Grimoire's own Accounts.
 type AccountService interface {
-	CreateInvite(ctx context.Context, by string, hours int, admin bool) (string, domain.Invite, error)
+	CreateInvite(ctx context.Context, by string, hours int, admin bool, email string) (string, domain.Invite, error)
 	Invite(ctx context.Context, token string) (domain.Invite, error)
 	Accept(ctx context.Context, token string, in domain.Setup, userAgent string) (domain.Account, string, error)
 	SignIn(ctx context.Context, username, password, userAgent string) (domain.SignedIn, error)
@@ -85,13 +85,14 @@ func (h *Handler) identityError(ctx context.Context, op string, err error) *oas.
 	return unavailable()
 }
 
-// CreateAccountInvite makes an Account Invite for an Admin.
+// CreateAccountInvite makes an Account Invite for an Admin, emailing its link when the Admin names an
+// email.
 func (h *Handler) CreateAccountInvite(ctx context.Context, req *oas.AccountInviteRequest) (oas.CreateAccountInviteRes, error) {
 	id, ok := auth.FromContext(ctx)
 	if !ok {
 		return unauthorized(), nil
 	}
-	token, inv, err := h.Accounts.CreateInvite(ctx, id.Subject, int(req.Hours), req.Admin.Or(false))
+	token, inv, err := h.Accounts.CreateInvite(ctx, id.Subject, int(req.Hours), req.Admin.Or(false), req.Email.Or(""))
 	if err != nil {
 		return h.identityError(ctx, "create account invite", err), nil
 	}

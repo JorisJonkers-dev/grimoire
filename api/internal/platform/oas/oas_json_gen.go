@@ -2223,11 +2223,18 @@ func (s *AccountInviteRequest) encodeFields(e *jx.Encoder) {
 			s.Admin.Encode(e)
 		}
 	}
+	{
+		if s.Email.Set {
+			e.FieldStart("email")
+			s.Email.Encode(e)
+		}
+	}
 }
 
-var jsonFieldsNameOfAccountInviteRequest = [2]string{
+var jsonFieldsNameOfAccountInviteRequest = [3]string{
 	0: "hours",
 	1: "admin",
+	2: "email",
 }
 
 // Decode decodes AccountInviteRequest from json.
@@ -2260,6 +2267,16 @@ func (s *AccountInviteRequest) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"admin\"")
+			}
+		case "email":
+			if err := func() error {
+				s.Email.Reset()
+				if err := s.Email.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"email\"")
 			}
 		default:
 			return errors.Errorf("unexpected field %q", k)
@@ -4504,6 +4521,12 @@ func (s *AdminInviteRow) encodeFields(e *jx.Encoder) {
 		e.Bool(s.Admin)
 	}
 	{
+		if s.Email.Set {
+			e.FieldStart("email")
+			s.Email.Encode(e)
+		}
+	}
+	{
 		e.FieldStart("status")
 		s.Status.Encode(e)
 	}
@@ -4517,12 +4540,13 @@ func (s *AdminInviteRow) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfAdminInviteRow = [5]string{
+var jsonFieldsNameOfAdminInviteRow = [6]string{
 	0: "id",
 	1: "admin",
-	2: "status",
-	3: "createdAt",
-	4: "expiresAt",
+	2: "email",
+	3: "status",
+	4: "createdAt",
+	5: "expiresAt",
 }
 
 // Decode decodes AdminInviteRow from json.
@@ -4556,8 +4580,18 @@ func (s *AdminInviteRow) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"admin\"")
 			}
+		case "email":
+			if err := func() error {
+				s.Email.Reset()
+				if err := s.Email.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"email\"")
+			}
 		case "status":
-			requiredBitSet[0] |= 1 << 2
+			requiredBitSet[0] |= 1 << 3
 			if err := func() error {
 				if err := s.Status.Decode(d); err != nil {
 					return err
@@ -4567,7 +4601,7 @@ func (s *AdminInviteRow) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"status\"")
 			}
 		case "createdAt":
-			requiredBitSet[0] |= 1 << 3
+			requiredBitSet[0] |= 1 << 4
 			if err := func() error {
 				v, err := json.DecodeDateTime(d)
 				s.CreatedAt = v
@@ -4579,7 +4613,7 @@ func (s *AdminInviteRow) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"createdAt\"")
 			}
 		case "expiresAt":
-			requiredBitSet[0] |= 1 << 4
+			requiredBitSet[0] |= 1 << 5
 			if err := func() error {
 				v, err := json.DecodeDateTime(d)
 				s.ExpiresAt = v
@@ -4600,7 +4634,7 @@ func (s *AdminInviteRow) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00011111,
+		0b00111011,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.

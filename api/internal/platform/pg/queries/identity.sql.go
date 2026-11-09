@@ -384,7 +384,7 @@ func (q *Queries) InsertAccountSession(ctx context.Context, arg InsertAccountSes
 }
 
 const insertInvite = `-- name: InsertInvite :exec
-INSERT INTO identity.invites (id, token_hash, created_by, admin, created_at, expires_at) VALUES ($1, $2, $3, $4, $5, $6)
+INSERT INTO identity.invites (id, token_hash, created_by, admin, email, created_at, expires_at) VALUES ($1, $2, $3, $4, $5, $6, $7)
 `
 
 type InsertInviteParams struct {
@@ -392,6 +392,7 @@ type InsertInviteParams struct {
 	TokenHash []byte
 	CreatedBy string
 	Admin     bool
+	Email     pgtype.Text
 	Now       time.Time
 	ExpiresAt time.Time
 }
@@ -402,6 +403,7 @@ func (q *Queries) InsertInvite(ctx context.Context, arg InsertInviteParams) erro
 		arg.TokenHash,
 		arg.CreatedBy,
 		arg.Admin,
+		arg.Email,
 		arg.Now,
 		arg.ExpiresAt,
 	)
@@ -551,13 +553,14 @@ func (q *Queries) InsertTwoStepChallenge(ctx context.Context, arg InsertTwoStepC
 }
 
 const inviteByToken = `-- name: InviteByToken :one
-SELECT id, created_by, admin, created_at, expires_at, used_at FROM identity.invites WHERE token_hash = $1
+SELECT id, created_by, admin, email, created_at, expires_at, used_at FROM identity.invites WHERE token_hash = $1
 `
 
 type InviteByTokenRow struct {
 	ID        uuid.UUID
 	CreatedBy string
 	Admin     bool
+	Email     pgtype.Text
 	CreatedAt time.Time
 	ExpiresAt time.Time
 	UsedAt    pgtype.Timestamptz
@@ -570,6 +573,7 @@ func (q *Queries) InviteByToken(ctx context.Context, tokenHash []byte) (InviteBy
 		&i.ID,
 		&i.CreatedBy,
 		&i.Admin,
+		&i.Email,
 		&i.CreatedAt,
 		&i.ExpiresAt,
 		&i.UsedAt,
@@ -712,13 +716,14 @@ func (q *Queries) ListAccounts(ctx context.Context) ([]ListAccountsRow, error) {
 }
 
 const listUnusedInvites = `-- name: ListUnusedInvites :many
-SELECT id, created_by, admin, created_at, expires_at FROM identity.invites WHERE used_at IS NULL ORDER BY created_at DESC LIMIT 200
+SELECT id, created_by, admin, email, created_at, expires_at FROM identity.invites WHERE used_at IS NULL ORDER BY created_at DESC LIMIT 200
 `
 
 type ListUnusedInvitesRow struct {
 	ID        uuid.UUID
 	CreatedBy string
 	Admin     bool
+	Email     pgtype.Text
 	CreatedAt time.Time
 	ExpiresAt time.Time
 }
@@ -736,6 +741,7 @@ func (q *Queries) ListUnusedInvites(ctx context.Context) ([]ListUnusedInvitesRow
 			&i.ID,
 			&i.CreatedBy,
 			&i.Admin,
+			&i.Email,
 			&i.CreatedAt,
 			&i.ExpiresAt,
 		); err != nil {

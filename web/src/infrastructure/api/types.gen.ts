@@ -289,6 +289,10 @@ export type AdminAccountRow = {
 export type AdminInviteRow = {
     id: Id;
     admin: boolean;
+    /**
+     * Where the invite link was emailed, if anywhere.
+     */
+    email?: string;
     status: 'invited' | 'expired';
     createdAt: string;
     expiresAt: string;
@@ -774,11 +778,15 @@ export type PasswordChange = {
 };
 
 /**
- * How long an Account Invite stays open, and whether it sets up an Admin.
+ * How long an Account Invite stays open, whether it sets up an Admin, and where to email its link, if anywhere. It never names a Campaign.
  */
 export type AccountInviteRequest = {
     hours: number;
     admin?: boolean;
+    /**
+     * Where to email the invite link; without it, nobody is emailed.
+     */
+    email?: string;
 };
 
 /**

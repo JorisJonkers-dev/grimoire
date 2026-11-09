@@ -1359,11 +1359,14 @@ func (s *AccountInviteHeaders) SetResponse(val AccountInvite) {
 
 func (*AccountInviteHeaders) previewAccountInviteRes() {}
 
-// How long an Account Invite stays open, and whether it sets up an Admin.
+// How long an Account Invite stays open, whether it sets up an Admin, and where to email its link, if
+// anywhere. It never names a Campaign.
 // Ref: #/components/schemas/AccountInviteRequest
 type AccountInviteRequest struct {
 	Hours int32   `json:"hours"`
 	Admin OptBool `json:"admin"`
+	// Where to email the invite link; without it, nobody is emailed.
+	Email OptString `json:"email"`
 }
 
 // GetHours returns the value of Hours.
@@ -1376,6 +1379,11 @@ func (s *AccountInviteRequest) GetAdmin() OptBool {
 	return s.Admin
 }
 
+// GetEmail returns the value of Email.
+func (s *AccountInviteRequest) GetEmail() OptString {
+	return s.Email
+}
+
 // SetHours sets the value of Hours.
 func (s *AccountInviteRequest) SetHours(val int32) {
 	s.Hours = val
@@ -1384,6 +1392,11 @@ func (s *AccountInviteRequest) SetHours(val int32) {
 // SetAdmin sets the value of Admin.
 func (s *AccountInviteRequest) SetAdmin(val OptBool) {
 	s.Admin = val
+}
+
+// SetEmail sets the value of Email.
+func (s *AccountInviteRequest) SetEmail(val OptString) {
+	s.Email = val
 }
 
 // What an invitee chooses for their Account, with the token its invite link carries.
@@ -2636,8 +2649,10 @@ func (s *AdminCampaign) SetRole(val string) {
 // An Invite nobody has used, open until it expires.
 // Ref: #/components/schemas/AdminInviteRow
 type AdminInviteRow struct {
-	ID        ID                   `json:"id"`
-	Admin     bool                 `json:"admin"`
+	ID    ID   `json:"id"`
+	Admin bool `json:"admin"`
+	// Where the invite link was emailed, if anywhere.
+	Email     OptString            `json:"email"`
 	Status    AdminInviteRowStatus `json:"status"`
 	CreatedAt time.Time            `json:"createdAt"`
 	ExpiresAt time.Time            `json:"expiresAt"`
@@ -2651,6 +2666,11 @@ func (s *AdminInviteRow) GetID() ID {
 // GetAdmin returns the value of Admin.
 func (s *AdminInviteRow) GetAdmin() bool {
 	return s.Admin
+}
+
+// GetEmail returns the value of Email.
+func (s *AdminInviteRow) GetEmail() OptString {
+	return s.Email
 }
 
 // GetStatus returns the value of Status.
@@ -2676,6 +2696,11 @@ func (s *AdminInviteRow) SetID(val ID) {
 // SetAdmin sets the value of Admin.
 func (s *AdminInviteRow) SetAdmin(val bool) {
 	s.Admin = val
+}
+
+// SetEmail sets the value of Email.
+func (s *AdminInviteRow) SetEmail(val OptString) {
+	s.Email = val
 }
 
 // SetStatus sets the value of Status.

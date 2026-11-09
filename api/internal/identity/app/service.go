@@ -92,12 +92,15 @@ func (s *Service) IsAdmin(ctx context.Context, subject string) bool {
 }
 
 // CreateInvite makes an Account Invite that expires after so many hours, for an Admin; only an Admin's
-// invite can set up another Admin. It returns the token the invite link carries.
-func (s *Service) CreateInvite(ctx context.Context, by string, hours int, admin bool) (string, domain.Invite, error) {
+// invite can set up another Admin. With an email, it also emails the invite link there, and an invite
+// that cannot be emailed is not made. It returns the token the invite link carries. An Account Invite
+// never joins a Campaign: that takes a Campaign Invite.
+func (s *Service) CreateInvite(ctx context.Context, by string, hours int, admin bool, email string) (string, domain.Invite, error) {
 	if !s.IsAdmin(ctx, by) {
 		return "", domain.Invite{}, domain.ErrForbidden
 	}
-	if hours < 1 || hours > MaxInviteHr {
+	email = strings.TrimSpace(email)
+	if hours < 1 || hours > MaxInviteHr || !emailOK(email) {
 		return "", domain.Invite{}, domain.ErrInvalid
 	}
 	token, hash, err := newToken()
@@ -105,8 +108,39 @@ func (s *Service) CreateInvite(ctx context.Context, by string, hours int, admin 
 		return "", domain.Invite{}, err
 	}
 	now := s.Now()
-	inv := domain.Invite{ID: uuid.New(), CreatedBy: by, Admin: admin, CreatedAt: now, ExpiresAt: now.Add(time.Duration(hours) * time.Hour), UsedAt: nil}
-	return token, inv, s.Repo.InsertInvite(ctx, inv, hash)
+	inv := domain.Invite{ID: uuid.New(), CreatedBy: by, Admin: admin, Email: email, CreatedAt: now, ExpiresAt: now.Add(time.Duration(hours) * time.Hour), UsedAt: nil}
+	err = s.Repo.InTx(ctx, func(r Repository) error {
+		if err := r.InsertInvite(ctx, inv, hash); err != nil {
+			return err
+		}
+		return s.mailInvite(ctx, inv, token)
+	})
+	if err != nil {
+		return "", domain.Invite{}, err
+	}
+	return token, inv, nil
+}
+
+// mailInvite emails an Account Invite's link to the address the Admin named, through the invite
+// letter; the token rides in the link's fragment, which browsers never send to a server. An invite
+// without an email is passed on by the Admin.
+func (s *Service) mailInvite(ctx context.Context, inv domain.Invite, token string) error {
+	if inv.Email == "" {
+		return nil
+	}
+	paragraphs := []string{"You are invited to set up an Account on Grimoire, a place to play tabletop roleplaying games with friends."}
+	if inv.Admin {
+		paragraphs = append(paragraphs, "Your Account will be an Admin, so it can manage Grimoire itself.")
+	}
+	paragraphs = append(paragraphs, "The link works once, until "+inv.ExpiresAt.UTC().Format("2 January 2006 at 15:04 UTC")+". If you did not expect it, ignore this email.")
+	subject, text, html, err := letters.Render(letters.Letter{
+		Kind: letters.Invite, Subject: "", Nickname: "", Heading: "You are invited to Grimoire", Paragraphs: paragraphs,
+		Action: &letters.Action{Label: "Set up your Account", URL: strings.TrimRight(s.BaseURL, "/") + "/account-invite#" + token}, Items: nil,
+	})
+	if err != nil {
+		return err
+	}
+	return s.Mailer.Send(ctx, mail.Message{To: inv.Email, Subject: subject, Text: text, HTML: html})
 }
 
 // Invite reads an Account Invite by its token: ErrExpired once used or past its time.
@@ -194,10 +228,16 @@ func cleanProfile(in domain.ProfileChange) (domain.ProfileChange, error) {
 		return in, domain.ErrInvalid
 	case in.Nickname == "" || utf8.RuneCountInString(in.Nickname) > 40:
 		return in, domain.ErrInvalid
-	case in.Email != "" && (len(in.Email) > 254 || !strings.Contains(in.Email, "@") || strings.HasPrefix(in.Email, "@") || strings.HasSuffix(in.Email, "@")):
+	case !emailOK(in.Email):
 		return in, domain.ErrInvalid
 	}
 	return in, nil
+}
+
+// emailOK reports whether a tidied email is none, or up to 254 characters with something on both sides
+// of an @.
+func emailOK(email string) bool {
+	return email == "" || (len(email) <= 254 && strings.Contains(email, "@") && !strings.HasPrefix(email, "@") && !strings.HasSuffix(email, "@"))
 }
 
 // dummyHash keeps a sign-in with an unknown Username as slow as one with a wrong password.

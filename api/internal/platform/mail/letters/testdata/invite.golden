@@ -9,7 +9,7 @@ Something happened that you asked to hear about.
 Open: https://grimoire.example/x
 
 -- 
-You get this email because of your Notification preferences in Grimoire.
+You get this email because someone invited you to Grimoire.
 
 ====
 <!doctype html>
@@ -31,7 +31,7 @@ You get this email because of your Notification preferences in Grimoire.
 <p style="margin:0 0 16px;">Something happened that you asked to hear about.</p>
 <p style="margin:24px 0 8px;text-align:center;"><a href="https://grimoire.example/x" style="display:inline-block;padding:12px 24px;background:#c9a35a;color:#14110d;border-radius:8px;text-decoration:none;font-family:Arial,sans-serif;font-size:15px;">Open</a></p>
 </td></tr>
-<tr><td align="center" style="padding:16px 28px 24px;border-top:1px solid #3a3127;font-size:12px;line-height:1.5;color:#8f826c;">You get this email because of your Notification preferences in Grimoire.</td></tr>
+<tr><td align="center" style="padding:16px 28px 24px;border-top:1px solid #3a3127;font-size:12px;line-height:1.5;color:#8f826c;">You get this email because someone invited you to Grimoire.</td></tr>
 </table>
 </td></tr>
 </table>

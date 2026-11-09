@@ -445,8 +445,10 @@ describe('Admin', () => {
   it('invites, disables, makes Admin and emails a sign-in link, never to the Admin’s own Account', async () => {
     as('admin')
     expect((await sdk.createAccountInvite({ body: { hours: 24 } })).data?.token).toMatch(/^invite_/)
-    await sdk.createAccountInvite({ body: { hours: 24, admin: true } })
-    expect((await sdk.listAdminAccounts()).data?.invites.map((i) => i.admin)).toEqual([true, false, false, false])
+    await sdk.createAccountInvite({ body: { hours: 24, admin: true, email: 'fern@example.com' } })
+    const invites = (await sdk.listAdminAccounts()).data?.invites
+    expect(invites?.map((i) => i.admin)).toEqual([true, false, false, false])
+    expect(invites?.map((i) => i.email)).toEqual(['fern@example.com', undefined, 'wren@example.com', undefined])
     expect(status(await sdk.setAccountDisabled({ path: { accountId: ids.admin }, body: { value: true } }))).toBe(409)
     expect(status(await sdk.setAccountDisabled({ path: { accountId: ids.session }, body: { value: true } }))).toBe(404)
     expect(status(await sdk.sendAdminSignInLink({ path: { accountId: brook } }))).toBe(204)

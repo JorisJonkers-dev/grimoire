@@ -104,6 +104,9 @@ func Render(l Letter) (string, string, string, error) {
 	if Security(l.Kind) {
 		v.Footer = "Grimoire sends this for your Account's safety; it cannot be turned off."
 	}
+	if l.Kind == Invite {
+		v.Footer = "You get this email because someone invited you to Grimoire."
+	}
 	var html bytes.Buffer
 	if err := tmpl.Execute(&html, v); err != nil {
 		return "", "", "", err

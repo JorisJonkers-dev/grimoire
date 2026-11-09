@@ -4116,7 +4116,7 @@ export const getStatus = <ThrowOnError extends boolean = false>(options?: Option
 /**
  * Invite someone to set up an Account
  *
- * An Admin's one-time Account Invite, closed once used or when it expires. Only an Admin can invite another Admin.
+ * An Admin's one-time Account Invite, closed once used or when it expires, and emailed when it names an email. Only an Admin can invite another Admin. Accepting it sets up an Account and joins no Campaign.
  */
 export const createAccountInvite = <ThrowOnError extends boolean = false>(options: Options<CreateAccountInviteData, ThrowOnError>): RequestResult<CreateAccountInviteResponses, CreateAccountInviteErrors, ThrowOnError> => (options.client ?? client).post<CreateAccountInviteResponses, CreateAccountInviteErrors, ThrowOnError>({
     requestValidator: async (data) => await z.object({
@@ -4157,7 +4157,7 @@ export const previewAccountInvite = <ThrowOnError extends boolean = false>(optio
 /**
  * Set up an Account from an invite
  *
- * Creates the Account the invite was for and signs it in on this device.
+ * Creates the Account the invite was for and signs it in on this device. The Account joins no Campaign; that takes a Campaign Invite.
  */
 export const acceptAccountInvite = <ThrowOnError extends boolean = false>(options: Options<AcceptAccountInviteData, ThrowOnError>): RequestResult<AcceptAccountInviteResponses, AcceptAccountInviteErrors, ThrowOnError> => (options.client ?? client).post<AcceptAccountInviteResponses, AcceptAccountInviteErrors, ThrowOnError>({
     requestValidator: async (data) => await z.object({

@@ -33,7 +33,7 @@ An Account that manages Grimoire itself rather than one Campaign, either through
 _Avoid_: Owner, superuser, DM
 
 **Account Invite**:
-A one-time link an Admin creates, and may email, so a new person can set up an Account, optionally joining a Campaign as a Player.
+A one-time link an Admin creates, and may email, so a new person can set up an Account. It never joins a Campaign; that takes a Campaign Invite.
 _Avoid_: Sign-up link, registration
 
 **Campaign Invite**:

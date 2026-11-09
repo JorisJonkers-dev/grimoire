@@ -4392,7 +4392,7 @@ export const getStatusOptions = (options?: Options<GetStatusData>) => queryOptio
 /**
  * Invite someone to set up an Account
  *
- * An Admin's one-time Account Invite, closed once used or when it expires. Only an Admin can invite another Admin.
+ * An Admin's one-time Account Invite, closed once used or when it expires, and emailed when it names an email. Only an Admin can invite another Admin. Accepting it sets up an Account and joins no Campaign.
  */
 export const createAccountInviteMutation = (options?: Partial<Options<CreateAccountInviteData>>): UseMutationOptions<CreateAccountInviteResponse, CreateAccountInviteError, Options<CreateAccountInviteData>> => {
     const mutationOptions: UseMutationOptions<CreateAccountInviteResponse, CreateAccountInviteError, Options<CreateAccountInviteData>> = {
@@ -4430,7 +4430,7 @@ export const previewAccountInviteMutation = (options?: Partial<Options<PreviewAc
 /**
  * Set up an Account from an invite
  *
- * Creates the Account the invite was for and signs it in on this device.
+ * Creates the Account the invite was for and signs it in on this device. The Account joins no Campaign; that takes a Campaign Invite.
  */
 export const acceptAccountInviteMutation = (options?: Partial<Options<AcceptAccountInviteData>>): UseMutationOptions<AcceptAccountInviteResponse, AcceptAccountInviteError, Options<AcceptAccountInviteData>> => {
     const mutationOptions: UseMutationOptions<AcceptAccountInviteResponse, AcceptAccountInviteError, Options<AcceptAccountInviteData>> = {

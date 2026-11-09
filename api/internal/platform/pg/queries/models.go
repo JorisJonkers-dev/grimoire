@@ -1336,6 +1336,7 @@ type IdentityInvite struct {
 	ExpiresAt time.Time
 	UsedAt    pgtype.Timestamptz
 	AccountID pgtype.UUID
+	Email     pgtype.Text
 }
 
 type IdentityOidcLink struct {

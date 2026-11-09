@@ -30,6 +30,14 @@ func status(disabled bool) string {
 	return "active"
 }
 
+// optString leaves an empty string out.
+func optString(s string) oas.OptString {
+	if s == "" {
+		return oas.OptString{}
+	}
+	return oas.NewOptString(s)
+}
+
 func eventsOut(events []domain.Event) []oas.AccountEvent {
 	out := make([]oas.AccountEvent, 0, len(events))
 	for _, e := range events {
@@ -69,7 +77,7 @@ func (h *Handler) ListAdminAccounts(ctx context.Context) (oas.ListAdminAccountsR
 		if !l.Open {
 			st = oas.AdminInviteRowStatusExpired
 		}
-		out.Invites = append(out.Invites, oas.AdminInviteRow{ID: oas.ID(inv.ID), Admin: inv.Admin, Status: st, CreatedAt: inv.CreatedAt.UTC(), ExpiresAt: inv.ExpiresAt.UTC()})
+		out.Invites = append(out.Invites, oas.AdminInviteRow{ID: oas.ID(inv.ID), Admin: inv.Admin, Email: optString(inv.Email), Status: st, CreatedAt: inv.CreatedAt.UTC(), ExpiresAt: inv.ExpiresAt.UTC()})
 	}
 	return &oas.AdminAccountListHeaders{Response: out}, nil
 }

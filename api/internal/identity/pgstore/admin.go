@@ -35,7 +35,7 @@ func (s *Store) UnusedInvites(ctx context.Context) ([]domain.Invite, error) {
 	}
 	out := make([]domain.Invite, 0, len(rows))
 	for _, r := range rows {
-		out = append(out, domain.Invite{ID: r.ID, CreatedBy: r.CreatedBy, Admin: r.Admin, CreatedAt: r.CreatedAt, ExpiresAt: r.ExpiresAt, UsedAt: nil})
+		out = append(out, domain.Invite{ID: r.ID, CreatedBy: r.CreatedBy, Admin: r.Admin, Email: r.Email.String, CreatedAt: r.CreatedAt, ExpiresAt: r.ExpiresAt, UsedAt: nil})
 	}
 	return out, nil
 }

@@ -6962,7 +6962,7 @@ paths:
       operationId: createAccountInvite
       x-ogen-operation-group: Account
       summary: Invite someone to set up an Account
-      description: An Admin's one-time Account Invite, closed once used or when it expires. Only an Admin can invite another Admin.
+      description: An Admin's one-time Account Invite, closed once used or when it expires, and emailed when it names an email. Only an Admin can invite another Admin. Accepting it sets up an Account and joins no Campaign.
       tags: [Identity]
       requestBody:
         required: true
@@ -7025,7 +7025,7 @@ paths:
       operationId: acceptAccountInvite
       x-ogen-operation-group: Account
       summary: Set up an Account from an invite
-      description: Creates the Account the invite was for and signs it in on this device.
+      description: Creates the Account the invite was for and signs it in on this device. The Account joins no Campaign; that takes a Campaign Invite.
       tags: [Identity]
       security: []
       requestBody:
@@ -9824,6 +9824,7 @@ components:
       properties:
         id: { $ref: "#/components/schemas/Id" }
         admin: { type: boolean }
+        email: { type: string, format: email, maxLength: 254, description: "Where the invite link was emailed, if anywhere." }
         status: { type: string, enum: [invited, expired] }
         createdAt: { type: string, format: date-time, maxLength: 40 }
         expiresAt: { type: string, format: date-time, maxLength: 40 }
@@ -10372,12 +10373,13 @@ components:
         password: { type: string, format: password, minLength: 10, maxLength: 200 }
     AccountInviteRequest:
       type: object
-      description: How long an Account Invite stays open, and whether it sets up an Admin.
+      description: How long an Account Invite stays open, whether it sets up an Admin, and where to email its link, if anywhere. It never names a Campaign.
       additionalProperties: false
       required: [hours]
       properties:
         hours: { type: integer, format: int32, minimum: 1, maximum: 720 }
         admin: { type: boolean }
+        email: { type: string, format: email, maxLength: 254, description: "Where to email the invite link; without it, nobody is emailed." }
     AccountInviteCreated:
       type: object
       description: A new Account Invite and the token its link carries; the token is shown only now.

@@ -20,7 +20,8 @@ type Handler interface {
 type AccountHandler interface {
 	// AcceptAccountInvite implements acceptAccountInvite operation.
 	//
-	// Creates the Account the invite was for and signs it in on this device.
+	// Creates the Account the invite was for and signs it in on this device. The Account joins no
+	// Campaign; that takes a Campaign Invite.
 	//
 	// POST /api/v1/account-invites/accept
 	AcceptAccountInvite(ctx context.Context, req *AccountSetup) (AcceptAccountInviteRes, error)
@@ -77,8 +78,9 @@ type AccountHandler interface {
 	CreateAccessToken(ctx context.Context, req *AccessTokenRequest) (CreateAccessTokenRes, error)
 	// CreateAccountInvite implements createAccountInvite operation.
 	//
-	// An Admin's one-time Account Invite, closed once used or when it expires. Only an Admin can invite
-	// another Admin.
+	// An Admin's one-time Account Invite, closed once used or when it expires, and emailed when it names
+	// an email. Only an Admin can invite another Admin. Accepting it sets up an Account and joins no
+	// Campaign.
 	//
 	// POST /api/v1/admin/account-invites
 	CreateAccountInvite(ctx context.Context, req *AccountInviteRequest) (CreateAccountInviteRes, error)

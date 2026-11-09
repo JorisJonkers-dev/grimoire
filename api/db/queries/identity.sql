@@ -19,10 +19,10 @@ SELECT id, subject, username, nickname, email, admin, disabled, created_at FROM 
 UPDATE identity.accounts SET password_hash = @password_hash WHERE id = @id;
 
 -- name: InsertInvite :exec
-INSERT INTO identity.invites (id, token_hash, created_by, admin, created_at, expires_at) VALUES (@id, @token_hash, @created_by, @admin, @now, @expires_at);
+INSERT INTO identity.invites (id, token_hash, created_by, admin, email, created_at, expires_at) VALUES (@id, @token_hash, @created_by, @admin, sqlc.narg(email), @now, @expires_at);
 
 -- name: InviteByToken :one
-SELECT id, created_by, admin, created_at, expires_at, used_at FROM identity.invites WHERE token_hash = @token_hash;
+SELECT id, created_by, admin, email, created_at, expires_at, used_at FROM identity.invites WHERE token_hash = @token_hash;
 
 -- name: UseInvite :execrows
 UPDATE identity.invites SET used_at = @now, account_id = @account_id WHERE id = @id AND used_at IS NULL AND expires_at > @now;
@@ -163,7 +163,7 @@ FROM identity.accounts a LEFT JOIN identity.account_sessions s ON s.account_id =
 GROUP BY a.id ORDER BY lower(a.nickname), a.username;
 
 -- name: ListUnusedInvites :many
-SELECT id, created_by, admin, created_at, expires_at FROM identity.invites WHERE used_at IS NULL ORDER BY created_at DESC LIMIT 200;
+SELECT id, created_by, admin, email, created_at, expires_at FROM identity.invites WHERE used_at IS NULL ORDER BY created_at DESC LIMIT 200;
 
 -- name: SetAccountDisabled :exec
 UPDATE identity.accounts SET disabled = @disabled WHERE id = @id;

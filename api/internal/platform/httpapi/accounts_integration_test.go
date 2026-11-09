@@ -327,3 +327,57 @@ func TestSignInLinks(t *testing.T) {
 		t.Fatalf("a link after 30 minutes: %d", rec.Code)
 	}
 }
+
+// An Admin may email an Account Invite through the invite letter, its link carrying the token in the
+// fragment; accepting it sets up an Account that belongs to no Campaign, even one the Admin runs.
+func TestAccountInviteIsEmailedAndJoinsNoCampaign(t *testing.T) {
+	t.Parallel()
+	trusted, public, mail, _ := accountServers(t)
+	rec := send(trusted, http.MethodPost, "/api/v1/campaigns", "", "root", `{"name":"Morvain","displayName":"Root"}`)
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("campaign: %d %s", rec.Code, rec.Body.String())
+	}
+	campaign, _ := decode(t, rec)["id"].(string)
+	for name, body := range map[string]string{
+		"a bad email":    `{"hours":24,"email":"not an email"}`,
+		"a long email":   `{"hours":24,"email":"` + strings.Repeat("a", 250) + `@example.com"}`,
+		"a Campaign too": `{"hours":24,"campaignId":"` + campaign + `"}`,
+	} {
+		if rec := send(trusted, http.MethodPost, "/api/v1/admin/account-invites", "", "root", body); rec.Code != http.StatusBadRequest {
+			t.Errorf("%s: %d %s", name, rec.Code, rec.Body.String())
+		}
+	}
+	invite(t, trusted, `{"hours":24}`)
+	if got := mail.last(); got != "" {
+		t.Fatalf("an invite without an email was mailed: %q", got)
+	}
+	token := invite(t, trusted, `{"hours":24,"email":"sam@example.com"}`)
+	letter := mail.last()
+	if !strings.HasPrefix(letter, "sam@example.com\nYou are invited to Grimoire\n") || !strings.Contains(letter, "https://grimoire.example/account-invite#"+token+"\n") {
+		t.Fatalf("email = %q", letter)
+	}
+	if rec := send(trusted, http.MethodGet, "/api/v1/admin/accounts", "", "root", ""); !strings.Contains(rec.Body.String(), `"email":"sam@example.com"`) {
+		t.Fatalf("the Admin list lacks where the invite went: %s", rec.Body.String())
+	}
+	rec = send(public, http.MethodPost, "/api/v1/account-invites/accept", "", "", `{"token":"`+token+`","username":"sam","nickname":"Sam","email":"sam@example.com","password":"0123456789"}`)
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("accept: %d %s", rec.Code, rec.Body.String())
+	}
+	sam := session(t, rec)
+	if rec := send(public, http.MethodGet, "/api/v1/campaigns", sam, "", ""); rec.Code != http.StatusOK || len(decode(t, rec)["items"].([]any)) != 0 {
+		t.Fatalf("the new Account's Campaigns: %d %s", rec.Code, rec.Body.String())
+	}
+	if rec := send(public, http.MethodGet, "/api/v1/campaigns/"+campaign, sam, "", ""); rec.Code != http.StatusNotFound {
+		t.Fatalf("the new Account reads the Admin's Campaign: %d %s", rec.Code, rec.Body.String())
+	}
+	if rec := send(public, http.MethodPost, "/api/v1/invites/accept", sam, "", `{"token":"`+token+`","displayName":"Sam"}`); rec.Code == http.StatusOK {
+		t.Fatalf("an Account Invite joined a Campaign as a Campaign Invite: %s", rec.Body.String())
+	}
+	if rec := send(trusted, http.MethodGet, "/api/v1/campaigns/"+campaign, "", "root", ""); rec.Code != http.StatusOK || decode(t, rec)["memberCount"] != float64(1) {
+		t.Fatalf("the Campaign's Members: %d %s", rec.Code, rec.Body.String())
+	}
+	rec = send(trusted, http.MethodGet, "/api/v1/admin/accounts/"+accountID(t, public, sam), "", "root", "")
+	if rec.Code != http.StatusOK || len(decode(t, rec)["campaigns"].([]any)) != 0 {
+		t.Fatalf("the new Account's Campaigns, as the Admin sees them: %d %s", rec.Code, rec.Body.String())
+	}
+}

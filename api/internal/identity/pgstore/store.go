@@ -100,9 +100,12 @@ func (s *Store) SetPassword(ctx context.Context, id domain.AccountID, hash strin
 	return s.q.SetAccountPassword(ctx, queries.SetAccountPasswordParams{ID: id, PasswordHash: pgtype.Text{String: hash, Valid: true}})
 }
 
-// InsertInvite stores an Account Invite under its token's hash.
+// InsertInvite stores an Account Invite under its token's hash; an Invite without an Email stores none.
 func (s *Store) InsertInvite(ctx context.Context, inv domain.Invite, tokenHash []byte) error {
-	return s.q.InsertInvite(ctx, queries.InsertInviteParams{ID: inv.ID, TokenHash: tokenHash, CreatedBy: inv.CreatedBy, Admin: inv.Admin, Now: inv.CreatedAt, ExpiresAt: inv.ExpiresAt})
+	return s.q.InsertInvite(ctx, queries.InsertInviteParams{
+		ID: inv.ID, TokenHash: tokenHash, CreatedBy: inv.CreatedBy, Admin: inv.Admin, Email: pgtype.Text{String: inv.Email, Valid: inv.Email != ""},
+		Now: inv.CreatedAt, ExpiresAt: inv.ExpiresAt,
+	})
 }
 
 // InviteByToken reads an Account Invite by its token's hash.
@@ -111,7 +114,7 @@ func (s *Store) InviteByToken(ctx context.Context, tokenHash []byte) (domain.Inv
 	if err != nil {
 		return domain.Invite{}, notFound(err)
 	}
-	inv := domain.Invite{ID: r.ID, CreatedBy: r.CreatedBy, Admin: r.Admin, CreatedAt: r.CreatedAt, ExpiresAt: r.ExpiresAt, UsedAt: nil}
+	inv := domain.Invite{ID: r.ID, CreatedBy: r.CreatedBy, Admin: r.Admin, Email: r.Email.String, CreatedAt: r.CreatedAt, ExpiresAt: r.ExpiresAt, UsedAt: nil}
 	if r.UsedAt.Valid {
 		used := r.UsedAt.Time
 		inv.UsedAt = &used

@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { createAccountInviteMutation, listAdminAccountsOptions, listAdminAccountsQueryKey } from '@/infrastructure/api/@tanstack/vue-query.gen'
-import { GAvatar, GButton, GPageHead } from '@/shared/ui'
+import { GAvatar, GButton, GField, GPageHead } from '@/shared/ui'
 import AdminTabs from './AdminTabs.vue'
 import { when } from './labels'
 import ReleaseNotesSection from './ReleaseNotesSection.vue'
@@ -30,10 +30,20 @@ const tally = computed(() => {
 })
 const hours = ref(72)
 const asAdmin = ref(false)
+// Where to email the invite link; left empty, the Admin passes the link on themselves.
+const inviteEmail = ref('')
+const emailed = ref('')
 const invite = useMutation(createAccountInviteMutation())
 const inviteLink = (token: string) => `${window.location.origin}/account-invite#${token}`
 function send() {
-  invite.mutate({ body: { hours: hours.value, admin: asAdmin.value } }, { onSuccess: () => void client.invalidateQueries({ queryKey: listAdminAccountsQueryKey() }) })
+  const email = inviteEmail.value.trim()
+  invite.mutate({ body: { hours: hours.value, admin: asAdmin.value, ...(email ? { email } : {}) } }, {
+    onSuccess: () => {
+      emailed.value = email
+      inviteEmail.value = ''
+      void client.invalidateQueries({ queryKey: listAdminAccountsQueryKey() })
+    },
+  })
 }
 </script>
 
@@ -91,7 +101,7 @@ function send() {
         <h2>Not yet used</h2>
         <ul v-if="list.data.value.invites.length" class="g-list">
           <li v-for="i in list.data.value.invites" :key="i.id" class="invite">
-            <span>{{ i.admin ? 'Admin invite' : 'Invite' }} made {{ when(i.createdAt) }}</span>
+            <span>{{ i.admin ? 'Admin invite' : 'Invite' }} made {{ when(i.createdAt) }}<template v-if="i.email">, emailed to {{ i.email }}</template></span>
             <span class="state"><span :class="['dot', i.status]" aria-hidden="true" />{{ i.status === 'invited' ? `open until ${when(i.expiresAt)}` : 'Expired' }}</span>
           </li>
         </ul>
@@ -107,8 +117,13 @@ function send() {
             </select>
           </label>
           <label class="check"><input v-model="asAdmin" type="checkbox" data-testid="invite-admin" /><span>As an Admin</span></label>
+          <GField v-model="inviteEmail" label="Email it to (optional)" type="email" :maxlength="254" autocomplete="off" hint="Leave empty to send the link yourself. The invite sets up an Account; joining a Campaign takes a Campaign Invite from its DM." data-testid="invite-email" />
           <GButton type="submit" variant="primary" :disabled="invite.isPending.value">Create an invite</GButton>
-          <p v-if="invite.data.value" role="status" data-testid="invite-link">Send this link, which works once: <code>{{ inviteLink(invite.data.value.token) }}</code></p>
+          <p v-if="invite.isError.value" role="alert" class="g-alert" data-testid="invite-failed">The invite was not made. If you gave an email, check it and try again.</p>
+          <p v-else-if="invite.data.value" role="status" data-testid="invite-link">
+            <template v-if="emailed">Emailed to {{ emailed }}. Its link works once: </template><template v-else>Send this link, which works once: </template>
+            <code>{{ inviteLink(invite.data.value.token) }}</code>
+          </p>
         </form>
       </section>
       <ReleaseNotesSection v-show="tab === 'notes'" />

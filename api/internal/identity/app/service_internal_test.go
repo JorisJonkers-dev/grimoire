@@ -261,8 +261,16 @@ func TestServiceErrorPaths(t *testing.T) {
 	ctx := context.Background()
 	open := domain.Invite{ID: uuid.New(), ExpiresAt: time.Date(2027, 1, 1, 0, 0, 0, 0, time.UTC)}
 	setup := domain.Setup{Username: "aria", Nickname: "Aria", Email: "a@b.c", Password: "0123456789"}
-	if _, _, err := service(&fakeRepo{fail: "insert invite"}).CreateInvite(ctx, "root", 1, false); !errors.Is(err, errBoom) {
+	if _, _, err := service(&fakeRepo{fail: "insert invite"}).CreateInvite(ctx, "root", 1, false, ""); !errors.Is(err, errBoom) {
 		t.Errorf("insert invite = %v", err)
+	}
+	if token, _, err := service(&fakeRepo{}).CreateInvite(ctx, "root", 1, true, "a@b.c"); !errors.Is(err, errBoom) || token != "" {
+		t.Errorf("an invite that cannot be emailed = %q, %v", token, err)
+	}
+	for _, email := range []string{"@b.c", "a@", "nobody", string(make([]byte, 255)) + "@b.c"} {
+		if _, _, err := service(&fakeRepo{}).CreateInvite(ctx, "root", 1, false, email); !errors.Is(err, domain.ErrInvalid) {
+			t.Errorf("invite emailed to %.20q = %v", email, err)
+		}
 	}
 	if _, err := service(&fakeRepo{fail: "invite"}).Invite(ctx, "x"); !errors.Is(err, errBoom) {
 		t.Errorf("invite = %v", err)

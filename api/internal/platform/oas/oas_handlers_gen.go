@@ -35,7 +35,8 @@ func (c *codeRecorder) Unwrap() http.ResponseWriter {
 
 // handleAcceptAccountInviteRequest handles acceptAccountInvite operation.
 //
-// Creates the Account the invite was for and signs it in on this device.
+// Creates the Account the invite was for and signs it in on this device. The Account joins no
+// Campaign; that takes a Campaign Invite.
 //
 // POST /api/v1/account-invites/accept
 func (s *Server) handleAcceptAccountInviteRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
@@ -3076,8 +3077,9 @@ func (s *Server) handleCreateAccessTokenRequest(args [0]string, argsEscaped bool
 
 // handleCreateAccountInviteRequest handles createAccountInvite operation.
 //
-// An Admin's one-time Account Invite, closed once used or when it expires. Only an Admin can invite
-// another Admin.
+// An Admin's one-time Account Invite, closed once used or when it expires, and emailed when it names
+// an email. Only an Admin can invite another Admin. Accepting it sets up an Account and joins no
+// Campaign.
 //
 // POST /api/v1/admin/account-invites
 func (s *Server) handleCreateAccountInviteRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {

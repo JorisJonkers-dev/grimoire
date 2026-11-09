@@ -42,7 +42,8 @@ type Invoker interface {
 type AccountInvoker interface {
 	// AcceptAccountInvite invokes acceptAccountInvite operation.
 	//
-	// Creates the Account the invite was for and signs it in on this device.
+	// Creates the Account the invite was for and signs it in on this device. The Account joins no
+	// Campaign; that takes a Campaign Invite.
 	//
 	// POST /api/v1/account-invites/accept
 	AcceptAccountInvite(ctx context.Context, request *AccountSetup) (AcceptAccountInviteRes, error)
@@ -99,8 +100,9 @@ type AccountInvoker interface {
 	CreateAccessToken(ctx context.Context, request *AccessTokenRequest) (CreateAccessTokenRes, error)
 	// CreateAccountInvite invokes createAccountInvite operation.
 	//
-	// An Admin's one-time Account Invite, closed once used or when it expires. Only an Admin can invite
-	// another Admin.
+	// An Admin's one-time Account Invite, closed once used or when it expires, and emailed when it names
+	// an email. Only an Admin can invite another Admin. Accepting it sets up an Account and joins no
+	// Campaign.
 	//
 	// POST /api/v1/admin/account-invites
 	CreateAccountInvite(ctx context.Context, request *AccountInviteRequest) (CreateAccountInviteRes, error)
@@ -2052,7 +2054,8 @@ func (c *Client) requestURL(ctx context.Context) *url.URL {
 
 // AcceptAccountInvite invokes acceptAccountInvite operation.
 //
-// Creates the Account the invite was for and signs it in on this device.
+// Creates the Account the invite was for and signs it in on this device. The Account joins no
+// Campaign; that takes a Campaign Invite.
 //
 // POST /api/v1/account-invites/accept
 func (c *Client) AcceptAccountInvite(ctx context.Context, request *AccountSetup) (AcceptAccountInviteRes, error) {
@@ -4233,8 +4236,9 @@ func (c *Client) sendCreateAccessToken(ctx context.Context, request *AccessToken
 
 // CreateAccountInvite invokes createAccountInvite operation.
 //
-// An Admin's one-time Account Invite, closed once used or when it expires. Only an Admin can invite
-// another Admin.
+// An Admin's one-time Account Invite, closed once used or when it expires, and emailed when it names
+// an email. Only an Admin can invite another Admin. Accepting it sets up an Account and joins no
+// Campaign.
 //
 // POST /api/v1/admin/account-invites
 func (c *Client) CreateAccountInvite(ctx context.Context, request *AccountInviteRequest) (CreateAccountInviteRes, error) {

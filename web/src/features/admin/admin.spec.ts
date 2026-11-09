@@ -14,7 +14,7 @@ const token = 'abcdefghijklmnopqrstuvwxyz0123456789ABCDEFG'
 afterEach(() => { unmountAll() })
 
 describe('the Admin page', () => {
-  it('lists Accounts and unused Invites, filters them, and makes an invite', async () => {
+  it('lists Accounts and unused Invites, filters them, and makes an invite, emailed or not', async () => {
     const sent: unknown[] = []
     const { wrapper } = await mountApp('/admin', {
       '/api/v1/admin/account-invites': async (_u, req) => {
@@ -23,7 +23,7 @@ describe('the Admin page', () => {
       },
       '/api/v1/admin/accounts': () => ({
         accounts: [aria, bram],
-        invites: [{ id: '0190c7a8-0000-7000-8000-0000000000e1', admin: true, status: 'invited', createdAt: '2026-10-01T10:00:00Z', expiresAt: '2026-10-04T10:00:00Z' },
+        invites: [{ id: '0190c7a8-0000-7000-8000-0000000000e1', admin: true, email: 'cara@example.com', status: 'invited', createdAt: '2026-10-01T10:00:00Z', expiresAt: '2026-10-04T10:00:00Z' },
           { id: '0190c7a8-0000-7000-8000-0000000000e2', admin: false, status: 'expired', createdAt: '2026-09-01T10:00:00Z', expiresAt: '2026-09-02T10:00:00Z' }],
       }),
       '/api/v1/account': () => me,
@@ -33,6 +33,7 @@ describe('the Admin page', () => {
     expect(wrapper.get('[data-testid="admin-account-bram"]').text()).toContain('never seen')
     expect(wrapper.get('[data-testid="admin-invites"]').text()).toContain('Admin invite')
     expect(wrapper.get('[data-testid="admin-invites"]').text()).toContain('Expired')
+    expect(wrapper.get('[data-testid="admin-invites"]').text()).toContain('emailed to cara@example.com')
     await wrapper.get('[data-testid="admin-filter"]').setValue('BRAM')
     expect(wrapper.find('[data-testid="admin-account-aria"]').exists()).toBe(false)
     await wrapper.get('[data-testid="admin-filter"]').setValue('nobody')
@@ -43,6 +44,27 @@ describe('the Admin page', () => {
     await flushPromises()
     expect(sent).toEqual([{ hours: 168, admin: true }])
     expect(wrapper.get('[data-testid="invite-link"]').text()).toContain(`/account-invite#${token}`)
+    expect(wrapper.get('[data-testid="invite-link"]').text()).not.toContain('Emailed')
+    // An Account Invite may be emailed; the link is still shown, in case the email goes astray.
+    await wrapper.get('[data-testid="invite-email"]').setValue(' dara@example.com ')
+    await wrapper.get('[data-testid="invite-form"]').trigger('submit')
+    await flushPromises()
+    expect(sent[1]).toEqual({ hours: 168, admin: true, email: 'dara@example.com' })
+    expect(wrapper.get('[data-testid="invite-link"]').text()).toContain('Emailed to dara@example.com')
+    expect(wrapper.get('[data-testid="invite-link"]').text()).toContain(`/account-invite#${token}`)
+  })
+
+  it('says so when an invite cannot be made, such as when its email cannot be sent', async () => {
+    const { wrapper } = await mountApp('/admin?tab=invites', {
+      '/api/v1/admin/account-invites': () => jsonResponse({ type: 'about:blank', title: 'Unavailable', status: 503, detail: 'Try again shortly.' }, 503),
+      '/api/v1/admin/accounts': () => ({ accounts: [aria], invites: [] }),
+      '/api/v1/account': () => me,
+    })
+    await wrapper.get('[data-testid="invite-email"]').setValue('dara@example.com')
+    await wrapper.get('[data-testid="invite-form"]').trigger('submit')
+    await flushPromises()
+    expect(wrapper.get('[data-testid="invite-failed"]').text()).toContain('not made')
+    expect(wrapper.find('[data-testid="invite-link"]').exists()).toBe(false)
   })
 
   it('heads the page, counts what is there, and keeps Accounts, Invites and Release Notes each on a tab', async () => {

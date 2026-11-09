@@ -108,7 +108,7 @@ export const accountHandlers = {
       const m = metaOf(world, a.id)
       return { id: a.id, username: a.username, nickname: a.nickname, email: a.email, admin: a.admin, status: m.disabled ? 'disabled' : 'active', createdAt: m.createdAt, ...(m.lastSeenAt ? { lastSeenAt: m.lastSeenAt } : {}) }
     })
-    const invites = world.personal.accountInvites.map((i) => ({ id: i.id, admin: i.admin, status: i.open ? ('invited' as const) : ('expired' as const), createdAt: i.createdAt, expiresAt: i.expiresAt }))
+    const invites = world.personal.accountInvites.map((i) => ({ id: i.id, admin: i.admin, ...(i.email ? { email: i.email } : {}), status: i.open ? ('invited' as const) : ('expired' as const), createdAt: i.createdAt, expiresAt: i.expiresAt }))
     return { accounts, invites }
   },
   getAdminAccount: ({ who, world, path }) => {
@@ -129,7 +129,8 @@ export const accountHandlers = {
   },
   createAccountInvite: ({ who, world, body }) => {
     admin(who)
-    const invite = { id: freshId(), admin: body.admin ?? false, createdAt: now(), expiresAt: inHours(body.hours), open: true }
+    // The demo sends no email; it only remembers where the invite went, as the Admin list shows it.
+    const invite = { id: freshId(), admin: body.admin ?? false, ...(body.email ? { email: body.email } : {}), createdAt: now(), expiresAt: inHours(body.hours), open: true }
     world.personal.accountInvites.unshift(invite)
     return { token: `invite_${invite.id.replace(/-/g, '')}`, expiresAt: invite.expiresAt }
   },

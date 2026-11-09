@@ -45,11 +45,13 @@ func SubjectFor(id AccountID) string {
 	return "account:" + id.String()
 }
 
-// Invite is an Account Invite: an Admin's one-time link to set up an Account before it expires.
+// Invite is an Account Invite: an Admin's one-time link to set up an Account before it expires. It is
+// emailed when it has an Email, and it never joins a Campaign.
 type Invite struct {
 	ID        uuid.UUID
 	CreatedBy string
 	Admin     bool
+	Email     string
 	CreatedAt time.Time
 	ExpiresAt time.Time
 	UsedAt    *time.Time
