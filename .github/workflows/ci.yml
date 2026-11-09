@@ -215,9 +215,9 @@ jobs:
             ${{ steps.proxy.outputs.enabled == 'true' && 'GOPROXY=https://packages.jorisjonkers.dev/go' || '' }}
             ${{ steps.proxy.outputs.enabled == 'true' && 'PIP_INDEX_URL=https://packages.jorisjonkers.dev/pypi/simple/' || '' }}
             ${{ steps.proxy.outputs.enabled == 'true' && 'UV_DEFAULT_INDEX=https://packages.jorisjonkers.dev/pypi/simple/' || '' }}
-          secrets: |
-            ${{ steps.proxy.outputs.enabled == 'true' && format('id=packages-netrc,src={0}', steps.proxy.outputs.netrc) || '' }}
-            ${{ steps.proxy.outputs.enabled == 'true' && format('id=packages-npmrc,src={0}', steps.proxy.outputs.npmrc) || '' }}
+          secret-files: |
+            ${{ steps.proxy.outputs.enabled == 'true' && format('packages-netrc={0}', steps.proxy.outputs.netrc) || '' }}
+            ${{ steps.proxy.outputs.enabled == 'true' && format('packages-npmrc={0}', steps.proxy.outputs.npmrc) || '' }}
           cache-from: type=gha,scope=image-${{ matrix.target }}
           # Only main saves caches; pull requests restore main's and never evict it from the 10 GB.
           cache-to: ${{ github.event_name == 'push' && format('type=gha,mode=max,scope=image-{0}', matrix.target) || '' }}
@@ -275,9 +275,9 @@ jobs:
             ${{ steps.proxy.outputs.enabled == 'true' && 'GOPROXY=https://packages.jorisjonkers.dev/go' || '' }}
             ${{ steps.proxy.outputs.enabled == 'true' && 'PIP_INDEX_URL=https://packages.jorisjonkers.dev/pypi/simple/' || '' }}
             ${{ steps.proxy.outputs.enabled == 'true' && 'UV_DEFAULT_INDEX=https://packages.jorisjonkers.dev/pypi/simple/' || '' }}
-          secrets: |
-            ${{ steps.proxy.outputs.enabled == 'true' && format('id=packages-netrc,src={0}', steps.proxy.outputs.netrc) || '' }}
-            ${{ steps.proxy.outputs.enabled == 'true' && format('id=packages-npmrc,src={0}', steps.proxy.outputs.npmrc) || '' }}
+          secret-files: |
+            ${{ steps.proxy.outputs.enabled == 'true' && format('packages-netrc={0}', steps.proxy.outputs.netrc) || '' }}
+            ${{ steps.proxy.outputs.enabled == 'true' && format('packages-npmrc={0}', steps.proxy.outputs.npmrc) || '' }}
           cache-from: |
             type=gha,scope=image-web
             type=gha,scope=image-api
