@@ -49,6 +49,13 @@ jobs:
           cache: true
           cache_save: ${{ github.event_name == 'push' }}
           install_args: go node pnpm task sqlc actionlint aqua:daveshanley/vacuum
+      - name: Set up the packages proxy
+        uses: JorisJonkers-dev/github-workflows/actions/setup-package-proxy@38aa4e9ea4a2adfdcfc210967f540023e05bca07 # v0.48.0
+        with:
+          token: ${{ secrets.PACKAGES_PROXY_TOKEN }}
+          go: 'false'
+          python: 'false'
+          cargo: 'false'
       - name: Install JS tooling
         run: task install
       - name: Lint OpenAPI contract
@@ -72,6 +79,13 @@ jobs:
           cache: true
           cache_save: ${{ github.event_name == 'push' }}
           install_args: node pnpm task
+      - name: Set up the packages proxy
+        uses: JorisJonkers-dev/github-workflows/actions/setup-package-proxy@38aa4e9ea4a2adfdcfc210967f540023e05bca07 # v0.48.0
+        with:
+          token: ${{ secrets.PACKAGES_PROXY_TOKEN }}
+          go: 'false'
+          python: 'false'
+          cargo: 'false'
       - name: Install JS tooling
         run: task install
       - name: Lint web
@@ -153,6 +167,13 @@ jobs:
           cache: true
           cache_save: ${{ github.event_name == 'push' }}
           install_args: node pnpm task
+      - name: Set up the packages proxy
+        uses: JorisJonkers-dev/github-workflows/actions/setup-package-proxy@38aa4e9ea4a2adfdcfc210967f540023e05bca07 # v0.48.0
+        with:
+          token: ${{ secrets.PACKAGES_PROXY_TOKEN }}
+          go: 'false'
+          python: 'false'
+          cargo: 'false'
       - name: Install JS tooling
         run: task install
       - name: Build the web app
@@ -305,6 +326,13 @@ jobs:
           cache: true
           cache_save: ${{ github.event_name == 'push' }}
           install_args: go node pnpm task
+      - name: Set up the packages proxy
+        uses: JorisJonkers-dev/github-workflows/actions/setup-package-proxy@38aa4e9ea4a2adfdcfc210967f540023e05bca07 # v0.48.0
+        with:
+          token: ${{ secrets.PACKAGES_PROXY_TOKEN }}
+          go: 'false'
+          python: 'false'
+          cargo: 'false'
       - name: Install JS tooling
         run: task install
       # Static, so the binary runs in the Playwright image whatever its libc.
@@ -363,6 +391,13 @@ jobs:
           cache: true
           cache_save: ${{ github.event_name == 'push' }}
           install_args: node pnpm task
+      - name: Set up the packages proxy
+        uses: JorisJonkers-dev/github-workflows/actions/setup-package-proxy@38aa4e9ea4a2adfdcfc210967f540023e05bca07 # v0.48.0
+        with:
+          token: ${{ secrets.PACKAGES_PROXY_TOKEN }}
+          go: 'false'
+          python: 'false'
+          cargo: 'false'
       - name: Install JS tooling
         run: task install
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
@@ -413,6 +448,13 @@ jobs:
           cache: true
           cache_save: ${{ github.event_name == 'push' }}
           install_args: node pnpm task
+      - name: Set up the packages proxy
+        uses: JorisJonkers-dev/github-workflows/actions/setup-package-proxy@38aa4e9ea4a2adfdcfc210967f540023e05bca07 # v0.48.0
+        with:
+          token: ${{ secrets.PACKAGES_PROXY_TOKEN }}
+          go: 'false'
+          python: 'false'
+          cargo: 'false'
       - name: Install JS tooling
         run: task install
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
