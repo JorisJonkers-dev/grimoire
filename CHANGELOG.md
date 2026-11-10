@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://github.com/JorisJonkers-dev/grimoire/compare/v1.5.0...v1.6.0) (2026-11-10)
+
+
+### Features
+
+* **web:** demo mode on typed in-browser mocks with a role switcher ([#446](https://github.com/JorisJonkers-dev/grimoire/issues/446)) ([25a464c](https://github.com/JorisJonkers-dev/grimoire/commit/25a464c3e243d66cd0461b902ba54daf30c1e273))
+
 ## [1.5.0](https://github.com/JorisJonkers-dev/grimoire/compare/v1.4.0...v1.5.0) (2026-10-21)
 
 
