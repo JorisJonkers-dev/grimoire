@@ -33,11 +33,11 @@ An Account that manages Grimoire itself rather than one Campaign, either through
 _Avoid_: Owner, superuser, DM
 
 **Account Invite**:
-A one-time link an Admin creates, and may email, so a new person can set up an Account, optionally joining a Campaign as a Player.
+A one-time link an Admin creates, and may email, so a new person can set up an Account without joining any Campaign; joining a Campaign goes through a Campaign Invite.
 _Avoid_: Sign-up link, registration
 
 **Campaign Invite**:
-A link a DM creates so someone with an Account joins that Campaign as a Player.
+A DM's invitation to join that Campaign as a Player, either addressed to one existing Account (which accepts or declines it from a Notification) or sent as a link that works a set number of times until it expires, which someone without an Account accepts by signing in through jorisjonkers.dev or creating an Account. Grimoire has no open sign-up: a new Account comes only from a Campaign Invite or an Account Invite.
 _Avoid_: Invite (ambiguous), join code
 
 **Friend**:
@@ -69,15 +69,19 @@ A hero owned by an Account: identity, Portrait, build and Backstory, playable in
 _Avoid_: PC, hero, sheet (the sheet is a view)
 
 **Campaign Character**:
-A Character's progress in one Campaign: level, hit points, inventory, spells and history there.
+A Character's progress in one Campaign: level, hit points, inventory, spells and history there. When its Player leaves or is removed it is retired, not deleted: out of play, history kept, and restorable by the DM.
 _Avoid_: Character copy, run, instance
+
+**Character Draft**:
+A Character still being built for a Campaign in the wizard; the DM sees that it is in progress and how far along, and finishing it files a Join Request.
+_Avoid_: Unfinished character, WIP
 
 **Backstory**:
 A Character's history, which may name Locations and NPCs the Player drafts and the DM can adopt into a Campaign.
 _Avoid_: Bio, lore
 
 **Join Request**:
-A Player's request to bring a Character into a Campaign; on approval the DM's starting level and allowed Collections shape the new Campaign Character.
+A Player's request to bring a Character into a Campaign, which the DM approves or declines with a reason; a declined Character goes back to being a Character Draft the Player can change and file again. On approval the DM's starting level and allowed Collections shape the new Campaign Character. A Character the DM adds for a Member needs no Join Request.
 _Avoid_: Application, enrolment
 
 **Advancement**:
@@ -493,7 +497,7 @@ An entry approved to keep a Manual Effect because its outcome is decided at the 
 _Avoid_: Unsupported, not automated
 
 **Revision**:
-A recorded version of a piece of prep data, with its author, that the DM can compare and restore.
+A recorded version of a piece of prep data or of a Campaign record (an invite, a Member, a Join Request, a Campaign Character), with its author, that the DM can compare and restore.
 _Avoid_: Version, history entry
 
 ### Space

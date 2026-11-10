@@ -24,7 +24,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: jdx/mise-action@6612f0ef07ed2a736cd1e00a94a065522dd41195 # v5.2.5
+      - uses: jdx/mise-action@f5be966e4a917d54244728e6a5fdcd1d93a35e6c # v5.2.6
         with:
           cache: true
           cache_save: ${{ github.event_name == 'push' }}
@@ -44,7 +44,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: jdx/mise-action@6612f0ef07ed2a736cd1e00a94a065522dd41195 # v5.2.5
+      - uses: jdx/mise-action@f5be966e4a917d54244728e6a5fdcd1d93a35e6c # v5.2.6
         with:
           cache: true
           cache_save: ${{ github.event_name == 'push' }}
@@ -67,7 +67,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: jdx/mise-action@6612f0ef07ed2a736cd1e00a94a065522dd41195 # v5.2.5
+      - uses: jdx/mise-action@f5be966e4a917d54244728e6a5fdcd1d93a35e6c # v5.2.6
         with:
           cache: true
           cache_save: ${{ github.event_name == 'push' }}
@@ -83,7 +83,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: jdx/mise-action@6612f0ef07ed2a736cd1e00a94a065522dd41195 # v5.2.5
+      - uses: jdx/mise-action@f5be966e4a917d54244728e6a5fdcd1d93a35e6c # v5.2.6
         with:
           cache: true
           cache_save: ${{ github.event_name == 'push' }}
@@ -107,7 +107,7 @@ jobs:
         with:
           # A pull request needs its merge base to tell which packages it changed.
           fetch-depth: ${{ github.event_name == 'pull_request' && '0' || '1' }}
-      - uses: jdx/mise-action@6612f0ef07ed2a736cd1e00a94a065522dd41195 # v5.2.5
+      - uses: jdx/mise-action@f5be966e4a917d54244728e6a5fdcd1d93a35e6c # v5.2.6
         with:
           cache: true
           cache_save: ${{ github.event_name == 'push' }}
@@ -134,7 +134,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: jdx/mise-action@6612f0ef07ed2a736cd1e00a94a065522dd41195 # v5.2.5
+      - uses: jdx/mise-action@f5be966e4a917d54244728e6a5fdcd1d93a35e6c # v5.2.6
         with:
           cache: true
           cache_save: ${{ github.event_name == 'push' }}
@@ -148,7 +148,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: jdx/mise-action@6612f0ef07ed2a736cd1e00a94a065522dd41195 # v5.2.5
+      - uses: jdx/mise-action@f5be966e4a917d54244728e6a5fdcd1d93a35e6c # v5.2.6
         with:
           cache: true
           cache_save: ${{ github.event_name == 'push' }}
@@ -171,12 +171,53 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - name: Write packages proxy netrc
+        id: proxy
+        shell: bash
+        # secrets is not usable in a step if:, so opt-in is checked in bash. Pull requests from
+        # forks have no secret and build without the proxy.
+        env:
+          PACKAGES_PROXY_TOKEN: ${{ secrets.PACKAGES_PROXY_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "$PACKAGES_PROXY_TOKEN" ]; then
+            echo "::warning::PACKAGES_PROXY_TOKEN is not set; packages install without the proxy."
+            exit 0
+          fi
+
+          printf '::add-mask::%s\n' "$PACKAGES_PROXY_TOKEN"
+          umask 077
+          netrc="$RUNNER_TEMP/packages-netrc"
+          {
+            printf 'machine packages.jorisjonkers.dev\n'
+            printf 'login packages\n'
+            printf 'password %s\n' "$PACKAGES_PROXY_TOKEN"
+          } > "$netrc"
+          npmrc="$RUNNER_TEMP/packages-npmrc"
+          {
+            printf 'registry=https://packages.jorisjonkers.dev/npm/\n'
+            printf '//packages.jorisjonkers.dev/npm/:_authToken=%s\n' "$PACKAGES_PROXY_TOKEN"
+            printf '@jorisjonkers-dev:registry=https://npm.pkg.github.com\n'
+          } > "$npmrc"
+          {
+            printf 'netrc=%s\n' "$netrc"
+            printf 'npmrc=%s\n' "$npmrc"
+            printf 'enabled=true\n'
+          } >> "$GITHUB_OUTPUT"
       - name: Build the ${{ matrix.target }} stage
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
           target: ${{ matrix.target }}
           push: false
+          build-args: |
+            ${{ steps.proxy.outputs.enabled == 'true' && 'GOPROXY=https://packages.jorisjonkers.dev/go' || '' }}
+            ${{ steps.proxy.outputs.enabled == 'true' && 'PIP_INDEX_URL=https://packages.jorisjonkers.dev/pypi/simple/' || '' }}
+            ${{ steps.proxy.outputs.enabled == 'true' && 'UV_DEFAULT_INDEX=https://packages.jorisjonkers.dev/pypi/simple/' || '' }}
+          secret-files: |
+            ${{ steps.proxy.outputs.enabled == 'true' && format('packages-netrc={0}', steps.proxy.outputs.netrc) || '' }}
+            ${{ steps.proxy.outputs.enabled == 'true' && format('packages-npmrc={0}', steps.proxy.outputs.npmrc) || '' }}
           cache-from: type=gha,scope=image-${{ matrix.target }}
           # Only main saves caches; pull requests restore main's and never evict it from the 10 GB.
           cache-to: ${{ github.event_name == 'push' && format('type=gha,mode=max,scope=image-{0}', matrix.target) || '' }}
@@ -189,13 +230,54 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - name: Write packages proxy netrc
+        id: proxy
+        shell: bash
+        # secrets is not usable in a step if:, so opt-in is checked in bash. Pull requests from
+        # forks have no secret and build without the proxy.
+        env:
+          PACKAGES_PROXY_TOKEN: ${{ secrets.PACKAGES_PROXY_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "$PACKAGES_PROXY_TOKEN" ]; then
+            echo "::warning::PACKAGES_PROXY_TOKEN is not set; packages install without the proxy."
+            exit 0
+          fi
+
+          printf '::add-mask::%s\n' "$PACKAGES_PROXY_TOKEN"
+          umask 077
+          netrc="$RUNNER_TEMP/packages-netrc"
+          {
+            printf 'machine packages.jorisjonkers.dev\n'
+            printf 'login packages\n'
+            printf 'password %s\n' "$PACKAGES_PROXY_TOKEN"
+          } > "$netrc"
+          npmrc="$RUNNER_TEMP/packages-npmrc"
+          {
+            printf 'registry=https://packages.jorisjonkers.dev/npm/\n'
+            printf '//packages.jorisjonkers.dev/npm/:_authToken=%s\n' "$PACKAGES_PROXY_TOKEN"
+            printf '@jorisjonkers-dev:registry=https://npm.pkg.github.com\n'
+          } > "$npmrc"
+          {
+            printf 'netrc=%s\n' "$netrc"
+            printf 'npmrc=%s\n' "$npmrc"
+            printf 'enabled=true\n'
+          } >> "$GITHUB_OUTPUT"
       - name: Build the image from the cached stages
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
           push: false
           tags: grimoire:ci
-          build-args: VERSION=ci
+          build-args: |
+            VERSION=ci
+            ${{ steps.proxy.outputs.enabled == 'true' && 'GOPROXY=https://packages.jorisjonkers.dev/go' || '' }}
+            ${{ steps.proxy.outputs.enabled == 'true' && 'PIP_INDEX_URL=https://packages.jorisjonkers.dev/pypi/simple/' || '' }}
+            ${{ steps.proxy.outputs.enabled == 'true' && 'UV_DEFAULT_INDEX=https://packages.jorisjonkers.dev/pypi/simple/' || '' }}
+          secret-files: |
+            ${{ steps.proxy.outputs.enabled == 'true' && format('packages-netrc={0}', steps.proxy.outputs.netrc) || '' }}
+            ${{ steps.proxy.outputs.enabled == 'true' && format('packages-npmrc={0}', steps.proxy.outputs.npmrc) || '' }}
           cache-from: |
             type=gha,scope=image-web
             type=gha,scope=image-api
@@ -218,7 +300,7 @@ jobs:
           version="$(grep -m1 -E "^  '@playwright/test@[0-9]" pnpm-lock.yaml | sed -E "s/^  '@playwright\/test@([0-9][^']*)':.*/\1/")"
           [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "no @playwright/test version in pnpm-lock.yaml" >&2; exit 1; }
           echo "version=$version" >> "$GITHUB_OUTPUT"
-      - uses: jdx/mise-action@6612f0ef07ed2a736cd1e00a94a065522dd41195 # v5.2.5
+      - uses: jdx/mise-action@f5be966e4a917d54244728e6a5fdcd1d93a35e6c # v5.2.6
         with:
           cache: true
           cache_save: ${{ github.event_name == 'push' }}
@@ -276,7 +358,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       # Only what the suite needs; the image brings the browsers.
-      - uses: jdx/mise-action@6612f0ef07ed2a736cd1e00a94a065522dd41195 # v5.2.5
+      - uses: jdx/mise-action@f5be966e4a917d54244728e6a5fdcd1d93a35e6c # v5.2.6
         with:
           cache: true
           cache_save: ${{ github.event_name == 'push' }}
@@ -326,7 +408,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: jdx/mise-action@6612f0ef07ed2a736cd1e00a94a065522dd41195 # v5.2.5
+      - uses: jdx/mise-action@f5be966e4a917d54244728e6a5fdcd1d93a35e6c # v5.2.6
         with:
           cache: true
           cache_save: ${{ github.event_name == 'push' }}
