@@ -178,8 +178,13 @@ jobs:
         run: task install
       - name: Build the web app
         run: pnpm --filter @grimoire/web build
+      # Java 21, and Gradle's dependencies and wrapper distribution through the package proxy.
+      - uses: JorisJonkers-dev/github-workflows/actions/setup-java-gradle@38aa4e9ea4a2adfdcfc210967f540023e05bca07 # v0.48.0
+        with:
+          java-version: '21'
+          packages-proxy-token: ${{ secrets.PACKAGES_PROXY_TOKEN }}
       - name: Android shell builds
-        run: JAVA_HOME="$JAVA_HOME_21_X64" task android
+        run: task android
 
   image-stage:
     name: Image stage (${{ matrix.target }})
