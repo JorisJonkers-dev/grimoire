@@ -174,6 +174,10 @@ jobs:
           go: 'false'
           python: 'false'
           cargo: 'false'
+      - name: Set up Gradle with the packages proxy
+        uses: JorisJonkers-dev/github-workflows/actions/setup-java-gradle@8aaf024208bf4b29acb468aecd3cd7ee130d5ac1 # v0.49.1
+        with:
+          packages-proxy-token: ${{ secrets.PACKAGES_PROXY_TOKEN }}
       - name: Install JS tooling
         run: task install
       - name: Build the web app
