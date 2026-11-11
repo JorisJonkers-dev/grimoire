@@ -68,6 +68,10 @@ jobs:
       - uses: jdx/mise-action@f5be966e4a917d54244728e6a5fdcd1d93a35e6c # v5.2.6
         with:
           install_args: node pnpm task
+      - uses: JorisJonkers-dev/github-workflows/actions/setup-package-proxy@8aaf024208bf4b29acb468aecd3cd7ee130d5ac1 # v0.49.1
+        with:
+          token: ${{ secrets.PACKAGES_PROXY_TOKEN }}
+
       - name: Install JS tooling
         run: task install
       - name: Build the demo
