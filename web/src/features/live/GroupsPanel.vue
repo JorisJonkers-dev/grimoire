@@ -54,7 +54,7 @@ const follow = (g: LiveGroup) => { emit('send', g.home ? { kind: 'table_follow' 
             <input type="radio" name="table-follows" :checked="g.table" :data-testid="`group-table-${g.sessionId}`" @change="follow(g)" />
             <span>Table Display follows</span>
           </label>
-          <GButton v-if="!away && !g.home" :aria-label="`Bring ${g.name} back`" :data-testid="`group-back-${g.sessionId}`" @click="back(g)">Bring back</GButton>
+          <GButton v-if="!away && !g.home" :aria-label="`Bring back ${g.name}`" :data-testid="`group-back-${g.sessionId}`" @click="back(g)">Bring back</GButton>
         </span>
       </li>
     </ul>

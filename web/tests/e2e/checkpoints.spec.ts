@@ -41,7 +41,7 @@ test('the DM keeps a checkpoint and rewinds the Session to it on every screen', 
   await expect(player.locator('[data-hex="1,0"]')).toHaveAttribute('aria-label', /Grik/)
 
   // A rewind asks first, then takes back everything since on both screens.
-  await kept.getByRole('button', { name: 'Rewind to Before the ambush' }).click()
+  await kept.getByRole('button', { name: 'Rewind here to Before the ambush' }).click()
   await expect(page.getByTestId('rewind-confirm')).toContainText('Everything done since is taken back')
   expect(await violations(page)).toEqual([])
   await page.getByTestId('rewind-yes').click()

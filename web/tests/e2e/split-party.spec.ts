@@ -79,7 +79,7 @@ test('the party splits across two maps, each group on its own screen, and comes 
   await expect(tv).toHaveURL(new RegExp(`${home}/table$`))
 
   // The group comes back: one party, one Session, and Aria's screen with it.
-  await page.getByTestId('groups').getByRole('button', { name: 'Bring The tower back' }).click()
+  await page.getByTestId('groups').getByRole('button', { name: 'Bring back The tower' }).click()
   await expect(page.getByTestId('tokens')).toContainText('Scout')
   await expect(page.getByTestId('groups').getByRole('listitem')).toHaveCount(0)
   await expect(player).toHaveURL(new RegExp(`${home}$`))
