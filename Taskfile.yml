@@ -71,6 +71,7 @@ tasks:
         old=""; new=""; rc=0
         for f in db/migrations/*.sql; do
           v=${f##*/}; v=${v%%_*}
+          case "$v" in ''|*[!0-9]*) echo "migration without a numeric version: $f" >&2; exit 1 ;; esac
           if [ "$((10#$v))" -le {{.SQUAWK_BASELINE}} ]; then old="$old $f"; else new="$new $f"; fi
         done
         squawk --config .squawk.baseline.toml $old || rc=1
