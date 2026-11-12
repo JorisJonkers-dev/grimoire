@@ -12,7 +12,10 @@ for (const { name, path, personas } of demoPages) {
     test(`${name} as ${persona} passes axe`, async ({ page }) => {
       await page.goto('/#/compendium/spells')
       await page.locator('label', { has: page.getByTestId(`demo-as-${persona}`) }).click()
+      await expect(page.getByTestId(`demo-as-${persona}`)).toBeChecked()
       await page.evaluate((hash) => { location.hash = hash }, path)
+      // The sign-in callback sends the caller on, so its own hash does not stay.
+      if (name !== 'oidc-callback') await expect.poll(() => page.evaluate(() => location.hash)).toBe(`#${path}`)
       await expect(page.locator('h1').first()).toBeVisible()
       const found = await violations(page)
       expect(found.map((v) => `${v.id}: ${v.nodes.map((n) => n.html.slice(0, 160)).join(' | ')}`)).toEqual([])
