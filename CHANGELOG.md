@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.7.0](https://github.com/JorisJonkers-dev/grimoire/compare/v1.6.0...v1.7.0) (2026-11-12)
+
+
+### Features
+
+* fake OIDC provider ([#399](https://github.com/JorisJonkers-dev/grimoire/issues/399)) ([#456](https://github.com/JorisJonkers-dev/grimoire/issues/456)) ([57f7786](https://github.com/JorisJonkers-dev/grimoire/commit/57f7786780e63798236b408446e68c8c877a25d9))
+
+
+### Bug Fixes
+
+* **ci:** unpin squawk and check only new migrations for ban-drop-constraint ([#470](https://github.com/JorisJonkers-dev/grimoire/issues/470)) ([f3d525f](https://github.com/JorisJonkers-dev/grimoire/commit/f3d525f20efad7c7162545d2ee32edd2f282be88))
+* **deps:** update minor and patch dependencies ([#233](https://github.com/JorisJonkers-dev/grimoire/issues/233)) ([a2cfbdd](https://github.com/JorisJonkers-dev/grimoire/commit/a2cfbdddcfebd575392d2ade496595cddee619a7))
+* **hygiene:** never cancel a run of the required hygiene checks ([#472](https://github.com/JorisJonkers-dev/grimoire/issues/472)) ([7d48147](https://github.com/JorisJonkers-dev/grimoire/commit/7d481475bbf330da45fa2f7e3cb95ce1b6073168))
+* **web:** make control names carry their visible text on every page ([#471](https://github.com/JorisJonkers-dev/grimoire/issues/471)) ([9335fc9](https://github.com/JorisJonkers-dev/grimoire/commit/9335fc9cb610befc74024481ef27558097f4dc68))
+
 ## [1.6.0](https://github.com/JorisJonkers-dev/grimoire/compare/v1.5.0...v1.6.0) (2026-11-10)
 
 
