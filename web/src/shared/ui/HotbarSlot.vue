@@ -25,7 +25,7 @@ const accessibleName = computed(() => {
     :title="available ? undefined : reason"
     @click="$emit('use')"
   >
-    <span v-if="suggested" class="badge" aria-hidden="true">Suggested</span>
+    <span v-if="suggested" class="badge" aria-hidden="true">{{ 'Suggested ' }}</span>
     <span class="icon" aria-hidden="true"><slot name="icon" /></span>
     <span class="label">{{ label }}</span>
   </button>
