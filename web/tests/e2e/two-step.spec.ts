@@ -43,7 +43,7 @@ test('two-step sign-in asks for one numeric code after the password', async ({ b
   await page.getByTestId('sign-out').click()
   await page.getByTestId('sign-in-username').fill(username)
   await page.getByTestId('sign-in-password').fill('correct horse battery')
-  await page.getByRole('button', { name: 'Sign in' }).click()
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click()
   const code = page.getByTestId('two-step-code')
   await expect(code).toHaveAttribute('inputmode', 'numeric')
   await expect(code).toHaveAttribute('autocomplete', 'one-time-code')

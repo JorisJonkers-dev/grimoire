@@ -339,16 +339,19 @@ jobs:
           cargo: 'false'
       - name: Install JS tooling
         run: task install
-      # Static, so the binary runs in the Playwright image whatever its libc.
+      # Static, so the binaries run in the Playwright image whatever its libc.
       - name: Build
         env:
           CGO_ENABLED: "0"
-        run: task build
+        run: |
+          task build
+          task build:fakeoidc
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: e2e-build
           path: |
             api/bin/grimoire
+            api/bin/fakeoidc
             web/dist
           retention-days: 1
 
@@ -408,19 +411,29 @@ jobs:
         with:
           name: e2e-build
       # An artifact does not keep the file mode.
-      - run: chmod +x api/bin/grimoire
+      - run: chmod +x api/bin/grimoire api/bin/fakeoidc
       # The image has no curl, so node asks whether a server answers. In the container `localhost` is
       # ::1 to Vite and 127.0.0.1 to node, so the preview listens on, and is asked at, 127.0.0.1.
-      - name: Start API and web preview
+      # The API signs in through a fake jorisjonkers.dev on 127.0.0.1, never the real provider; these
+      # settings match web/playwright.config.ts, and the client secret is a test-only value.
+      - name: Start fake OIDC provider, API and web preview
+        env:
+          OIDC_ISSUER: http://127.0.0.1:18766
+          OIDC_CLIENT_ID: grimoire
+          OIDC_CLIENT_SECRET: e2e-only-fake-oidc-secret
+          WEB_ORIGIN: http://localhost:4173
         run: |
-          GRIMOIRE_ADDR=:18765 GRIMOIRE_AUTO_MIGRATE=true GRIMOIRE_AUTO_IMPORT=true GRIMOIRE_DEV_SUBJECT=e2e-player GRIMOIRE_RATE_LIMIT_PER_MINUTE=100000 GRIMOIRE_ADMIN_SUBJECTS=e2e-admin api/bin/grimoire serve > /tmp/api.log 2>&1 &
+          api/bin/fakeoidc -addr 127.0.0.1:18766 -issuer "$OIDC_ISSUER" -client-id "$OIDC_CLIENT_ID" -client-secret "$OIDC_CLIENT_SECRET" -redirect-uri "$WEB_ORIGIN/oidc/callback" > /tmp/oidc.log 2>&1 &
+          GRIMOIRE_ADDR=:18765 GRIMOIRE_AUTO_MIGRATE=true GRIMOIRE_AUTO_IMPORT=true GRIMOIRE_DEV_SUBJECT=e2e-player GRIMOIRE_RATE_LIMIT_PER_MINUTE=100000 GRIMOIRE_ADMIN_SUBJECTS=e2e-admin \
+            GRIMOIRE_BASE_URL="$WEB_ORIGIN" GRIMOIRE_OIDC_ISSUER="$OIDC_ISSUER" GRIMOIRE_OIDC_CLIENT_ID="$OIDC_CLIENT_ID" GRIMOIRE_OIDC_CLIENT_SECRET="$OIDC_CLIENT_SECRET" GRIMOIRE_OIDC_NAME=jorisjonkers.dev \
+            api/bin/grimoire serve > /tmp/api.log 2>&1 &
           GRIMOIRE_API_ORIGIN=http://localhost:18765 pnpm --filter @grimoire/web preview --host 127.0.0.1 > /tmp/web.log 2>&1 &
           up() { node -e 'fetch(process.argv[1]).then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))' "$1"; }
           for _ in $(seq 1 60); do
-            if up http://127.0.0.1:18765/readyz && up http://127.0.0.1:4173; then exit 0; fi
+            if up "$OIDC_ISSUER/.well-known/openid-configuration" && up http://127.0.0.1:18765/readyz && up http://127.0.0.1:4173; then exit 0; fi
             sleep 1
           done
-          cat /tmp/api.log /tmp/web.log
+          cat /tmp/oidc.log /tmp/api.log /tmp/web.log
           exit 1
       - name: End-to-end on ${{ matrix.device }}
         env:
