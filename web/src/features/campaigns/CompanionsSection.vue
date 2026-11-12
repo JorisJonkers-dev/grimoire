@@ -82,7 +82,7 @@ function runBy(c: Companion): string {
         </span>
         <span v-if="dm" class="actions">
           <GButton :aria-label="`Change ${c.name}`" :data-testid="`companion-edit-${c.name}`" @click="edit(c)">Change</GButton>
-          <GButton variant="danger" :aria-label="`Let ${c.name} go`" :data-testid="`companion-delete-${c.name}`" @click="letGo(c)">Let go</GButton>
+          <GButton variant="danger" :aria-label="`Let go of ${c.name}`" :data-testid="`companion-delete-${c.name}`" @click="letGo(c)">Let go</GButton>
         </span>
       </li>
     </ul>

@@ -24,7 +24,7 @@ const status = (z: LiveZone) =>
         </ul>
         <div class="row">
           <template v-if="z.status === 'armed'">
-            <GButton variant="danger" :aria-label="`Spring ${z.name} now`" @click="emit('send', { kind: 'spring_zone', zoneId: z.id })">Spring it now</GButton>
+            <GButton variant="danger" :aria-label="`Spring it now: ${z.name}`" @click="emit('send', { kind: 'spring_zone', zoneId: z.id })">Spring it now</GButton>
             <GButton :aria-label="`${z.held ? 'Let' : 'Hold off'} ${z.name}`" @click="emit('send', { kind: 'hold_zone', zoneId: z.id, on: !z.held })">
               {{ z.held ? 'Let it spring' : 'Hold off' }}
             </GButton>

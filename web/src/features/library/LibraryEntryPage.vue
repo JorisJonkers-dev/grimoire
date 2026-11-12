@@ -150,7 +150,7 @@ function linkInto() {
                 <GButton
                   v-if="!shared && r.no !== d.entry.revision"
                   :disabled="restore.isPending.value"
-                  :aria-label="`Bring Revision ${String(r.no)} back`"
+                  :aria-label="`Bring back Revision ${String(r.no)}`"
                   data-testid="revision-restore"
                   @click="bringBack(r.no)"
                 >

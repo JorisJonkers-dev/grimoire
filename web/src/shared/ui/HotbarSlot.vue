@@ -10,8 +10,9 @@ defineEmits<{ use: [] }>()
 const accessibleName = computed(() => {
   const economy = props.kind === 'action' ? 'action' : 'bonus action'
   const state = props.available ? '' : `, unavailable: ${props.reason || 'not now'}`
-  const hint = props.suggested ? ', suggested' : ''
-  return `${props.label}, ${economy}${hint}${state}`
+  // Visible text order is badge then label, so the name must open with the same words.
+  const name = props.suggested ? `Suggested ${props.label}` : props.label
+  return `${name}, ${economy}${state}`
 })
 </script>
 
@@ -24,7 +25,7 @@ const accessibleName = computed(() => {
     :title="available ? undefined : reason"
     @click="$emit('use')"
   >
-    <span v-if="suggested" class="badge" aria-hidden="true">Suggested</span>
+    <span v-if="suggested" class="badge" aria-hidden="true">{{ 'Suggested ' }}</span>
     <span class="icon" aria-hidden="true"><slot name="icon" /></span>
     <span class="label">{{ label }}</span>
   </button>

@@ -59,7 +59,7 @@ describe('the Revisions of a Library entry', () => {
     ])
     // The newest is what the entry is now: there is nothing to bring back to.
     expect(lines().map((li) => li.find('[data-testid="revision-restore"]').exists())).toEqual([false, true, true])
-    expect(lines()[2]?.get('[data-testid="revision-restore"]').attributes('aria-label')).toBe('Bring Revision 1 back')
+    expect(lines()[2]?.get('[data-testid="revision-restore"]').attributes('aria-label')).toBe('Bring back Revision 1')
     await expectAccessible(wrapper.element as Element)
 
     // A failure says so and changes nothing.

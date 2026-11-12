@@ -46,7 +46,7 @@ function rewind() {
             <strong>{{ c.name }}</strong>
             <span v-if="c.kind === 'round'" class="dim"> Start of the round</span>
           </span>
-          <GButton :aria-label="`Rewind to ${c.name}`" :data-testid="`rewind-${c.id}`" @click="asking = c">Rewind here</GButton>
+          <GButton :aria-label="`Rewind here to ${c.name}`" :data-testid="`rewind-${c.id}`" @click="asking = c">Rewind here</GButton>
         </li>
       </ol>
       <p v-else class="dim" data-testid="checkpoints-none">None yet. Keep one before something risky; every round of a fight leaves one by itself.</p>
