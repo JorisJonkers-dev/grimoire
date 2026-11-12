@@ -346,6 +346,7 @@ jobs:
         run: |
           task build
           task build:fakeoidc
+          task build:demo
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: e2e-build
@@ -353,6 +354,7 @@ jobs:
             api/bin/grimoire
             api/bin/fakeoidc
             web/dist
+            web/dist-demo
           retention-days: 1
 
   # The official Playwright image already holds the browsers and every system package they need, so
@@ -428,12 +430,14 @@ jobs:
             GRIMOIRE_BASE_URL="$WEB_ORIGIN" GRIMOIRE_OIDC_ISSUER="$OIDC_ISSUER" GRIMOIRE_OIDC_CLIENT_ID="$OIDC_CLIENT_ID" GRIMOIRE_OIDC_CLIENT_SECRET="$OIDC_CLIENT_SECRET" GRIMOIRE_OIDC_NAME=jorisjonkers.dev \
             api/bin/grimoire serve > /tmp/api.log 2>&1 &
           GRIMOIRE_API_ORIGIN=http://localhost:18765 pnpm --filter @grimoire/web preview --host 127.0.0.1 > /tmp/web.log 2>&1 &
+          # The demo build, which demo-axe.spec.ts opens every page of the app on.
+          pnpm --filter @grimoire/web exec vite preview --outDir dist-demo --port 4174 --strictPort --host 127.0.0.1 > /tmp/demo.log 2>&1 &
           up() { node -e 'fetch(process.argv[1]).then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))' "$1"; }
           for _ in $(seq 1 60); do
-            if up "$OIDC_ISSUER/.well-known/openid-configuration" && up http://127.0.0.1:18765/readyz && up http://127.0.0.1:4173; then exit 0; fi
+            if up "$OIDC_ISSUER/.well-known/openid-configuration" && up http://127.0.0.1:18765/readyz && up http://127.0.0.1:4173 && up http://127.0.0.1:4174; then exit 0; fi
             sleep 1
           done
-          cat /tmp/oidc.log /tmp/api.log /tmp/web.log
+          cat /tmp/oidc.log /tmp/api.log /tmp/web.log /tmp/demo.log
           exit 1
       - name: End-to-end on ${{ matrix.device }}
         env:

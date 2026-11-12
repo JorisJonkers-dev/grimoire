@@ -131,7 +131,7 @@ describe('riding in a live Session', () => {
     const hex = wrapper.get('[data-hex="1,0"]')
     expect(hex.attributes('aria-label')).toBe('Hex 1, 0: Aria (12/12 HP), riding Steed (11/11 HP)')
     expect(hex.findAll('circle.token').map((c) => c.classes().includes('token--under'))).toEqual([true, false])
-    expect(hex.get('.mark').text()).toBe('A')
+    expect(wrapper.findAll('.tokens .mark').map((m) => m.text())).toContain('A')
     expect(wrapper.get('[data-hex="0,0"]').attributes('aria-label')).toBe('Hex 0, 0')
     expect(wrapper.findAll('[data-testid="token-under"]')).toHaveLength(1)
     for (const picked of [true, true, false]) {

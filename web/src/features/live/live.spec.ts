@@ -1551,7 +1551,7 @@ describe('encounter zones', () => {
     expect(panel.text()).toContain('Ambush · 1 hex · 2 hidden · Armed')
     await panel.get('[aria-label="Spring it now: Ambush"]').trigger('click')
     expect(s.sent.at(-1)).toMatchObject({ kind: 'spring_zone', zoneId: ZID })
-    await panel.get('[aria-label="Hold off Ambush"]').trigger('click')
+    await panel.get('[aria-label="Hold off: Ambush"]').trigger('click')
     expect(s.sent.at(-1)).toMatchObject({ kind: 'hold_zone', zoneId: ZID, on: true })
     await wrapper.get('[data-testid="tool-zone"]').setValue(true)
     const before = s.sent.length
@@ -1563,8 +1563,8 @@ describe('encounter zones', () => {
     await wrapper.get('[data-hex="-1,0"]').trigger('click')
     expect(s.sent.at(-1)).toMatchObject({ kind: 'add_zone', label: 'Den', q: -1, r: 0, radiusHexes: 4, dmOnly: true })
     const statuses = [
-      [zone({ held: true }), 'Held off', 'Let Ambush'],
-      [zone({ dmOnly: true, radiusHexes: 2 }), 'Springs when you say', 'Hold off Ambush'],
+      [zone({ held: true }), 'Held off', 'Let it spring: Ambush'],
+      [zone({ dmOnly: true, radiusHexes: 2 }), 'Springs when you say', 'Hold off: Ambush'],
     ] as const
     let seq = 2
     for (const [z, text, hold] of statuses) {
@@ -2276,7 +2276,7 @@ describe('the fallen', () => {
     expect(w.get('[data-testid="dying-Nim"]').text()).toContain('Stable')
     await w.get('[aria-label="Stabilise Aria with Medicine"]').trigger('click')
     expect(w.emitted('send')?.at(-1)).toEqual([{ kind: 'stabilise', tokenId: helper.id, targetId: aria.id, option: 'medicine' }])
-    await w.get('[aria-label="Stabilise Aria with a spell"]').trigger('click')
+    await w.get('[aria-label="Spare the Dying: stabilise Aria"]').trigger('click')
     expect(w.emitted('send')?.at(-1)).toEqual([{ kind: 'stabilise', tokenId: helper.id, targetId: aria.id, option: 'spell' }])
     await w.get('[aria-label="Revive Brom with raise dead"]').trigger('click')
     expect(w.emitted('send')?.at(-1)).toEqual([{ kind: 'revive', targetId: brom.id, option: 'raise_dead' }])
