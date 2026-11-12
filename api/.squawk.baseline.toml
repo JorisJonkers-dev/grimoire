@@ -1,0 +1,5 @@
+# Applied-migration baseline: the same as .squawk.toml, plus ban-drop-constraint (squawk 2.68+),
+# which flags constraint drops in migrations that already ran and cannot be changed. Used only for
+# the migrations up to SQUAWK_BASELINE in the Taskfile; every newer migration uses .squawk.toml.
+excluded_rules = ["prefer-bigint-over-int", "ban-drop-constraint"]
+assume_in_transaction = true

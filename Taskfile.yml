@@ -60,7 +60,23 @@ tasks:
   lint:sql:
     desc: Migration safety lint (squawk)
     dir: api
-    cmd: squawk db/migrations/*.sql
+    # ban-drop-constraint (squawk 2.68+) is checked on every migration after the baseline. The
+    # migrations up to the baseline are already applied everywhere and cannot be changed, so they
+    # are checked with .squawk.baseline.toml, which excludes that one rule. Leave SQUAWK_BASELINE
+    # alone: a new migration has a larger version and gets every rule.
+    vars:
+      SQUAWK_BASELINE: "20261015180000"
+    cmds:
+      - |
+        old=""; new=""; rc=0
+        for f in db/migrations/*.sql; do
+          v=${f##*/}; v=${v%%_*}
+          case "$v" in ''|*[!0-9]*) echo "migration without a numeric version: $f" >&2; exit 1 ;; esac
+          if [ "$((10#$v))" -le {{.SQUAWK_BASELINE}} ]; then old="$old $f"; else new="$new $f"; fi
+        done
+        squawk --config .squawk.baseline.toml $old || rc=1
+        if [ -n "$new" ]; then squawk $new || rc=1; fi
+        exit $rc
 
   lint:web:
     desc: ESLint (type-checked, a11y) and vue-tsc
