@@ -173,6 +173,11 @@ tasks:
       - pnpm --filter @grimoire/web build
       - task: build:demo
 
+  build:fakeoidc:
+    desc: Build the fake jorisjonkers.dev OIDC provider the e2e suite signs in through (a test double, never deployed)
+    dir: api
+    cmd: go build -trimpath -o bin/fakeoidc ./cmd/fakeoidc
+
   build:demo:
     desc: Build the web app on its in-browser mock (web/dist-demo); it needs no API and sends nothing
     deps: [install]

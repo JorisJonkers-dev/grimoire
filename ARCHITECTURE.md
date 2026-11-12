@@ -282,6 +282,7 @@ grimoire/
 ├── api/                           # Go module
 │   ├── go.mod  sqlc.yaml  .golangci.yml  .custom-gcl.yml
 │   ├── cmd/grimoire/main.go       # composition root: `serve`, `migrate`, `import`, `gen`
+│   ├── cmd/fakeoidc/main.go       # fake jorisjonkers.dev OIDC provider for e2e; a test double, never deployed
 │   ├── internal/
 │   │   ├── shared/                # IDs, Result helpers, clock, rng, errors
 │   │   ├── compendium/{domain,app,adapters/{persistence,sources}}/
