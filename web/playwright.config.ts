@@ -57,6 +57,13 @@ export default defineConfig({
       },
     },
     {
+      // The demo build, on its own port: demo-axe.spec.ts opens every page of the app on it.
+      command: 'pnpm build:demo && pnpm exec vite preview --outDir dist-demo --port 4174 --strictPort',
+      url: 'http://localhost:4174',
+      reuseExistingServer: !process.env.CI,
+      timeout: 180_000,
+    },
+    {
       command: 'pnpm build && pnpm preview',
       url: webOrigin,
       env: { GRIMOIRE_API_ORIGIN: apiOrigin },

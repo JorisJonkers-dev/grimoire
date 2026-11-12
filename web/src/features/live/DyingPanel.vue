@@ -30,7 +30,7 @@ const status = (t: LiveToken) => {
           <GButton :aria-label="`Stabilise ${t.label} with Medicine`" @click="emit('send', { kind: 'stabilise', tokenId: helper.id, targetId: t.id, option: 'medicine' })">
             Medicine
           </GButton>
-          <GButton :aria-label="`Stabilise ${t.label} with a spell`" @click="emit('send', { kind: 'stabilise', tokenId: helper.id, targetId: t.id, option: 'spell' })">
+          <GButton :aria-label="`Spare the Dying: stabilise ${t.label}`" @click="emit('send', { kind: 'stabilise', tokenId: helper.id, targetId: t.id, option: 'spell' })">
             Spare the Dying
           </GButton>
         </template>

@@ -100,19 +100,26 @@ const cells = computed(() =>
         <template v-if="c.token">
           <circle v-if="c.under" :cx="c.centre.x" :cy="c.centre.y" :r="layout.size * 0.8" :class="['token', 'token--under', `token--${c.under.kind}`, { 'token--hidden': c.under.hidden }]" data-testid="token-under" />
           <circle :cx="c.centre.x" :cy="c.centre.y" :r="layout.size * 0.62" :class="['token', `token--${c.token.kind}`, { 'token--hidden': c.token.hidden }]" />
-          <text :x="c.centre.x" :y="c.centre.y + layout.size * 0.2" text-anchor="middle" class="mark" aria-hidden="true">{{ initials(c.token.label) }}</text>
-          <text
-            v-if="captions[c.token.id]"
-            :x="c.centre.x"
-            :y="c.centre.y + layout.size * 0.95"
-            text-anchor="middle"
-            class="caption"
-            :style="{ fontSize: `${String(Math.round(layout.size * 0.3))}px` }"
-            aria-hidden="true"
-            :data-testid="`caption-${c.token.id}`"
-          >
-            {{ captions[c.token.id]?.text }}
-          </text>
+        </template>
+      </g>
+      <!-- Drawn after the buttons, not inside them: a button's visible text must be part of its name, and this is only a picture of the token. -->
+      <g class="tokens" aria-hidden="true">
+        <template v-for="c in cells" :key="c.k">
+          <template v-if="c.token">
+            <text :x="c.centre.x" :y="c.centre.y + layout.size * 0.2" text-anchor="middle" class="mark">{{ initials(c.token.label) }}</text>
+            <text
+              v-if="captions[c.token.id]"
+              :x="c.centre.x"
+              :y="c.centre.y + layout.size * 0.95"
+              text-anchor="middle"
+              class="caption"
+              :style="{ fontSize: `${String(Math.round(layout.size * 0.3))}px` }"
+              aria-hidden="true"
+              :data-testid="`caption-${c.token.id}`"
+            >
+              {{ captions[c.token.id]?.text }}
+            </text>
+          </template>
         </template>
       </g>
       <path v-if="squares" :d="squares" class="squares" data-testid="grid-squares" />
