@@ -44,8 +44,13 @@ const box = computed(() => gridBox(props.cells, props.size))
         @keydown.enter.prevent="emit('select', { q: s.q, r: s.r })"
       >
         <polygon :points="s.points" />
-        <text v-if="s.mark" :x="s.centre.x" :y="s.centre.y + size * 0.18" text-anchor="middle" class="mark" aria-hidden="true">{{ s.mark }}</text>
-        <text v-if="s.caption" :x="s.centre.x" :y="s.centre.y + size * 0.82" text-anchor="middle" class="caption" aria-hidden="true" :data-testid="`caption-${s.captionKey ?? ''}`">{{ s.caption }}</text>
+      </g>
+      <!-- Drawn after the buttons, not inside them: a button's visible text must be part of its name, and this is only a picture of the token. -->
+      <g class="tokens" aria-hidden="true">
+        <template v-for="s in shapes" :key="`${String(s.q)},${String(s.r)}`">
+          <text v-if="s.mark" :x="s.centre.x" :y="s.centre.y + size * 0.18" text-anchor="middle" class="mark">{{ s.mark }}</text>
+          <text v-if="s.caption" :x="s.centre.x" :y="s.centre.y + size * 0.82" text-anchor="middle" class="caption" :data-testid="`caption-${s.captionKey ?? ''}`">{{ s.caption }}</text>
+        </template>
       </g>
     </svg>
   </div>

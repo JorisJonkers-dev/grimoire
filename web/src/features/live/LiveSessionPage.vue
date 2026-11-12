@@ -556,7 +556,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         </div>
         <div class="zoom" role="group" aria-label="Map zoom">
           <button type="button" aria-label="Zoom out" :disabled="!shell.canZoomOut.value" data-testid="zoom-out" @click="shell.zoomOut">−</button>
-          <button type="button" aria-label="Reset zoom" data-testid="zoom-reset" @click="shell.zoomReset">{{ Math.round(shell.zoom.value * 100) }}%</button>
+          <button type="button" data-testid="zoom-reset" :aria-label="`Reset zoom, now ${String(Math.round(shell.zoom.value * 100))}%`" @click="shell.zoomReset">{{ Math.round(shell.zoom.value * 100) }}%</button>
           <button type="button" aria-label="Zoom in" :disabled="!shell.canZoomIn.value" data-testid="zoom-in" @click="shell.zoomIn">+</button>
         </div>
         <div id="quick-bar-slot" class="quick-slot" />

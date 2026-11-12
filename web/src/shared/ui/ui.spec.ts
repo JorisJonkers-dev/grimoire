@@ -38,7 +38,7 @@ describe('HotbarSlot', () => {
 
   it('marks bonus, suggested and unavailable slots', async () => {
     const bonus = mount(HotbarSlot, { props: { label: 'Mark', kind: 'bonus', suggested: true } })
-    expect(bonus.get('button').attributes('aria-label')).toBe('Mark, bonus action, suggested')
+    expect(bonus.get('button').attributes('aria-label')).toBe('Suggested Mark, bonus action')
     expect(bonus.text()).toContain('Suggested')
     const off = mount(HotbarSlot, { ...attach, props: { label: 'Dash', available: false, reason: 'No action left' } })
     expect(off.get('button').attributes('aria-label')).toBe('Dash, action, unavailable: No action left')
