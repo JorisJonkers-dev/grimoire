@@ -3,7 +3,7 @@
 
 # Both build stages run on the build platform; only the Go binary is cross-compiled, so a
 # multi-arch build needs no emulation.
-FROM --platform=$BUILDPLATFORM node:24.22.1-alpine AS web
+FROM --platform=$BUILDPLATFORM node:24.22.2-alpine AS web
 RUN --mount=type=secret,id=packages-npmrc,target=/run/secrets/packages-npmrc,required=false \
     NPM_CONFIG_USERCONFIG=/run/secrets/packages-npmrc npm install -g pnpm@12.6.0
 WORKDIR /src
