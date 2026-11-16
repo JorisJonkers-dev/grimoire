@@ -50,7 +50,7 @@ jobs:
           cache_save: ${{ github.event_name == 'push' }}
           install_args: go node pnpm task sqlc actionlint aqua:daveshanley/vacuum
       - name: Set up the packages proxy
-        uses: JorisJonkers-dev/github-workflows/actions/setup-package-proxy@48fcba8b143567e12716f4b77b9a3ab211719ffd # v0.50.1
+        uses: JorisJonkers-dev/github-workflows/actions/setup-package-proxy@b14d5e031f1abd5bec45e50c898e9e73f3ffc534 # v0.50.4
         with:
           token: ${{ secrets.PACKAGES_PROXY_TOKEN }}
           go: 'false'
@@ -80,7 +80,7 @@ jobs:
           cache_save: ${{ github.event_name == 'push' }}
           install_args: node pnpm task
       - name: Set up the packages proxy
-        uses: JorisJonkers-dev/github-workflows/actions/setup-package-proxy@48fcba8b143567e12716f4b77b9a3ab211719ffd # v0.50.1
+        uses: JorisJonkers-dev/github-workflows/actions/setup-package-proxy@b14d5e031f1abd5bec45e50c898e9e73f3ffc534 # v0.50.4
         with:
           token: ${{ secrets.PACKAGES_PROXY_TOKEN }}
           go: 'false'
@@ -168,14 +168,14 @@ jobs:
           cache_save: ${{ github.event_name == 'push' }}
           install_args: node pnpm task
       - name: Set up the packages proxy
-        uses: JorisJonkers-dev/github-workflows/actions/setup-package-proxy@48fcba8b143567e12716f4b77b9a3ab211719ffd # v0.50.1
+        uses: JorisJonkers-dev/github-workflows/actions/setup-package-proxy@b14d5e031f1abd5bec45e50c898e9e73f3ffc534 # v0.50.4
         with:
           token: ${{ secrets.PACKAGES_PROXY_TOKEN }}
           go: 'false'
           python: 'false'
           cargo: 'false'
       - name: Set up Gradle with the packages proxy
-        uses: JorisJonkers-dev/github-workflows/actions/setup-java-gradle@48fcba8b143567e12716f4b77b9a3ab211719ffd # v0.50.1
+        uses: JorisJonkers-dev/github-workflows/actions/setup-java-gradle@b14d5e031f1abd5bec45e50c898e9e73f3ffc534 # v0.50.4
         with:
           packages-proxy-token: ${{ secrets.PACKAGES_PROXY_TOKEN }}
       - name: Install JS tooling
@@ -331,7 +331,7 @@ jobs:
           cache_save: ${{ github.event_name == 'push' }}
           install_args: go node pnpm task
       - name: Set up the packages proxy
-        uses: JorisJonkers-dev/github-workflows/actions/setup-package-proxy@48fcba8b143567e12716f4b77b9a3ab211719ffd # v0.50.1
+        uses: JorisJonkers-dev/github-workflows/actions/setup-package-proxy@b14d5e031f1abd5bec45e50c898e9e73f3ffc534 # v0.50.4
         with:
           token: ${{ secrets.PACKAGES_PROXY_TOKEN }}
           go: 'false'
@@ -401,7 +401,7 @@ jobs:
           cache_save: ${{ github.event_name == 'push' }}
           install_args: node pnpm task
       - name: Set up the packages proxy
-        uses: JorisJonkers-dev/github-workflows/actions/setup-package-proxy@48fcba8b143567e12716f4b77b9a3ab211719ffd # v0.50.1
+        uses: JorisJonkers-dev/github-workflows/actions/setup-package-proxy@b14d5e031f1abd5bec45e50c898e9e73f3ffc534 # v0.50.4
         with:
           token: ${{ secrets.PACKAGES_PROXY_TOKEN }}
           go: 'false'
@@ -470,7 +470,7 @@ jobs:
           cache_save: ${{ github.event_name == 'push' }}
           install_args: node pnpm task
       - name: Set up the packages proxy
-        uses: JorisJonkers-dev/github-workflows/actions/setup-package-proxy@48fcba8b143567e12716f4b77b9a3ab211719ffd # v0.50.1
+        uses: JorisJonkers-dev/github-workflows/actions/setup-package-proxy@b14d5e031f1abd5bec45e50c898e9e73f3ffc534 # v0.50.4
         with:
           token: ${{ secrets.PACKAGES_PROXY_TOKEN }}
           go: 'false'
